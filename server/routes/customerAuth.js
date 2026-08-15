@@ -2,6 +2,7 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { sendOtpEmail } from "../utils/email.js";
+import { requireCustomer } from "../middleware/requireCustomer.js";
 
 const router = Router();
 const CODE_EXPIRY_MINUTES = 10;
@@ -17,7 +18,20 @@ router.post("/request-code", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email is required" });
 
-  const code = generateCode();
+  const normalizedEmail = email.toLowerCase();
+
+  // TIP: a demo bypass so a specific email always works with a fixed
+  // code, no real email needed — useful for showing the site to a
+  // client before you fully trust email delivery (Resend's free tier
+  // only sends to your own verified address until a sending domain is
+  // verified). Set DEMO_EMAIL and DEMO_CODE in your .env / Render
+  // environment variables. Leave them unset (or delete them later) to
+  // turn this off completely — no code changes needed either way.
+  const isDemo =
+    process.env.DEMO_EMAIL &&
+    normalizedEmail === process.env.DEMO_EMAIL.toLowerCase();
+
+  const code = isDemo ? process.env.DEMO_CODE : generateCode();
   const expiresAt = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000);
 
   // TIP: findOneAndUpdate with upsert:true means "find this user, or
@@ -26,10 +40,17 @@ router.post("/request-code", async (req, res) => {
   // step; the first time someone enters a code successfully for a
   // new email, an account is created for them automatically.
   await User.findOneAndUpdate(
-    { email: email.toLowerCase() },
+    { email: normalizedEmail },
     { otpCode: code, otpExpiresAt: expiresAt },
     { upsert: true, new: true },
   );
+
+  if (isDemo) {
+    // TIP: skip sendOtpEmail entirely for the demo account — she just
+    // always uses the fixed DEMO_CODE, so there's no real email that
+    // could fail, land in spam, or get rate-limited.
+    return res.json({ message: "Code sent" });
+  }
 
   // TIP: now that sendOtpEmail actually talks to a real email
   // provider, it can genuinely fail (bad API key, unverified domain,
@@ -76,6 +97,33 @@ router.post("/verify-code", async (req, res) => {
 
   res.json({
     token,
+    user: {
+      id: user._id,
+      email: user.email,
+      username: user.username,
+      loyaltyStatus: user.loyaltyStatus,
+    },
+  });
+});
+
+// PATCH /api/auth/customer/me
+// body: { username }
+// TIP: requireCustomer runs first, checks the JWT, and attaches
+// req.customerId — that's how we know WHICH user to update without
+// trusting an id sent in the request body (which anyone could fake).
+router.patch("/me", requireCustomer, async (req, res) => {
+  const { username } = req.body;
+  if (typeof username !== "string" || !username.trim()) {
+    return res.status(400).json({ error: "Username is required" });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.customerId,
+    { username: username.trim() },
+    { new: true },
+  );
+
+  res.json({
     user: {
       id: user._id,
       email: user.email,

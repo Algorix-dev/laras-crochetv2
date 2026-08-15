@@ -4,16 +4,16 @@
 // this is the only file that needs to change.
 const API_URL = import.meta.env.VITE_API_URL;
 
-export async function getProducts(category = 'all') {
-  const query = category && category !== 'all' ? `?category=${category}` : '';
+export async function getProducts(category = "all") {
+  const query = category && category !== "all" ? `?category=${category}` : "";
   const res = await fetch(`${API_URL}/api/products${query}`);
-  if (!res.ok) throw new Error('Failed to load products');
+  if (!res.ok) throw new Error("Failed to load products");
   return res.json();
 }
 
 export async function getProduct(id) {
   const res = await fetch(`${API_URL}/api/products/${id}`);
-  if (!res.ok) throw new Error('Product not found');
+  if (!res.ok) throw new Error("Product not found");
   return res.json();
 }
 
@@ -21,16 +21,29 @@ export async function getProduct(id) {
 // needs an authenticated call (addresses, order history) can use
 // this instead of manually building the Authorization header each time.
 export async function authenticatedFetch(path, options = {}) {
-  const token = localStorage.getItem('laras-token');
+  const token = localStorage.getItem("laras-token");
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   });
   return res;
+}
+
+// TIP: PATCHes the logged-in customer's own record — requireCustomer
+// on the backend reads the id from the JWT itself, not from anything
+// sent here, so there's nothing for a customer to fake their way into
+// editing someone else's account.
+export async function updateUsername(username) {
+  const res = await authenticatedFetch("/api/auth/customer/me", {
+    method: "PATCH",
+    body: JSON.stringify({ username }),
+  });
+  if (!res.ok) throw new Error("Failed to update username");
+  return res.json();
 }
 
 // TIP: maps a backend Product document onto the shape the existing
