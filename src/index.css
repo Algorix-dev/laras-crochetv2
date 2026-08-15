@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root { --maroon: #4a0e1e; --cream: #f7f6f3; --ink: #15141a; --muted: #6f6d76; --line: #e4e2dd; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #FAFAFA; font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+.font-ui { font-family: 'DM Sans', sans-serif; }
+.font-display { font-family: 'DM Sans', sans-serif; }
+
+button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid #4a0e1e; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
