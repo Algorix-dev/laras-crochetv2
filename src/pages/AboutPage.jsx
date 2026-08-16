@@ -29,17 +29,17 @@ export default function AboutPage() {
   return (
     <>
       {/* TIP: Main grid — single column on mobile, two columns on md+. */}
-      <main className="grid bg-[#fafafa] md:h-[970px] md:grid-cols-2">
+      <main className="mx-auto grid max-w-7xl gap-10 px-5 py-10 md:grid-cols-2 md:gap-20 md:px-8 md:py-16 lg:gap-28">
         {/* TIP: Left column — the crosswalk/sunglasses photo, full-bleed
             within its grid column. object-cover fills the frame nicely. */}
         <img
           src={laraSunglasses}
           alt="Lara — founder of Lara's Crochet"
-          className="h-full min-h-[500px] w-full object-cover object-center"
+          className="aspect-[3/4] w-full object-cover"
         />
 
         {/* TIP: Right column — heading, rotated label, lifestyle image, story, and links. */}
-        <section className="flex flex-col justify-center px-8 py-16 md:mx-auto md:w-[500px] md:translate-y-[68px] md:px-0 md:py-0">
+        <section className="flex flex-col justify-center">
           {/* TIP: Page heading — real logo lockup image, not live text.
               Width capped and height auto so it scales proportionally;
               the source image is 484x43, so this stays reasonably crisp
@@ -47,7 +47,7 @@ export default function AboutPage() {
           <img
             src={aboutHeadingLockup}
             alt="This is Lara's Crochet"
-            className="h-auto w-full max-w-[484px]"
+            className="h-auto w-full max-w-[420px]"
           />
 
           {/* TIP: Rotated "MEET LARA" label beside the close-up portrait.
@@ -59,9 +59,9 @@ export default function AboutPage() {
               it. Giving it a fixed narrow width and letting it stretch to
               the image's height (self-stretch, via the parent's default
               align-items: stretch) fixes that properly. */}
-          <div className="mt-8 flex gap-3">
+          <div className="mt-10 flex gap-5">
             <div className="flex w-6 shrink-0 items-center justify-center">
-              <p className="-rotate-90 whitespace-nowrap text-[9px] font-bold">
+              <p className="-rotate-90 whitespace-nowrap text-base font-bold">
                 MEET LARA
               </p>
             </div>
@@ -72,12 +72,12 @@ export default function AboutPage() {
             <img
               src={laraPortrait}
               alt="Lara close-up portrait"
-              className="aspect-[416/391] w-full max-w-[416px] object-cover"
+              className="aspect-[416/391] w-full max-w-[380px] object-cover"
             />
           </div>
 
           {/* TIP: Brand story paragraph — explains the handmade, slow-fashion ethos. */}
-          <p className="mt-7 max-w-[416px] text-[9px] leading-[13px] text-[#454545]">
+          <p className="mt-9 max-w-xl text-sm leading-8 text-[var(--muted)]">
             At Lara&apos;s Crochet, every piece starts as a single strand of
             yarn and a pair of hands. No factories, no shortcuts — just crochet
             made with love, one piece at a time, out of Lagos, Nigeria. We
@@ -89,7 +89,7 @@ export default function AboutPage() {
               the shop. "Connect with Lara's Crochet" gets the exact mauve-brown
               (#564345) the spec calls out; "Back to Shop" keeps the default ink
               color since the spec doesn't call out a different color for it. */}
-          <div className="mt-6 flex flex-wrap gap-6 text-[9px] underline underline-offset-2">
+          <div className="mt-8 flex flex-wrap gap-6 text-sm underline underline-offset-4">
             <a
               href="https://instagram.com"
               target="_blank"

@@ -1,6 +1,6 @@
 /*
   TIP: The footer has two parts:
-  1. A link grid (General, Support, Socials columns) + newsletter form
+  1. A link grid (General, Support, Socials columns)
   2. A massive "LAC" monogram in Yellowtail script font that spans
      the full width — this is the brand's signature visual element.
 
@@ -48,22 +48,19 @@ export default function Footer({ showNewsletter = false }) {
   };
 
   return (
-    <footer className="overflow-hidden pt-[68px] pb-0">
+    <footer className="pt-14 pb-0">
       {/* Link columns */}
       <div
-        className={`mx-auto mb-[76px] grid max-w-[1280px] gap-10 px-5 md:px-0 grid-cols-2 ${
+        className={`mx-auto mb-16 grid max-w-7xl gap-8 px-5 md:px-8 grid-cols-2 ${
           showNewsletter ? "sm:grid-cols-4" : "sm:grid-cols-3"
         }`}
       >
         {columns.map((col) => (
           <div key={col.title}>
-            <h3 className="mb-3 text-[10px] font-bold uppercase leading-3 tracking-[-0.04em] text-black">
+            <h3 className="mb-3 text-xl font-bold uppercase tracking-[-0.04em]">
               {col.title}
             </h3>
-            {/* TIP: 16px, black — the spec calls for actual black text
-                here, not the muted gray usually used for secondary
-                links elsewhere in the site. */}
-            <ul className="space-y-1.5 text-[9px] text-black">
+            <ul className="space-y-2 text-sm text-[var(--muted)]">
               {col.links.map((link) => (
                 <li key={link.label}>
                   {link.href ? (
@@ -87,12 +84,11 @@ export default function Footer({ showNewsletter = false }) {
         ))}
 
         {/* TIP: this column is conditional — only pages that actually
-            asked for it (Account, Order History, Addresses, About)
-            pass showNewsletter, so the homepage/shop footer stays
-            as-is. */}
+            asked for it (Account, Order History, Addresses) pass
+            showNewsletter, so the homepage/shop footer stays as-is. */}
         {showNewsletter && (
           <div className="col-span-2 sm:col-span-1">
-            <h3 className="mb-3 text-[10px] font-bold uppercase leading-3 tracking-[-0.04em] text-black">
+            <h3 className="mb-3 text-xl font-bold uppercase tracking-[-0.04em]">
               Subscribe to Our Newsletter
             </h3>
             {subscribed ? (
@@ -100,28 +96,17 @@ export default function Footer({ showNewsletter = false }) {
                 You're subscribed — thank you!
               </p>
             ) : (
-              // TIP: items-start (not items-center/stretch) — the button
-              // is only as tall as the input, it doesn't stretch down to
-              // match the input + caption line together.
-              <form
-                onSubmit={handleSubscribe}
-                className="flex items-start gap-2"
-              >
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="h-[28px] w-full border border-[#D4D4D4] px-2 text-[8px] outline-none focus:border-[var(--ink)]"
-                  />
-                  <p className="text-[8px] text-[#A4A7AE]">
-                    Enjoy latest exclusives.
-                  </p>
-                </div>
+              <form onSubmit={handleSubscribe} className="flex">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full min-w-0 border border-[var(--line)] px-3 py-2 text-sm outline-none focus:border-[var(--ink)]"
+                />
                 <button
                   type="submit"
-                  className="h-[28px] w-[104px] shrink-0 bg-[#412B2D] text-[8px] font-bold uppercase text-white hover:bg-[var(--maroon)]"
+                  className="shrink-0 bg-[var(--ink)] px-4 text-xs uppercase text-white hover:bg-[var(--maroon)]"
                 >
                   Subscribe
                 </button>
@@ -141,12 +126,12 @@ export default function Footer({ showNewsletter = false }) {
           file to src/assets/fonts/, 2) adding an @font-face rule
           for it in index.css, 3) changing font-['Yellowtail'] below
           to font-['Genty_Demo']. */}
-      <div className="mt-0 flex w-full justify-center overflow-hidden">
+      <div className="mt-6 w-full overflow-hidden flex justify-center">
         <img
           src={lacMonogram}
           alt="Lara's Crochet Monogram"
           aria-hidden="true"
-          className="block h-auto w-full align-bottom -mb-2"
+          className="w-full h-auto mix-blend-multiply opacity-95 block align-bottom -mb-2 sm:-mb-4 md:-mb-6"
         />
       </div>
     </footer>
