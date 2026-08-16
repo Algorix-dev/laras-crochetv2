@@ -7,34 +7,34 @@
   We use <Link> from react-router-dom so navigation stays smooth
   without full page reloads.
 */
-import { Link } from 'react-router-dom';
-import { useState } from 'react';
-import lacMonogram from '../assets/lac-monogram.png';
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import lacMonogram from "../assets/lac-monogram.png";
 
 const columns = [
   {
-    title: 'General',
+    title: "General",
     links: [
-      { label: 'Shop', to: '/' },
-      { label: 'About', to: '/about' },
-      { label: 'Custom Orders', to: '/contact?flow=custom' },
+      { label: "Shop", to: "/" },
+      { label: "About", to: "/about" },
+      { label: "Custom Orders", to: "/contact?flow=custom" },
     ],
   },
   {
-    title: 'Support',
+    title: "Support",
     links: [
-      { label: 'Contact', to: '/contact' },
-      { label: 'Enquiries', to: '/contact' },
+      { label: "Contact", to: "/contact" },
+      { label: "Enquiries", to: "/contact" },
     ],
   },
   {
-    title: 'Socials',
-    links: [{ label: 'Instagram', href: 'https://instagram.com' }],
+    title: "Socials",
+    links: [{ label: "Instagram", href: "https://instagram.com" }],
   },
 ];
 
 export default function Footer({ showNewsletter = false }) {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
   const handleSubscribe = (e) => {
@@ -52,12 +52,12 @@ export default function Footer({ showNewsletter = false }) {
       {/* Link columns */}
       <div
         className={`mx-auto mb-16 grid max-w-7xl gap-8 px-5 md:px-8 grid-cols-2 ${
-          showNewsletter ? 'sm:grid-cols-4' : 'sm:grid-cols-3'
+          showNewsletter ? "sm:grid-cols-4" : "sm:grid-cols-3"
         }`}
       >
         {columns.map((col) => (
           <div key={col.title}>
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest">
+            <h3 className="mb-3 text-xl font-bold uppercase tracking-[-0.04em]">
               {col.title}
             </h3>
             <ul className="space-y-2 text-sm text-[var(--muted)]">
@@ -73,10 +73,7 @@ export default function Footer({ showNewsletter = false }) {
                       {link.label}
                     </a>
                   ) : (
-                    <Link
-                      to={link.to}
-                      className="hover:text-[var(--maroon)]"
-                    >
+                    <Link to={link.to} className="hover:text-[var(--maroon)]">
                       {link.label}
                     </Link>
                   )}
@@ -91,11 +88,13 @@ export default function Footer({ showNewsletter = false }) {
             showNewsletter, so the homepage/shop footer stays as-is. */}
         {showNewsletter && (
           <div className="col-span-2 sm:col-span-1">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest">
+            <h3 className="mb-3 text-xl font-bold uppercase tracking-[-0.04em]">
               Subscribe to Our Newsletter
             </h3>
             {subscribed ? (
-              <p className="text-sm text-[var(--muted)]">You're subscribed — thank you!</p>
+              <p className="text-sm text-[var(--muted)]">
+                You're subscribed — thank you!
+              </p>
             ) : (
               <form onSubmit={handleSubscribe} className="flex">
                 <input
