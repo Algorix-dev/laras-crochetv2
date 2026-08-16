@@ -16,6 +16,7 @@ import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import CurrencySelector from "./CurrencySelector";
 import SearchOverlay from "./SearchOverlay";
+import fullLogo from "../assets/lara-crochet-logo.png";
 
 const LINKS = [
   { label: "Shop", to: "/shop" },
@@ -74,15 +75,15 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--cream)]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
+      <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[#fafafa]/95 backdrop-blur">
+        <div className="mx-auto flex h-[54px] max-w-[1280px] items-center justify-between px-5 md:px-0">
           {/* Brand logo */}
-          <Link to="/" className="font-display text-xl italic">
-            Lara's Crochet
+          <Link to="/" className="flex h-9 w-[58px] items-center">
+            <img src={fullLogo} alt="Lara's Crochet" className="h-full w-full object-contain" />
           </Link>
 
           {/* Desktop nav links */}
-          <nav className="hidden gap-8 text-sm uppercase md:flex">
+          <nav className="hidden gap-7 text-[8px] uppercase md:flex">
             {LINKS.map((l) => (
               <Link
                 key={l.label}
@@ -99,7 +100,7 @@ export default function Navbar() {
           </nav>
 
           {/* Desktop utility icons */}
-          <div className="hidden items-center gap-5 md:flex">
+          <div className="hidden items-center gap-3 md:flex">
             <button aria-label="Search" onClick={() => setSearchOpen(true)}>
               <Search size={18} />
             </button>

@@ -7,11 +7,10 @@
 */
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Pencil, Check } from "lucide-react";
+import { Pencil, Check, Heart } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { updateUsername } from "../api";
 import { products } from "../data/products";
-import ProductGrid from "../components/ProductGrid";
 import AccountSidebar from "../components/AccountSidebar";
 import Footer from "../components/Footer";
 
@@ -47,25 +46,25 @@ export default function AccountPage() {
 
   return (
     <>
-      <section className="mx-auto max-w-7xl px-5 py-10 md:px-8">
-        <p className="mb-6 text-xs text-[var(--muted)]">
+      <section className="mx-auto max-w-[1280px] px-5 py-10 md:px-0 md:pt-[62px]">
+        <p className="mb-[62px] text-[9px] text-[#454545]">
           <Link to="/" className="hover:underline">
             Home
           </Link>{" "}
           / Account
         </p>
 
-        <div className="grid gap-10 md:grid-cols-[180px_1fr]">
+        <div className="grid min-h-[470px] gap-10 md:grid-cols-[180px_1fr]">
           <AccountSidebar active="about" />
 
           {/* About You content */}
           <div>
-            <h1 className="mb-8 text-2xl font-bold uppercase tracking-tight">
+            <h1 className="mb-6 text-[18px] font-bold uppercase tracking-tight">
               About You
             </h1>
 
-            <div className="mb-8 max-w-sm">
-              <span className="text-sm font-bold text-[var(--ink)]">
+            <div className="mb-7 max-w-sm">
+              <span className="text-[9px] font-bold text-[var(--ink)]">
                 Username
               </span>
               <div className="mt-1 flex items-center justify-between gap-2">
@@ -78,7 +77,7 @@ export default function AccountPage() {
                     className="w-full border-b border-[var(--line)] bg-transparent text-sm outline-none"
                   />
                 ) : (
-                  <span className="text-sm text-[var(--muted)]">
+                  <span className="text-[9px] text-[#454545]">
                     {user?.username || "–"}
                   </span>
                 )}
@@ -103,25 +102,25 @@ export default function AccountPage() {
               </div>
             </div>
 
-            <div className="mb-8 max-w-sm">
-              <span className="text-sm font-bold text-[var(--ink)]">Email</span>
-              <p className="mt-1 text-sm text-[var(--muted)]">{user?.email}</p>
+            <div className="mb-7 max-w-sm">
+              <span className="text-[9px] font-bold text-[var(--ink)]">Email</span>
+              <p className="mt-1 text-[9px] text-[#454545]">{user?.email}</p>
             </div>
 
             <div className="mb-8">
-              <span className="text-sm font-bold text-[var(--ink)]">
+              <span className="text-[9px] font-bold text-[var(--ink)]">
                 Preferences
               </span>
-              <p className="mt-1 text-sm text-[var(--muted)] underline underline-offset-2">
+              <p className="mt-1 text-[9px] text-[#454545] underline underline-offset-2">
                 Unsubscribe from marketing emails
               </p>
             </div>
 
             <div>
-              <span className="text-sm font-bold text-[var(--ink)]">
+              <span className="text-[9px] font-bold text-[var(--ink)]">
                 Loyalty Status
               </span>
-              <p className="mt-1 text-sm text-[var(--muted)]">
+              <p className="mt-1 text-[9px] text-[#454545]">
                 {user?.loyaltyStatus || "Guest"}
               </p>
             </div>
@@ -129,11 +128,22 @@ export default function AccountPage() {
         </div>
 
         {/* Recommendations — reuses the same ProductGrid as the shop/homepage */}
-        <div className="mt-16">
-          <h2 className="mb-6 text-sm font-bold">
+        <div className="pb-[52px]">
+          <h2 className="mb-4 text-[18px] font-bold">
             Lara Thinks You'd Love These Too
           </h2>
-          <ProductGrid products={products} />
+          <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
+            {[...products, products[0]].map((product, index) => (
+              <article key={`${product.id}-${index}`}>
+                <div className="relative aspect-[3/4] bg-white">
+                  <img src={product.image} alt={product.name} className="h-full w-full object-contain" />
+                  <Heart className="absolute bottom-2 right-1.5 h-3 w-3" strokeWidth={1} />
+                </div>
+                <p className="mt-2 text-[8px] font-medium uppercase leading-none">{product.name}</p>
+                <p className="mt-1 text-[8px] leading-none">70,000</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 

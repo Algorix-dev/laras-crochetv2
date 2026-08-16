@@ -25,7 +25,7 @@ export default function AccountSidebar({ active }) {
 
   return (
     <>
-      <nav className="flex flex-row gap-4 overflow-x-auto text-xs uppercase tracking-wide md:flex-col md:gap-3">
+      <nav className="flex flex-row gap-4 overflow-x-auto text-[9px] uppercase tracking-wide md:flex-col md:gap-2">
         {LINKS.map((link) => (
           <Link
             key={link.key}
