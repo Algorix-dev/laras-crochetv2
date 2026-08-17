@@ -16,6 +16,7 @@ import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import CurrencySelector from "./CurrencySelector";
 import SearchOverlay from "./SearchOverlay";
+import laraCrochetLogo from "../assets/lara-crochet-logo.png";
 
 const LINKS = [
   { label: "Shop", to: "/shop" },
@@ -74,23 +75,28 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--cream)]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8">
+      <header className="sticky top-0 z-50 border-b border-[#E5E5E5] bg-[#FAFAFA]">
+        <div className="flex h-[66px] items-center justify-between px-5 md:px-8 lg:px-[15.83%]">
           {/* Brand logo */}
-          <Link to="/" className="font-display text-xl italic">
-            Lara's Crochet
+          <Link to="/">
+            <img
+              src={laraCrochetLogo}
+              alt="Lara's Crochet"
+              className="h-9 w-auto"
+            />
           </Link>
 
           {/* Desktop nav links */}
-          <nav className="hidden gap-8 text-sm uppercase md:flex">
+          <nav className="hidden gap-5 text-sm uppercase md:flex">
             {LINKS.map((l) => (
               <Link
                 key={l.label}
                 to={l.to}
                 className={
-                  isActive(l.to)
+                  "flex h-10 items-center rounded-[10px] px-[10px] hover:bg-black/5 " +
+                  (isActive(l.to)
                     ? "font-bold text-[var(--ink)]"
-                    : "text-[var(--muted)] hover:text-[var(--ink)]"
+                    : "text-[var(--muted)] hover:text-[var(--ink)]")
                 }
               >
                 {l.label}

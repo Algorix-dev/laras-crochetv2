@@ -1,6 +1,6 @@
-import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
-import { currencies, useCurrency } from '../context/CurrencyContext';
+import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { currencies, useCurrency } from "../context/CurrencyContext";
 
 /**
  * Flag — Renders an inline SVG flag for a given currency code.
@@ -13,7 +13,7 @@ import { currencies, useCurrency } from '../context/CurrencyContext';
  * @param {{ code: string }} props
  */
 function Flag({ code }) {
-  if (code === 'NGN') {
+  if (code === "NGN") {
     // TIP: Nigerian flag — green-white-green vertical stripes
     return (
       <svg viewBox="0 0 30 20" className="h-3.5 w-5" aria-hidden="true">
@@ -23,7 +23,7 @@ function Flag({ code }) {
     );
   }
 
-  if (code === 'USD') {
+  if (code === "USD") {
     // TIP: US flag — red background with white stripes and blue canton
     return (
       <svg viewBox="0 0 30 20" className="h-3.5 w-5" aria-hidden="true">
@@ -42,26 +42,10 @@ function Flag({ code }) {
   return (
     <svg viewBox="0 0 30 20" className="h-3.5 w-5" aria-hidden="true">
       <path fill="#012169" d="M0 0h30v20H0z" />
-      <path
-        stroke="#fff"
-        strokeWidth="4"
-        d="M0 0l30 20M30 0L0 20"
-      />
-      <path
-        stroke="#c8102e"
-        strokeWidth="1.5"
-        d="M0 0l30 20M30 0L0 20"
-      />
-      <path
-        stroke="#fff"
-        strokeWidth="6"
-        d="M15 0v20M0 10h30"
-      />
-      <path
-        stroke="#c8102e"
-        strokeWidth="3"
-        d="M15 0v20M0 10h30"
-      />
+      <path stroke="#fff" strokeWidth="4" d="M0 0l30 20M30 0L0 20" />
+      <path stroke="#c8102e" strokeWidth="1.5" d="M0 0l30 20M30 0L0 20" />
+      <path stroke="#fff" strokeWidth="6" d="M15 0v20M0 10h30" />
+      <path stroke="#c8102e" strokeWidth="3" d="M15 0v20M0 10h30" />
     </svg>
   );
 }
@@ -81,11 +65,11 @@ export default function CurrencySelector() {
         aria-label="Select currency"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-full border border-[var(--line)] py-1 pl-1 pr-2 text-xs font-medium"
+        className="flex h-11 w-32 items-center justify-center gap-2 rounded-[10px] bg-[#E5E5E5] px-[10px] text-base font-semibold"
       >
         <Flag code={currency} />
         {currency}
-        <ChevronDown size={14} />
+        <ChevronDown size={24} />
       </button>
 
       {/* TIP: Dropdown panel — lists all available currencies; clicking one sets it and closes the panel */}
