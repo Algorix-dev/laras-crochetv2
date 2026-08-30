@@ -48,7 +48,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="pt-14 pb-0 px-76.25">
+    <footer className="pt-14 pb-0 px-50">
       {/* TIP: the Figma export shows the link columns naturally-sized
           and grouped on the left, with the newsletter column pushed
           to the far right by justify-between — NOT an even grid of
