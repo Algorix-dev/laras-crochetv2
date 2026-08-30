@@ -1,4 +1,4 @@
-import { ChevronDown, Search, X } from "lucide-react";
+import { Check, ChevronDown, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { countries } from "../data/countries";
 import { useCurrency } from "../context/CurrencyContext";
@@ -61,7 +61,7 @@ export default function CountrySelectorModal() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--maroon-dark)]/70 px-5"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-[#372A2B]/95 px-5"
           onClick={() => setOpen(false)}
         >
           <div
@@ -102,10 +102,11 @@ export default function CountrySelectorModal() {
                   onClick={() => handleSelect(c)}
                   className="flex w-full items-center justify-between py-2.5 text-left text-sm hover:bg-[var(--cream)]"
                 >
-                  <span>
+                  <span className="flex items-center gap-2">
+                    <span aria-hidden="true">{c.flag}</span>
                     {c.name} <span className="text-[var(--muted)]">({c.code})</span>
                   </span>
-                  {c.code === selected.code && <Check size={15} />}
+                  {c.code === selected.code && <Check size={14} strokeWidth={2} />}
                 </button>
               ))}
               {filtered.length === 0 && (
@@ -116,13 +117,5 @@ export default function CountrySelectorModal() {
         </div>
       )}
     </div>
-  );
-}
-
-function Check(props) {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <path d="M4 10l4 4 8-8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }

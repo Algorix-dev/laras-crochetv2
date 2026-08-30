@@ -15,7 +15,7 @@ export default function LogoutModal({ open, onCancel, onConfirm }) {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--maroon-dark)]/70 px-5"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-[#372A2B]/95 px-5"
       onClick={onCancel} // clicking the dark backdrop cancels, matching typical modal behavior
     >
       <div

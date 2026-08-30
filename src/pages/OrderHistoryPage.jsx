@@ -7,6 +7,7 @@
 */
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getProducts, normalizeProduct } from '../api';
 import ProductGrid from '../components/ProductGrid';
@@ -73,15 +74,30 @@ export default function OrderHistoryPage() {
               </div>
               {/* TIP: the Figma shows this search field even in the
                   empty state, not just once orders exist. */}
-              <input
-                type="search"
-                placeholder="Search all orders"
-                className="border border-[var(--line)] px-3 py-2 text-xs outline-none focus:border-[var(--ink)]"
-              />
+              <label className="relative">
+                <span className="sr-only">Search all orders</span>
+                <input
+                  type="search"
+                  placeholder="Search all orders"
+                  className="border border-[var(--line)] py-2 pl-3 pr-9 text-xs outline-none focus:border-[var(--ink)]"
+                />
+                <Search size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+              </label>
             </div>
 
             {loading ? (
-              <p className="text-sm text-[var(--muted)]">Loading...</p>
+              <div className="space-y-4" aria-busy="true" aria-label="Loading orders">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 py-4 animate-pulse">
+                    <div className="space-y-2">
+                      <div className="h-3.5 w-28 rounded bg-[var(--line)]" />
+                      <div className="h-3 w-40 rounded bg-[var(--line)]" />
+                    </div>
+                    <div className="h-3 w-16 rounded bg-[var(--line)]" />
+                    <div className="h-3.5 w-20 rounded bg-[var(--line)]" />
+                  </div>
+                ))}
+              </div>
             ) : orders.length === 0 ? (
               <p className="text-sm text-[var(--muted)]">
                 You haven't placed any orders yet.{' '}
@@ -116,7 +132,7 @@ export default function OrderHistoryPage() {
         )}
       </section>
 
-      <Footer showNewsletter />
+      <Footer />
     </>
   );
 }

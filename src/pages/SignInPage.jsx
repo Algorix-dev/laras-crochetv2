@@ -58,6 +58,7 @@ export default function SignInPage() {
   async function continueWithEmail() {
     if (emailState !== 'valid') return;
     setError('');
+    setChecking(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/customer/request-code`, {
         method: 'POST',
@@ -72,6 +73,8 @@ export default function SignInPage() {
       }, 1300);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setChecking(false);
     }
   }
 
@@ -95,7 +98,7 @@ export default function SignInPage() {
       if (!res.ok) throw new Error(data.error || 'Invalid code — try again.');
 
       login(data.user, data.token);
-      const redirectTo = new URLSearchParams(location.search).get('redirect') || '/account';
+      const redirectTo = new URLSearchParams(location.search).get('redirect') || '/';
       navigate(redirectTo);
     } catch (err) {
       setError(err.message);

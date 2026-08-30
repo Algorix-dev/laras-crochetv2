@@ -33,7 +33,7 @@ const columns = [
   },
 ];
 
-export default function Footer({ showNewsletter = false }) {
+export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -49,53 +49,53 @@ export default function Footer({ showNewsletter = false }) {
 
   return (
     <footer className="pt-14 pb-0">
-      {/* Link columns */}
-      <div
-        className={`mx-auto mb-16 grid max-w-7xl gap-8 px-5 md:px-8 grid-cols-2 ${
-          showNewsletter ? "sm:grid-cols-4" : "sm:grid-cols-3"
-        }`}
-      >
-        {columns.map((col) => (
-          <div key={col.title}>
-            <h3 className="mb-3 text-xl font-bold uppercase tracking-[-0.04em]">
-              {col.title}
-            </h3>
-            <ul className="space-y-2 text-sm text-[var(--muted)]">
-              {col.links.map((link) => (
-                <li key={link.label}>
-                  {link.href ? (
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="hover:text-[var(--maroon)]"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link to={link.to} className="hover:text-[var(--maroon)]">
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+      {/* TIP: the Figma export shows the link columns naturally-sized
+          and grouped on the left, with the newsletter column pushed
+          to the far right by justify-between — NOT an even grid of
+          equal-width columns. Newsletter also appears on every page's
+          footer in the export (Shop, Addresses, etc.), not just
+          account pages, so it's no longer conditional. */}
+      <div className="mx-auto mb-16 flex max-w-7xl flex-wrap justify-between gap-x-16 gap-y-10 px-5 md:px-8">
+        <div className="flex flex-wrap gap-x-16 gap-y-8">
+          {columns.map((col) => (
+            <div key={col.title}>
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-tight">
+                {col.title}
+              </h3>
+              <ul className="space-y-2 text-sm text-[var(--muted)]">
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    {link.href ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-[var(--maroon)]"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link to={link.to} className="hover:text-[var(--maroon)]">
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
 
-        {/* TIP: this column is conditional — only pages that actually
-            asked for it (Account, Order History, Addresses) pass
-            showNewsletter, so the homepage/shop footer stays as-is. */}
-        {showNewsletter && (
-          <div className="col-span-2 sm:col-span-1">
-            <h3 className="mb-3 text-xl font-bold uppercase tracking-[-0.04em]">
-              Subscribe to Our Newsletter
-            </h3>
-            {subscribed ? (
-              <p className="text-sm text-[var(--muted)]">
-                You're subscribed — thank you!
-              </p>
-            ) : (
+        <div className="w-full max-w-xs sm:w-auto">
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-tight">
+            Subscribe to Our Newsletter
+          </h3>
+          {subscribed ? (
+            <p className="text-sm text-[var(--muted)]">
+              You're subscribed — thank you!
+            </p>
+          ) : (
+            <>
               <form onSubmit={handleSubscribe} className="flex">
                 <input
                   type="email"
@@ -106,14 +106,15 @@ export default function Footer({ showNewsletter = false }) {
                 />
                 <button
                   type="submit"
-                  className="shrink-0 bg-[var(--ink)] px-4 text-xs uppercase text-white hover:bg-[var(--maroon)]"
+                  className="shrink-0 bg-[var(--maroon)] px-4 text-xs font-bold uppercase text-white hover:bg-[var(--maroon-dark)]"
                 >
                   Subscribe
                 </button>
               </form>
-            )}
-          </div>
-        )}
+              <p className="mt-1.5 text-xs text-[var(--muted)]">Enjoy latest exclusives.</p>
+            </>
+          )}
+        </div>
       </div>
 
       {/* TIP — licensing: "Genty Demo" (the font you sent) is

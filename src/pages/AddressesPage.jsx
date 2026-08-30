@@ -145,7 +145,12 @@ export default function AddressesPage() {
             </div>
 
             {loading ? (
-              <p className="text-sm text-[var(--muted)]">Loading...</p>
+              <div className="max-w-sm animate-pulse space-y-3 border border-[var(--line)] p-4" aria-busy="true" aria-label="Loading addresses">
+                <div className="h-3.5 w-32 rounded bg-[var(--line)]" />
+                <div className="h-3 w-full rounded bg-[var(--line)]" />
+                <div className="h-3 w-3/4 rounded bg-[var(--line)]" />
+                <div className="h-3 w-1/2 rounded bg-[var(--line)]" />
+              </div>
             ) : (
               <>
                 {/* Saved address cards */}
@@ -316,7 +321,7 @@ export default function AddressesPage() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--maroon-dark)]/70 px-5"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-[#372A2B]/95 px-5"
           onClick={() => setConfirmRemoveId(null)}
         >
           <div
@@ -354,7 +359,7 @@ export default function AddressesPage() {
         </div>
       )}
 
-      <Footer showNewsletter />
+      <Footer />
     </>
   );
 }

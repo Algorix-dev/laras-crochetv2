@@ -145,7 +145,7 @@ export default function AccountPage() {
         )}
       </section>
 
-      <Footer showNewsletter />
+      <Footer />
     </>
   );
 }

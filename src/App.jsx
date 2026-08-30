@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import CategoryIntro from "./components/CategoryIntro";
@@ -24,6 +24,17 @@ import AddressesPage from "./pages/AddressesPage";
 import WishlistPage from "./pages/WishlistPage";
 import ComingSoon from "./pages/ComingSoon";
 
+// TIP: pulled verbatim from the Figma landing page export — real
+// testimonials Lara/Teniya wrote, not placeholder text.
+const TESTIMONIALS = [
+  { quote: "I've never had a piece fit this well straight out of the box — literally made to my measurements. No alterations needed.", name: 'Teniola Aladese' },
+  { quote: "You can tell this isn't machine-made. The detail in the stitching is unreal.", name: 'Tolu Coker' },
+  { quote: 'The bikini set held up through an entire beach trip — no stretching, no losing shape. Genuinely impressed.', name: 'Halima Finny' },
+  { quote: 'The Reina dress is a whole moment. I get stopped every single time I wear it.', name: 'Chidinma K.' },
+  { quote: 'Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.', name: 'Precious Ehizoge' },
+  { quote: 'Customer service walked me through sizing so patiently. Made ordering online feel less scary.', name: 'Ejiro Okezie' },
+];
+
 function ScrollToTop() {
   const { pathname, search } = useLocation();
   useEffect(() => {
@@ -34,10 +45,34 @@ function ScrollToTop() {
 
 // TIP: sign-in has no navbar per its own spec — a standalone,
 // full-page experience. Every other route gets the normal site nav.
+// "/" is special: it shows SignInPage (no navbar) when signed out,
+// but the real HomePage (with navbar) once signed in — so the check
+// here has to know the auth state, not just the pathname.
 function ConditionalNavbar() {
   const { pathname } = useLocation();
-  if (pathname === "/" || pathname === "/signin") return null;
+  const { isSignedIn } = useAuth();
+  if (pathname === "/signin" || (pathname === "/" && !isSignedIn)) return null;
   return <Navbar />;
+}
+
+// TIP: "/" is gated on auth — signed-out visitors are sent to the
+// real sign-in flow (not just shown a copy of it inline, so the
+// URL bar and back button behave correctly); signed-in visitors see
+// the actual homepage. This is also why clicking the logo (which
+// links to "/") now correctly returns signed-in users to the
+// homepage instead of dumping them back on sign-in.
+function HomeGate() {
+  const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      navigate("/signin", { replace: true });
+    }
+  }, [isSignedIn, navigate]);
+
+  if (!isSignedIn) return null;
+  return <HomePage />;
 }
 
 /* Home page is its own component so the route stays clean */
@@ -59,6 +94,43 @@ function HomePage() {
   return (
     <>
       <Hero product={heroProduct} />
+
+      {/* Brand story — verbatim from the Figma landing page export */}
+      <section className="max-w-2xl mx-auto px-5 py-16 md:py-20 text-center">
+        <p className="text-sm md:text-base leading-relaxed text-[var(--ink)] mb-6">
+          Welcome to Lara's Crochet! Here, every piece here starts as a single strand of
+          yarn and a pair of hands, no factories, no shortcuts. Made-to-order, one piece at
+          a time, out of Lagos, Nigeria.
+        </p>
+        <p className="text-sm md:text-base font-semibold text-[var(--ink)] mb-6">
+          We don't keep a stockroom.
+        </p>
+        <p className="text-sm md:text-base leading-relaxed text-[var(--ink)] mb-6">
+          When you order, your piece is made for you — your size, your color, your fit. It
+          takes time, because handmade always does, but it means what arrives at your door
+          was never sitting on a shelf waiting for someone else.
+        </p>
+        <p className="text-sm text-[var(--muted)]">
+          This isn't fast fashion. It's handmade, made with love.
+        </p>
+      </section>
+
+      {/* Testimonials — real quotes from the Figma export, not placeholder text */}
+      <section className="max-w-6xl mx-auto px-5 pb-16 md:pb-24">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+          {TESTIMONIALS.map((t) => (
+            <div key={t.name} className="border border-[var(--line)] p-5 h-full">
+              <p className="text-sm text-[var(--ink)] mb-4 leading-relaxed">"{t.quote}"</p>
+              <p className="text-xs font-bold text-[var(--ink)] flex items-center gap-1">
+                {t.name}
+                <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-white text-[9px]">✓</span>
+              </p>
+              <p className="text-[11px] text-[var(--muted)]">Verified Customer</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <CategoryIntro />
       {loading ? (
         <p className="px-5 py-16 text-center text-sm text-[var(--muted)]">
@@ -68,7 +140,7 @@ function HomePage() {
         <ProductGrid products={liveProducts} />
       )}
       <CustomOrderBanner />
-      <Footer />
+      <Footer showNewsletter />
     </>
   );
 }
@@ -80,7 +152,7 @@ export default function App() {
       <ConditionalNavbar />
       <Routes>
         {/* ===== ROUTES VISIBLE TO CLIENT ===== */}
-        <Route path="/" element={<SignInPage />} />
+        <Route path="/" element={<HomeGate />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/signin" element={<SignInPage />} />

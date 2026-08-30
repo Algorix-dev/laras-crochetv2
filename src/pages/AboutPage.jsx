@@ -28,18 +28,27 @@ import Footer from "../components/Footer";
 export default function AboutPage() {
   return (
     <>
-      {/* TIP: Main grid — single column on mobile, two columns on md+. */}
-      <main className="mx-auto grid max-w-7xl gap-10 px-5 py-10 md:grid-cols-2 md:gap-20 md:px-8 md:py-16 lg:gap-28">
-        {/* TIP: Left column — the crosswalk/sunglasses photo, full-bleed
-            within its grid column. object-cover fills the frame nicely. */}
+      {/* TIP: Main grid — single column on mobile, two columns on md+.
+          No max-w/padding/mx-auto here on purpose: the left photo needs
+          to touch the true top-left viewport edge (full-bleed), not just
+          the edge of a centered max-w-7xl container — on any screen wider
+          than 1280px, a centered container would leave a visible gap the
+          image shouldn't have. Padding for readability is applied only
+          to the text column below, not to this outer grid. */}
+      <main className="grid gap-10 md:grid-cols-2 md:gap-20 lg:gap-28">
+        {/* TIP: Left column — the crosswalk/sunglasses photo, genuinely
+            full-bleed: flush with the top and left edges of the browser
+            viewport, filling its full column height. */}
         <img
           src={laraSunglasses}
           alt="Lara — founder of Lara's Crochet"
-          className="aspect-[3/4] w-full object-cover"
+          className="aspect-[3/4] w-full object-cover md:aspect-auto md:h-full"
         />
 
-        {/* TIP: Right column — heading, rotated label, lifestyle image, story, and links. */}
-        <section className="flex flex-col justify-center">
+        {/* TIP: Right column — heading, rotated label, lifestyle image, story, and links.
+            Padding lives here instead of on the outer grid, so this column
+            stays readable while the image column stays edge-to-edge. */}
+        <section className="flex flex-col justify-center px-5 py-10 md:px-8 md:py-16 lg:pr-16">
           {/* TIP: Page heading — real logo lockup image, not live text.
               Width capped and height auto so it scales proportionally;
               the source image is 484x43, so this stays reasonably crisp
@@ -103,7 +112,7 @@ export default function AboutPage() {
         </section>
       </main>
 
-      <Footer showNewsletter />
+      <Footer />
     </>
   );
 }
