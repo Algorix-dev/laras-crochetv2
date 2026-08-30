@@ -55,7 +55,7 @@ export default function Footer() {
           equal-width columns. Newsletter also appears on every page's
           footer in the export (Shop, Addresses, etc.), not just
           account pages, so it's no longer conditional. */}
-      <div className="mx-auto mb-16 flex max-w-7xl flex-wrap justify-between gap-x-16 gap-y-10 px-5 md:px-8">
+      <div className="mx-auto mb-16 flex max-w-7xl flex-wrap justify-between gap-x-16 gap-y-10 px-76.25 md:px-8">
         <div className="flex flex-wrap gap-x-16 gap-y-8">
           {columns.map((col) => (
             <div key={col.title}>
