@@ -33,16 +33,19 @@ export default function ContactPage() {
   const [searchParams] = useSearchParams();
   const flowParam = searchParams.get('flow') || '';
 
-  const [step, setStep] = useState(flowParam ? 2 : 1);
+  const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
   const [flow, setFlow] = useState(flowParam);
   const [submitting, setSubmitting] = useState(false);
 
   // TIP: We sync search query updates (like navigating from 'Contact' to 'Custom Orders')
   // directly into the wizard's state so the page transitions instantly.
+  // Both entry points now start at step 1 — plain /contact shows the
+  // chooser there, while ?flow=custom shows the garment-type step there
+  // instead (see the two step===1 blocks below, split by `flow`).
   useEffect(() => {
     setFlow(flowParam);
-    setStep(flowParam ? 2 : 1);
+    setStep(1);
   }, [flowParam]);
 
   // Form inputs state
@@ -56,6 +59,7 @@ export default function ContactPage() {
 
     // Custom order fields — matches the Figma spec's 6 steps:
     // 2) size  3) color mix  4) photo  5) anything else  6) email
+    garmentType: '', // 'Dress' | 'Bikini' | 'Shirt' | 'Two piece' | 'Skirt' | 'Other'
     sizeChoice: '', // 'Small' | 'Large' | 'Extra Large' | 'XXL' | 'Custom sizing'
     bust: '',
     underbust: '',
@@ -95,6 +99,7 @@ export default function ContactPage() {
       orderNumber: '',
       enquiryDetails: '',
       enquiryEmail: '',
+      garmentType: '',
       sizeChoice: '',
       bust: '',
       underbust: '',
@@ -206,7 +211,7 @@ export default function ContactPage() {
     <>
       <main className="min-h-[calc(100vh-64px)] w-full flex items-center justify-center py-12 px-5 bg-[var(--cream)]">
         {/* Card Container with custom glow shadow and border matching Lara's colors */}
-        <div className="relative max-w-lg w-full bg-white rounded-3xl p-6 sm:p-8 md:p-12 border border-[#f3ebed] shadow-[0_15px_50px_rgba(74,14,30,0.05)] overflow-hidden">
+        <div className="relative max-w-lg w-full bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040] overflow-hidden">
           
           {/* Top Header Row containing Back button and Step indicator */}
           {step < successStep && (
@@ -249,9 +254,9 @@ export default function ContactPage() {
               >
                 
                 {/* ========================================================
-                    SHARED STEP 1: Flow selection (Enquiry vs Custom Order)
+                    SHARED STEP 1 (plain /contact only): Flow selection
                     ======================================================== */}
-                {step === 1 && (
+                {step === 1 && flow !== 'custom' && (
                   <div className="text-center">
                     <h1 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8 font-medium">
                       How would you like Lara to help you?
@@ -259,16 +264,50 @@ export default function ContactPage() {
                     <div className="space-y-4 max-w-sm mx-auto">
                       <button
                         onClick={() => selectFlow('custom')}
-                        className="w-full border border-[var(--line)] rounded-xl py-4 px-6 text-sm font-semibold tracking-wide bg-white text-[var(--ink)] transition-all hover:border-[var(--ink)] focus-visible:border-[var(--ink)] cursor-pointer"
+                        className="w-full border border-[var(--line)] py-4 px-6 text-sm font-semibold tracking-wide bg-white text-[var(--ink)] transition-all hover:border-[var(--ink)] focus-visible:border-[var(--ink)] cursor-pointer"
                       >
                         Make a custom order
                       </button>
                       <button
                         onClick={() => selectFlow('enquiry')}
-                        className="w-full border border-[var(--ink)] rounded-xl py-4 px-6 text-sm font-semibold tracking-wide bg-[var(--ink)] text-white transition-all hover:bg-[var(--maroon)] hover:border-[var(--maroon)] cursor-pointer"
+                        className="w-full border border-[var(--ink)] py-4 px-6 text-sm font-semibold tracking-wide bg-[var(--ink)] text-white transition-all hover:bg-[var(--maroon)] hover:border-[var(--maroon)] cursor-pointer"
                       >
                         Make an enquiry
                       </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* ========================================================
+                    STEP 1 (Custom Orders entry point only): garment type.
+                    Only reachable via the dedicated "Custom Orders" nav
+                    link (?flow=custom preset from the URL) — landing on
+                    plain /contact and choosing "Make a custom order"
+                    skips this and starts custom-flow content at step 2,
+                    since the chooser above already established intent.
+                    ======================================================== */}
+                {step === 1 && flow === 'custom' && (
+                  <div>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-medium">
+                      What would you like Lara to make for you?
+                    </h2>
+                    <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
+                      {['Dress', 'Bikini', 'Shirt', 'Two piece', 'Skirt', 'Other'].map((garment) => (
+                        <button
+                          key={garment}
+                          onClick={() => {
+                            updateField('garmentType', garment);
+                            nextStep();
+                          }}
+                          className={`border py-3 px-4 text-xs font-medium transition-all text-center cursor-pointer ${
+                            formData.garmentType === garment
+                              ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
+                              : 'border-[var(--line)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)]'
+                          }`}
+                        >
+                          {garment}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -298,7 +337,7 @@ export default function ContactPage() {
                               <button
                                 key={topic}
                                 onClick={() => handlePillSelect('enquiryType', topic)}
-                                className={`border rounded-xl py-3 px-4 text-xs font-medium transition-all text-center cursor-pointer ${
+                                className={`border py-3 px-4 text-xs font-medium transition-all text-center cursor-pointer ${
                                   isSelected
                                     ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
                                     : 'border-[var(--line)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)]'
@@ -321,7 +360,7 @@ export default function ContactPage() {
                         <div className="flex gap-4 mb-6">
                           <button
                             onClick={() => updateField('hasOrderNumber', 'yes')}
-                            className={`flex-1 border rounded-xl py-3 text-xs font-semibold uppercase tracking-wide transition-colors cursor-pointer ${
+                            className={`flex-1 border py-3 text-xs font-semibold uppercase tracking-wide transition-colors cursor-pointer ${
                               formData.hasOrderNumber === 'yes'
                                 ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
                                 : 'border-[var(--line)] text-[var(--ink)] hover:border-[var(--ink)]'
@@ -335,7 +374,7 @@ export default function ContactPage() {
                               updateField('orderNumber', '');
                               nextStep();
                             }}
-                            className={`flex-1 border rounded-xl py-3 text-xs font-semibold uppercase tracking-wide transition-colors cursor-pointer ${
+                            className={`flex-1 border py-3 text-xs font-semibold uppercase tracking-wide transition-colors cursor-pointer ${
                               formData.hasOrderNumber === 'no'
                                 ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
                                 : 'border-[var(--line)] text-[var(--ink)] hover:border-[var(--ink)]'
@@ -360,14 +399,14 @@ export default function ContactPage() {
                                 value={formData.orderNumber}
                                 onChange={(e) => updateField('orderNumber', e.target.value)}
                                 placeholder="Enter order number (e.g. #1024)"
-                                className="w-full border border-[var(--line)] rounded-xl px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)]"
+                                className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)]"
                                 required
                               />
                             </div>
                             <button
                               onClick={nextStep}
                               disabled={!formData.orderNumber.trim()}
-                              className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 rounded-xl transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
                               Next
                             </button>
@@ -394,14 +433,14 @@ export default function ContactPage() {
                               value={formData.enquiryDetails}
                               onChange={(e) => updateField('enquiryDetails', e.target.value)}
                               placeholder="What's on your mind?"
-                              className="w-full border border-[var(--line)] rounded-2xl px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
+                              className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                               required
                             />
                           </div>
                           <button
                             onClick={nextStep}
                             disabled={!formData.enquiryDetails.trim()}
-                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 rounded-xl transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                           >
                             Next
                           </button>
@@ -424,7 +463,7 @@ export default function ContactPage() {
                               value={formData.enquiryEmail}
                               onChange={(e) => updateField('enquiryEmail', e.target.value)}
                               placeholder="Email address"
-                              className={`w-full border rounded-xl pl-4 pr-11 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] ${
+                              className={`w-full border pl-4 pr-11 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] ${
                                 errors.enquiryEmail ? 'border-red-500' : 'border-[var(--line)]'
                               }`}
                               required
@@ -442,7 +481,7 @@ export default function ContactPage() {
                           <button
                             type="submit"
                             disabled={submitting}
-                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 rounded-xl transition-colors hover:bg-[var(--maroon)] disabled:opacity-75 flex items-center justify-center gap-2 cursor-pointer"
+                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-75 flex items-center justify-center gap-2 cursor-pointer"
                           >
                             {submitting ? 'Sending...' : 'Send Enquiry'}
                           </button>
@@ -465,7 +504,7 @@ export default function ContactPage() {
                         <div className="flex flex-col gap-3">
                           <Link
                             to="/"
-                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 rounded-xl transition-colors hover:bg-[var(--maroon)] text-center cursor-pointer"
+                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors hover:bg-[var(--maroon)] text-center cursor-pointer"
                           >
                             Back to Shop
                           </Link>
@@ -499,7 +538,7 @@ export default function ContactPage() {
                               <button
                                 key={size}
                                 onClick={() => updateField('sizeChoice', size)}
-                                className={`border rounded-xl py-3 px-4 text-xs font-medium transition-all text-center cursor-pointer ${
+                                className={`border py-3 px-4 text-xs font-medium transition-all text-center cursor-pointer ${
                                   isSelected
                                     ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
                                     : 'border-[var(--line)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)]'
@@ -535,14 +574,14 @@ export default function ContactPage() {
                                   inputMode="decimal"
                                   value={formData[field]}
                                   onChange={(e) => updateField(field, e.target.value)}
-                                  className="w-24 border border-[var(--line)] rounded-lg px-3 py-2 text-sm text-center outline-none focus:border-[var(--ink)]"
+                                  className="w-24 border border-[var(--line)] px-3 py-2 text-sm text-center outline-none focus:border-[var(--ink)]"
                                 />
                               </div>
                             ))}
                             <button
                               onClick={nextStep}
                               disabled={!formData.bust.trim() || !formData.waist.trim() || !formData.hip.trim()}
-                              className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 rounded-xl transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2"
+                              className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2"
                             >
                               Next
                             </button>
@@ -553,7 +592,7 @@ export default function ContactPage() {
                         {formData.sizeChoice && formData.sizeChoice !== 'Custom sizing' && (
                           <button
                             onClick={nextStep}
-                            className="w-full max-w-md mx-auto block bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 rounded-xl transition-colors hover:bg-[var(--maroon)] cursor-pointer mt-6"
+                            className="w-full max-w-md mx-auto block bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 transition-colors hover:bg-[var(--maroon)] cursor-pointer mt-6"
                           >
                             Next
                           </button>
@@ -593,14 +632,14 @@ export default function ContactPage() {
                           value={formData.colorNote}
                           onChange={(e) => updateField('colorNote', e.target.value)}
                           placeholder="Magenta and turquoise etc..."
-                          className="w-full border border-[var(--line)] rounded-2xl px-4 py-3 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
+                          className="w-full border border-[var(--line)] px-4 py-3 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                         />
                         <p className="text-xs text-[var(--muted)] mt-1.5">Write the specific colors you want.</p>
 
                         <button
                           onClick={nextStep}
                           disabled={!formData.colorSwatch && !formData.colorNote.trim()}
-                          className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 rounded-xl transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-5"
+                          className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-5"
                         >
                           Next
                         </button>
@@ -616,7 +655,7 @@ export default function ContactPage() {
 
                         <label
                           htmlFor="photo-upload"
-                          className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--line)] rounded-2xl py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
+                          className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--line)] py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
                         >
                           <UploadCloud size={22} className="text-[var(--muted)]" />
                           <span className="text-sm text-[var(--ink)]">
@@ -639,7 +678,7 @@ export default function ContactPage() {
                         {formData.photos.length > 0 && (
                           <div className="flex gap-2 mt-4 flex-wrap justify-center">
                             {formData.photos.map((file, i) => (
-                              <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[var(--line)]">
+                              <div key={i} className="relative w-16 h-16 overflow-hidden border border-[var(--line)]">
                                 <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
                               </div>
                             ))}
@@ -648,7 +687,7 @@ export default function ContactPage() {
 
                         <button
                           onClick={nextStep}
-                          className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 rounded-xl transition-colors hover:bg-[var(--maroon)] cursor-pointer mt-6"
+                          className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 transition-colors hover:bg-[var(--maroon)] cursor-pointer mt-6"
                         >
                           Next
                         </button>
@@ -673,12 +712,12 @@ export default function ContactPage() {
                               value={formData.customDetails}
                               onChange={(e) => updateField('customDetails', e.target.value)}
                               placeholder="And for the lady, perhaps a matching bag 😉?"
-                              className="w-full border border-[var(--line)] rounded-2xl px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
+                              className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                             />
                           </div>
                           <button
                             onClick={nextStep}
-                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 rounded-xl transition-colors hover:bg-[var(--maroon)] cursor-pointer"
+                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors hover:bg-[var(--maroon)] cursor-pointer"
                           >
                             {formData.customDetails.trim() ? 'Next' : 'No'}
                           </button>
@@ -701,7 +740,7 @@ export default function ContactPage() {
                               value={formData.customEmail}
                               onChange={(e) => updateField('customEmail', e.target.value)}
                               placeholder="Email address"
-                              className={`w-full border rounded-xl pl-4 pr-11 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] ${
+                              className={`w-full border pl-4 pr-11 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] ${
                                 errors.customEmail ? 'border-red-500' : 'border-[var(--line)]'
                               }`}
                               required
@@ -719,7 +758,7 @@ export default function ContactPage() {
                           <button
                             type="submit"
                             disabled={submitting}
-                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 rounded-xl transition-colors hover:bg-[var(--maroon)] disabled:opacity-75 flex items-center justify-center gap-2 cursor-pointer"
+                            className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-75 flex items-center justify-center gap-2 cursor-pointer"
                           >
                             {submitting ? 'Submitting...' : 'Send Custom Request'}
                           </button>

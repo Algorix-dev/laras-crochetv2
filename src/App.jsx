@@ -74,6 +74,27 @@ function HomeGate() {
   return <HomePage />;
 }
 
+// TIP: reusable guard for any route that shouldn't be reachable by a
+// signed-out visitor — most importantly Checkout. A real e-commerce
+// flow doesn't let a guest walk straight through to payment; they
+// have to sign in first, same as clicking "My Bag" → "Checkout" would
+// naturally prompt. redirect=<path> is passed through so SignInPage
+// sends them back to where they were trying to go, not just "/".
+function RequireAuth({ children }) {
+  const { isSignedIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      navigate(`/signin?redirect=${encodeURIComponent(location.pathname)}`, { replace: true });
+    }
+  }, [isSignedIn, navigate, location.pathname]);
+
+  if (!isSignedIn) return null;
+  return children;
+}
+
 /* Home page is its own component so the route stays clean */
 function HomePage() {
   const [liveProducts, setLiveProducts] = useState(products); // instant first paint, then swapped for live data
@@ -182,7 +203,7 @@ export default function App() {
             component — e.g. <Route path="/shop" element={<ShopPage />} /> */}
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
         <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
         <Route path="/account/orders" element={<OrderHistoryPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
