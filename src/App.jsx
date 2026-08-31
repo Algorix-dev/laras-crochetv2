@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import CategoryIntro from "./components/CategoryIntro";
 import ProductGrid from "./components/ProductGrid";
 import CustomOrderBanner from "./components/CustomOrderBanner";
 import Footer from "./components/Footer";
@@ -116,7 +115,7 @@ function HomePage() {
       </section>
 
       {/* Testimonials — real quotes from the Figma export, not placeholder text */}
-      <section className="max-w-6xl mx-auto px-5 pb-16 md:pb-24">
+      <section className="max-w-6xl mx-auto px-5 pb-10 md:pb-14">
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {TESTIMONIALS.map((t) => (
             <div key={t.name} className="border border-[var(--line)] p-5 h-full">
@@ -129,18 +128,37 @@ function HomePage() {
             </div>
           ))}
         </div>
+        <div className="text-center mt-10">
+          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+            Go to Shop
+          </Link>
+        </div>
       </section>
 
-      <CategoryIntro />
-      {loading ? (
-        <p className="px-5 py-16 text-center text-sm text-[var(--muted)]">
-          Loading products...
-        </p>
-      ) : (
-        <ProductGrid products={liveProducts} />
-      )}
+      {/* Shop Our Pieces — a curated 4-item taste of the catalog, not the full grid */}
+      <section className="max-w-6xl mx-auto px-5 py-10 md:py-16">
+        <div className="flex items-end justify-between mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
+            Shop Our Pieces
+          </h2>
+          <Link to="/shop" className="text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
+            Go to shop
+          </Link>
+        </div>
+        {loading ? (
+          <p className="text-sm text-[var(--muted)]">Loading products...</p>
+        ) : (
+          <ProductGrid products={liveProducts.slice(0, 4)} />
+        )}
+        <div className="text-center mt-10">
+          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+            Go to Shop
+          </Link>
+        </div>
+      </section>
+
       <CustomOrderBanner />
-      <Footer showNewsletter />
+      <Footer />
     </>
   );
 }

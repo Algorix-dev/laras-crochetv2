@@ -1,47 +1,37 @@
-import Reveal from './Reveal';
 import reinaFront from '../assets/reina-front.png';
 import { Link } from 'react-router-dom';
 
 export default function CustomOrderBanner() {
   return (
-    <section id="custom-orders" className="bg-[var(--maroon)] text-[#f5efe9] py-14 md:py-20">
-      <Reveal>
-        <h2 className="font-display text-3xl md:text-4xl text-center mb-10">
-          Make a Custom Order
-        </h2>
-      </Reveal>
+    <section id="custom-orders" className="py-14 md:py-20 text-center">
+      <h2 className="mb-8 flex items-center justify-center gap-3 text-3xl md:text-4xl">
+        <span className="font-logo text-[var(--maroon)]">Custom</span>
+        <span className="font-bold uppercase tracking-wide text-[var(--ink)]">Orders</span>
+      </h2>
 
-      {/* Mobile: horizontal scroll strip (swiping sideways feels
-          natural on a phone). Desktop: a 6-column grid that fills
-          the full section width edge to edge with no scrolling —
-          six is enough to divide evenly without overflow at normal
-          screen widths, so no scroll bar is needed once there's
-          more room. */}
-      <div className="flex gap-3 px-5 overflow-x-auto md:grid md:grid-cols-6 md:gap-4 md:px-8 md:overflow-visible scrollbar-hide">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div
-            key={i}
-            className="relative aspect-[3/4] w-40 md:w-auto shrink-0 bg-[#f5efe9]/10 overflow-hidden"
-          >
-            <img
-              src={reinaFront}
-              alt="Custom crochet piece example"
-              className="w-full h-full object-contain opacity-95"
-            />
-          </div>
-        ))}
-      </div>
+      {/* TIP: design shows three different models/outfits standing
+          together — we only have single-model product photography as
+          assets right now, so this uses the one available shot rather
+          than fabricating a composite that doesn't exist. Swap for the
+          real 3-model photo once Lara/Teniayo provide it. */}
+      <img
+        src={reinaFront}
+        alt="A custom crochet piece from Lara's Crochet"
+        className="mx-auto h-72 md:h-96 w-auto object-contain"
+      />
 
-      <Reveal delay={0.1}>
-        <div className="text-center mt-10">
-          <Link
-            to="/contact?flow=custom"
-            className="inline-flex items-center gap-2 border border-[#f5efe9] px-6 py-3 text-xs uppercase tracking-widest hover:bg-[#f5efe9] hover:text-[var(--maroon)] transition-colors"
-          >
-            Make a Custom Order <span aria-hidden="true">→</span>
-          </Link>
-        </div>
-      </Reveal>
+      <p className="mx-auto mt-8 max-w-lg text-sm text-[var(--muted)] leading-relaxed">
+        Not seeing exactly what you want? Tell us your size, your color, your vision — and
+        we'll crochet it just for you. Every custom piece is made from scratch, one stitch
+        at a time, out of Lagos.
+      </p>
+
+      <Link
+        to="/contact?flow=custom"
+        className="mt-6 inline-block bg-[var(--maroon)] px-6 py-3 text-xs font-bold text-white hover:bg-[var(--maroon-dark)]"
+      >
+        Make a custom order
+      </Link>
     </section>
   );
 }
