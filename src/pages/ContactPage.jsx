@@ -188,17 +188,8 @@ function SuccessCard({ heading, subtext, linkTo = '/shop', linkLabel = 'Back to 
       <div
         className="flex flex-col items-center w-[532px] h-[232px] px-[60px] py-[40px] bg-[#FFFCFC] shadow-[0px_1px_19px_rgba(77,0,0,0.25)] rounded-[20px]"
       >
-        {/* Frame 177 */}
-        <div className="flex flex-col items-center w-[102px] h-[12px] gap-[18px] shrink-0" aria-hidden="true">
-          <div className="flex items-center justify-center gap-1.5 h-3">
-            {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
-              <span key={idx} className="w-1.5 h-1.5 rounded-full bg-[var(--mauve)]" />
-            ))}
-          </div>
-        </div>
-
-        {/* Frame 176 */}
-        <div className="flex flex-col items-center w-[412px] h-[140px] gap-[20px] shrink-0 mt-[18px]">
+        {/* All Done content — no progress dots in the Figma design */}
+        <div className="flex flex-col items-center w-[412px] h-[140px] gap-[20px] shrink-0">
           {/* Text */}
           <div className="flex flex-col justify-center items-center w-[412px] h-[60px] gap-1 shrink-0">
             <h2 className="w-full h-[32px] font-sans font-bold text-[24px] leading-[32px] text-center text-[#404040] m-0">
