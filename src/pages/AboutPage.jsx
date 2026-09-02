@@ -24,10 +24,16 @@ export default function AboutPage() {
           />
 
           {/* Meet Lara + portrait */}
-          <div className="mt-10 flex items-center">
-            {/* Label */}
-            <div className="flex w-10 shrink-0 items-center justify-center self-stretch overflow-hidden">
-              <p className="-rotate-90 whitespace-nowrap text-base font-bold tracking-wide">
+          <div className="relative mt-10 flex items-end">
+            {/* MEET LARA label */}
+            <div className="flex h-full w-6 shrink-0 items-end justify-end">
+              <p
+                className="whitespace-nowrap text-base font-bold tracking-wide"
+                style={{
+                  writingMode: "vertical-rl",
+                  transform: "rotate(180deg)",
+                }}
+              >
                 MEET LARA
               </p>
             </div>
