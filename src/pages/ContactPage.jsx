@@ -232,22 +232,22 @@ function TerminalActions({ primaryTo, primaryLabel, secondaryTo = '/contact', se
 
 function SizeChartTable() {
   return (
-    <div className="border border-[var(--line)] mt-4">
-      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] px-3 py-2 border-b border-[var(--line)]">
-        <span>Size</span>
-        <span>Bust</span>
-        <span>Waist</span>
-        <span>Hip</span>
+    <div className="border border-[var(--line)] mt-4 ml-6">
+      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
+        <span className="px-3 py-2">Size</span>
+        <span className="px-3 py-2 border-l border-[var(--line)]">Bust</span>
+        <span className="px-3 py-2 border-l border-[var(--line)]">Waist</span>
+        <span className="px-3 py-2 border-l border-[var(--line)]">Hip</span>
       </div>
       {SIZE_CHART_ROWS.map((row) => (
         <div
           key={row.size}
-          className="grid grid-cols-4 text-sm px-3 py-2 border-b border-[var(--line)] last:border-b-0 bg-[var(--cream)]/40"
+          className="grid grid-cols-4 text-sm border-b border-[var(--line)] last:border-b-0 bg-[var(--cream)]/40"
         >
-          <span>{row.size}</span>
-          <span>{row.bust}&quot;</span>
-          <span>{row.waist}&quot;</span>
-          <span>{row.hip}&quot;</span>
+          <span className="px-3 py-2">{row.size}</span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">{row.bust}&quot;</span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">{row.waist}&quot;</span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">{row.hip}&quot;</span>
         </div>
       ))}
     </div>
@@ -262,10 +262,10 @@ function MeasurementRow({ values, onChange }) {
     ['hip', 'Hip'],
   ];
   return (
-    <div className="border border-[var(--line)] mt-4">
-      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] px-3 py-2 border-b border-[var(--line)]">
-        {fields.map(([, label]) => (
-          <span key={label}>{label}</span>
+    <div className="border border-[var(--line)] mt-4 ml-6">
+      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
+        {fields.map(([, label], idx) => (
+          <span key={label} className={`px-3 py-2 ${idx > 0 ? 'border-l border-[var(--line)]' : ''}`}>{label}</span>
         ))}
       </div>
       <div className="grid grid-cols-4">
@@ -426,7 +426,16 @@ export default function ContactPage() {
     }, 1000);
   };
 
-  const meta = flow === 'custom' ? CUSTOM_STEP_META[phase] : ENQUIRY_STEP_META[phase];
+  // TIP: the "Other" garment path has one extra question ("What would
+  // this fit be?") before size, that every other garment type skips
+  // straight past. That pushes every step after it — size, color,
+  // photo, more, email — one number later, and the total step count
+  // to 7 for this path specifically, rather than the usual 6.
+  const otherPath = flow === 'custom' && formData.garmentType === 'Other';
+  const otherOffset = otherPath && ['size', 'color', 'photo', 'more', 'email'].includes(phase) ? 1 : 0;
+  const baseMeta = flow === 'custom' ? CUSTOM_STEP_META[phase] : ENQUIRY_STEP_META[phase];
+  const meta = baseMeta ? { ...baseMeta, n: baseMeta.n + otherOffset } : baseMeta;
+  const totalStepsForFlow = otherPath ? TOTAL_STEPS + 1 : TOTAL_STEPS;
   const showBack = history.length > 0;
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const orderStatusIndex = formData.orderRef ? hashString(formData.orderRef) % ORDER_STATUSES.length : 1;
@@ -453,7 +462,7 @@ export default function ContactPage() {
                 <SuccessCard heading="All Done!" subtext="Lara is working on it." />
               )
             ) : (
-              <StepShell stepNumber={meta.n} showHeader={meta.show} onBack={showBack ? goBack : undefined}>
+              <StepShell stepNumber={meta.n} totalSteps={totalStepsForFlow} showHeader={meta.show} onBack={showBack ? goBack : undefined}>
                 {/* ============ SHARED CHOOSER ============ */}
                 {phase === 'chooser' && (
                   <div className="text-center">
@@ -652,7 +661,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: payment → issue ============ */}
                 {phase === 'pay-issue' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">Tell Lara the issue</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">What's the issue?</h2>
                     <div className="space-y-4">
                       <div>
                         <textarea
@@ -743,7 +752,7 @@ export default function ContactPage() {
                         className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                       />
                       <p className="text-xs text-[var(--muted)] -mt-2.5">This might help Lara nail your vision faster.</p>
-                      <PrimaryButton disabled={!formData.otherFitDetails.trim()} onClick={() => goTo('color')}>
+                      <PrimaryButton disabled={!formData.otherFitDetails.trim()} onClick={() => goTo('size')}>
                         Next
                       </PrimaryButton>
                     </div>
