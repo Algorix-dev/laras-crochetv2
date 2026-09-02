@@ -69,7 +69,7 @@ export default function AboutPage() {
               align-items: stretch) fixes that properly. */}
           <div className="mt-10 flex gap-0.5">
             <div className="flex w-6 items-end justify-center">
-              <p className="-rotate-90 whitespace-nowrap text-base font-bold">
+              <p className="-rotate-90 text-base font-bold">
                 MEET LARA
               </p>
             </div>
