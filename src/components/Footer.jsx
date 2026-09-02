@@ -127,7 +127,7 @@ export default function Footer() {
           file to src/assets/fonts/, 2) adding an @font-face rule
           for it in index.css, 3) changing font-['Yellowtail'] below
           to font-['Genty_Demo']. */}
-      <div className="mt-6 w-full overflow-hidden flex justify-center">
+      <div className="mt-3 w-full overflow-hidden flex justify-center">
         <img
           src={lacMonogram}
           alt="Lara's Crochet Monogram"
