@@ -55,7 +55,7 @@ export default function Footer() {
           equal-width columns. Newsletter also appears on every page's
           footer in the export (Shop, Addresses, etc.), not just
           account pages, so it's no longer conditional. */}
-      <div className="mx-auto mb-10 flex max-w-7xl flex-wrap justify-between gap-x-16 gap-y-10 px-8 md:px-16 lg:px-24">
+      <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-x-16 gap-y-10 px-8 md:px-16 lg:px-24">
         <div className="flex flex-wrap gap-x-16 gap-y-8">
           {columns.map((col) => (
             <div key={col.title}>
@@ -127,7 +127,7 @@ export default function Footer() {
           file to src/assets/fonts/, 2) adding an @font-face rule
           for it in index.css, 3) changing font-['Yellowtail'] below
           to font-['Genty_Demo']. */}
-      <div className="mt-3 w-full overflow-hidden flex justify-center">
+      <div className="w-full overflow-hidden flex justify-center">
         <img
           src={lacMonogram}
           alt="Lara's Crochet Monogram"
