@@ -9,7 +9,7 @@
 */
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import lacMonogram from "../assets/lac-monogram.png";
+import lacMonogram from "../assets/lara-monogram.png";
 
 const columns = [
   {

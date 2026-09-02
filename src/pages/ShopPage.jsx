@@ -26,6 +26,7 @@ import { Search } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
 import { getProducts, normalizeProduct } from '../api';
 import ProductGrid from '../components/ProductGrid';
+import Footer from '../components/Footer';
 
 // TIP: turns 'two-pieces' into 'Two Pieces' for display, so the data
 // file can stay in clean lowercase-hyphen slugs (good for URLs/code)
@@ -79,6 +80,7 @@ export default function ShopPage() {
   const hasMore = visibleCount < filtered.length;
 
   return (
+    <>
     <section className="max-w-7xl mx-auto px-5 md:px-8 pt-10">
       {/* Header row: title/subtitle on the left, search on the right */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
@@ -168,5 +170,7 @@ export default function ShopPage() {
         </p>
       )}
     </section>
+    <Footer />
+    </>
   );
 }
