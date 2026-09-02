@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import laraPortrait from "../assets/lara-portrait.jpg";
 import laraSunglasses from "../assets/lara-sunglasses.jpg";
 import aboutHeadingLockup from "../assets/about-heading-lockup.png";
@@ -68,8 +67,8 @@ export default function AboutPage() {
               it. Giving it a fixed narrow width and letting it stretch to
               the image's height (self-stretch, via the parent's default
               align-items: stretch) fixes that properly. */}
-          <div className="mt-10 flex gap-5">
-            <div className="flex w-6 shrink-0 items-end justify-center pb-3">
+          <div className="mt-10 flex gap-2">
+            <div className="flex w-6 shrink-0 items-center justify-center">
               <p className="-rotate-90 whitespace-nowrap text-base font-bold">
                 MEET LARA
               </p>
@@ -94,11 +93,11 @@ export default function AboutPage() {
             you to be part of ours.
           </p>
 
-          {/* TIP: Action links — Instagram social link and navigation back to
-              the shop. "Connect with Lara's Crochet" gets the exact mauve-brown
-              (#564345) the spec calls out; "Back to Shop" keeps the default ink
-              color since the spec doesn't call out a different color for it. */}
-          <div className="mt-8 flex flex-wrap gap-6 text-sm underline underline-offset-4">
+          {/* TIP: Action link — Instagram social link only. "Connect with
+              Lara's Crochet" gets the exact mauve-brown (#564345) the spec
+              calls out. This is the only link here (per Emmanuel's
+              corrections list) — no "Back to Shop" link, and it's centered. */}
+          <div className="mt-8 flex justify-center text-sm underline underline-offset-4">
             <a
               href="https://instagram.com"
               target="_blank"
@@ -107,7 +106,6 @@ export default function AboutPage() {
             >
               Connect with Lara&apos;s Crochet
             </a>
-            <Link to="/">Back to Shop</Link>
           </div>
         </section>
       </main>

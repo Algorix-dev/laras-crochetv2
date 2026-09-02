@@ -287,10 +287,21 @@ function MeasurementRow({ values, onChange }) {
 /* ---------- Page ---------- */
 
 export default function ContactPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const flowParam = searchParams.get('flow') || '';
 
   const [flow, setFlow] = useState(flowParam === 'custom' ? 'custom' : '');
+
+  // TIP: internal `flow` state and the `?flow=` URL param used to drift
+  // apart — clicking "Make a custom order" from the chooser switched
+  // `flow` without touching the URL, so the Navbar (which highlights
+  // links by matching pathname+search) kept "Contact" highlighted
+  // instead of "Custom Orders". This keeps the URL as the source of
+  // truth whenever the flow changes from inside the page.
+  const switchFlow = (nextFlow) => {
+    setFlow(nextFlow);
+    setSearchParams(nextFlow === 'custom' ? { flow: 'custom' } : {}, { replace: true });
+  };
   const [phase, setPhase] = useState(flowParam === 'custom' ? 'garment' : 'chooser');
   const [history, setHistory] = useState([]);
   const [direction, setDirection] = useState(1);
@@ -352,7 +363,7 @@ export default function ContactPage() {
   };
 
   const resetAll = () => {
-    setFlow('');
+    switchFlow('');
     setPhase('chooser');
     setHistory([]);
     setDirection(-1);
@@ -472,7 +483,7 @@ export default function ContactPage() {
                     <div className="space-y-4 max-w-sm mx-auto">
                       <button
                         onClick={() => {
-                          setFlow('custom');
+                          switchFlow('custom');
                           goTo('garment');
                         }}
                         className="w-full border border-[var(--line)] py-4 px-6 text-sm font-semibold tracking-wide bg-white text-[var(--ink)] transition-all hover:border-[var(--ink)] focus-visible:border-[var(--ink)] cursor-pointer"
@@ -481,7 +492,7 @@ export default function ContactPage() {
                       </button>
                       <button
                         onClick={() => {
-                          setFlow('enquiry');
+                          switchFlow('enquiry');
                           goTo('topic');
                         }}
                         className="w-full border border-[var(--ink)] py-4 px-6 text-sm font-semibold tracking-wide bg-[var(--ink)] text-white transition-all hover:bg-[var(--maroon)] hover:border-[var(--maroon)] cursor-pointer"
@@ -716,7 +727,7 @@ export default function ContactPage() {
                         error={errors.enquiryEmail}
                         required
                       />
-                      <PrimaryButton type="submit" disabled={submitting}>
+                      <PrimaryButton type="submit" disabled={submitting || !formData.enquiryEmail.trim()}>
                         {submitting ? 'Sending...' : 'Done'}
                       </PrimaryButton>
                     </div>
@@ -802,34 +813,7 @@ export default function ContactPage() {
                       </motion.div>
                     )}
 
-                    {/* TIP: second, independent way to reach the same
-                        measurements table as the "Custom sizing" pill
-                        above — either path writes to the same
-                        formData.customMeasurements, so it doesn't
-                        matter which one someone uses. */}
-                    <div className="flex items-center justify-between mt-6 max-w-sm mx-auto">
-                      <span className="text-sm font-semibold text-[var(--ink)]">Do you want custom sizing?</span>
-                      <div className="flex gap-3 text-sm">
-                        <button
-                          onClick={() => updateField('wantsCustomSizing', 'yes')}
-                          className={`cursor-pointer ${
-                            formData.wantsCustomSizing === 'yes' ? 'underline font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'
-                          }`}
-                        >
-                          Yes
-                        </button>
-                        <button
-                          onClick={() => updateField('wantsCustomSizing', 'no')}
-                          className={`cursor-pointer ${
-                            formData.wantsCustomSizing !== 'yes' ? 'underline font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'
-                          }`}
-                        >
-                          No
-                        </button>
-                      </div>
-                    </div>
-
-                    {(formData.sizeChoice === 'Custom sizing' || formData.wantsCustomSizing === 'yes') && (
+                    {formData.sizeChoice === 'Custom sizing' && (
                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 max-w-sm mx-auto">
                         <p className="text-sm text-[var(--ink)] mb-1">Go ahead, fill in your measurements.</p>
                         <MeasurementRow
@@ -846,7 +830,7 @@ export default function ContactPage() {
                       </motion.div>
                     )}
 
-                    {formData.sizeChoice && formData.sizeChoice !== 'Custom sizing' && formData.wantsCustomSizing !== 'yes' && (
+                    {formData.sizeChoice && formData.sizeChoice !== 'Custom sizing' && (
                       <PrimaryButton className="mt-6 max-w-sm mx-auto block" onClick={() => goTo('color')}>
                         Next
                       </PrimaryButton>
@@ -906,7 +890,7 @@ export default function ContactPage() {
 
                     <label
                       htmlFor="photo-upload"
-                      className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--line)] py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
+                      className="flex flex-col items-center justify-center gap-2 rounded-none border-2 border-dashed border-[var(--line)] py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
                     >
                       <UploadCloud size={22} className="text-[var(--muted)]" />
                       <span className="text-sm text-[var(--ink)]">
@@ -974,7 +958,7 @@ export default function ContactPage() {
                         error={errors.customEmail}
                         required
                       />
-                      <PrimaryButton type="submit" disabled={submitting}>
+                      <PrimaryButton type="submit" disabled={submitting || !formData.customEmail.trim()}>
                         {submitting ? 'Submitting...' : 'Send Custom Order'}
                       </PrimaryButton>
                     </div>

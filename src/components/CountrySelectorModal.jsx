@@ -1,34 +1,24 @@
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { countries } from "../data/countries";
+import { countries, defaultCountry } from "../data/countries";
 import { useCurrency } from "../context/CurrencyContext";
 
-// TIP: the design shows countries labeled like "Nigeria (NGN)" — a
-// currency-style code, not the plain ISO country code our data uses
-// (NG, GB, US...). Since only 3 real currencies exist in
-// CurrencyContext (NGN/USD/GBP), everything else falls back to USD
-// for pricing purposes, matching how most Nigerian storefronts price
-// international orders. The label shown is still each country's own
-// code, not a fabricated currency table for 17 countries we don't
-// actually support pricing in.
-const countryToCurrency = { NG: "NGN", GB: "GBP", US: "USD" };
-
 /**
- * CountrySelectorModal — full-screen searchable country picker,
- * replacing the old compact 3-item currency dropdown. Selecting a
- * country updates the site currency (mapped where we have real
- * exchange rates, USD otherwise) and closes the modal.
+ * CountrySelectorModal — full-screen searchable country picker.
+ * Selecting a country updates the site currency (NGN for Nigeria, GBP
+ * for the UK, USD for everywhere else, since those are the only 3
+ * currencies with real exchange rates — see CurrencyContext) and
+ * closes the modal. The selected country itself (not just its
+ * currency) is remembered, so the pill always shows the country you
+ * actually picked instead of falling back to whichever country
+ * happens to share that currency.
  */
 export default function CountrySelectorModal() {
-  const { currency, setCurrency } = useCurrency();
+  const { country, setCountry } = useCurrency();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  // TIP: figure out which country is "selected" from the current
-  // currency by reverse-looking-up countryToCurrency — falls back to
-  // Nigeria (index 0) if the currency doesn't map to a specific country.
-  const selected =
-    countries.find((c) => countryToCurrency[c.code] === currency) || countries[0];
+  const selected = countries.find((c) => c.code === country) || defaultCountry;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -39,7 +29,7 @@ export default function CountrySelectorModal() {
   }, [query]);
 
   function handleSelect(country) {
-    setCurrency(countryToCurrency[country.code] || "USD");
+    setCountry(country.code);
     setOpen(false);
     setQuery("");
   }
@@ -50,11 +40,11 @@ export default function CountrySelectorModal() {
         aria-label="Select your country"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="flex h-11 items-center gap-2 rounded-[10px] bg-[#E5E5E5] px-3 text-sm font-semibold"
+        className="flex h-11 max-w-[160px] items-center gap-2 rounded-[10px] bg-[#E5E5E5] px-3 text-sm font-semibold"
       >
-        <span aria-hidden="true">{selected.flag}</span>
-        {currency}
-        <ChevronDown size={18} />
+        <span aria-hidden="true" className="shrink-0">{selected.flag}</span>
+        <span className="truncate">{selected.name}</span>
+        <ChevronDown size={18} className="shrink-0" />
       </button>
 
       {open && (
