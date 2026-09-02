@@ -6,65 +6,76 @@ import Footer from "../components/Footer";
 export default function AboutPage() {
   return (
     <>
-      <main className="grid gap-10 md:grid-cols-2 md:gap-20 lg:gap-28">
-        {/* Left: full-bleed Lara image */}
-        <img
-          src={laraSunglasses}
-          alt="Lara — founder of Lara's Crochet"
-          className="aspect-[3/4] w-full object-cover md:aspect-auto md:h-full"
-        />
-
-        {/* Right column */}
-        <section className="flex flex-col px-5 pt-10 pb-10 md:px-8 md:pt-14 lg:pr-16">
-          {/* Brand heading */}
+      {/* About Page */}
+      <main className="flex w-full flex-col md:flex-row md:items-center bg-[#FFFCFC]">
+        {/* Left: Figma-style full-height image */}
+        <div className="w-full md:h-[calc(100vh-66px)] md:w-1/2 lg:w-[49.1667%] shrink-0 overflow-hidden">
           <img
-            src={aboutHeadingLockup}
-            alt="This is Lara's Crochet"
-            className="h-auto w-full max-w-[420px]"
-          />
-
-          {/* Meet Lara + portrait */}
-        <div className="relative mt-10 flex items-end">
-          {/* MEET LARA label */}
-          <div className="flex h-full w-6 shrink-0 items-end justify-end">
-            <p
-              className="whitespace-nowrap text-base font-bold tracking-wide"
-              style={{
-                writingMode: "vertical-rl",
-                transform: "rotate(180deg)",
-              }}
-            >
-              MEET LARA
-            </p>
-          </div>
-
-          {/* Portrait */}
-          <img
-            src={laraPortrait}
-            alt="Lara close-up portrait"
-            className="aspect-[416/391] w-full max-w-[380px] object-cover"
+            src={laraSunglasses}
+            alt="Lara — founder of Lara's Crochet"
+            className="block h-full w-full object-cover"
           />
         </div>
 
-          {/* Brand story */}
-          <p className="mt-9 max-w-xl text-sm leading-8 text-[var(--muted)]">
-            At Lara&apos;s Crochet, every piece starts as a single strand of
-            yarn and a pair of hands. No factories, no shortcuts — just crochet
-            made with love, one piece at a time, out of Lagos, Nigeria. We
-            believe in slow fashion that tells a story, and we&apos;d love for
-            you to be part of ours.
-          </p>
+        {/* Right: centered Figma content */}
+        <section className="flex w-full flex-1 items-center justify-center px-6 py-16 md:min-h-[calc(100vh-66px)] md:px-8 lg:px-12">
+          <div className="flex w-full max-w-[580px] flex-col items-center gap-10">
+            {/* Frame 162 */}
+            <div className="flex w-full max-w-[477px] flex-col items-center justify-center gap-4">
+              {/* This is Lara's Crochet */}
+              <img
+                src={aboutHeadingLockup}
+                alt="This is Lara's Crochet"
+                className="h-[78px] w-[477px] max-w-full object-contain"
+              />
 
-          {/* Instagram link */}
-          <div className="mt-8 flex justify-center text-sm underline underline-offset-4">
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              className="text-[#564345]"
-            >
-              Connect with Lara&apos;s Crochet
-            </a>
+              {/* Frame 161 */}
+              <div className="flex h-[391px] w-full max-w-[440px] flex-row items-end">
+                {/* MEET LARA */}
+                <div className="flex h-[391px] w-[24px] shrink-0 items-center justify-center">
+                  <p
+                    className="whitespace-nowrap font-['DM_Sans'] text-[16px] font-bold leading-6 text-black"
+                    style={{
+                      transform: "rotate(-90deg)",
+                    }}
+                  >
+                    MEET LARA
+                  </p>
+                </div>
+
+                {/* Rectangle 46 */}
+                <div className="h-[391px] w-[416px] shrink-0 overflow-hidden">
+                  <img
+                    src={laraPortrait}
+                    alt="Lara close-up portrait"
+                    className="block h-full w-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Frame 160 */}
+            <div className="flex w-full flex-col items-center gap-10">
+              {/* Body Text */}
+              <div className="w-full px-0 py-2.5">
+                <p className="w-full text-center font-['DM_Sans'] text-[16px] font-normal leading-6 text-[#404040]">
+                  At Lara&apos;s Crochet, every piece here starts as a single
+                  strand of yarn and a pair of hands, no factories, no
+                  shortcuts. Made-to-order, one piece at a time, out of Lagos,
+                  Nigeria.
+                </p>
+              </div>
+
+              {/* Instagram */}
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full text-center font-['DM_Sans'] text-[16px] font-normal leading-6 text-[#564345] underline underline-offset-4"
+              >
+                Connect with Lara&apos;s Crochet
+              </a>
+            </div>
           </div>
         </section>
       </main>
