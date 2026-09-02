@@ -68,7 +68,7 @@ export default function AboutPage() {
               the image's height (self-stretch, via the parent's default
               align-items: stretch) fixes that properly. */}
           <div className="mt-10 flex gap-0.5">
-            <div className="flex w-6 shrink-0 items-center justify-end">
+            <div className="flex w-6 shrink-0 items-end justify-center">
               <p className="-rotate-90 whitespace-nowrap text-base font-bold">
                 MEET LARA
               </p>
