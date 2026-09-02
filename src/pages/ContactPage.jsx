@@ -56,6 +56,7 @@ const CUSTOM_STEP_META = {
   garment: { n: 1, show: true },
   'other-fit': { n: 2, show: true },
   size: { n: 2, show: true },
+  'custom-sizing': { n: 2, show: true },
   color: { n: 3, show: true },
   photo: { n: 4, show: true },
   more: { n: 5, show: true },
@@ -185,11 +186,6 @@ function SuccessCard({ heading, subtext, linkTo = '/shop', linkLabel = 'Back to 
   return (
     <div className="text-center max-w-md mx-auto">
       <div className="bg-[#FAFAFA] border border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 sm:p-10">
-        <div className="flex items-center justify-center gap-1.5 mb-6" aria-hidden="true">
-          {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
-            <div key={idx} className="w-1.5 h-1.5 rounded-full bg-[var(--mauve)]" />
-          ))}
-        </div>
         <h2 className="font-display text-3xl text-[var(--ink)] font-bold mb-1">{heading}</h2>
         <p className="text-sm text-[var(--muted)]">{subtext}</p>
         <div className="mx-auto mt-6 flex items-center justify-center w-14 h-14 rounded-full bg-[#10B981] text-white">
@@ -256,11 +252,17 @@ function SizeChartTable() {
 
 function MeasurementRow({ values, onChange }) {
   const fields = [
-    ['size', 'Size'],
-    ['bust', 'Bust'],
-    ['waist', 'Waist'],
-    ['hip', 'Hip'],
+    ['size', 'Size', 'letters'],
+    ['bust', 'Bust', 'numbers'],
+    ['waist', 'Waist', 'numbers'],
+    ['hip', 'Hip', 'numbers'],
   ];
+
+  const sanitizeValue = (key, value) =>
+    key === 'size'
+      ? value.replace(/[^A-Za-z]/g, '')
+      : value.replace(/[^0-9]/g, '');
+
   return (
     <div className="border border-[var(--line)] mt-4">
       <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
@@ -269,11 +271,14 @@ function MeasurementRow({ values, onChange }) {
         ))}
       </div>
       <div className="grid grid-cols-4">
-        {fields.map(([key], idx) => (
+        {fields.map(([key, , inputType], idx) => (
           <input
             key={key}
             value={values[key]}
-            onChange={(e) => onChange(key, e.target.value)}
+            type="text"
+            inputMode={inputType === 'numbers' ? 'numeric' : 'text'}
+            pattern={inputType === 'numbers' ? '[0-9]*' : '[A-Za-z]*'}
+            onChange={(e) => onChange(key, sanitizeValue(key, e.target.value))}
             className={`w-full text-center text-sm px-2 py-2.5 outline-none bg-[var(--cream)]/40 focus:bg-white focus:border-[var(--ink)] border-[var(--line)] ${
               idx > 0 ? 'border-l' : ''
             }`}
@@ -443,7 +448,7 @@ export default function ContactPage() {
   // photo, more, email — one number later, and the total step count
   // to 7 for this path specifically, rather than the usual 6.
   const otherPath = flow === 'custom' && formData.garmentType === 'Other';
-  const otherOffset = otherPath && ['size', 'color', 'photo', 'more', 'email'].includes(phase) ? 1 : 0;
+  const otherOffset = otherPath && ['size', 'custom-sizing', 'color', 'photo', 'more', 'email'].includes(phase) ? 1 : 0;
   const baseMeta = flow === 'custom' ? CUSTOM_STEP_META[phase] : ENQUIRY_STEP_META[phase];
   const meta = baseMeta ? { ...baseMeta, n: baseMeta.n + otherOffset } : baseMeta;
   const totalStepsForFlow = otherPath ? TOTAL_STEPS + 1 : TOTAL_STEPS;
@@ -779,7 +784,12 @@ export default function ContactPage() {
                         <PillButton
                           key={size}
                           active={formData.sizeChoice === size}
-                          onClick={() => updateField('sizeChoice', size)}
+                          onClick={() => {
+                            updateField('sizeChoice', size);
+                            if (size === 'Custom sizing') {
+                              goTo('custom-sizing');
+                            }
+                          }}
                         >
                           {size}
                         </PillButton>
@@ -807,26 +817,10 @@ export default function ContactPage() {
                         </button>
                       </div>
                     </div>
+
                     {formData.showSizeChart === 'yes' && (
                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="max-w-sm mx-auto">
                         <SizeChartTable />
-                      </motion.div>
-                    )}
-
-                    {formData.sizeChoice === 'Custom sizing' && (
-                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 max-w-sm mx-auto">
-                        <p className="text-sm text-[var(--ink)] mb-1">Go ahead, fill in your measurements.</p>
-                        <MeasurementRow
-                          values={formData.customMeasurements}
-                          onChange={(key, val) => updateField('customMeasurements', { ...formData.customMeasurements, [key]: val })}
-                        />
-                        <PrimaryButton
-                          className="mt-4"
-                          disabled={!formData.customMeasurements.bust.trim() || !formData.customMeasurements.waist.trim() || !formData.customMeasurements.hip.trim()}
-                          onClick={() => goTo('color')}
-                        >
-                          Next
-                        </PrimaryButton>
                       </motion.div>
                     )}
 
@@ -835,6 +829,38 @@ export default function ContactPage() {
                         Next
                       </PrimaryButton>
                     )}
+                  </div>
+                )}
+
+                {/* ============ CUSTOM: custom sizing ============ */}
+                {phase === 'custom-sizing' && (
+                  <div className="max-w-sm mx-auto">
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      Go ahead, fill in your measurements.
+                    </h2>
+
+                    <MeasurementRow
+                      values={formData.customMeasurements}
+                      onChange={(key, val) =>
+                        updateField('customMeasurements', {
+                          ...formData.customMeasurements,
+                          [key]: val,
+                        })
+                      }
+                    />
+
+                    <PrimaryButton
+                      className="mt-6"
+                      disabled={
+                        !formData.customMeasurements.size.trim() ||
+                        !formData.customMeasurements.bust.trim() ||
+                        !formData.customMeasurements.waist.trim() ||
+                        !formData.customMeasurements.hip.trim()
+                      }
+                      onClick={() => goTo('color')}
+                    >
+                      Next
+                    </PrimaryButton>
                   </div>
                 )}
 
@@ -886,17 +912,21 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: photo ============ */}
                 {phase === 'photo' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">Got a picture of what you want?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">
+                      Got a picture of what you want?
+                    </h2>
 
                     <label
                       htmlFor="photo-upload"
-                      className="flex flex-col items-center justify-center gap-2 rounded-none border-2 border-dashed border-[var(--line)] py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--line)] py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
                     >
                       <UploadCloud size={22} className="text-[var(--muted)]" />
                       <span className="text-sm text-[var(--ink)]">
                         Drop your image here or <span className="text-blue-600 underline">browse</span>
                       </span>
-                      <span className="text-xs text-[var(--muted)]">Supports JPG &amp; PNG (4 images max)</span>
+                      <span className="text-xs text-[var(--muted)]">
+                        Supports JPG &amp; PNG (1–4 images)
+                      </span>
                       <input
                         id="photo-upload"
                         type="file"
@@ -904,23 +934,44 @@ export default function ContactPage() {
                         multiple
                         className="sr-only"
                         onChange={(e) => {
-                          const files = Array.from(e.target.files || []).slice(0, 4);
-                          updateField('photos', files);
+                          const selectedFiles = Array.from(e.target.files || []);
+
+                          if (selectedFiles.length > 4) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              photos: 'You can upload a maximum of 4 images.',
+                            }));
+                            e.target.value = '';
+                            return;
+                          }
+
+                          if (selectedFiles.length === 0) return;
+
+                          setErrors((prev) => ({ ...prev, photos: '' }));
+                          updateField('photos', selectedFiles);
                         }}
                       />
                     </label>
 
+                    {errors.photos && (
+                      <p className="text-xs text-red-500 mt-2 text-center">{errors.photos}</p>
+                    )}
+
                     {formData.photos.length > 0 && (
                       <div className="grid grid-cols-2 gap-3 mt-4">
                         {formData.photos.map((file, i) => (
-                          <div key={i} className="relative aspect-square overflow-hidden border border-[var(--line)]">
+                          <div key={`${file.name}-${i}`} className="relative aspect-square overflow-hidden border border-[var(--line)] rounded-xl">
                             <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
                           </div>
                         ))}
                       </div>
                     )}
 
-                    <PrimaryButton className="mt-6" onClick={() => goTo('more')}>
+                    <PrimaryButton
+                      className="mt-6"
+                      disabled={formData.photos.length === 0}
+                      onClick={() => goTo('more')}
+                    >
                       Next
                     </PrimaryButton>
                   </div>
