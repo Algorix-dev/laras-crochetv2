@@ -184,14 +184,38 @@ function StepShell({ stepNumber, totalSteps = TOTAL_STEPS, showHeader = true, on
 // variant.
 function SuccessCard({ heading, subtext, linkTo = '/shop', linkLabel = 'Back to shop' }) {
   return (
-    <div className="text-center max-w-md mx-auto">
-      <div className="bg-[#FAFAFA] border border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 sm:p-10">
-        <h2 className="font-display text-3xl text-[var(--ink)] font-bold mb-1">{heading}</h2>
-        <p className="text-sm text-[var(--muted)]">{subtext}</p>
-        <div className="mx-auto mt-6 flex items-center justify-center w-14 h-14 rounded-full bg-[#10B981] text-white">
-          <Check size={26} />
+    <div className="w-full flex flex-col items-center text-center">
+      <div
+        className="flex flex-col items-center w-[532px] h-[232px] px-[60px] py-[40px] bg-[#FFFCFC] shadow-[0px_1px_19px_rgba(77,0,0,0.25)] rounded-[20px]"
+      >
+        {/* Frame 177 */}
+        <div className="flex flex-col items-center w-[102px] h-[12px] gap-[18px] shrink-0" aria-hidden="true">
+          <div className="flex items-center justify-center gap-1.5 h-3">
+            {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
+              <span key={idx} className="w-1.5 h-1.5 rounded-full bg-[var(--mauve)]" />
+            ))}
+          </div>
+        </div>
+
+        {/* Frame 176 */}
+        <div className="flex flex-col items-center w-[412px] h-[140px] gap-[20px] shrink-0 mt-[18px]">
+          {/* Text */}
+          <div className="flex flex-col justify-center items-center w-[412px] h-[60px] gap-1 shrink-0">
+            <h2 className="w-full h-[32px] font-sans font-bold text-[24px] leading-[32px] text-center text-[#404040] m-0">
+              {heading}
+            </h2>
+            <p className="w-full h-[24px] font-sans font-normal text-[16px] leading-[24px] text-center text-black m-0">
+              {subtext}
+            </p>
+          </div>
+
+          {/* Verified Badge */}
+          <div className="flex items-center justify-center w-[60px] h-[60px] shrink-0 bg-[#10B981] rounded-full">
+            <Check size={30} strokeWidth={3.5} className="text-[#FFFCFC]" />
+          </div>
         </div>
       </div>
+
       <Link
         to={linkTo}
         className="inline-flex items-center gap-1 mt-6 text-xs font-semibold text-[var(--ink)] underline underline-offset-2 hover:text-[var(--maroon)] transition-colors cursor-pointer"
