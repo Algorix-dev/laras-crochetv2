@@ -4,17 +4,18 @@
   - Search icon → opens full-screen search overlay
   - Heart icon → shows wishlist count badge, navigates to wishlist section
   - Bag icon → shows cart count badge, opens bag drawer
-  - User icon → shows toast (account area coming soon)
-  - Currency selector dropdown with real SVG flags
+  - User icon → shows account area
+  - Country selector with flags, ISO alpha-3 code when closed,
+    and full country name + currency when opened
   - Mobile hamburger menu with all the same controls
 */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart, Search, ShoppingBag, User, Menu, X } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
-import CountrySelectorModal from "./CountrySelectorModal";
+import CountrySelector from "./CountrySelector";
 import SearchOverlay from "./SearchOverlay";
 import laraCrochetLogo from "../assets/lara-crochet-logo.png";
 
@@ -29,11 +30,34 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  // The important fix:
+  // Use the new CountrySelector component that actually renders
+  // the flag + 3-letter country code in the closed header state.
+  const [country, setCountry] = useState(() => {
+    try {
+      return localStorage.getItem("lara-country") || "NG";
+    } catch {
+      return "NG";
+    }
+  });
+
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("lara-country", country);
+    } catch {
+      // localStorage may be unavailable; the selector still works in memory.
+    }
+  }, [country]);
+
+  const handleCountryChange = (selectedCountry) => {
+    setCountry(selectedCountry.code);
+  };
 
   const isActive = (to) => {
     if (to === "/")
@@ -109,15 +133,24 @@ export default function Navbar() {
             <button aria-label="Search" onClick={() => setSearchOpen(true)}>
               <Search size={18} />
             </button>
+
             <WishlistButton />
             <BagButton />
+
             <button
               aria-label="Account"
               onClick={() => navigate(isSignedIn ? "/account" : "/signin")}
             >
               <User size={18} />
             </button>
-            <CountrySelectorModal />
+
+            {/* IMPORTANT: this is the actual selector now being rendered.
+                Closed = flag + 3-letter country code.
+                Open = flag + full country name + currency. */}
+            <CountrySelector
+              value={country}
+              onChange={handleCountryChange}
+            />
           </div>
 
           {/* Mobile hamburger */}
@@ -147,6 +180,7 @@ export default function Navbar() {
                 {l.label}
               </Link>
             ))}
+
             <div className="flex gap-5">
               <button
                 aria-label="Search"
@@ -157,8 +191,10 @@ export default function Navbar() {
               >
                 <Search size={18} />
               </button>
+
               <WishlistButton />
               <BagButton />
+
               <button
                 aria-label="Account"
                 onClick={() => {
@@ -169,8 +205,12 @@ export default function Navbar() {
                 <User size={18} />
               </button>
             </div>
+
             <div className="pt-2">
-              <CountrySelectorModal />
+              <CountrySelector
+                value={country}
+                onChange={handleCountryChange}
+              />
             </div>
           </nav>
         )}

@@ -56,7 +56,6 @@ const CUSTOM_STEP_META = {
   garment: { n: 1, show: true },
   'other-fit': { n: 2, show: true },
   size: { n: 2, show: true },
-  'custom-sizing': { n: 2, show: true },
   color: { n: 3, show: true },
   photo: { n: 4, show: true },
   more: { n: 5, show: true },
@@ -184,29 +183,19 @@ function StepShell({ stepNumber, totalSteps = TOTAL_STEPS, showHeader = true, on
 // variant.
 function SuccessCard({ heading, subtext, linkTo = '/shop', linkLabel = 'Back to shop' }) {
   return (
-    <div className="w-full flex flex-col items-center text-center">
-      <div
-        className="flex flex-col items-center w-[532px] h-[232px] px-[60px] py-[40px] bg-[#FFFCFC] shadow-[0px_1px_19px_rgba(77,0,0,0.25)] rounded-[20px]"
-      >
-        {/* All Done content — no progress dots in the Figma design */}
-        <div className="flex flex-col items-center w-[412px] h-[140px] gap-[20px] shrink-0">
-          {/* Text */}
-          <div className="flex flex-col justify-center items-center w-[412px] h-[60px] gap-1 shrink-0">
-            <h2 className="w-full h-[32px] font-sans font-bold text-[24px] leading-[32px] text-center text-[#404040] m-0">
-              {heading}
-            </h2>
-            <p className="w-full h-[24px] font-sans font-normal text-[16px] leading-[24px] text-center text-black m-0">
-              {subtext}
-            </p>
-          </div>
-
-          {/* Verified Badge */}
-          <div className="flex items-center justify-center w-[60px] h-[60px] shrink-0 bg-[#10B981] rounded-full">
-            <Check size={30} strokeWidth={3.5} className="text-[#FFFCFC]" />
-          </div>
+    <div className="text-center max-w-md mx-auto">
+      <div className="bg-[#FAFAFA] border border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 sm:p-10">
+        <div className="flex items-center justify-center gap-1.5 mb-6" aria-hidden="true">
+          {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
+            <div key={idx} className="w-1.5 h-1.5 rounded-full bg-[var(--mauve)]" />
+          ))}
+        </div>
+        <h2 className="font-display text-2xl text-[var(--ink)] font-bold mb-1">{heading}</h2>
+        <p className="text-sm text-[var(--muted)]">{subtext}</p>
+        <div className="mx-auto mt-6 flex items-center justify-center w-14 h-14 rounded-full bg-[#10B981] text-white">
+          <Check size={26} />
         </div>
       </div>
-
       <Link
         to={linkTo}
         className="inline-flex items-center gap-1 mt-6 text-xs font-semibold text-[var(--ink)] underline underline-offset-2 hover:text-[var(--maroon)] transition-colors cursor-pointer"
@@ -267,17 +256,11 @@ function SizeChartTable() {
 
 function MeasurementRow({ values, onChange }) {
   const fields = [
-    ['size', 'Size', 'letters'],
-    ['bust', 'Bust', 'numbers'],
-    ['waist', 'Waist', 'numbers'],
-    ['hip', 'Hip', 'numbers'],
+    ['size', 'Size'],
+    ['bust', 'Bust'],
+    ['waist', 'Waist'],
+    ['hip', 'Hip'],
   ];
-
-  const sanitizeValue = (key, value) =>
-    key === 'size'
-      ? value.replace(/[^A-Za-z]/g, '')
-      : value.replace(/[^0-9]/g, '');
-
   return (
     <div className="border border-[var(--line)] mt-4">
       <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
@@ -286,14 +269,11 @@ function MeasurementRow({ values, onChange }) {
         ))}
       </div>
       <div className="grid grid-cols-4">
-        {fields.map(([key, , inputType], idx) => (
+        {fields.map(([key], idx) => (
           <input
             key={key}
             value={values[key]}
-            type="text"
-            inputMode={inputType === 'numbers' ? 'numeric' : 'text'}
-            pattern={inputType === 'numbers' ? '[0-9]*' : '[A-Za-z]*'}
-            onChange={(e) => onChange(key, sanitizeValue(key, e.target.value))}
+            onChange={(e) => onChange(key, e.target.value)}
             className={`w-full text-center text-sm px-2 py-2.5 outline-none bg-[var(--cream)]/40 focus:bg-white focus:border-[var(--ink)] border-[var(--line)] ${
               idx > 0 ? 'border-l' : ''
             }`}
@@ -463,7 +443,7 @@ export default function ContactPage() {
   // photo, more, email — one number later, and the total step count
   // to 7 for this path specifically, rather than the usual 6.
   const otherPath = flow === 'custom' && formData.garmentType === 'Other';
-  const otherOffset = otherPath && ['size', 'custom-sizing', 'color', 'photo', 'more', 'email'].includes(phase) ? 1 : 0;
+  const otherOffset = otherPath && ['size', 'color', 'photo', 'more', 'email'].includes(phase) ? 1 : 0;
   const baseMeta = flow === 'custom' ? CUSTOM_STEP_META[phase] : ENQUIRY_STEP_META[phase];
   const meta = baseMeta ? { ...baseMeta, n: baseMeta.n + otherOffset } : baseMeta;
   const totalStepsForFlow = otherPath ? TOTAL_STEPS + 1 : TOTAL_STEPS;
@@ -497,7 +477,7 @@ export default function ContactPage() {
                 {/* ============ SHARED CHOOSER ============ */}
                 {phase === 'chooser' && (
                   <div className="text-center">
-                    <h1 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8 font-bold">
+                    <h1 className="font-display text-2xl text-[var(--ink)] mb-8 font-bold">
                       How would you like Lara to help you?
                     </h1>
                     <div className="space-y-4 max-w-sm mx-auto">
@@ -526,7 +506,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: topic select ============ */}
                 {phase === 'topic' && (
                   <div>
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-bold">
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
                       What&apos;s your enquiry about?
                     </h2>
                     <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
@@ -542,7 +522,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: sizing → which item ============ */}
                 {phase === 'sizing-field' && (
                   <div className="max-w-sm mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">Which item?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">Which item?</h2>
                     <div className="space-y-4">
                       <TextField
                         value={formData.itemName}
@@ -608,7 +588,7 @@ export default function ContactPage() {
                 {phase === 'sizing-done' && (
                   <div>
                     <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-3 font-bold">All set!</h2>
-                    <p className="text-sm text-[var(--muted)] text-center leading-relaxed">
+                    <p className="text-lg text-[var(--muted)] text-center leading-relaxed">
                       Thanks — hope that helps with your sizing! Reach out anytime if you need anything else.
                     </p>
                     <TerminalActions primaryTo="/shop" primaryLabel="Back to shop" />
@@ -618,7 +598,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: order status / payment → order ref ============ */}
                 {(phase === 'os-field' || phase === 'pay-field') && (
                   <div className="max-w-sm mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
                       What is your order reference number?
                     </h2>
                     <div className="space-y-4">
@@ -667,15 +647,15 @@ export default function ContactPage() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-sm text-[var(--ink)] leading-relaxed">
+                    <p className="text-lg text-[var(--ink)] leading-relaxed">
                       Your order (#{formData.orderRef}) has been received on {today} and{' '}
                       {currentStatus === 'Order received' && 'is being reviewed.'}
                       {currentStatus === 'In production' && 'is currently in production.'}
                       {currentStatus === 'Packaging' && 'is currently in packaging undergoing proper inspection and quality check.'}
                       {currentStatus === 'Delivery' && 'is finally on its way to you!'}
                     </p>
-                    <p className="text-sm text-[var(--ink)] mt-4">Thank you for choosing Lara&apos;s Crochet.</p>
-                    <p className="text-sm text-[var(--ink)] mt-4">
+                    <p className="text-lg text-[var(--ink)] mt-4">Thank you for choosing Lara&apos;s Crochet.</p>
+                    <p className="text-lg text-[var(--ink)] mt-4">
                       Yours in love,
                       <br />
                       <span className="font-logo text-base">Lara</span>
@@ -692,7 +672,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: payment → issue ============ */}
                 {phase === 'pay-issue' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">What's the issue?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">What's the issue?</h2>
                     <div className="space-y-4">
                       <div>
                         <textarea
@@ -736,7 +716,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: email (payment + something-else only) ============ */}
                 {phase === 'email' && flow !== 'custom' && (
                   <form onSubmit={submitEnquiry} className="max-w-sm mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">Where can Lara email you?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">Where can Lara email you?</h2>
                     <div className="space-y-4">
                       <TextField
                         type="email"
@@ -757,7 +737,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: garment type ============ */}
                 {phase === 'garment' && (
                   <div>
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-bold">
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
                       What would you like Lara to make for you?
                     </h2>
                     <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
@@ -773,7 +753,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: "Other" → free-text fit ============ */}
                 {phase === 'other-fit' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">What would this fit be?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">What would this fit be?</h2>
                     <div className="space-y-4">
                       <textarea
                         rows={4}
@@ -793,18 +773,13 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: size ============ */}
                 {phase === 'size' && (
                   <div>
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-bold">What size works for you?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">What size works for you?</h2>
                     <div className="flex flex-wrap justify-center gap-3 max-w-sm mx-auto">
                       {SIZE_OPTIONS.map((size) => (
                         <PillButton
                           key={size}
                           active={formData.sizeChoice === size}
-                          onClick={() => {
-                            updateField('sizeChoice', size);
-                            if (size === 'Custom sizing') {
-                              goTo('custom-sizing');
-                            }
-                          }}
+                          onClick={() => updateField('sizeChoice', size)}
                         >
                           {size}
                         </PillButton>
@@ -832,10 +807,26 @@ export default function ContactPage() {
                         </button>
                       </div>
                     </div>
-
                     {formData.showSizeChart === 'yes' && (
                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="max-w-sm mx-auto">
                         <SizeChartTable />
+                      </motion.div>
+                    )}
+
+                    {formData.sizeChoice === 'Custom sizing' && (
+                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 max-w-sm mx-auto">
+                        <p className="text-lg text-[var(--ink)] mb-1">Go ahead, fill in your measurements.</p>
+                        <MeasurementRow
+                          values={formData.customMeasurements}
+                          onChange={(key, val) => updateField('customMeasurements', { ...formData.customMeasurements, [key]: val })}
+                        />
+                        <PrimaryButton
+                          className="mt-4"
+                          disabled={!formData.customMeasurements.bust.trim() || !formData.customMeasurements.waist.trim() || !formData.customMeasurements.hip.trim()}
+                          onClick={() => goTo('color')}
+                        >
+                          Next
+                        </PrimaryButton>
                       </motion.div>
                     )}
 
@@ -847,42 +838,10 @@ export default function ContactPage() {
                   </div>
                 )}
 
-                {/* ============ CUSTOM: custom sizing ============ */}
-                {phase === 'custom-sizing' && (
-                  <div className="max-w-sm mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
-                      Go ahead, fill in your measurements.
-                    </h2>
-
-                    <MeasurementRow
-                      values={formData.customMeasurements}
-                      onChange={(key, val) =>
-                        updateField('customMeasurements', {
-                          ...formData.customMeasurements,
-                          [key]: val,
-                        })
-                      }
-                    />
-
-                    <PrimaryButton
-                      className="mt-6"
-                      disabled={
-                        !formData.customMeasurements.size.trim() ||
-                        !formData.customMeasurements.bust.trim() ||
-                        !formData.customMeasurements.waist.trim() ||
-                        !formData.customMeasurements.hip.trim()
-                      }
-                      onClick={() => goTo('color')}
-                    >
-                      Next
-                    </PrimaryButton>
-                  </div>
-                )}
-
                 {/* ============ CUSTOM: color ============ */}
                 {phase === 'color' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">What color mix do you have in mind?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">What color mix do you have in mind?</h2>
                     <div className="flex justify-center gap-3 flex-wrap mb-4">
                       {COLOR_SWATCHES.map((hex) => (
                         <button
@@ -927,21 +886,17 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: photo ============ */}
                 {phase === 'photo' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">
-                      Got a picture of what you want?
-                    </h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">Got a picture of what you want?</h2>
 
                     <label
                       htmlFor="photo-upload"
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--line)] py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
+                      className="flex flex-col items-center justify-center gap-2 rounded-none border-2 border-dashed border-[var(--line)] py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
                     >
                       <UploadCloud size={22} className="text-[var(--muted)]" />
-                      <span className="text-sm text-[var(--ink)]">
+                      <span className="text-lg text-[var(--ink)]">
                         Drop your image here or <span className="text-blue-600 underline">browse</span>
                       </span>
-                      <span className="text-xs text-[var(--muted)]">
-                        Supports JPG &amp; PNG (1–4 images)
-                      </span>
+                      <span className="text-xs text-[var(--muted)]">Supports JPG &amp; PNG (4 images max)</span>
                       <input
                         id="photo-upload"
                         type="file"
@@ -949,44 +904,23 @@ export default function ContactPage() {
                         multiple
                         className="sr-only"
                         onChange={(e) => {
-                          const selectedFiles = Array.from(e.target.files || []);
-
-                          if (selectedFiles.length > 4) {
-                            setErrors((prev) => ({
-                              ...prev,
-                              photos: 'You can upload a maximum of 4 images.',
-                            }));
-                            e.target.value = '';
-                            return;
-                          }
-
-                          if (selectedFiles.length === 0) return;
-
-                          setErrors((prev) => ({ ...prev, photos: '' }));
-                          updateField('photos', selectedFiles);
+                          const files = Array.from(e.target.files || []).slice(0, 4);
+                          updateField('photos', files);
                         }}
                       />
                     </label>
 
-                    {errors.photos && (
-                      <p className="text-xs text-red-500 mt-2 text-center">{errors.photos}</p>
-                    )}
-
                     {formData.photos.length > 0 && (
                       <div className="grid grid-cols-2 gap-3 mt-4">
                         {formData.photos.map((file, i) => (
-                          <div key={`${file.name}-${i}`} className="relative aspect-square overflow-hidden border border-[var(--line)] rounded-xl">
+                          <div key={i} className="relative aspect-square overflow-hidden border border-[var(--line)]">
                             <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
                           </div>
                         ))}
                       </div>
                     )}
 
-                    <PrimaryButton
-                      className="mt-6"
-                      disabled={formData.photos.length === 0}
-                      onClick={() => goTo('more')}
-                    >
+                    <PrimaryButton className="mt-6" onClick={() => goTo('more')}>
                       Next
                     </PrimaryButton>
                   </div>
@@ -995,8 +929,8 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: anything else ============ */}
                 {phase === 'more' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-2 font-bold">Anything else you&apos;d like to mention?</h2>
-                    <p className="text-center text-xs text-[var(--muted)] mb-6">This might help Lara nail your vision faster.</p>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-2 font-bold">Anything else you&apos;d like to mention?</h2>
+                    <p className="text-center text-lg text-[var(--muted)] mb-6">This might help Lara nail your vision faster.</p>
                     <div className="space-y-4">
                       <textarea
                         rows={4}
@@ -1013,7 +947,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: email ============ */}
                 {phase === 'email' && flow === 'custom' && (
                   <form onSubmit={submitCustom} className="max-w-sm mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">Where can Lara email you?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">Where can Lara email you?</h2>
                     <div className="space-y-4">
                       <TextField
                         type="email"

@@ -6,12 +6,12 @@ import Footer from "../components/Footer";
 export default function AboutPage() {
   return (
     <>
-      <main className="grid gap-10 md:grid-cols-2 md:gap-20 lg:gap-28">
-        {/* Left: full-bleed Lara image */}
+      <main className="grid gap-10 md:grid-cols-[944px_minmax(0,1fr)] md:gap-20 lg:gap-28">
+        {/* Left: Figma-sized Lara image */}
         <img
           src={laraSunglasses}
           alt="Lara — founder of Lara's Crochet"
-          className="aspect-[3/4] w-full object-cover md:aspect-auto md:h-full"
+          className="h-auto w-full object-cover md:h-[1024px] md:w-[944px]"
         />
 
         {/* Right column */}
@@ -47,12 +47,12 @@ export default function AboutPage() {
           </div>
 
           {/* Brand story */}
-          <p className="mt-9 max-w-xl text-sm leading-8 text-[var(--muted)]">
+          <p className="mt-9 max-w-xl text-center text-sm leading-8 text-[var(--muted)]">
             At Lara&apos;s Crochet, every piece starts as a single strand of
-            yarn and a pair of hands. No factories, no shortcuts — just crochet
-            made with love, one piece at a time, out of Lagos, Nigeria. We
-            believe in slow fashion that tells a story, and we&apos;d love for
-            you to be part of ours.
+            yarn and a pair of hands. No factories, no shortcuts — just
+            crochet made with love, one piece at a time, out of Lagos,
+            Nigeria. We believe in slow fashion that tells a story, and
+            we&apos;d love for you to be part of ours.
           </p>
 
           {/* Instagram link */}
