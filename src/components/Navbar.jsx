@@ -1,21 +1,20 @@
 /*
-  TIP: The Navbar is sticky (stays at top on scroll) with a
-  frosted-glass effect. It now has:
-  - Search icon → opens full-screen search overlay
-  - Heart icon → shows wishlist count badge, navigates to wishlist section
-  - Bag icon → shows cart count badge, opens bag drawer
-  - User icon → shows account area
-  - Country selector with flags, ISO alpha-3 code when closed,
-    and full country name + currency when opened
-  - Mobile hamburger menu with all the same controls
+  Navbar
+  - Sticky header
+  - Search overlay
+  - Wishlist/cart badges
+  - Account navigation
+  - Country selector with flags + 3-letter country code when closed
+  - Full country name + currency when the selector is opened
+  - Mobile hamburger menu
 */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Heart, Search, ShoppingBag, User, Menu, X } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
-import CountrySelector from "./CountrySelector";
+import CountrySelectorModal from "./CountrySelectorModal";
 import SearchOverlay from "./SearchOverlay";
 import laraCrochetLogo from "../assets/lara-crochet-logo.png";
 
@@ -30,44 +29,28 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  // The important fix:
-  // Use the new CountrySelector component that actually renders
-  // the flag + 3-letter country code in the closed header state.
-  const [country, setCountry] = useState(() => {
-    try {
-      return localStorage.getItem("lara-country") || "NG";
-    } catch {
-      return "NG";
-    }
-  });
-
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("lara-country", country);
-    } catch {
-      // localStorage may be unavailable; the selector still works in memory.
-    }
-  }, [country]);
-
-  const handleCountryChange = (selectedCountry) => {
-    setCountry(selectedCountry.code);
-  };
-
   const isActive = (to) => {
-    if (to === "/")
-      return location.pathname === "/" && !location.hash && !location.search;
+    if (to === "/") {
+      return (
+        location.pathname === "/" &&
+        !location.hash &&
+        !location.search
+      );
+    }
+
     return location.pathname + location.search === to;
   };
 
   /* Bag button with count badge */
   const BagButton = () => (
     <button
+      type="button"
       aria-label={`Bag, ${cartCount} items`}
       onClick={() => navigate("/bag")}
       className="relative hover:text-[var(--maroon)]"
@@ -84,6 +67,7 @@ export default function Navbar() {
   /* Wishlist button with count badge */
   const WishlistButton = () => (
     <button
+      type="button"
       aria-label={`Wishlist, ${wishlistCount} items`}
       onClick={() => navigate("/wishlist")}
       className="relative hover:text-[var(--maroon)]"
@@ -102,7 +86,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-50 border-b border-[#E5E5E5] bg-[#FAFAFA]">
         <div className="flex h-[66px] items-center justify-between px-5 md:px-8 lg:px-[15.83%]">
           {/* Brand logo */}
-          <Link to="/">
+          <Link to="/" aria-label="Lara's Crochet home">
             <img
               src={laraCrochetLogo}
               alt="Lara's Crochet"
@@ -112,25 +96,29 @@ export default function Navbar() {
 
           {/* Desktop nav links */}
           <nav className="hidden gap-5 text-sm uppercase md:flex">
-            {LINKS.map((l) => (
+            {LINKS.map((link) => (
               <Link
-                key={l.label}
-                to={l.to}
+                key={link.label}
+                to={link.to}
                 className={
                   "flex h-10 items-center rounded-[10px] px-[10px] hover:bg-black/5 " +
-                  (isActive(l.to)
+                  (isActive(link.to)
                     ? "font-nav-active text-[var(--ink)]"
                     : "text-[var(--muted)] hover:text-[var(--ink)]")
                 }
               >
-                {l.label}
+                {link.label}
               </Link>
             ))}
           </nav>
 
           {/* Desktop utility icons */}
           <div className="hidden items-center gap-5 md:flex">
-            <button aria-label="Search" onClick={() => setSearchOpen(true)}>
+            <button
+              type="button"
+              aria-label="Search"
+              onClick={() => setSearchOpen(true)}
+            >
               <Search size={18} />
             </button>
 
@@ -138,25 +126,26 @@ export default function Navbar() {
             <BagButton />
 
             <button
+              type="button"
               aria-label="Account"
-              onClick={() => navigate(isSignedIn ? "/account" : "/signin")}
+              onClick={() =>
+                navigate(isSignedIn ? "/account" : "/signin")
+              }
             >
               <User size={18} />
             </button>
 
-            {/* IMPORTANT: this is the actual selector now being rendered.
-                Closed = flag + 3-letter country code.
-                Open = flag + full country name + currency. */}
-            <CountrySelector
-              value={country}
-              onChange={handleCountryChange}
-            />
+            {/* Country selector
+                Closed: flag + 3-letter country code
+                Open: full country name + currency */}
+            <CountrySelectorModal />
           </div>
 
           {/* Mobile hamburger */}
           <button
+            type="button"
             className="md:hidden"
-            aria-label="Open menu"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen(!menuOpen)}
           >
             {menuOpen ? <X /> : <Menu />}
@@ -166,23 +155,24 @@ export default function Navbar() {
         {/* Mobile menu dropdown */}
         {menuOpen && (
           <nav className="flex flex-col gap-4 px-5 pb-6 text-sm uppercase md:hidden">
-            {LINKS.map((l) => (
+            {LINKS.map((link) => (
               <Link
-                key={l.label}
-                to={l.to}
+                key={link.label}
+                to={link.to}
                 onClick={() => setMenuOpen(false)}
                 className={
-                  isActive(l.to)
+                  isActive(link.to)
                     ? "font-nav-active text-[var(--ink)]"
                     : "text-[var(--muted)] hover:text-[var(--ink)]"
                 }
               >
-                {l.label}
+                {link.label}
               </Link>
             ))}
 
             <div className="flex gap-5">
               <button
+                type="button"
                 aria-label="Search"
                 onClick={() => {
                   setSearchOpen(true);
@@ -196,6 +186,7 @@ export default function Navbar() {
               <BagButton />
 
               <button
+                type="button"
                 aria-label="Account"
                 onClick={() => {
                   navigate(isSignedIn ? "/account" : "/signin");
@@ -207,16 +198,16 @@ export default function Navbar() {
             </div>
 
             <div className="pt-2">
-              <CountrySelector
-                value={country}
-                onChange={handleCountryChange}
-              />
+              <CountrySelectorModal />
             </div>
           </nav>
         )}
       </header>
 
-      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </>
   );
 }
