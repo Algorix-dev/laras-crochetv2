@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import laraPortrait from "../assets/lara-portrait.jpg";
 import laraSunglasses from "../assets/lara-sunglasses.jpg";
 import aboutHeadingLockup from "../assets/about-heading-lockup.png";
@@ -47,7 +48,7 @@ export default function AboutPage() {
         {/* TIP: Right column — heading, rotated label, lifestyle image, story, and links.
             Padding lives here instead of on the outer grid, so this column
             stays readable while the image column stays edge-to-edge. */}
-        <section className="flex flex-col justify-center px-5 py-10 md:px-8 md:py-16 lg:pr-16">
+        <section className="flex flex-col px-5 pt-10 pb-10 md:px-8 md:pt-14 lg:pr-16">
           {/* TIP: Page heading — real logo lockup image, not live text.
               Width capped and height auto so it scales proportionally;
               the source image is 484x43, so this stays reasonably crisp
@@ -68,7 +69,7 @@ export default function AboutPage() {
               the image's height (self-stretch, via the parent's default
               align-items: stretch) fixes that properly. */}
           <div className="mt-10 flex gap-5">
-            <div className="flex w-6 shrink-0 items-center justify-center">
+            <div className="flex w-6 shrink-0 items-end justify-center pb-3">
               <p className="-rotate-90 whitespace-nowrap text-base font-bold">
                 MEET LARA
               </p>
@@ -93,18 +94,20 @@ export default function AboutPage() {
             you to be part of ours.
           </p>
 
-          {/* TIP: real Lara's Crochet Instagram, per client. "Back to Shop"
-              removed per client feedback. Center-aligned per client feedback
-              (was left-aligned before). */}
-          <div className="mt-8 flex justify-center text-sm underline underline-offset-4">
+          {/* TIP: Action links — Instagram social link and navigation back to
+              the shop. "Connect with Lara's Crochet" gets the exact mauve-brown
+              (#564345) the spec calls out; "Back to Shop" keeps the default ink
+              color since the spec doesn't call out a different color for it. */}
+          <div className="mt-8 flex flex-wrap gap-6 text-sm underline underline-offset-4">
             <a
-              href="https://www.instagram.com/_larascrochet/"
+              href="https://instagram.com"
               target="_blank"
               rel="noreferrer"
               className="text-[#564345]"
             >
               Connect with Lara&apos;s Crochet
             </a>
+            <Link to="/">Back to Shop</Link>
           </div>
         </section>
       </main>

@@ -99,12 +99,12 @@ export default function OrderHistoryPage() {
                 ))}
               </div>
             ) : orders.length === 0 ? (
-              <p className="text-sm text-[var(--muted)]">
-                You haven't placed any orders yet.{' '}
-                <Link to="/shop" className="underline underline-offset-2 hover:text-[var(--ink)]">
+              <div>
+                <p className="text-sm text-[var(--muted)]">You haven't placed any orders yet.</p>
+                <Link to="/shop" className="mt-2 inline-flex items-center gap-1 text-sm underline underline-offset-2 hover:text-[var(--ink)]">
                   Start shopping →
                 </Link>
-              </p>
+              </div>
             ) : (
               <div className="divide-y divide-[var(--line)]">
                 {orders.map((order) => (

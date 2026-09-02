@@ -2,14 +2,15 @@
 // Adds test products to your live database so the frontend has
 // something real to fetch once it's wired to the API.
 //
-// TIP: image URLs below are placeholders, NOT the real Lara's Crochet
-// photos — those live locally in src/assets and were never uploaded to
-// Cloudinary. Once the admin panel exists (or you upload manually via
-// POST /api/upload), replace these with real Cloudinary URLs. This
-// script exists purely to test that "product in database" → "product
-// shows on site" actually works end to end, across every category
-// (so Shop's category tabs and My Bag actually have something to
-// filter/add), not just prove one product renders.
+// TIP: images below are REAL photos now — cropped directly from the
+// Figma Shop Page export (public/images/reina-*.jpg in the frontend
+// repo) instead of colored placeholder rectangles. All 8 are the same
+// "Reina" two-piece garment in different colorways (that's the only
+// product Lara's photographed so far) — spread across 5 categories
+// here isn't claiming they're different garments, it's just so Shop's
+// category tabs and My Bag actually have something in every tab to
+// filter/add and test with, until real photos for other garment types
+// exist. Swap in real category-appropriate photos once she has them.
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import { connectDB } from './config/db.js';
@@ -26,7 +27,7 @@ if (existingCount > 0) {
       name: 'Reina',
       price: 70000,
       category: 'dresses',
-      images: ['https://placehold.co/600x800/1c1c22/e9e6e0?text=Reina'],
+      images: ['/images/reina-teal.jpg', '/images/reina-turquoise-set.jpg'],
       colors: ['#1c1c22', '#22304a', '#9aa5ad'],
       shades: ['#e9e6e0', '#22304a', '#9aa5ad', '#b7bcc2', '#8b9096'],
       sizes: ['XS', 'S', 'M', 'XL', 'XXL'],
@@ -37,7 +38,7 @@ if (existingCount > 0) {
       name: 'Amara',
       price: 55000,
       category: 'bikinis',
-      images: ['https://placehold.co/600x800/6b4c4f/f5efe9?text=Amara'],
+      images: ['/images/reina-mustard.jpg'],
       colors: ['#6b4c4f', '#c9aeb4'],
       shades: ['#f5efe9', '#c9aeb4'],
       sizes: ['XS', 'S', 'M', 'L'],
@@ -48,7 +49,7 @@ if (existingCount > 0) {
       name: 'Zuri',
       price: 62000,
       category: 'two-pieces',
-      images: ['https://placehold.co/600x800/22304a/e9e6e0?text=Zuri'],
+      images: ['/images/reina-burgundy.jpg'],
       colors: ['#22304a', '#9aa5ad'],
       shades: ['#e9e6e0', '#9aa5ad'],
       sizes: ['S', 'M', 'L', 'XL'],
@@ -59,7 +60,7 @@ if (existingCount > 0) {
       name: 'Femi',
       price: 48000,
       category: 'shirts',
-      images: ['https://placehold.co/600x800/8b9096/1c1c22?text=Femi'],
+      images: ['/images/reina-green.jpg'],
       colors: ['#8b9096', '#1c1c22'],
       shades: ['#1c1c22', '#8b9096'],
       sizes: ['S', 'M', 'L', 'XL', 'XXL'],
@@ -70,7 +71,7 @@ if (existingCount > 0) {
       name: 'Nneka',
       price: 39000,
       category: 'skirts',
-      images: ['https://placehold.co/600x800/b7bcc2/1c1c22?text=Nneka'],
+      images: ['/images/reina-lilac.jpg', '/images/reina-orange.jpg', '/images/reina-brown.jpg'],
       colors: ['#b7bcc2'],
       shades: ['#1c1c22', '#b7bcc2', '#9aa5ad'],
       sizes: ['XS', 'S', 'M', 'L'],
@@ -78,7 +79,7 @@ if (existingCount > 0) {
       description: 'A midi-length crochet skirt with a flowing silhouette.',
     },
   ]);
-  console.log('Seeded 5 test products across every category (placeholder images).');
+  console.log('Seeded 5 test products with real photos across every category.');
 }
 
 await mongoose.disconnect();

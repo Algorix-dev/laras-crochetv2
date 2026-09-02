@@ -181,35 +181,24 @@ function StepShell({ stepNumber, totalSteps = TOTAL_STEPS, showHeader = true, on
 // from every wizard step — rounded corners + soft shadow vs. the
 // wizard's sharp corners — so it's its own component, not a StepShell
 // variant.
-// TIP: matched to the Figma dev-mode spec exactly — "All Done!" is
-// Display xs/Bold (DM Sans 700, 24px/32px) in Neutral/600 #404040,
-// NOT the 30px --ink heading style used elsewhere; the subtext is
-// Text md/Regular (DM Sans 400, 16px/24px) in solid #000000, NOT the
-// smaller muted-gray text used on other pages. Card is 532x232 in
-// spec — kept as a max-width here since that's a fixed desktop
-// pixel value, not a fluid one.
 function SuccessCard({ heading, subtext, linkTo = '/shop', linkLabel = 'Back to shop' }) {
   return (
-    <div className="text-center w-full max-w-[532px] mx-auto">
-      <div className="bg-[#FFFCFC] shadow-[0px_1px_19px_0px_rgba(77,0,0,0.25)] rounded-[20px] px-10 py-10 flex flex-col items-center gap-[18px]">
-        <div className="flex items-center justify-center gap-1.5" aria-hidden="true">
+    <div className="text-center max-w-md mx-auto">
+      <div className="bg-[#FAFAFA] border border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 sm:p-10">
+        <div className="flex items-center justify-center gap-1.5 mb-6" aria-hidden="true">
           {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
             <div key={idx} className="w-1.5 h-1.5 rounded-full bg-[var(--mauve)]" />
           ))}
         </div>
-        <div className="flex flex-col items-center gap-5">
-          <div>
-            <h2 className="font-['DM_Sans'] text-2xl leading-8 font-bold text-[#404040]">{heading}</h2>
-            <p className="font-['DM_Sans'] text-base leading-6 text-black">{subtext}</p>
-          </div>
-          <div className="flex items-center justify-center w-[60px] h-[60px] rounded-full bg-[#10B981] text-white">
-            <Check size={22} strokeWidth={2.5} />
-          </div>
+        <h2 className="font-display text-3xl text-[var(--ink)] font-bold mb-1">{heading}</h2>
+        <p className="text-sm text-[var(--muted)]">{subtext}</p>
+        <div className="mx-auto mt-6 flex items-center justify-center w-14 h-14 rounded-full bg-[#10B981] text-white">
+          <Check size={26} />
         </div>
       </div>
       <Link
         to={linkTo}
-        className="inline-flex items-center gap-1 mt-6 font-['DM_Sans'] text-base leading-6 text-[#404040] underline hover:text-[var(--maroon)] transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1 mt-6 text-xs font-semibold text-[var(--ink)] underline underline-offset-2 hover:text-[var(--maroon)] transition-colors cursor-pointer"
       >
         {linkLabel} <span aria-hidden="true">→</span>
       </Link>
@@ -241,59 +230,53 @@ function TerminalActions({ primaryTo, primaryLabel, secondaryTo = '/contact', se
   );
 }
 
-// TIP: SizeChartTable and MeasurementRow render as ONE continuous
-// table when both are shown together (see 'sizing-chart' and 'size'
-// phases below) — same grid, no gap, header only drawn once by
-// SizeChartTable, so the custom-sizing input row reads as an extra
-// row of the same straight table rather than a second boxed table.
-function SizeChartTable({ noBottomBorder = false }) {
+function SizeChartTable() {
   return (
-    <div className={`border border-[var(--line)] mt-4 ${noBottomBorder ? 'border-b-0' : ''}`}>
-      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] px-3 py-2 border-b border-[var(--line)]">
-        <span>Size</span>
-        <span>Bust</span>
-        <span>Waist</span>
-        <span>Hip</span>
+    <div className="border border-[var(--line)] mt-4">
+      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
+        <span className="px-3 py-2">Size</span>
+        <span className="px-3 py-2 border-l border-[var(--line)]">Bust</span>
+        <span className="px-3 py-2 border-l border-[var(--line)]">Waist</span>
+        <span className="px-3 py-2 border-l border-[var(--line)]">Hip</span>
       </div>
       {SIZE_CHART_ROWS.map((row) => (
         <div
           key={row.size}
-          className="grid grid-cols-4 text-sm px-3 py-2 border-b border-[var(--line)] last:border-b-0 bg-[var(--cream)]/40"
+          className="grid grid-cols-4 text-sm border-b border-[var(--line)] last:border-b-0 bg-[var(--cream)]/40"
         >
-          <span>{row.size}</span>
-          <span>{row.bust}&quot;</span>
-          <span>{row.waist}&quot;</span>
-          <span>{row.hip}&quot;</span>
+          <span className="px-3 py-2">{row.size}</span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">{row.bust}&quot;</span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">{row.waist}&quot;</span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">{row.hip}&quot;</span>
         </div>
       ))}
     </div>
   );
 }
 
-// Size: letters only. Bust/Waist/Hip: numbers only (digits + one decimal point).
-const LETTERS_ONLY = /[^a-zA-Z\s]/g;
-const NUMBERS_ONLY = /[^0-9.]/g;
-
-function MeasurementRow({ values, onChange, attached = false }) {
+function MeasurementRow({ values, onChange }) {
   const fields = [
-    ['size', 'Size', LETTERS_ONLY],
-    ['bust', 'Bust', NUMBERS_ONLY],
-    ['waist', 'Waist', NUMBERS_ONLY],
-    ['hip', 'Hip', NUMBERS_ONLY],
+    ['size', 'Size'],
+    ['bust', 'Bust'],
+    ['waist', 'Waist'],
+    ['hip', 'Hip'],
   ];
   return (
-    <div className={`border border-[var(--line)] rounded-b-lg overflow-hidden ${attached ? 'border-t-0' : 'mt-4'}`}>
+    <div className="border border-[var(--line)] mt-4">
+      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
+        {fields.map(([, label], idx) => (
+          <span key={label} className={`px-3 py-2 ${idx > 0 ? 'border-l border-[var(--line)]' : ''}`}>{label}</span>
+        ))}
+      </div>
       <div className="grid grid-cols-4">
-        {fields.map(([key, , stripPattern], idx) => (
+        {fields.map(([key], idx) => (
           <input
             key={key}
             value={values[key]}
-            onChange={(e) => onChange(key, e.target.value.replace(stripPattern, ''))}
-            inputMode={stripPattern === NUMBERS_ONLY ? 'decimal' : 'text'}
-            placeholder={key === 'size' ? 'e.g. M' : '"'}
+            onChange={(e) => onChange(key, e.target.value)}
             className={`w-full text-center text-sm px-2 py-2.5 outline-none bg-[var(--cream)]/40 focus:bg-white focus:border-[var(--ink)] border-[var(--line)] ${
               idx > 0 ? 'border-l' : ''
-            } ${idx === 0 ? 'rounded-bl-lg' : ''} ${idx === fields.length - 1 ? 'rounded-br-lg' : ''}`}
+            }`}
           />
         ))}
       </div>
@@ -304,7 +287,7 @@ function MeasurementRow({ values, onChange, attached = false }) {
 /* ---------- Page ---------- */
 
 export default function ContactPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const flowParam = searchParams.get('flow') || '';
 
   const [flow, setFlow] = useState(flowParam === 'custom' ? 'custom' : '');
@@ -443,7 +426,16 @@ export default function ContactPage() {
     }, 1000);
   };
 
-  const meta = flow === 'custom' ? CUSTOM_STEP_META[phase] : ENQUIRY_STEP_META[phase];
+  // TIP: the "Other" garment path has one extra question ("What would
+  // this fit be?") before size, that every other garment type skips
+  // straight past. That pushes every step after it — size, color,
+  // photo, more, email — one number later, and the total step count
+  // to 7 for this path specifically, rather than the usual 6.
+  const otherPath = flow === 'custom' && formData.garmentType === 'Other';
+  const otherOffset = otherPath && ['size', 'color', 'photo', 'more', 'email'].includes(phase) ? 1 : 0;
+  const baseMeta = flow === 'custom' ? CUSTOM_STEP_META[phase] : ENQUIRY_STEP_META[phase];
+  const meta = baseMeta ? { ...baseMeta, n: baseMeta.n + otherOffset } : baseMeta;
+  const totalStepsForFlow = otherPath ? TOTAL_STEPS + 1 : TOTAL_STEPS;
   const showBack = history.length > 0;
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const orderStatusIndex = formData.orderRef ? hashString(formData.orderRef) % ORDER_STATUSES.length : 1;
@@ -470,18 +462,17 @@ export default function ContactPage() {
                 <SuccessCard heading="All Done!" subtext="Lara is working on it." />
               )
             ) : (
-              <StepShell stepNumber={meta.n} showHeader={meta.show} onBack={showBack ? goBack : undefined}>
+              <StepShell stepNumber={meta.n} totalSteps={totalStepsForFlow} showHeader={meta.show} onBack={showBack ? goBack : undefined}>
                 {/* ============ SHARED CHOOSER ============ */}
                 {phase === 'chooser' && (
                   <div className="text-center">
-                    <h1 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8 font-medium">
+                    <h1 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8 font-bold">
                       How would you like Lara to help you?
                     </h1>
                     <div className="space-y-4 max-w-sm mx-auto">
                       <button
                         onClick={() => {
                           setFlow('custom');
-                          setSearchParams({ flow: 'custom' });
                           goTo('garment');
                         }}
                         className="w-full border border-[var(--line)] py-4 px-6 text-sm font-semibold tracking-wide bg-white text-[var(--ink)] transition-all hover:border-[var(--ink)] focus-visible:border-[var(--ink)] cursor-pointer"
@@ -504,7 +495,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: topic select ============ */}
                 {phase === 'topic' && (
                   <div>
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-medium">
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-bold">
                       What&apos;s your enquiry about?
                     </h2>
                     <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
@@ -520,7 +511,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: sizing → which item ============ */}
                 {phase === 'sizing-field' && (
                   <div className="max-w-sm mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">Which item?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">Which item?</h2>
                     <div className="space-y-4">
                       <TextField
                         value={formData.itemName}
@@ -538,19 +529,10 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: sizing → chart + custom sizing ============ */}
                 {phase === 'sizing-chart' && (
                   <div>
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-medium">
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
                       Here is our size chart for {formData.itemName || '(item name)'}
                     </h2>
-                    <SizeChartTable noBottomBorder={formData.wantsSizeHelp === 'yes'} />
-                    {formData.wantsSizeHelp === 'yes' && (
-                      <MeasurementRow
-                        attached
-                        values={formData.sizingMeasurements}
-                        onChange={(key, val) =>
-                          updateField('sizingMeasurements', { ...formData.sizingMeasurements, [key]: val })
-                        }
-                      />
-                    )}
+                    <SizeChartTable />
                     <div className="flex items-center justify-between mt-5">
                       <span className="text-sm font-semibold text-[var(--ink)]">Do you want custom sizing?</span>
                       <div className="flex gap-3 text-sm">
@@ -573,6 +555,18 @@ export default function ContactPage() {
                       </div>
                     </div>
 
+                    {formData.wantsSizeHelp === 'yes' && (
+                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+                        <p className="text-xs text-[var(--muted)] mt-4 mb-1">Fill in your measurements</p>
+                        <MeasurementRow
+                          values={formData.sizingMeasurements}
+                          onChange={(key, val) =>
+                            updateField('sizingMeasurements', { ...formData.sizingMeasurements, [key]: val })
+                          }
+                        />
+                      </motion.div>
+                    )}
+
                     <PrimaryButton className="mt-6" onClick={() => goTo('sizing-done')}>
                       {formData.wantsSizeHelp === 'yes' ? 'Done' : 'Next'}
                     </PrimaryButton>
@@ -582,7 +576,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: sizing → done (self-serve, no email) ============ */}
                 {phase === 'sizing-done' && (
                   <div>
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-3 font-medium">All set!</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-3 font-bold">All set!</h2>
                     <p className="text-sm text-[var(--muted)] text-center leading-relaxed">
                       Thanks — hope that helps with your sizing! Reach out anytime if you need anything else.
                     </p>
@@ -593,7 +587,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: order status / payment → order ref ============ */}
                 {(phase === 'os-field' || phase === 'pay-field') && (
                   <div className="max-w-sm mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">
                       What is your order reference number?
                     </h2>
                     <div className="space-y-4">
@@ -616,7 +610,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: order status → tracker (self-serve, no email) ============ */}
                 {phase === 'os-tracker' && (
                   <div>
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-medium">
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
                       Here is the status of your order
                     </h2>
                     <div className="flex items-center justify-between mb-10 px-1">
@@ -667,7 +661,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: payment → issue ============ */}
                 {phase === 'pay-issue' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">Tell Lara the issue</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">What's the issue?</h2>
                     <div className="space-y-4">
                       <div>
                         <textarea
@@ -689,7 +683,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: something else → issue (no step header) ============ */}
                 {phase === 'se-issue' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-medium">What&apos;s the issue?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">What&apos;s the issue?</h2>
                     <div className="space-y-4">
                       <div>
                         <textarea
@@ -711,7 +705,7 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: email (payment + something-else only) ============ */}
                 {phase === 'email' && flow !== 'custom' && (
                   <form onSubmit={submitEnquiry} className="max-w-sm mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">Where can Lara email you?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">Where can Lara email you?</h2>
                     <div className="space-y-4">
                       <TextField
                         type="email"
@@ -722,7 +716,7 @@ export default function ContactPage() {
                         error={errors.enquiryEmail}
                         required
                       />
-                      <PrimaryButton type="submit" disabled={submitting || !formData.enquiryEmail.trim()}>
+                      <PrimaryButton type="submit" disabled={submitting}>
                         {submitting ? 'Sending...' : 'Done'}
                       </PrimaryButton>
                     </div>
@@ -732,7 +726,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: garment type ============ */}
                 {phase === 'garment' && (
                   <div>
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-medium">
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-bold">
                       What would you like Lara to make for you?
                     </h2>
                     <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
@@ -748,7 +742,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: "Other" → free-text fit ============ */}
                 {phase === 'other-fit' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">What would this fit be?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">What would this fit be?</h2>
                     <div className="space-y-4">
                       <textarea
                         rows={4}
@@ -768,7 +762,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: size ============ */}
                 {phase === 'size' && (
                   <div>
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-medium">What size works for you?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-8 font-bold">What size works for you?</h2>
                     <div className="flex flex-wrap justify-center gap-3 max-w-sm mx-auto">
                       {SIZE_OPTIONS.map((size) => (
                         <PillButton
@@ -802,24 +796,49 @@ export default function ContactPage() {
                         </button>
                       </div>
                     </div>
-                    {formData.showSizeChart === 'yes' && formData.sizeChoice !== 'Custom sizing' && (
+                    {formData.showSizeChart === 'yes' && (
                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="max-w-sm mx-auto">
                         <SizeChartTable />
                       </motion.div>
                     )}
 
-                    {formData.sizeChoice === 'Custom sizing' && (
+                    {/* TIP: second, independent way to reach the same
+                        measurements table as the "Custom sizing" pill
+                        above — either path writes to the same
+                        formData.customMeasurements, so it doesn't
+                        matter which one someone uses. */}
+                    <div className="flex items-center justify-between mt-6 max-w-sm mx-auto">
+                      <span className="text-sm font-semibold text-[var(--ink)]">Do you want custom sizing?</span>
+                      <div className="flex gap-3 text-sm">
+                        <button
+                          onClick={() => updateField('wantsCustomSizing', 'yes')}
+                          className={`cursor-pointer ${
+                            formData.wantsCustomSizing === 'yes' ? 'underline font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'
+                          }`}
+                        >
+                          Yes
+                        </button>
+                        <button
+                          onClick={() => updateField('wantsCustomSizing', 'no')}
+                          className={`cursor-pointer ${
+                            formData.wantsCustomSizing !== 'yes' ? 'underline font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'
+                          }`}
+                        >
+                          No
+                        </button>
+                      </div>
+                    </div>
+
+                    {(formData.sizeChoice === 'Custom sizing' || formData.wantsCustomSizing === 'yes') && (
                       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 max-w-sm mx-auto">
                         <p className="text-sm text-[var(--ink)] mb-1">Go ahead, fill in your measurements.</p>
-                        {formData.showSizeChart === 'yes' && <SizeChartTable noBottomBorder />}
                         <MeasurementRow
-                          attached={formData.showSizeChart === 'yes'}
                           values={formData.customMeasurements}
                           onChange={(key, val) => updateField('customMeasurements', { ...formData.customMeasurements, [key]: val })}
                         />
                         <PrimaryButton
                           className="mt-4"
-                          disabled={!formData.customMeasurements.size.trim() || !formData.customMeasurements.bust.trim() || !formData.customMeasurements.waist.trim() || !formData.customMeasurements.hip.trim()}
+                          disabled={!formData.customMeasurements.bust.trim() || !formData.customMeasurements.waist.trim() || !formData.customMeasurements.hip.trim()}
                           onClick={() => goTo('color')}
                         >
                           Next
@@ -827,7 +846,7 @@ export default function ContactPage() {
                       </motion.div>
                     )}
 
-                    {formData.sizeChoice && formData.sizeChoice !== 'Custom sizing' && (
+                    {formData.sizeChoice && formData.sizeChoice !== 'Custom sizing' && formData.wantsCustomSizing !== 'yes' && (
                       <PrimaryButton className="mt-6 max-w-sm mx-auto block" onClick={() => goTo('color')}>
                         Next
                       </PrimaryButton>
@@ -838,7 +857,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: color ============ */}
                 {phase === 'color' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">What color mix do you have in mind?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">What color mix do you have in mind?</h2>
                     <div className="flex justify-center gap-3 flex-wrap mb-4">
                       {COLOR_SWATCHES.map((hex) => (
                         <button
@@ -883,7 +902,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: photo ============ */}
                 {phase === 'photo' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">Got a picture of what you want?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">Got a picture of what you want?</h2>
 
                     <label
                       htmlFor="photo-upload"
@@ -926,7 +945,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: anything else ============ */}
                 {phase === 'more' && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-2 font-medium">Anything else you&apos;d like to mention?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-2 font-bold">Anything else you&apos;d like to mention?</h2>
                     <p className="text-center text-xs text-[var(--muted)] mb-6">This might help Lara nail your vision faster.</p>
                     <div className="space-y-4">
                       <textarea
@@ -944,7 +963,7 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: email ============ */}
                 {phase === 'email' && flow === 'custom' && (
                   <form onSubmit={submitCustom} className="max-w-sm mx-auto">
-                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-medium">Where can Lara email you?</h2>
+                    <h2 className="font-display text-3xl text-center text-[var(--ink)] mb-6 font-bold">Where can Lara email you?</h2>
                     <div className="space-y-4">
                       <TextField
                         type="email"
@@ -955,7 +974,7 @@ export default function ContactPage() {
                         error={errors.customEmail}
                         required
                       />
-                      <PrimaryButton type="submit" disabled={submitting || !formData.customEmail.trim()}>
+                      <PrimaryButton type="submit" disabled={submitting}>
                         {submitting ? 'Submitting...' : 'Send Custom Order'}
                       </PrimaryButton>
                     </div>

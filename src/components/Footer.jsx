@@ -15,7 +15,7 @@ const columns = [
   {
     title: "General",
     links: [
-      { label: "Shop", to: "/" },
+      { label: "Shop", to: "/shop" },
       { label: "About", to: "/about" },
       { label: "Custom Orders", to: "/contact?flow=custom" },
     ],
