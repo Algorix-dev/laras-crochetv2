@@ -127,7 +127,7 @@ export default function ShopPage() {
           <button
             key={cat}
             onClick={() => setActiveCategory(activeCategory === cat ? 'all' : cat)}
-            className={`shrink-0 rounded-md border px-4 py-2 font-semibold transition-colors ${
+            className={`shrink-0 rounded-md uppercase border px-4 py-2 font-semibold transition-colors ${
               activeCategory === cat
                 ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
                 : 'border-[var(--line)] text-[var(--ink)] hover:border-[var(--ink)]'
