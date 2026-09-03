@@ -5,7 +5,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ProductGrid from "./components/ProductGrid";
 import CustomOrderBanner from "./components/CustomOrderBanner";
-import LaraShowcase from "./components/LaraShowcase";
+import BrandStory from "./components/BrandStory";
 import Footer from "./components/Footer";
 import { products, heroModels } from "./data/products";
 import { getProducts, normalizeProduct } from "./api";
@@ -82,17 +82,14 @@ function HomePage() {
     <>
       <Hero models={heroModels} />
 
-      {/* TIP: this used to be two static sections (brand story +
-          testimonial grid), each just fading up once when scrolled
-          into view. Per Lara's feedback it's now one sticky,
-          scroll-scrubbed sequence — LaraShowcase pins itself under
-          the navbar, scatters the 3 reference photos over her
-          portrait, cross-fades the same 4 brand-story paragraphs one
-          at a time, then fades the testimonials through one by one —
-          before finally releasing and letting the page continue
-          scrolling into the shop section below. See LaraShowcase.jsx
-          for how the pin + scroll-scrub is built. */}
-      <LaraShowcase />
+      {/* TIP: this used to be LaraShowcase — a pinned, scroll-scrubbed
+          sequence that faded the brand-story paragraphs and testimonials
+          in one at a time as you scrolled. Reverted to a static section
+          (BrandStory.jsx) because the actual Figma export shows all of
+          this content sitting still on the page, nothing scroll-scrubbed.
+          Same real copy, same 3 reference photos, just laid out plainly
+          with the same gentle Reveal fade-up used elsewhere on the site. */}
+      <BrandStory />
 
       <div className="text-center pt-2 pb-10 md:pb-14">
         <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
