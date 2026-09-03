@@ -974,7 +974,7 @@ const COUNTRIES = [
   {
     "name": "Nigeria",
     "code": "NG",
-    "code3": "NGA",
+    "code3": "NGN",
     "currency": "NGN"
   },
   {
