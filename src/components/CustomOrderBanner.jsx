@@ -5,7 +5,7 @@ export default function CustomOrderBanner() {
   return (
     <section id="custom-orders" className="py-14 md:py-20 text-center">
       <h2 className="mb-8 flex items-center justify-center gap-3 text-3xl md:text-4xl">
-        <span className="font-logo text-[var(--maroon)]">Custom</span>
+        <span className="font-logo text-[var(--maroon-dark)]">Custom</span>
         <span className="font-bold uppercase tracking-wide text-[var(--ink)]">Orders</span>
       </h2>
 

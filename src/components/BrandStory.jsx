@@ -51,7 +51,7 @@ export default function BrandStory() {
       {/* Lara wordmark + photo stack */}
       <Reveal>
         <div className="relative inline-flex items-center justify-center mb-14 md:mb-20">
-          <span className="font-['Yellowtail'] text-[4rem] sm:text-[5rem] md:text-[6.5rem] leading-none text-[var(--maroon)] select-none">
+          <span className="font-logo text-[4rem] sm:text-[5rem] md:text-[6.5rem] leading-none text-[var(--maroon-dark)] select-none">
             Lara
           </span>
           <div className="relative w-[110px] h-[80px] sm:w-[140px] sm:h-[100px] md:w-[155px] md:h-[110px] ml-1">

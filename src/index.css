@@ -40,6 +40,22 @@ body {
 .font-display {
   font-family: "DM Sans", sans-serif;
 }
+/* TIP: the Figma export specifies 'Genty Demo' for every script/
+   cursive wordmark ("Lara's Crochet" nav logo, "Custom", the big
+   "LARA" brand-story text, the footer monogram) — but that font
+   isn't on Google Fonts and there's no font file for it in this
+   project, so it can't actually be loaded. Yellowtail (already
+   imported above) was chosen as the closest free substitute and is
+   what Hero/Footer already use successfully.
+   BUG FOUND while reconciling against the Figma CSS export: this
+   class was referenced in CustomOrderBanner.jsx and ContactPage.jsx
+   but was never actually defined here — so "Custom" and the Contact
+   page's "Lara" text have been silently falling back to the
+   browser's default serif font this whole time, not the intended
+   script look. Defining it now fixes both. */
+.font-logo {
+  font-family: "Yellowtail", cursive;
+}
 /* TIP: active nav-link labels use Raleway 800 uppercase in the Figma
    export; inactive links stay DM Sans. */
 .font-nav-active {
