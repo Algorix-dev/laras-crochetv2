@@ -5,140 +5,150 @@ import { useWishlist } from "../context/WishlistContext";
 import { useCurrency } from "../context/CurrencyContext";
 import ShareButton from "./ShareButton";
 import MoreOptionsMenu from "./MoreOptionsMenu";
+import podiumRing from "../assets/podium-ring.png";
 
 /*
-  TIP: "Rotate to center" carousel — clicking an angle reorders
-  the array so that item appears at position 2 (center). The
-  motion.div with `layout` animates the position swap smoothly.
+  TIP: FIXED SLOTS, NOT A CAROUSEL.
+  ----------------------------------
+  Earlier version reordered the array so the clicked item slid into
+  the middle. That's wrong per Lara's correction: the 5 garments stay
+  in their own slots always — clicking one only changes which slot
+  counts as "selected." The selected slot's photo faces front, gets
+  full color, and gets its own name-behind-head + podium + price.
+  Every other slot dims/desaturates and "looks away" — mirrored to
+  face further left if it sits left of the selected slot, unmirrored
+  (facing right) if it sits right of it.
+
+  The name/podium/price block uses a shared framer-motion `layoutId`
+  so when you click a different slot, that block visibly slides from
+  its old position to the new one instead of just popping — the
+  "mini transition" Lara asked for — even though the photos
+  themselves never move.
 */
-export default function Hero({ product }) {
-  const [centerIndex, setCenterIndex] = useState(2);
-  const angles = product.angles;
+export default function Hero({ models }) {
+  const [selectedId, setSelectedId] = useState(models[0]?.id);
+  const selectedSlot = models.findIndex((m) => m.id === selectedId);
+  const selected = models[selectedSlot];
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { formatPrice } = useCurrency();
-
-  /* TIP: Build display order so centerIndex is always at position 2.
-     Example: if centerIndex=0, order is [3,4,0,1,2] — item 0 is
-     in the middle, others flow naturally to its sides. */
-  const displayOrder = (() => {
-    const order = [];
-    for (let i = 0; i < angles.length; i++) {
-      const offset = (i - centerIndex + angles.length) % angles.length;
-      const displayPos = (offset + 2) % angles.length;
-      order[displayPos] = i;
-    }
-    return order;
-  })();
 
   return (
     <section className="pt-10 md:pt-16 pb-10 text-center px-5">
       <div className="relative max-w-5xl mx-auto">
-        <h1 className="relative z-0 font-display text-[4.5rem] sm:text-[5.5rem] md:text-[7rem] leading-none text-[#d8d5cd] select-none">
-          {product.name.toUpperCase()}
-        </h1>
-
-        <div className="flex items-end justify-center gap-3 md:gap-6 -mt-10 sm:-mt-14 md:-mt-20">
-          {displayOrder.map((originalIndex, displayPos) => {
-            const angle = angles[originalIndex];
-            const isCenter = displayPos === 2;
-            const distance = Math.abs(displayPos - 2);
-
-            /* On mobile, hide items 2+ from center. On desktop, show all 5. */
+        <div className="flex items-end justify-center gap-3 md:gap-6">
+          {models.map((model, slot) => {
+            const isSelected = model.id === selectedId;
+            const distance = Math.abs(slot - selectedSlot);
             const responsiveClass = distance >= 2 ? "hidden md:block" : "";
+            // TIP: mirror slots to the LEFT of the selected one so
+            // they read as "facing away left"; slots to the right
+            // stay unmirrored, reading as "facing away right." The
+            // selected slot itself is always unmirrored (front-on).
+            const shouldMirror = !isSelected && slot < selectedSlot;
 
             return (
-              <motion.div
-                key={`angle-${originalIndex}`}
-                layout
-                role="button"
-                tabIndex={0}
-                onClick={() => setCenterIndex(originalIndex)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setCenterIndex(originalIndex);
-                  }
-                }}
-                aria-label={`View angle ${originalIndex + 1} of ${product.name}`}
-                aria-current={isCenter}
-                className={`relative cursor-pointer focus-visible:outline-none ${responsiveClass}`}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  mass: 0.8,
-                }}
-              >
-                {isCenter && (
-                  <motion.div
-                    layoutId="ground-shadow"
-                    className="absolute left-1/2 -translate-x-1/2 bottom-1 w-3/4 h-3 bg-black/20 blur-md rounded-full -z-10"
-                  />
+              <div key={model.id} className={`relative ${responsiveClass}`}>
+                {isSelected && (
+                  <>
+                    {/* Name — sits BEHIND the photo (lower z-index),
+                        positioned at this model's own head height via
+                        nameTop, so it reads as "coming from behind
+                        the head" rather than floating above it. */}
+                    <motion.h1
+                      layoutId="hero-name"
+                      transition={{ type: "spring", stiffness: 260, damping: 28 }}
+                      style={{ top: model.nameTop }}
+                      className="absolute left-1/2 -translate-x-1/2 z-0 font-display text-[3.5rem] sm:text-[4.5rem] md:text-[5.5rem] leading-none text-[#d8d5cd] select-none whitespace-nowrap"
+                    >
+                      {model.name.toUpperCase()}
+                    </motion.h1>
+
+                    {/* Podium — the real crochet-ring asset, slowly
+                        spinning under the selected garment only. */}
+                    <motion.img
+                      layoutId="hero-podium"
+                      src={podiumRing}
+                      alt=""
+                      aria-hidden="true"
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        layout: { type: "spring", stiffness: 260, damping: 28 },
+                        rotate: { duration: 14, repeat: Infinity, ease: "linear" },
+                      }}
+                      className="absolute left-1/2 bottom-2 -translate-x-1/2 z-0 w-40 sm:w-48 md:w-56 pointer-events-none"
+                    />
+                  </>
                 )}
 
-                <img
-                  src={angle.src}
-                  alt={
-                    isCenter
-                      ? `${product.name}, front view`
-                      : `${product.name}, alternate angle`
-                  }
-                  className={`relative z-10 h-auto pointer-events-none transition-all duration-500 ease-[0.22,1,0.36,1] ${
-                    isCenter
-                      ? "w-40 sm:w-48 md:w-56 opacity-100"
-                      : "w-32 md:w-40 opacity-40"
+                <motion.img
+                  layout
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedId(model.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedId(model.id);
+                    }
+                  }}
+                  aria-label={`View ${model.placeholder ? "this piece" : model.name}`}
+                  aria-current={isSelected}
+                  src={model.image}
+                  alt={model.placeholder ? "Lara's Crochet piece" : model.name}
+                  transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
+                  style={shouldMirror ? { transform: "scaleX(-1)" } : {}}
+                  className={`relative z-10 h-auto cursor-pointer focus-visible:outline-none transition-[opacity,filter] duration-500 ${
+                    isSelected
+                      ? "w-40 sm:w-48 md:w-56 opacity-100 saturate-100"
+                      : "w-32 md:w-40 opacity-60 saturate-[0.35]"
                   }`}
-                  style={angle.flip ? { transform: "scaleX(-1)" } : {}}
                 />
 
-                {isCenter && (
-                  <div className="absolute -right-6 sm:-right-7 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
+                {isSelected && (
+                  <div className="absolute -right-6 sm:-right-7 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-2">
                     <button
                       aria-label="Toggle wishlist"
-                      aria-pressed={isInWishlist(product.id)}
+                      aria-pressed={isInWishlist(model.id)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleWishlist(product.id);
+                        toggleWishlist(model.id);
                       }}
                       className="hover:text-[var(--maroon)]"
                     >
-                      <Heart
-                        size={17}
-                        strokeWidth={1.5}
-                        fill={
-                          isInWishlist(product.id) ? "currentColor" : "none"
-                        }
-                      />
+                      <Heart size={17} strokeWidth={1.5} fill={isInWishlist(model.id) ? "currentColor" : "none"} />
                     </button>
-                    <ShareButton
-                      product={product}
-                      className="hover:text-[var(--maroon)]"
-                    />
-                    <MoreOptionsMenu product={product} />
+                    <ShareButton product={model} className="hover:text-[var(--maroon)]" />
+                    <MoreOptionsMenu product={model} />
                   </div>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>
 
         <div className="relative z-10 flex justify-center gap-1.5 mt-4">
-          {angles.map((_, i) => (
+          {models.map((m) => (
             <button
-              key={i}
-              onClick={() => setCenterIndex(i)}
-              aria-label={`Go to angle ${i + 1}`}
+              key={m.id}
+              onClick={() => setSelectedId(m.id)}
+              aria-label={`View ${m.placeholder ? "piece" : m.name}`}
               className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                i === centerIndex ? "bg-[var(--ink)]" : "bg-[var(--line)]"
+                m.id === selectedId ? "bg-[var(--ink)]" : "bg-[var(--line)]"
               }`}
             />
           ))}
         </div>
 
-        <div className="relative z-10 w-40 sm:w-48 md:w-56 mx-auto flex items-center justify-between mt-3 text-sm">
-          <span className="uppercase tracking-wide">{product.name}</span>
-          <span className="font-semibold">{formatPrice(product.price)}</span>
-        </div>
+        {/* Price — its own shared-layout block so it slides to match
+            whichever slot is selected, showing THAT model's own price,
+            not a leftover from the previous selection. */}
+        <motion.div
+          layout
+          className="relative z-10 w-40 sm:w-48 md:w-56 mx-auto flex items-center justify-between mt-3 text-sm"
+        >
+          <span className="uppercase tracking-wide">{selected.name}</span>
+          <span className="font-semibold">{formatPrice(selected.price)}</span>
+        </motion.div>
       </div>
     </section>
   );

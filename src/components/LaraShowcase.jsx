@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import laraPortrait from '../assets/lara-sunglasses.jpg';
 import scatterBeach from '../assets/scatter-beach.png';
 import scatterStreet from '../assets/scatter-street.jpg';
 import scatterTeal from '../assets/scatter-teal.png';
@@ -10,24 +9,27 @@ import arcFlourish2 from '../assets/arc-flourish-2.png';
 /*
   TIP: HOW THIS SECTION IS PINNED
   -------------------------------
-  The outer <section> is tall (300vh) — that extra height is scroll
-  "runway." The inner div is `sticky top-[66px]` (66px = Navbar height,
-  see Navbar.jsx `h-[66px]`), so once its top hits the bottom edge of
-  the fixed navbar it locks there and stays on screen while the user
-  keeps scrolling through the rest of the outer section's height. Once
-  the outer section runs out of height, the sticky div scrolls away
-  naturally with the rest of the page — no JS pinning/unpinning logic
-  needed, just CSS position:sticky + a tall parent.
+  The outer <section> is tall (260vh) — that extra height is scroll
+  "runway." The inner div is `sticky top-[66px]` (66px = Navbar
+  height, see Navbar.jsx `h-[66px]`), so once its top hits the bottom
+  edge of the sticky navbar it locks there and stays on screen while
+  the user keeps scrolling through the rest of the outer section's
+  height. Once the outer section runs out of height, the sticky div
+  scrolls away naturally — no manual pin/unpin JS needed.
 
-  `useScroll` tracks how far through that outer section we've
-  scrolled (0 → 1) and drives every animation stage below off of that
-  single number — the three photos scattering into place, the four
-  brand-story paragraphs cross-fading, and the testimonials fading in
-  then back out one by one. Nothing here is triggered by
-  "has this element entered the viewport" (that's what <Reveal> is
-  for elsewhere on the page) — it's continuously tied to scroll
-  position, which is what makes it feel "scrubbed" rather than just
-  "triggered once."
+  `useScroll` tracks progress through that outer section (0 → 1) and
+  drives every stage below off that one number: the 3 photos
+  converging onto the LARA wordmark, the 4 brand-story paragraphs
+  cross-fading, and the testimonials fading in/out in staggered
+  groups of 3. It's continuously tied to scroll position (scrubbed),
+  not a "did this enter the viewport" trigger.
+
+  CORRECTION FROM THE FIRST PASS: "Lara" in the brief refers to the
+  cursive "LARA" wordmark (see Group_4.png / the existing footer
+  monogram treatment, font-family Yellowtail) — NOT a photo of Lara
+  herself. Rendered as live text here (same technique Footer.jsx
+  already uses via font-['Yellowtail']) so it stays crisp at any
+  size, rather than as an image.
 */
 
 const PARAGRAPHS = [
@@ -37,10 +39,10 @@ const PARAGRAPHS = [
   "This isn't fast fashion. It's handmade, made with love.",
 ];
 
-// TIP: only 6 real testimonials exist in the copy doc right now (see
-// App.jsx's old TESTIMONIALS array) — the Figma export shows 9 slots.
-// Using the 6 real ones here; ask Lara for 3 more when she has them
-// rather than inventing placeholder reviews.
+// TIP: only 6 real testimonials exist in the copy doc right now — the
+// Figma export shows 9 slots. Grouped 3-at-a-time below (2 full
+// groups); ask Lara for 3 more whenever she has them so the 3rd group
+// isn't empty.
 const TESTIMONIALS = [
   { quote: "I've never had a piece fit this well straight out of the box — literally made to my measurements. No alterations needed.", name: 'Teniola Aladese' },
   { quote: "You can tell this isn't machine-made. The detail in the stitching is unreal.", name: 'Tolu Coker' },
@@ -49,20 +51,26 @@ const TESTIMONIALS = [
   { quote: 'Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.', name: 'Precious Ehizoge' },
   { quote: 'Customer service walked me through sizing so patiently. Made ordering online feel less scary.', name: 'Ejiro Okezie' },
 ];
+const TESTIMONIAL_GROUPS = [];
+for (let i = 0; i < TESTIMONIALS.length; i += 3) {
+  TESTIMONIAL_GROUPS.push(TESTIMONIALS.slice(i, i + 3));
+}
 
-// Final resting spot + entry direction for each of the 3 scattered photos.
+// TIP: converge from left, right, and below (per Lara's note) onto a
+// small tilted collage nested around the wordmark — much smaller
+// footprint than the first pass's full-height treatment.
 const SCATTER_LAYOUT = [
-  { src: scatterBeach, alt: 'Lara\'s Crochet customer wearing a turquoise two-piece on the beach', from: { x: -140, y: -60, rotate: -14 }, to: { x: -190, y: -70, rotate: -8 }, size: 'w-32 sm:w-40 md:w-48' },
-  { src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", from: { x: 150, y: -40, rotate: 12 }, to: { x: 195, y: -50, rotate: 7 }, size: 'w-32 sm:w-40 md:w-48' },
-  { src: scatterStreet, alt: 'Street-style portrait, styling reference', from: { x: 0, y: 180, rotate: 6 }, to: { x: 0, y: 210, rotate: -3 }, size: 'w-28 sm:w-36 md:w-44' },
+  { src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", from: { x: -260, y: -40, rotate: -20 }, to: { x: -78, y: -6, rotate: -9 }, size: 'w-20 sm:w-24 md:w-28' },
+  { src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", from: { x: 260, y: -40, rotate: 20 }, to: { x: 78, y: -6, rotate: 8 }, size: 'w-20 sm:w-24 md:w-28' },
+  { src: scatterStreet, alt: 'Street-style portrait, styling reference', from: { x: 0, y: 220, rotate: 8 }, to: { x: 0, y: 30, rotate: -4 }, size: 'w-16 sm:w-20 md:w-24' },
 ];
 
 /* Stage boundaries along the 0→1 scroll progress of the whole pinned run. */
 const STAGES = {
-  scatterEnd: 0.16,
-  paragraphsStart: 0.16,
-  paragraphsEnd: 0.52,
-  reviewsStart: 0.52,
+  scatterEnd: 0.14,
+  paragraphsStart: 0.14,
+  paragraphsEnd: 0.5,
+  reviewsStart: 0.5,
   reviewsEnd: 0.98,
 };
 
@@ -72,14 +80,14 @@ function ScatterImage({ layout, progress }) {
   const y = useTransform(localProgress, [0, 1], [layout.from.y, layout.to.y]);
   const rotate = useTransform(localProgress, [0, 1], [layout.from.rotate, layout.to.rotate]);
   const opacity = useTransform(progress, [0, STAGES.scatterEnd * 0.6, STAGES.scatterEnd], [0, 1, 1]);
-  const scale = useTransform(localProgress, [0, 1], [0.7, 1]);
+  const scale = useTransform(localProgress, [0, 1], [0.6, 1]);
 
   return (
     <motion.img
       src={layout.src}
       alt={layout.alt}
       style={{ x, y, rotate, opacity, scale }}
-      className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${layout.size} rounded-sm object-cover shadow-xl ring-4 ring-[var(--cream)]`}
+      className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ${layout.size} rounded-sm object-cover shadow-xl ring-2 ring-[var(--cream)]`}
     />
   );
 }
@@ -104,22 +112,10 @@ function ScrollParagraph({ text, index, progress }) {
   );
 }
 
-function ScrollTestimonial({ t, index, progress }) {
-  const span = (STAGES.reviewsEnd - STAGES.reviewsStart) / TESTIMONIALS.length;
-  const start = STAGES.reviewsStart + index * span;
-  const fadeIn = start + span * 0.25;
-  const hold = start + span * 0.7;
-  const fadeOut = start + span;
-
-  const opacity = useTransform(progress, [start, fadeIn, hold, fadeOut], [0, 1, 1, 0]);
-  // TIP: enters sliding in from the left, per the "one by one, left to
-  // right" request — x animates from off-left to its resting spot.
-  const x = useTransform(progress, [start, fadeIn], [-40, 0]);
-
+function ReviewCard({ t, raised }) {
   return (
-    <motion.div
-      style={{ opacity, x }}
-      className="absolute inset-x-0 top-1/2 -translate-y-1/2 mx-auto max-w-sm border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
+    <div
+      className={`border border-[var(--line)] bg-[var(--cream)] p-5 w-full max-w-[15rem] text-center ${raised ? '-translate-y-4' : ''}`}
     >
       <p className="text-sm text-[var(--ink)] mb-3 leading-relaxed">"{t.quote}"</p>
       <p className="text-xs font-bold text-[var(--ink)] flex items-center justify-center gap-1">
@@ -127,6 +123,31 @@ function ScrollTestimonial({ t, index, progress }) {
         <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-white text-[9px]">✓</span>
       </p>
       <p className="text-[11px] text-[var(--muted)]">Verified Customer</p>
+    </div>
+  );
+}
+
+function ScrollReviewGroup({ group, index, progress }) {
+  const span = (STAGES.reviewsEnd - STAGES.reviewsStart) / TESTIMONIAL_GROUPS.length;
+  const start = STAGES.reviewsStart + index * span;
+  const fadeIn = start + span * 0.25;
+  const hold = start + span * 0.7;
+  const fadeOut = start + span;
+
+  const opacity = useTransform(progress, [start, fadeIn, hold, fadeOut], [0, 1, 1, 0]);
+  const y = useTransform(progress, [start, fadeIn], [24, 0]);
+
+  return (
+    <motion.div
+      style={{ opacity, y }}
+      // TIP: "not straight" per Lara's screenshot — the middle card
+      // sits a little higher than its neighbors (see ReviewCard's
+      // `raised` prop), not a flat row of 3.
+      className="absolute inset-0 flex items-center justify-center gap-4"
+    >
+      {group.map((t, i) => (
+        <ReviewCard key={t.name} t={t} raised={i === 1} />
+      ))}
     </motion.div>
   );
 }
@@ -138,48 +159,41 @@ export default function LaraShowcase() {
     offset: ['start start', 'end end'],
   });
 
-  const podiumRotate = useTransform(scrollYProgress, [0, 1], [0, 180]);
-
   return (
-    <section ref={sectionRef} className="relative h-[300vh]">
+    <section ref={sectionRef} className="relative h-[260vh]">
       {/* TIP: top-[66px] matches Navbar's fixed h-[66px] — this is
           what makes the section stop right at the navbar's bottom
           edge instead of sliding underneath it. */}
       <div className="sticky top-[66px] h-[calc(100vh-66px)] overflow-hidden bg-[var(--cream)]">
-        {/* Decorative arcs — same flourish used elsewhere on the page */}
-        <img src={arcFlourish1} alt="" aria-hidden="true" className="pointer-events-none absolute -top-10 left-0 w-full opacity-70" />
-        <img src={arcFlourish2} alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-10 left-0 w-full rotate-180 opacity-70" />
+        {/* Decorative arcs — kept at their natural aspect ratio and
+            tucked into a corner instead of stretched edge-to-edge, so
+            the diagonal sweep reads correctly instead of flattening
+            into straight lines. */}
+        <img src={arcFlourish1} alt="" aria-hidden="true" className="pointer-events-none absolute -top-6 -left-10 w-[55%] max-w-md opacity-70" />
+        <img src={arcFlourish2} alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-6 -right-10 w-[55%] max-w-md opacity-70" />
 
-        {/* Wool/crochet-spiral backdrop, Lara up front, photos scattered on top */}
         <div className="relative mx-auto flex h-full max-w-5xl flex-col items-center justify-center px-5">
-          <div
-            aria-hidden="true"
-            style={{ rotate: podiumRotate }}
-            className="absolute h-[70vmin] w-[70vmin] rounded-full border-2 border-dashed border-[var(--mauve)] opacity-50"
-          />
-
-          <div className="relative">
-            <img
-              src={laraPortrait}
-              alt="Lara, founder of Lara's Crochet"
-              className="relative z-10 h-[46vh] w-auto max-w-none rounded-sm object-cover shadow-2xl md:h-[56vh]"
-            />
+          {/* LARA wordmark + the 3 photos converging onto it */}
+          <div className="relative flex items-center justify-center h-40 md:h-48 w-full">
+            <span className="font-['Yellowtail'] text-[3.5rem] sm:text-[4.5rem] md:text-[5.5rem] leading-none text-[var(--maroon)] select-none">
+              Lara
+            </span>
             {SCATTER_LAYOUT.map((layout, i) => (
               <ScatterImage key={i} layout={layout} progress={scrollYProgress} />
             ))}
           </div>
 
           {/* Paragraphs — stacked in the same spot, cross-fading */}
-          <div className="relative mt-8 h-24 w-full">
+          <div className="relative mt-6 h-24 w-full">
             {PARAGRAPHS.map((text, i) => (
               <ScrollParagraph key={i} text={text} index={i} progress={scrollYProgress} />
             ))}
           </div>
 
-          {/* Testimonials — stacked in the same spot, one at a time */}
-          <div className="relative mt-4 h-40 w-full">
-            {TESTIMONIALS.map((t, i) => (
-              <ScrollTestimonial key={t.name} t={t} index={i} progress={scrollYProgress} />
+          {/* Testimonials — 3 at a time, staggered, fading in then out as a group */}
+          <div className="relative mt-6 h-56 w-full">
+            {TESTIMONIAL_GROUPS.map((group, i) => (
+              <ScrollReviewGroup key={i} group={group} index={i} progress={scrollYProgress} />
             ))}
           </div>
         </div>

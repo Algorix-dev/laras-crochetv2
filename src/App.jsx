@@ -7,7 +7,7 @@ import ProductGrid from "./components/ProductGrid";
 import CustomOrderBanner from "./components/CustomOrderBanner";
 import LaraShowcase from "./components/LaraShowcase";
 import Footer from "./components/Footer";
-import { products, heroProduct } from "./data/products";
+import { products, heroModels } from "./data/products";
 import { getProducts, normalizeProduct } from "./api";
 
 import SignInPage from "./pages/SignInPage";
@@ -80,7 +80,7 @@ function HomePage() {
 
   return (
     <>
-      <Hero product={heroProduct} />
+      <Hero models={heroModels} />
 
       {/* TIP: this used to be two static sections (brand story +
           testimonial grid), each just fading up once when scrolled
