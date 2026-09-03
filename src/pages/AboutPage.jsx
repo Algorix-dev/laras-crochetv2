@@ -42,12 +42,12 @@ export default function AboutPage() {
           <img
             src={laraPortrait}
             alt="Lara close-up portrait"
-            className="aspect-[416/391] w-full max-w-[380px] object-cover"
+            className="aspect-[416 / 195.5] w-full max-w-[380px] object-cover"
           />
         </div>
 
           {/* Brand story */}
-          <p className="mt-9 max-w-xl text-sm leading-8 text-[var(--muted)]">
+          <p className="mt-9 max-w-xl text-center text-sm leading-8 text-[var(--muted)]">
             At Lara&apos;s Crochet, every piece starts as a single strand of
             yarn and a pair of hands. No factories, no shortcuts — just crochet
             made with love, one piece at a time, out of Lagos, Nigeria. We
