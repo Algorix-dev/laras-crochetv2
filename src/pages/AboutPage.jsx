@@ -70,20 +70,27 @@ export default function AboutPage() {
           />
 
           {/* TIP: Rotated "MEET LARA" label beside the close-up portrait.
-              The label sits in its own narrow, height-matched wrapper —
-              a CSS rotation doesn't shrink the element's LAYOUT footprint,
-              only its visual appearance, so without this wrapper the
-              rotated text kept its original horizontal width/height for
-              spacing purposes and visually overlapped the image next to
-              it. Giving it a fixed narrow width and letting it stretch to
-              the image's height (self-stretch, via the parent's default
-              align-items: stretch) fixes that properly. */}
-          <div className="mt-10 flex gap-0.5">
-            <div className="flex w-6 items-end justify-center">
-              <p className="-rotate-90 whitespace-nowrap text-base font-bold">
-                MEET LARA
-              </p>
-            </div>
+              Previously this sat in a sibling flex column that relied on
+              align-items: stretch to match the image's height, with the
+              text pinned to its bottom via items-end — that only holds up
+              if the stretch calculation resolves exactly right, and it
+              was drifting off the image's actual bottom edge whenever
+              that broke. Anchoring the label with position: absolute
+              directly against the image's own wrapper (bottom-0 = same
+              bottom edge as the image, right-full = fully outside its
+              left edge) ties it to the image's real rendered box instead
+              of a height calculated elsewhere, so it can't drift no
+              matter what the image does. writing-mode: vertical-rl plus
+              a 180deg rotation gives bottom-to-top vertical text without
+              needing a separate rotated wrapper. */}
+          <div className="relative mt-10 w-full max-w-[380px]">
+            <p
+              className="absolute bottom-0 right-full mr-2 whitespace-nowrap text-base font-bold"
+              style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+            >
+              MEET LARA
+            </p>
+
             {/* TIP: the source photo is a tall 2:3 portrait, but the
                 spec wants a near-square 416:391 crop — object-cover
                 handles that by cropping top/bottom rather than
@@ -91,7 +98,7 @@ export default function AboutPage() {
             <img
               src={laraPortrait}
               alt="Lara close-up portrait"
-              className="aspect-[416/391] w-full max-w-[380px] object-cover"
+              className="aspect-[416/391] w-full object-cover"
             />
           </div>
 
