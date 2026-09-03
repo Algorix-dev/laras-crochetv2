@@ -37,15 +37,19 @@ export default function AboutPage() {
       <main className="grid items-start gap-10 md:grid-cols-2 md:gap-20 lg:gap-28">
         {/* TIP: Left column — the crosswalk/sunglasses photo, genuinely
             full-bleed: flush with the top and left edges of the browser
-            viewport. Fixed at 1024px per the Figma spec (Rectangle 45:
-            944x1024) instead of h-full — with items-start on the grid,
-            h-full would otherwise stretch to match whatever height the
-            right column's content happens to grow to, which was making
-            the image render taller than intended. */}
+            viewport. Locked to the exact Figma spec (Rectangle 45:
+            944x1024) on both axes, not just height — the source image's
+            aspect ratio (2832x3072 ≈ 0.922) exactly matches 944/1024, so
+            with both dimensions fixed there's nothing left for
+            object-cover to crop. Previously only height was fixed while
+            width stayed w-full (i.e. whatever the grid column happened
+            to render at); on any column narrower than 944px that forced
+            object-cover to crop hard from the sides, zooming in on just
+            her face instead of showing the full photo. */}
         <img
           src={laraSunglasses}
           alt="Lara — founder of Lara's Crochet"
-          className="aspect-[3/4] w-full object-cover md:aspect-auto md:h-[1024px]"
+          className="aspect-[3/4] w-full object-cover md:aspect-auto md:h-[1024px] md:w-[944px]"
         />
 
         {/* TIP: Right column — heading, rotated label, lifestyle image, story, and links.
