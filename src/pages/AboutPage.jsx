@@ -50,16 +50,19 @@ export default function AboutPage() {
 
         {/* TIP: Right column — heading, rotated label, lifestyle image, story, and links.
             Padding lives here instead of on the outer grid, so this column
-            stays readable while the image column stays edge-to-edge. */}
-        <section className="flex flex-col px-5 pt-10 pb-10 md:px-8 md:pt-14 lg:pr-16">
+            stays readable while the image column stays edge-to-edge.
+            items-center + text-center centers every child (heading image,
+            Meet Lara block, paragraph, link) horizontally within the column. */}
+        <section className="flex flex-col items-center px-5 pt-10 pb-10 text-center md:px-8 md:pt-14 lg:pr-16">
           {/* TIP: Page heading — real logo lockup image, not live text.
               Width capped and height auto so it scales proportionally;
               the source image is 484x43, so this stays reasonably crisp
-              up to a couple times that width. */}
+              up to a couple times that width. mx-auto centers it since
+              its own width (max-w-420) is narrower than the column. */}
           <img
             src={aboutHeadingLockup}
             alt="This is Lara's Crochet"
-            className="h-auto w-full max-w-[420px]"
+            className="mx-auto h-auto w-full max-w-[420px]"
           />
 
           {/* TIP: Rotated "MEET LARA" label beside the close-up portrait.
@@ -103,7 +106,7 @@ export default function AboutPage() {
               corrections list) — no "Back to Shop" link, and it's centered. */}
           <div className="mt-8 flex justify-center text-sm underline underline-offset-4">
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/_larascrochet/"
               target="_blank"
               rel="noreferrer"
               className="text-[#564345]"
