@@ -97,6 +97,7 @@ export const heroModels = [
     name: 'Reina',
     price: 70000,
     image: reinaFront,
+    angleImage: reinaThreeQuarter, // TIP: shown when this slot is NOT selected — see Hero.jsx
     nameTop: '9%',
   },
   {
