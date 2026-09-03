@@ -11,11 +11,13 @@ import MoreOptionsMenu from "./MoreOptionsMenu";
   ----------------------------------
   The 5 garments stay in their own slots always — clicking one only
   changes which slot counts as "selected." The selected slot's photo
-  faces front, gets full color, and is a little taller than the rest
-  (see the height classes below — a small bump, not a big jump).
+  faces front, gets full color, and is a little taller than the rest.
   ONLY the selected slot ever gets the enlarged/full-color treatment —
   every other slot is always rendered at the same small, dimmed size
   regardless of which one was previously selected.
+  (Recentering the selected piece into the middle slot, carousel-style,
+  is a separate behavior change — holding off on that until it's
+  spec'd out, per request.)
 
   Every other slot dims using opacity (30%, per the Figma spec) and
   "looks away" using the angleImage (a real 3/4-turned photo — see
@@ -25,41 +27,46 @@ import MoreOptionsMenu from "./MoreOptionsMenu";
   stay as plain dimmed front photos until real 3/4-angle shots exist
   for them too.
 
-  All photos share the same HEIGHT (not width) so they line up like
-  people standing at the same height regardless of each photo's own
-  aspect ratio — width is left automatic per photo. (Figma's export
-  fixes each slot at a flat 173.14px width instead — flagged this as
-  a decision to confirm rather than silently switching it.)
+  SIZING IS CLAMP()-BASED, NOT BREAKPOINT-BASED.
+  ------------------------------------------------
+  Every key dimension (row gap, image heights, podium size, name
+  font-size, container padding) is a `clamp(min, Nvw, figmaPx)` where
+  the vw ratio is that dimension's exact fraction of Figma's 1920px
+  frame. That means: at a 1920px viewport you land on the literal
+  Figma pixel values (the clamp's ceiling), and anything narrower
+  scales the whole hero down fluidly and proportionally instead of
+  jumping between a few fixed breakpoints. Nothing gets bigger than
+  the Figma numbers even on ultra-wide screens, because the ceiling
+  is a hard px cap.
 
-  THE NAME IS A PERSISTENT ELEMENT THAT SLIDES TO THE SELECTED SLOT.
-  There's a single <h1>, rendered once outside the slot loop, and a
-  small effect below measures the selected slot's actual on-screen
-  position (via refs) and animates the name over to it with `x` —
-  this is the "name transfers to the selected item" behavior.
-
-  THE PODIUM RING IS NOW STAGNANT (kept centered, doesn't slide) AND
-  BUILT FROM LITERAL CSS, matching Figma's actual layer structure
-  (Group 29 → Ellipse 24/25/26, three dashed ellipses of slightly
-  different size stacked with a small offset, not one image asset).
-  It no longer reads markerX, and no longer uses Framer Motion at all
-  — it's a plain CSS `@keyframes` rotation (see the <style> block
-  below), the same technique as a CSS conic-gradient loader: the
-  whole 3-ellipse cluster spins together, continuously, at a fixed
-  center. If you want it to follow the selected slot again later,
-  swap the plain CSS transform back for a motion.div with the same
-  `x: calc(-50% + markerX px)` key the name uses below.
+  THE NAME IS DELIBERATELY LAYERED BEHIND THE TOP OF THE IMAGE.
+  -----------------------------------------------------------------
+  Figma's own layout has the name box (top:35, height:113) overlap
+  the top of the garment photo (top:75) by 73px, with the photo's
+  z-index above the name's — that's what makes the model read as
+  standing in front of the wordmark. The effect below reproduces
+  that same overlap proportionally (as a % of the image's own
+  height) rather than leaving a gap above it, and measures the
+  name's own rendered height (via nameRef) so it's positioned
+  correctly regardless of how large the responsive font gets.
 */
 
-// Figma's Group 29 (243.81 × 116.05) contains 3 dashed ellipses at
-// slightly different sizes/offsets — this is what creates the
-// hand-drawn, slightly-wobbly "circled" look instead of one clean
-// ring. Values below are each ellipse's box as a % of the group's
-// own bounding box, so they scale with the container at any size.
+// Figma's Group 29 (243.81 × 116.05) is 3 dashed ellipses at
+// slightly different sizes/offsets, not one clean ring — that's
+// what gives it the hand-drawn "circled" look. Values below are
+// each ellipse's box as a % of the group's own bounding box, so
+// they scale with the container at any size.
 const PODIUM_ELLIPSES = [
   { left: "0%", top: "3.3%", width: "100%", height: "96.7%" },
   { left: "4.7%", top: "7.9%", width: "90.6%", height: "87.6%" },
   { left: "5.7%", top: "0%", width: "90.6%", height: "87.6%" },
 ];
+
+// How far the name's bottom edge intrudes into the top of the
+// image, as a fraction of the image's own rendered height —
+// taken directly from Figma: 73px overlap / 603px image height.
+const NAME_OVERLAP_RATIO = 73 / 603;
+
 export default function Hero({ models }) {
   const [selectedId, setSelectedId] = useState(models[0]?.id);
   const selectedSlot = models.findIndex((m) => m.id === selectedId);
@@ -67,15 +74,9 @@ export default function Hero({ models }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { formatPrice } = useCurrency();
 
-  // TIP: rowRef = the flex row of photos. slotRefs = one ref per model,
-  // collected via the callback ref below on each slot's div. Every time
-  // selectedId changes (or the window resizes, since the row is
-  // responsive), this measures where the selected slot actually sits on
-  // screen relative to the row's own center, and stores that as
-  // markerX — the horizontal distance the NAME needs to shift by.
-  // (The podium no longer uses this value — see TIP above.)
   const rowRef = useRef(null);
   const containerRef = useRef(null);
+  const nameRef = useRef(null);
   const slotRefs = useRef({});
   const [markerX, setMarkerX] = useState(0);
   const [nameTop, setNameTop] = useState(0);
@@ -84,19 +85,21 @@ export default function Hero({ models }) {
     function measure() {
       const row = rowRef.current;
       const container = containerRef.current;
+      const nameEl = nameRef.current;
       const slotEl = slotRefs.current[selectedId];
-      if (!row || !container || !slotEl) return;
+      if (!row || !container || !slotEl || !nameEl) return;
       const rowRect = row.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
       const slotRect = slotEl.getBoundingClientRect();
+      const nameHeight = nameEl.getBoundingClientRect().height;
+
       const rowCenter = rowRect.left + rowRect.width / 2;
       const slotCenter = slotRect.left + slotRect.width / 2;
       setMarkerX(slotCenter - rowCenter);
-      // Name sits a small gap above whichever image is selected —
-      // measured off the actual slot, not a per-model magic number,
-      // so it's always at "head level" no matter which piece or
-      // breakpoint. Gap scales with the image's own height.
-      setNameTop(slotRect.top - containerRect.top - slotRect.height * 0.14);
+
+      const slotTopInContainer = slotRect.top - containerRect.top;
+      const nameBottom = slotTopInContainer + slotRect.height * NAME_OVERLAP_RATIO;
+      setNameTop(nameBottom - nameHeight);
     }
     measure();
     window.addEventListener("resize", measure);
@@ -104,12 +107,21 @@ export default function Hero({ models }) {
   }, [selectedId]);
 
   return (
-    <section className="pt-10 md:pt-16 pb-10 text-center px-5">
-      <div ref={containerRef} className="relative max-w-5xl mx-auto">
-        {/* Gap widened to roughly match Figma's 128px : 173.14px
-            (gap : model-width) ratio, scaled down for our smaller
-            photo sizes at each breakpoint. */}
-        <div ref={rowRef} className="flex items-end justify-center gap-10 sm:gap-12 md:gap-14">
+    <section className="pt-10 md:pt-16 pb-10 text-center">
+      {/* Container width/padding: 1312px content inside 1920px frame
+          with 304px side padding → padding is 304/1920 = 15.83vw,
+          capped at 304px (19rem), same clamp technique as everything
+          else here. */}
+      <div
+        ref={containerRef}
+        className="relative max-w-[82rem] mx-auto px-[clamp(1rem,15.83vw,19rem)]"
+      >
+        {/* Gap: 128px / 173.14px model width in Figma ≈ 6.667vw of the
+            1920px frame, capped at 128px (8rem). */}
+        <div
+          ref={rowRef}
+          className="flex items-end justify-center gap-[clamp(1.5rem,6.667vw,8rem)]"
+        >
           {models.map((model, slot) => {
             const isSelected = model.id === selectedId;
             const distance = Math.abs(slot - selectedSlot);
@@ -122,12 +134,6 @@ export default function Hero({ models }) {
             // photo as-is. Slots to the RIGHT need to face right (away)
             // → mirror it with scaleX(-1). The selected slot always shows
             // the plain front photo, never mirrored.
-            // Models without an angleImage (the 4 placeholder pieces —
-            // only Reina has real multi-angle photography right now)
-            // fall back to their single front photo with no mirror at
-            // all, since mirroring a straight-on photo doesn't read as
-            // "looking away" — ask Lara for a 3/4-angle shot per piece
-            // to get the same effect on those once real photos exist.
             const shouldMirror = !isSelected && !!model.angleImage && slot > selectedSlot;
             const displayImage = isSelected ? model.image : (model.angleImage ?? model.image);
 
@@ -157,17 +163,17 @@ export default function Hero({ models }) {
                   // TIP: HEIGHT is fixed here, not width — width is left
                   // automatic so each photo keeps its own aspect ratio but
                   // all photos still stand at the same height, like people
-                  // side by side. The selected one is only ~15% taller
-                  // (h-64 vs h-56 at md, etc.) — a small step up, not a
-                  // big jump — since "items-end" on the row keeps every
-                  // photo's feet on the same ground line either way.
-                  // ONLY isSelected gets the enlarged/full-opacity classes —
-                  // every other slot always gets the small/30%-opacity ones,
-                  // no matter which slot was selected before.
-                  className={`relative z-10 w-auto cursor-pointer focus-visible:outline-none transition-[opacity,filter,height] duration-500 ${
+                  // side by side ("items-end" on the row keeps every
+                  // photo's feet on the same ground line).
+                  //
+                  // Heights are clamp()'d to Figma's exact px values:
+                  // unselected = 534px (27.8125vw), selected = 603px
+                  // (31.40625vw) — the same "hit the real number at
+                  // 1920px, scale fluidly below it" approach as the gap.
+                  className={`relative z-10 w-auto cursor-pointer focus-visible:outline-none transition-[opacity,height] duration-500 ${
                     isSelected
-                      ? "h-56 sm:h-64 md:h-72 opacity-100"
-                      : "h-48 sm:h-56 md:h-64 opacity-30"
+                      ? "h-[clamp(11rem,31.40625vw,37.6875rem)] opacity-100"
+                      : "h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
                   }`}
                 />
 
@@ -193,75 +199,64 @@ export default function Hero({ models }) {
           })}
         </div>
 
-        {/* Name — sits BEHIND the photos (z-0), one persistent element
-            that slides to sit over whichever slot is selected (via
-            markerX) and sits at a fixed gap above that slot's own top
-            edge (via nameTop, measured live — see the effect above),
-            so it reads at "head level" for every model, not just the
-            one a hardcoded number happened to be tuned for. */}
+        {/* Name — z-0, BEHIND the photos (z-10), one persistent element
+            that slides to sit over whichever slot is selected (markerX)
+            and is positioned so its bottom edge intrudes into the top
+            of the selected image by Figma's proportion (nameTop, see
+            the effect above) — the "standing in front of the wordmark"
+            look, not a gap above it.
+            Font-size clamp: 96px / 1920px = 5vw, capped at 96px (6rem). */}
         <motion.h1
+          ref={nameRef}
           animate={{ x: `calc(-50% + ${markerX}px)`, top: nameTop }}
           transition={{ type: "spring", stiffness: 260, damping: 28 }}
-          // TIP: font/color/tracking pulled straight from the Figma
-          // dev-mode CSS for this element — Raleway 700, -0.07em
-          // tracking, Rose/900 (#4C0519 = var(--maroon-dark)) at
-          // 96px on the 1920px desktop frame. The rem sizes below
-          // scale that down for mobile/tablet the same way the
-          // rest of this component already scales responsively —
-          // change the text-[…] values if you want it bigger/smaller
-          // at a given breakpoint.
-          className="absolute left-1/2 z-0 font-['Raleway'] font-bold tracking-[-0.07em] text-[3.5rem] sm:text-[4.5rem] md:text-[5.5rem] leading-[1.18] text-[var(--maroon-dark)] select-none whitespace-nowrap"
+          className="absolute left-1/2 z-0 font-['Raleway'] font-bold tracking-[-0.07em] text-[clamp(2.5rem,5vw,6rem)] leading-[1.18] text-[var(--maroon-dark)] select-none whitespace-nowrap"
         >
           {selected.name.toUpperCase()}
         </motion.h1>
 
-        {/* Podium — STAGNANT: stays centered under the row instead of
-            sliding to whichever slot is selected, and is now literal
-            CSS (3 dashed ellipses, see PODIUM_ELLIPSES above) instead
-            of an image asset. `.podium-spin` (defined in the <style>
-            block below) rotates the whole cluster continuously — same
-            "to { rotate(1turn) }" technique as a CSS loader, just at a
-            slower 14s pace to match the original spin speed. */}
+        {/* Podium — fully static, matching the wireframe as-is (no
+            spin, no follow-the-selection movement) until the intended
+            behavior is spec'd out. Built from 3 literal dashed
+            ellipses (PODIUM_ELLIPSES above), matching Figma's actual
+            layer group instead of an image asset.
+            Width clamp: 243.81px / 1920px = 12.7vw, capped at 243.81px
+            (15.24rem); border-width clamp: 5px / 1920px ≈ 0.26vw,
+            capped at 5px — both hit Figma's real numbers at 1920px. */}
         <div
           aria-hidden="true"
-          className="podium-spin absolute left-1/2 bottom-4 z-0 w-28 sm:w-32 md:w-40 aspect-[243.81/116.05] pointer-events-none"
+          className="absolute left-1/2 -translate-x-1/2 bottom-4 z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
         >
           {PODIUM_ELLIPSES.map((e, i) => (
             <span
               key={i}
-              className="absolute rounded-[50%] border border-dashed border-[var(--maroon)]/35"
-              style={{ left: e.left, top: e.top, width: e.width, height: e.height }}
+              className="absolute rounded-[50%] border-[var(--maroon-dark)]"
+              style={{
+                left: e.left,
+                top: e.top,
+                width: e.width,
+                height: e.height,
+                borderStyle: "dashed",
+                borderWidth: "clamp(1px, 0.26vw, 5px)",
+              }}
             />
           ))}
         </div>
 
         {/* Price — reads straight from `selected`, so the text is
-            always right; the `x` animation is what makes it actually
-            slide under whichever slot is selected instead of staying
-            pinned to the row's center regardless of the click. */}
+            always right; the `x` animation slides it under whichever
+            slot is actually selected instead of staying centered.
+            Width clamp: 360px / 1920px = 18.75vw, capped at 360px
+            (22.5rem), matching Figma's "Frame 62" row width. */}
         <motion.div
           animate={{ x: markerX }}
           transition={{ type: "spring", stiffness: 260, damping: 28 }}
-          className="relative z-10 w-40 sm:w-48 md:w-56 mx-auto flex items-center justify-between mt-6 text-xl"
+          className="relative z-10 w-[clamp(11rem,18.75vw,22.5rem)] mx-auto flex items-center justify-between mt-6 text-xl"
         >
           <span className="uppercase tracking-wide">{selected.name}</span>
           <span className="font-bold tracking-[-0.04em]">{formatPrice(selected.price)}</span>
         </motion.div>
       </div>
-
-      {/* Same rotation technique as a CSS loader: a plain @keyframes
-          that just spins to a full turn, run on infinite linear loop.
-          Kept as a scoped <style> tag so the podium doesn't need
-          Framer Motion or a Tailwind config change for one animation. */}
-      <style>{`
-        .podium-spin {
-          transform: translateX(-50%) rotate(0deg);
-          animation: podium-spin 14s linear infinite;
-        }
-        @keyframes podium-spin {
-          to { transform: translateX(-50%) rotate(1turn); }
-        }
-      `}</style>
     </section>
   );
 }
