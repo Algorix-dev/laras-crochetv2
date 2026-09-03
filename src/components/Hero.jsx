@@ -1,321 +1,766 @@
-```jsx
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Heart } from "lucide-react";
-import { useWishlist } from "../context/WishlistContext";
-import { useCurrency } from "../context/CurrencyContext";
-import ShareButton from "./ShareButton";
-import MoreOptionsMenu from "./MoreOptionsMenu";
-import podiumRing from "../assets/podium-ring.png";
+import { useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
+
+import scatterBeach from "../assets/scatter-beach.png";
+import scatterStreet from "../assets/scatter-street.jpg";
+import scatterTeal from "../assets/scatter-teal.png";
+
+import arcFlourish1 from "../assets/arc-flourish-1.png";
+import arcFlourish2 from "../assets/arc-flourish-2.png";
 
 /*
-  HERO MODEL SELECTOR
-  -------------------
-  The models live in FIXED slots.
+  LARA SHOWCASE
 
-  Selecting a model:
-  - does NOT move/reorder the other models
-  - enlarges ONLY the selected model
-  - keeps every unselected model the exact same size
-  - places the spinning ring directly underneath the selected model
-  - places the selected model's name behind its head
-  - removes the old navigation dots completely
-  - keeps the selected model fully visible
-  - makes surrounding models appear to face away from the selected one
+  This section is controlled by one scroll progress value.
 
-  Important:
-  The images themselves stay in their slots. Only their visual scale,
-  opacity, saturation and orientation change.
+  The animation moves through three major stages:
+
+  1. The three scattered photos fade in and converge into
+     a small, tight tilted stack.
+
+  2. The Lara wordmark and brand story appear.
+     The paragraphs cross-fade instead of sitting on top
+     of each other.
+
+  3. The customer reviews appear in groups of three.
+     Only the middle review is raised.
 */
 
-export default function Hero({ models }) {
-  const [selectedId, setSelectedId] = useState(models[0]?.id);
+/* Brand story paragraphs */
+const PARAGRAPHS = [
+  "Welcome to Lara's Crochet! Here, every piece here starts as a single strand of yarn and a pair of hands, no factories, no shortcuts. Made-to-order, one piece at a time, out of Lagos, Nigeria.",
 
-  const selectedSlot = models.findIndex((m) => m.id === selectedId);
-  const selected = models[selectedSlot];
+  "We don't keep a stockroom.",
 
-  const { toggleWishlist, isInWishlist } = useWishlist();
-  const { formatPrice } = useCurrency();
+  "When you order, your piece is made for you — your size, your color, your fit. It takes time, because handmade always does, but it means what arrives at your door was never sitting on a shelf waiting for someone else.",
+
+  "This isn't fast fashion. It's handmade, made with love.",
+];
+
+/* Customer testimonials */
+const TESTIMONIALS = [
+  {
+    quote:
+      "I've never had a piece fit this well straight out of the box — literally made to my measurements. No alterations needed.",
+    name: "Teniola Aladese",
+  },
+  {
+    quote:
+      "You can tell this isn't machine-made. The detail in the stitching is unreal.",
+    name: "Tolu Coker",
+  },
+  {
+    quote:
+      "The bikini set held up through an entire beach trip — no stretching, no losing shape. Genuinely impressed.",
+    name: "Halima Finny",
+  },
+  {
+    quote:
+      "The Reina dress is a whole moment. I get stopped every single time I wear it.",
+    name: "Chidinma K.",
+  },
+  {
+    quote:
+      "Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.",
+    name: "Precious Ehizoge",
+  },
+  {
+    quote:
+      "Customer service walked me through sizing so patiently. Made ordering online feel less scary.",
+    name: "Ejiro Okezie",
+  },
+];
+
+/*
+  Divide the testimonials into groups of three.
+
+  This gives us:
+
+  Row 1:
+  [ review ] [ review ] [ review ]
+
+  Row 2:
+  [ review ] [ review ] [ review ]
+*/
+const TESTIMONIAL_GROUPS = [];
+
+for (let i = 0; i < TESTIMONIALS.length; i += 3) {
+  TESTIMONIAL_GROUPS.push(
+    TESTIMONIALS.slice(i, i + 3)
+  );
+}
+
+/*
+  FIGMA PHOTO STACK
+
+  The final positions are intentionally close together.
+
+  They overlap like a real tilted photo stack, but each image
+  remains visible instead of collapsing into one image.
+
+  Approximate Figma values:
+  - 175.6 × 103.73
+  - 0°
+  - 19.63°
+  - -8.21°
+*/
+const SCATTER_LAYOUT = [
+  {
+    src: scatterBeach,
+    alt:
+      "Lara's Crochet customer wearing a turquoise two-piece on the beach",
+
+    from: {
+      x: -300,
+      y: -80,
+      rotate: -24,
+      scale: 0.55,
+    },
+
+    to: {
+      x: -13,
+      y: 8,
+      rotate: 0,
+      scale: 1,
+    },
+  },
+
+  {
+    src: scatterStreet,
+    alt:
+      "Street-style portrait, styling reference",
+
+    from: {
+      x: 0,
+      y: 250,
+      rotate: 14,
+      scale: 0.55,
+    },
+
+    to: {
+      x: 7,
+      y: -8,
+      rotate: 19.63,
+      scale: 1,
+    },
+  },
+
+  {
+    src: scatterTeal,
+    alt:
+      "Lara's Crochet customer wearing a teal crochet dress",
+
+    from: {
+      x: 300,
+      y: -70,
+      rotate: 25,
+      scale: 0.55,
+    },
+
+    to: {
+      x: 23,
+      y: 10,
+      rotate: -8.21,
+      scale: 1,
+    },
+  },
+];
+
+/*
+  Scroll stages.
+
+  More room is given to the story section so the paragraphs
+  do not feel too close to the Lara/photo area.
+*/
+const STAGES = {
+  scatterStart: 0,
+  scatterEnd: 0.18,
+
+  paragraphsStart: 0.22,
+  paragraphsEnd: 0.56,
+
+  reviewsStart: 0.58,
+  reviewsEnd: 0.98,
+};
+
+/* ============================================================
+   SCATTER IMAGE
+   ============================================================ */
+
+function ScatterImage({ layout, progress }) {
+  /*
+    Convert the overall scroll progress into a local
+    0 → 1 progress for the scatter animation.
+  */
+  const localProgress = useTransform(
+    progress,
+    [STAGES.scatterStart, STAGES.scatterEnd],
+    [0, 1]
+  );
+
+  /* Horizontal movement */
+  const x = useTransform(
+    localProgress,
+    [0, 1],
+    [layout.from.x, layout.to.x]
+  );
+
+  /* Vertical movement */
+  const y = useTransform(
+    localProgress,
+    [0, 1],
+    [layout.from.y, layout.to.y]
+  );
+
+  /* Rotation */
+  const rotate = useTransform(
+    localProgress,
+    [0, 1],
+    [layout.from.rotate, layout.to.rotate]
+  );
+
+  /* Scale */
+  const scale = useTransform(
+    localProgress,
+    [0, 1],
+    [layout.from.scale, layout.to.scale]
+  );
+
+  /*
+    Fade in fairly quickly.
+
+    After the image has appeared, it remains fully visible
+    while the other parts of the section continue.
+  */
+  const opacity = useTransform(
+    progress,
+    [0, 0.05, STAGES.scatterEnd],
+    [0, 1, 1]
+  );
 
   return (
-    <section className="pt-10 md:pt-16 pb-10 text-center px-5 overflow-hidden">
-      <div className="relative max-w-6xl mx-auto">
+    <motion.img
+      src={layout.src}
+      alt={layout.alt}
+      style={{
+        x,
+        y,
+        rotate,
+        scale,
+        opacity,
+      }}
+      className="
+        absolute
+        left-1/2
+        top-1/2
+        -translate-x-1/2
+        -translate-y-1/2
+        w-[140px]
+        sm:w-[155px]
+        md:w-[176px]
+        aspect-[175.6/103.73]
+        rounded-[2px]
+        object-cover
+        shadow-xl
+        ring-2
+        ring-[var(--cream)]
+        will-change-transform
+      "
+    />
+  );
+}
 
-        {/* MODEL ROW */}
+/* ============================================================
+   LARA WORDMARK
+   ============================================================ */
+
+function LaraWordmark({ progress }) {
+  /*
+    "Lara" is intentionally kept as live text because the existing
+    project already uses the Yellowtail font treatment.
+
+    The word fades in and rises slightly as the scroll reaches
+    the Lara section.
+  */
+  const opacity = useTransform(
+    progress,
+    [0.12, 0.22],
+    [0, 1]
+  );
+
+  const y = useTransform(
+    progress,
+    [0.12, 0.22],
+    [20, 0]
+  );
+
+  const blur = useTransform(
+    progress,
+    [0.12, 0.22],
+    ["blur(5px)", "blur(0px)"]
+  );
+
+  return (
+    <motion.span
+      style={{
+        opacity,
+        y,
+        filter: blur,
+      }}
+      className="
+        relative
+        z-20
+        font-['Yellowtail']
+        text-[4rem]
+        sm:text-[5rem]
+        md:text-[6.5rem]
+        leading-none
+        text-[var(--maroon)]
+        select-none
+        pointer-events-none
+      "
+    >
+      Lara
+    </motion.span>
+  );
+}
+
+/* ============================================================
+   STORY PARAGRAPH
+   ============================================================ */
+
+function ScrollParagraph({
+  text,
+  index,
+  progress,
+}) {
+  /*
+    Divide the paragraph section equally between all
+    four paragraphs.
+  */
+  const span =
+    (STAGES.paragraphsEnd -
+      STAGES.paragraphsStart) /
+    PARAGRAPHS.length;
+
+  const start =
+    STAGES.paragraphsStart +
+    index * span;
+
+  const fadeIn =
+    start + span * 0.15;
+
+  const hold =
+    start + span * 0.68;
+
+  const fadeOut =
+    start + span * 0.96;
+
+  /*
+    Each paragraph:
+    fade in → remain visible → become transparent.
+  */
+  const opacity = useTransform(
+    progress,
+    [start, fadeIn, hold, fadeOut],
+    [0, 1, 1, 0]
+  );
+
+  const y = useTransform(
+    progress,
+    [start, fadeIn],
+    [20, 0]
+  );
+
+  return (
+    <motion.p
+      style={{
+        opacity,
+        y,
+      }}
+      className="
+        absolute
+        inset-x-0
+        top-0
+        mx-auto
+        max-w-lg
+        px-6
+        text-center
+        text-sm
+        md:text-base
+        leading-[1.8]
+        text-[var(--ink)]
+      "
+    >
+      {text}
+    </motion.p>
+  );
+}
+
+/* ============================================================
+   REVIEW CARD
+   ============================================================ */
+
+function ReviewCard({ testimonial, raised }) {
+  return (
+    <motion.div
+      animate={{
+        y: raised ? -28 : 0,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 120,
+        damping: 20,
+      }}
+      className="
+        w-full
+        max-w-[15rem]
+        border
+        border-[var(--line)]
+        bg-[var(--cream)]
+        p-5
+        text-center
+      "
+    >
+      {/* Review text */}
+      <p
+        className="
+          mb-4
+          text-sm
+          leading-relaxed
+          text-[var(--ink)]
+        "
+      >
+        "{testimonial.quote}"
+      </p>
+
+      {/* Customer name */}
+      <p
+        className="
+          flex
+          items-center
+          justify-center
+          gap-1
+          text-xs
+          font-bold
+          text-[var(--ink)]
+        "
+      >
+        {testimonial.name}
+
+        {/* Verification mark */}
+        <span
+          aria-hidden="true"
+          className="
+            inline-flex
+            h-3.5
+            w-3.5
+            items-center
+            justify-center
+            rounded-full
+            bg-[var(--maroon)]
+            text-[9px]
+            text-white
+          "
+        >
+          ✓
+        </span>
+      </p>
+
+      {/* Verified customer label */}
+      <p
+        className="
+          mt-1
+          text-[11px]
+          text-[var(--muted)]
+        "
+      >
+        Verified Customer
+      </p>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   REVIEW GROUP
+   ============================================================ */
+
+function ScrollReviewGroup({
+  group,
+  index,
+  progress,
+}) {
+  /*
+    Divide the review section between each group of three.
+  */
+  const span =
+    (STAGES.reviewsEnd -
+      STAGES.reviewsStart) /
+    TESTIMONIAL_GROUPS.length;
+
+  const start =
+    STAGES.reviewsStart +
+    index * span;
+
+  const fadeIn =
+    start + span * 0.2;
+
+  const hold =
+    start + span * 0.7;
+
+  const fadeOut =
+    start + span * 0.96;
+
+  /* Group fade */
+  const opacity = useTransform(
+    progress,
+    [start, fadeIn, hold, fadeOut],
+    [0, 1, 1, 0]
+  );
+
+  /* Group entrance */
+  const y = useTransform(
+    progress,
+    [start, fadeIn],
+    [24, 0]
+  );
+
+  return (
+    <motion.div
+      style={{
+        opacity,
+        y,
+      }}
+      className="
+        absolute
+        inset-0
+        flex
+        items-center
+        justify-center
+        gap-3
+        sm:gap-4
+      "
+    >
+      {group.map((testimonial, i) => (
+        <ReviewCard
+          key={testimonial.name}
+          testimonial={testimonial}
+          raised={i === 1}
+        />
+      ))}
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   MAIN COMPONENT
+   ============================================================ */
+
+export default function LaraShowcase() {
+  const sectionRef = useRef(null);
+
+  /*
+    Track how far the user has scrolled through the entire
+    Lara showcase section.
+  */
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"],
+  });
+
+  /*
+    Fade the decorative arcs in as the section begins.
+  */
+  const arcOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.08, 0.2],
+    [0, 0.8, 0.8]
+  );
+
+  return (
+    <section
+      ref={sectionRef}
+      className="
+        relative
+        h-[275vh]
+      "
+    >
+      {/* Sticky viewport for the entire scroll animation */}
+      <div
+        className="
+          sticky
+          top-[66px]
+          h-[calc(100vh-66px)]
+          overflow-hidden
+          bg-[var(--cream)]
+        "
+      >
+
+        {/* ======================================================
+            LEFT ARC FLOURISH
+            ====================================================== */}
+
+        <motion.img
+          src={arcFlourish1}
+          alt=""
+          aria-hidden="true"
+          style={{
+            opacity: arcOpacity,
+          }}
+          className="
+            pointer-events-none
+            absolute
+            left-[-16%]
+            top-[8%]
+            z-0
+            w-[70%]
+            max-w-[1030px]
+          "
+        />
+
+        {/* ======================================================
+            RIGHT ARC FLOURISH
+            ====================================================== */}
+
+        <motion.img
+          src={arcFlourish2}
+          alt=""
+          aria-hidden="true"
+          style={{
+            opacity: arcOpacity,
+          }}
+          className="
+            pointer-events-none
+            absolute
+            right-[-16%]
+            top-[8%]
+            z-0
+            w-[70%]
+            max-w-[1030px]
+            scale-x-[-1]
+          "
+        />
+
+        {/* ======================================================
+            MAIN CONTENT
+            ====================================================== */}
+
         <div
           className="
             relative
-            flex
-            items-end
-            justify-center
-            gap-1
-            sm:gap-3
-            md:gap-5
-            min-h-[390px]
-            sm:min-h-[430px]
-            md:min-h-[500px]
-          "
-        >
-          {models.map((model, slot) => {
-            const isSelected = model.id === selectedId;
-
-            /*
-              Everything is calculated relative to the selected model.
-
-              left side  -> faces toward the left / away from selected model
-              right side -> faces toward the right / away from selected model
-            */
-            const isLeftOfSelected = slot < selectedSlot;
-            const isRightOfSelected = slot > selectedSlot;
-
-            /*
-              Keep all five slots the same width and height.
-              This is the important part that prevents the selected
-              model from pushing the other models around.
-            */
-            const slotWidth =
-              "w-[68px] sm:w-[90px] md:w-[120px] lg:w-[135px]";
-
-            /*
-              Selected image grows inside its fixed slot.
-              Unselected images all use exactly the same dimensions.
-            */
-            const imageSize = isSelected
-              ? "w-[120px] sm:w-[145px] md:w-[190px] lg:w-[215px]"
-              : "w-[68px] sm:w-[90px] md:w-[120px] lg:w-[135px]";
-
-            /*
-              This gives the surrounding models a stronger "looking away"
-              feeling without changing their actual slot positions.
-
-              Left models turn visually left.
-              Right models turn visually right.
-            */
-            const directionTransform = isSelected
-              ? "translateX(-50%) scale(1)"
-              : isLeftOfSelected
-                ? "translateX(-50%) rotateY(-18deg) rotateZ(-1deg) scale(0.96)"
-                : "translateX(-50%) rotateY(18deg) rotateZ(1deg) scale(0.96)";
-
-            return (
-              <div
-                key={model.id}
-                className={`
-                  relative
-                  shrink-0
-                  ${slotWidth}
-                  h-[370px]
-                  sm:h-[410px]
-                  md:h-[475px]
-                  flex
-                  items-end
-                  justify-center
-                `}
-              >
-                {/* NAME BEHIND THE SELECTED MODEL */}
-                {isSelected && (
-                  <motion.div
-                    layoutId="hero-name"
-                    transition={{
-                      type: "spring",
-                      stiffness: 220,
-                      damping: 26,
-                    }}
-                    className="
-                      absolute
-                      left-1/2
-                      z-[1]
-                      pointer-events-none
-                      font-display
-                      font-bold
-                      text-[2.8rem]
-                      sm:text-[3.8rem]
-                      md:text-[5rem]
-                      lg:text-[5.8rem]
-                      leading-none
-                      tracking-tight
-                      text-[#d8d5cd]
-                      select-none
-                      whitespace-nowrap
-                    "
-                    style={{
-                      top: model.nameTop || "7%",
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    {model.name.toUpperCase()}
-                  </motion.div>
-                )}
-
-                {/* SPINNING RING
-                    It belongs ONLY to the selected slot.
-                    No layoutId means it cannot travel independently
-                    from the model. It simply spins in this position.
-                */}
-                {isSelected && (
-                  <motion.img
-                    src={podiumRing}
-                    alt=""
-                    aria-hidden="true"
-                    className="
-                      absolute
-                      left-1/2
-                      bottom-[7px]
-                      z-[2]
-                      w-[125px]
-                      sm:w-[150px]
-                      md:w-[190px]
-                      lg:w-[215px]
-                      pointer-events-none
-                    "
-                    animate={{
-                      rotate: 360,
-                    }}
-                    transition={{
-                      rotate: {
-                        duration: 10,
-                        repeat: Infinity,
-                        ease: "linear",
-                      },
-                    }}
-                    style={{
-                      transformOrigin: "center center",
-                    }}
-                  />
-                )}
-
-                {/* MODEL */}
-                <motion.img
-                  role="button"
-                  tabIndex={0}
-                  src={model.image}
-                  alt={
-                    model.placeholder
-                      ? "Lara's Crochet piece"
-                      : model.name
-                  }
-                  aria-label={`View ${
-                    model.placeholder ? "this piece" : model.name
-                  }`}
-                  aria-current={isSelected}
-                  onClick={() => setSelectedId(model.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelectedId(model.id);
-                    }
-                  }}
-                  className={`
-                    absolute
-                    left-1/2
-                    bottom-0
-                    z-[10]
-                    h-auto
-                    max-w-none
-                    cursor-pointer
-                    select-none
-                    object-contain
-                    origin-bottom
-                    transition-all
-                    duration-500
-                    ease-[cubic-bezier(0.22,1,0.36,1)]
-                    ${imageSize}
-                    ${
-                      isSelected
-                        ? "opacity-100 saturate-100"
-                        : "opacity-55 saturate-[0.35]"
-                    }
-                  `}
-                  style={{
-                    transform: directionTransform,
-                  }}
-                />
-
-                {/* ACTIONS ONLY FOR SELECTED MODEL */}
-                {isSelected && (
-                  <div
-                    className="
-                      absolute
-                      -right-5
-                      sm:-right-6
-                      md:-right-7
-                      top-[48%]
-                      z-[20]
-                      flex
-                      flex-col
-                      items-center
-                      gap-2
-                    "
-                  >
-                    <button
-                      aria-label="Toggle wishlist"
-                      aria-pressed={isInWishlist(model.id)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleWishlist(model.id);
-                      }}
-                      className="hover:text-[var(--maroon)] transition-colors"
-                    >
-                      <Heart
-                        size={17}
-                        strokeWidth={1.5}
-                        fill={
-                          isInWishlist(model.id)
-                            ? "currentColor"
-                            : "none"
-                        }
-                      />
-                    </button>
-
-                    <ShareButton
-                      product={model}
-                      className="hover:text-[var(--maroon)]"
-                    />
-
-                    <MoreOptionsMenu product={model} />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* NO DOTS */}
-        {/* The old carousel dots have intentionally been removed. */}
-
-        {/* PRODUCT INFORMATION */}
-        <motion.div
-          key={selected.id}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.35,
-            ease: "easeOut",
-          }}
-          className="
-            relative
-            z-30
-            w-44
-            sm:w-52
-            md:w-60
             mx-auto
             flex
+            h-full
+            max-w-5xl
+            flex-col
             items-center
-            justify-between
-            mt-1
-            text-sm
+            px-5
           "
         >
-          <span className="uppercase tracking-wide">
-            {selected.name}
-          </span>
 
-          <span className="font-semibold">
-            {formatPrice(selected.price)}
-          </span>
-        </motion.div>
+          {/* ====================================================
+              LARA + PHOTO STACK
+              ==================================================== */}
+
+          <div
+            className="
+              relative
+              mt-[6vh]
+              flex
+              h-[270px]
+              w-full
+              items-center
+              justify-center
+              sm:h-[300px]
+              md:h-[330px]
+            "
+          >
+            {/* Lara wordmark */}
+            <LaraWordmark
+              progress={scrollYProgress}
+            />
+
+            {/* Scattered photos */}
+            {SCATTER_LAYOUT.map(
+              (layout, index) => (
+                <ScatterImage
+                  key={index}
+                  layout={layout}
+                  progress={scrollYProgress}
+                />
+              )
+            )}
+          </div>
+
+          {/* ====================================================
+              BRAND STORY
+              ====================================================
+
+              Extra margin is intentionally added here.
+
+              This keeps the paragraphs away from the Lara image
+              and gives the section more breathing room.
+          */}
+
+          <div
+            className="
+              relative
+              mt-[10vh]
+              h-[270px]
+              w-full
+              sm:mt-[11vh]
+              md:mt-[12vh]
+              md:h-[290px]
+            "
+          >
+            {PARAGRAPHS.map(
+              (text, index) => (
+                <ScrollParagraph
+                  key={index}
+                  text={text}
+                  index={index}
+                  progress={scrollYProgress}
+                />
+              )
+            )}
+          </div>
+
+          {/* ====================================================
+              REVIEWS
+              ====================================================
+
+              The review section has its own breathing room.
+
+              Only the middle card in each row is raised.
+          */}
+
+          <div
+            className="
+              relative
+              mt-[4vh]
+              h-[270px]
+              w-full
+              md:mt-[5vh]
+              md:h-[290px]
+            "
+          >
+            {TESTIMONIAL_GROUPS.map(
+              (group, index) => (
+                <ScrollReviewGroup
+                  key={index}
+                  group={group}
+                  index={index}
+                  progress={scrollYProgress}
+                />
+              )
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );
 }
-```
