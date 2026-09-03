@@ -120,7 +120,18 @@ export default function Hero({ models }) {
                 {isSelected && (
                   <div
                     aria-hidden="true"
-                    className="absolute left-1/2 -translate-x-1/2 bottom-4 z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
+                    className="absolute left-1/2 bottom-4 z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
+                    style={{
+                      // Nudge here if the ring doesn't sit under the
+                      // feet — it's centered on the image's own width,
+                      // but the model inside the photo may not be
+                      // perfectly centered in that canvas (asymmetric
+                      // padding/cropping). Prefer model.podiumOffsetX
+                      // (set per-piece in your product data, in px) so
+                      // each garment can be tuned individually; falls
+                      // back to 0 (pure center) if unset.
+                      transform: `translateX(calc(-50% + ${model.podiumOffsetX ?? 0}px))`,
+                    }}
                   >
                     {PODIUM_ELLIPSES.map((e, i) => (
                       <span
