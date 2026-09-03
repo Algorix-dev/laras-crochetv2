@@ -5,7 +5,6 @@ import { useWishlist } from "../context/WishlistContext";
 import { useCurrency } from "../context/CurrencyContext";
 import ShareButton from "./ShareButton";
 import MoreOptionsMenu from "./MoreOptionsMenu";
-import podiumRing from "../assets/podium-ring.png";
 
 /*
   TIP: FIXED SLOTS, NOT A CAROUSEL.
@@ -14,32 +13,53 @@ import podiumRing from "../assets/podium-ring.png";
   changes which slot counts as "selected." The selected slot's photo
   faces front, gets full color, and is a little taller than the rest
   (see the height classes below — a small bump, not a big jump).
+  ONLY the selected slot ever gets the enlarged/full-color treatment —
+  every other slot is always rendered at the same small, dimmed size
+  regardless of which one was previously selected.
 
-  Every other slot dims/desaturates and "looks away" using the
-  angleImage (a real 3/4-turned photo — see products.js), mirrored
-  with scaleX(-1) on whichever side needs to face the opposite way.
-  Only Reina has that second photo right now; the other 4 pieces are
-  placeholders with just one image, so they stay as plain dimmed
-  front photos until real 3/4-angle shots exist for them too.
+  Every other slot dims using opacity (30%, per the Figma spec) and
+  "looks away" using the angleImage (a real 3/4-turned photo — see
+  products.js), mirrored with scaleX(-1) on whichever side needs to
+  face the opposite way. Only Reina has that second photo right now;
+  the other 4 pieces are placeholders with just one image, so they
+  stay as plain dimmed front photos until real 3/4-angle shots exist
+  for them too.
 
   All photos share the same HEIGHT (not width) so they line up like
   people standing at the same height regardless of each photo's own
-  aspect ratio — width is left automatic per photo.
+  aspect ratio — width is left automatic per photo. (Figma's export
+  fixes each slot at a flat 173.14px width instead — flagged this as
+  a decision to confirm rather than silently switching it.)
 
-  THE NAME + PODIUM ARE ONE PERSISTENT PAIR OF ELEMENTS, NOT ONE PER
-  SLOT. Earlier this lived inside each slot's own div and got
-  unmounted/remounted on every click — which meant the podium's spin
-  restarted from 0 every time (never truly continuous) and the slide
-  between slots depended on Framer Motion's shared-layoutId magic
-  working across that remount, which isn't reliable. Now there's a
-  single <h1> and a single podium <img>, rendered once outside the
-  slot loop, and a small effect below measures the selected slot's
-  actual on-screen position (via refs) and animates the pair over to
-  it with `x`. Because the podium element itself never unmounts, its
-  `rotate: 360, repeat: Infinity` keeps spinning nonstop in the
-  background the entire time — like a wheel that's always turning,
-  not something that stops and restarts.
+  THE NAME IS A PERSISTENT ELEMENT THAT SLIDES TO THE SELECTED SLOT.
+  There's a single <h1>, rendered once outside the slot loop, and a
+  small effect below measures the selected slot's actual on-screen
+  position (via refs) and animates the name over to it with `x` —
+  this is the "name transfers to the selected item" behavior.
+
+  THE PODIUM RING IS NOW STAGNANT (kept centered, doesn't slide) AND
+  BUILT FROM LITERAL CSS, matching Figma's actual layer structure
+  (Group 29 → Ellipse 24/25/26, three dashed ellipses of slightly
+  different size stacked with a small offset, not one image asset).
+  It no longer reads markerX, and no longer uses Framer Motion at all
+  — it's a plain CSS `@keyframes` rotation (see the <style> block
+  below), the same technique as a CSS conic-gradient loader: the
+  whole 3-ellipse cluster spins together, continuously, at a fixed
+  center. If you want it to follow the selected slot again later,
+  swap the plain CSS transform back for a motion.div with the same
+  `x: calc(-50% + markerX px)` key the name uses below.
 */
+
+// Figma's Group 29 (243.81 × 116.05) contains 3 dashed ellipses at
+// slightly different sizes/offsets — this is what creates the
+// hand-drawn, slightly-wobbly "circled" look instead of one clean
+// ring. Values below are each ellipse's box as a % of the group's
+// own bounding box, so they scale with the container at any size.
+const PODIUM_ELLIPSES = [
+  { left: "0%", top: "3.3%", width: "100%", height: "96.7%" },
+  { left: "4.7%", top: "7.9%", width: "90.6%", height: "87.6%" },
+  { left: "5.7%", top: "0%", width: "90.6%", height: "87.6%" },
+];
 export default function Hero({ models }) {
   const [selectedId, setSelectedId] = useState(models[0]?.id);
   const selectedSlot = models.findIndex((m) => m.id === selectedId);
@@ -52,7 +72,8 @@ export default function Hero({ models }) {
   // selectedId changes (or the window resizes, since the row is
   // responsive), this measures where the selected slot actually sits on
   // screen relative to the row's own center, and stores that as
-  // markerX — the horizontal distance the name/podium need to shift by.
+  // markerX — the horizontal distance the NAME needs to shift by.
+  // (The podium no longer uses this value — see TIP above.)
   const rowRef = useRef(null);
   const slotRefs = useRef({});
   const [markerX, setMarkerX] = useState(0);
@@ -76,7 +97,10 @@ export default function Hero({ models }) {
   return (
     <section className="pt-10 md:pt-16 pb-10 text-center px-5">
       <div className="relative max-w-5xl mx-auto">
-        <div ref={rowRef} className="flex items-end justify-center gap-3 md:gap-6">
+        {/* Gap widened to roughly match Figma's 128px : 173.14px
+            (gap : model-width) ratio, scaled down for our smaller
+            photo sizes at each breakpoint. */}
+        <div ref={rowRef} className="flex items-end justify-center gap-10 sm:gap-12 md:gap-14">
           {models.map((model, slot) => {
             const isSelected = model.id === selectedId;
             const distance = Math.abs(slot - selectedSlot);
@@ -128,10 +152,13 @@ export default function Hero({ models }) {
                   // (h-64 vs h-56 at md, etc.) — a small step up, not a
                   // big jump — since "items-end" on the row keeps every
                   // photo's feet on the same ground line either way.
+                  // ONLY isSelected gets the enlarged/full-opacity classes —
+                  // every other slot always gets the small/30%-opacity ones,
+                  // no matter which slot was selected before.
                   className={`relative z-10 w-auto cursor-pointer focus-visible:outline-none transition-[opacity,filter,height] duration-500 ${
                     isSelected
-                      ? "h-48 sm:h-56 md:h-64 opacity-100 saturate-100"
-                      : "h-40 sm:h-48 md:h-56 opacity-60 saturate-[0.35]"
+                      ? "h-48 sm:h-56 md:h-64 opacity-100"
+                      : "h-40 sm:h-48 md:h-56 opacity-30"
                   }`}
                 />
 
@@ -160,7 +187,8 @@ export default function Hero({ models }) {
         {/* Name — sits BEHIND the photos (z-0), one persistent element
             that slides to sit over whichever slot is selected (via
             markerX, see the effect above) and swaps to that model's
-            name/head-height as it arrives. */}
+            name/head-height as it arrives. This is the "name transfers
+            to the selected item" behavior. */}
         <motion.h1
           animate={{ x: `calc(-50% + ${markerX}px)`, top: selected.nameTop }}
           transition={{ type: "spring", stiffness: 260, damping: 28 }}
@@ -177,22 +205,25 @@ export default function Hero({ models }) {
           {selected.name.toUpperCase()}
         </motion.h1>
 
-        {/* Podium — ONE ring image, never unmounted, so `rotate` keeps
-            accumulating forever instead of resetting to 0 on every
-            click. Only its `x` (which slot it's centered over) moves. */}
-        <motion.img
-          src={podiumRing}
-          alt=""
+        {/* Podium — STAGNANT: stays centered under the row instead of
+            sliding to whichever slot is selected, and is now literal
+            CSS (3 dashed ellipses, see PODIUM_ELLIPSES above) instead
+            of an image asset. `.podium-spin` (defined in the <style>
+            block below) rotates the whole cluster continuously — same
+            "to { rotate(1turn) }" technique as a CSS loader, just at a
+            slower 14s pace to match the original spin speed. */}
+        <div
           aria-hidden="true"
-          animate={{ x: `calc(-50% + ${markerX}px)`, rotate: 360 }}
-          // TIP: `duration: 14` (seconds per full turn) is unchanged from
-          // before — lower it for a faster spin, raise it for slower.
-          transition={{
-            x: { type: "spring", stiffness: 260, damping: 28 },
-            rotate: { duration: 14, repeat: Infinity, ease: "linear" },
-          }}
-          className="absolute left-1/2 bottom-2 z-0 w-40 sm:w-48 md:w-56 pointer-events-none"
-        />
+          className="podium-spin absolute left-1/2 bottom-2 z-0 w-40 sm:w-48 md:w-56 aspect-[243.81/116.05] pointer-events-none"
+        >
+          {PODIUM_ELLIPSES.map((e, i) => (
+            <span
+              key={i}
+              className="absolute rounded-[50%] border-[2.5px] border-dashed border-[var(--maroon-dark)]"
+              style={{ left: e.left, top: e.top, width: e.width, height: e.height }}
+            />
+          ))}
+        </div>
 
         <div className="relative z-10 flex justify-center gap-1.5 mt-4">
           {models.map((m) => (
@@ -209,7 +240,8 @@ export default function Hero({ models }) {
 
         {/* Price — reads straight from `selected`, so it always shows
             whichever model is currently picked; `layout` just animates
-            it sliding/resizing smoothly when that changes. */}
+            it sliding/resizing smoothly when that changes. No delay —
+            this updates the instant selectedId changes. */}
         <motion.div
           layout
           className="relative z-10 w-40 sm:w-48 md:w-56 mx-auto flex items-center justify-between mt-3 text-xl"
@@ -218,6 +250,20 @@ export default function Hero({ models }) {
           <span className="font-bold tracking-[-0.04em]">{formatPrice(selected.price)}</span>
         </motion.div>
       </div>
+
+      {/* Same rotation technique as a CSS loader: a plain @keyframes
+          that just spins to a full turn, run on infinite linear loop.
+          Kept as a scoped <style> tag so the podium doesn't need
+          Framer Motion or a Tailwind config change for one animation. */}
+      <style>{`
+        .podium-spin {
+          transform: translateX(-50%) rotate(0deg);
+          animation: podium-spin 14s linear infinite;
+        }
+        @keyframes podium-spin {
+          to { transform: translateX(-50%) rotate(1turn); }
+        }
+      `}</style>
     </section>
   );
 }
