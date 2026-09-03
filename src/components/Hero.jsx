@@ -1,3 +1,4 @@
+```jsx
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
@@ -8,82 +9,195 @@ import MoreOptionsMenu from "./MoreOptionsMenu";
 import podiumRing from "../assets/podium-ring.png";
 
 /*
-  TIP: FIXED SLOTS, NOT A CAROUSEL.
-  ----------------------------------
-  Earlier version reordered the array so the clicked item slid into
-  the middle. That's wrong per Lara's correction: the 5 garments stay
-  in their own slots always — clicking one only changes which slot
-  counts as "selected." The selected slot's photo faces front, gets
-  full color, and gets its own name-behind-head + podium + price.
-  Every other slot dims/desaturates and "looks away" — mirrored to
-  face further left if it sits left of the selected slot, unmirrored
-  (facing right) if it sits right of it.
+  HERO MODEL SELECTOR
+  -------------------
+  The models live in FIXED slots.
 
-  The name/podium/price block uses a shared framer-motion `layoutId`
-  so when you click a different slot, that block visibly slides from
-  its old position to the new one instead of just popping — the
-  "mini transition" Lara asked for — even though the photos
-  themselves never move.
+  Selecting a model:
+  - does NOT move/reorder the other models
+  - enlarges ONLY the selected model
+  - keeps every unselected model the exact same size
+  - places the spinning ring directly underneath the selected model
+  - places the selected model's name behind its head
+  - removes the old navigation dots completely
+  - keeps the selected model fully visible
+  - makes surrounding models appear to face away from the selected one
+
+  Important:
+  The images themselves stay in their slots. Only their visual scale,
+  opacity, saturation and orientation change.
 */
+
 export default function Hero({ models }) {
   const [selectedId, setSelectedId] = useState(models[0]?.id);
+
   const selectedSlot = models.findIndex((m) => m.id === selectedId);
   const selected = models[selectedSlot];
+
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { formatPrice } = useCurrency();
 
   return (
-    <section className="pt-10 md:pt-16 pb-10 text-center px-5">
-      <div className="relative max-w-5xl mx-auto">
-        <div className="flex items-end justify-center gap-3 md:gap-6">
+    <section className="pt-10 md:pt-16 pb-10 text-center px-5 overflow-hidden">
+      <div className="relative max-w-6xl mx-auto">
+
+        {/* MODEL ROW */}
+        <div
+          className="
+            relative
+            flex
+            items-end
+            justify-center
+            gap-1
+            sm:gap-3
+            md:gap-5
+            min-h-[390px]
+            sm:min-h-[430px]
+            md:min-h-[500px]
+          "
+        >
           {models.map((model, slot) => {
             const isSelected = model.id === selectedId;
-            const distance = Math.abs(slot - selectedSlot);
-            const responsiveClass = distance >= 2 ? "hidden md:block" : "";
-            // TIP: mirror slots to the LEFT of the selected one so
-            // they read as "facing away left"; slots to the right
-            // stay unmirrored, reading as "facing away right." The
-            // selected slot itself is always unmirrored (front-on).
-            const shouldMirror = !isSelected && slot < selectedSlot;
+
+            /*
+              Everything is calculated relative to the selected model.
+
+              left side  -> faces toward the left / away from selected model
+              right side -> faces toward the right / away from selected model
+            */
+            const isLeftOfSelected = slot < selectedSlot;
+            const isRightOfSelected = slot > selectedSlot;
+
+            /*
+              Keep all five slots the same width and height.
+              This is the important part that prevents the selected
+              model from pushing the other models around.
+            */
+            const slotWidth =
+              "w-[68px] sm:w-[90px] md:w-[120px] lg:w-[135px]";
+
+            /*
+              Selected image grows inside its fixed slot.
+              Unselected images all use exactly the same dimensions.
+            */
+            const imageSize = isSelected
+              ? "w-[120px] sm:w-[145px] md:w-[190px] lg:w-[215px]"
+              : "w-[68px] sm:w-[90px] md:w-[120px] lg:w-[135px]";
+
+            /*
+              This gives the surrounding models a stronger "looking away"
+              feeling without changing their actual slot positions.
+
+              Left models turn visually left.
+              Right models turn visually right.
+            */
+            const directionTransform = isSelected
+              ? "translateX(-50%) scale(1)"
+              : isLeftOfSelected
+                ? "translateX(-50%) rotateY(-18deg) rotateZ(-1deg) scale(0.96)"
+                : "translateX(-50%) rotateY(18deg) rotateZ(1deg) scale(0.96)";
 
             return (
-              <div key={model.id} className={`relative ${responsiveClass}`}>
+              <div
+                key={model.id}
+                className={`
+                  relative
+                  shrink-0
+                  ${slotWidth}
+                  h-[370px]
+                  sm:h-[410px]
+                  md:h-[475px]
+                  flex
+                  items-end
+                  justify-center
+                `}
+              >
+                {/* NAME BEHIND THE SELECTED MODEL */}
                 {isSelected && (
-                  <>
-                    {/* Name — sits BEHIND the photo (lower z-index),
-                        positioned at this model's own head height via
-                        nameTop, so it reads as "coming from behind
-                        the head" rather than floating above it. */}
-                    <motion.h1
-                      layoutId="hero-name"
-                      transition={{ type: "spring", stiffness: 260, damping: 28 }}
-                      style={{ top: model.nameTop }}
-                      className="absolute left-1/2 -translate-x-1/2 z-0 font-display text-[3.5rem] sm:text-[4.5rem] md:text-[5.5rem] leading-none text-[#d8d5cd] select-none whitespace-nowrap"
-                    >
-                      {model.name.toUpperCase()}
-                    </motion.h1>
-
-                    {/* Podium — the real crochet-ring asset, slowly
-                        spinning under the selected garment only. */}
-                    <motion.img
-                      layoutId="hero-podium"
-                      src={podiumRing}
-                      alt=""
-                      aria-hidden="true"
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        layout: { type: "spring", stiffness: 260, damping: 28 },
-                        rotate: { duration: 14, repeat: Infinity, ease: "linear" },
-                      }}
-                      className="absolute left-1/2 bottom-2 -translate-x-1/2 z-0 w-40 sm:w-48 md:w-56 pointer-events-none"
-                    />
-                  </>
+                  <motion.div
+                    layoutId="hero-name"
+                    transition={{
+                      type: "spring",
+                      stiffness: 220,
+                      damping: 26,
+                    }}
+                    className="
+                      absolute
+                      left-1/2
+                      z-[1]
+                      pointer-events-none
+                      font-display
+                      font-bold
+                      text-[2.8rem]
+                      sm:text-[3.8rem]
+                      md:text-[5rem]
+                      lg:text-[5.8rem]
+                      leading-none
+                      tracking-tight
+                      text-[#d8d5cd]
+                      select-none
+                      whitespace-nowrap
+                    "
+                    style={{
+                      top: model.nameTop || "7%",
+                      transform: "translateX(-50%)",
+                    }}
+                  >
+                    {model.name.toUpperCase()}
+                  </motion.div>
                 )}
 
+                {/* SPINNING RING
+                    It belongs ONLY to the selected slot.
+                    No layoutId means it cannot travel independently
+                    from the model. It simply spins in this position.
+                */}
+                {isSelected && (
+                  <motion.img
+                    src={podiumRing}
+                    alt=""
+                    aria-hidden="true"
+                    className="
+                      absolute
+                      left-1/2
+                      bottom-[7px]
+                      z-[2]
+                      w-[125px]
+                      sm:w-[150px]
+                      md:w-[190px]
+                      lg:w-[215px]
+                      pointer-events-none
+                    "
+                    animate={{
+                      rotate: 360,
+                    }}
+                    transition={{
+                      rotate: {
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: "linear",
+                      },
+                    }}
+                    style={{
+                      transformOrigin: "center center",
+                    }}
+                  />
+                )}
+
+                {/* MODEL */}
                 <motion.img
-                  layout
                   role="button"
                   tabIndex={0}
+                  src={model.image}
+                  alt={
+                    model.placeholder
+                      ? "Lara's Crochet piece"
+                      : model.name
+                  }
+                  aria-label={`View ${
+                    model.placeholder ? "this piece" : model.name
+                  }`}
+                  aria-current={isSelected}
                   onClick={() => setSelectedId(model.id)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -91,21 +205,48 @@ export default function Hero({ models }) {
                       setSelectedId(model.id);
                     }
                   }}
-                  aria-label={`View ${model.placeholder ? "this piece" : model.name}`}
-                  aria-current={isSelected}
-                  src={model.image}
-                  alt={model.placeholder ? "Lara's Crochet piece" : model.name}
-                  transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
-                  style={shouldMirror ? { transform: "scaleX(-1)" } : {}}
-                  className={`relative z-10 h-auto cursor-pointer focus-visible:outline-none transition-[opacity,filter] duration-500 ${
-                    isSelected
-                      ? "w-40 sm:w-48 md:w-56 opacity-100 saturate-100"
-                      : "w-32 md:w-40 opacity-60 saturate-[0.35]"
-                  }`}
+                  className={`
+                    absolute
+                    left-1/2
+                    bottom-0
+                    z-[10]
+                    h-auto
+                    max-w-none
+                    cursor-pointer
+                    select-none
+                    object-contain
+                    origin-bottom
+                    transition-all
+                    duration-500
+                    ease-[cubic-bezier(0.22,1,0.36,1)]
+                    ${imageSize}
+                    ${
+                      isSelected
+                        ? "opacity-100 saturate-100"
+                        : "opacity-55 saturate-[0.35]"
+                    }
+                  `}
+                  style={{
+                    transform: directionTransform,
+                  }}
                 />
 
+                {/* ACTIONS ONLY FOR SELECTED MODEL */}
                 {isSelected && (
-                  <div className="absolute -right-6 sm:-right-7 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-2">
+                  <div
+                    className="
+                      absolute
+                      -right-5
+                      sm:-right-6
+                      md:-right-7
+                      top-[48%]
+                      z-[20]
+                      flex
+                      flex-col
+                      items-center
+                      gap-2
+                    "
+                  >
                     <button
                       aria-label="Toggle wishlist"
                       aria-pressed={isInWishlist(model.id)}
@@ -113,11 +254,24 @@ export default function Hero({ models }) {
                         e.stopPropagation();
                         toggleWishlist(model.id);
                       }}
-                      className="hover:text-[var(--maroon)]"
+                      className="hover:text-[var(--maroon)] transition-colors"
                     >
-                      <Heart size={17} strokeWidth={1.5} fill={isInWishlist(model.id) ? "currentColor" : "none"} />
+                      <Heart
+                        size={17}
+                        strokeWidth={1.5}
+                        fill={
+                          isInWishlist(model.id)
+                            ? "currentColor"
+                            : "none"
+                        }
+                      />
                     </button>
-                    <ShareButton product={model} className="hover:text-[var(--maroon)]" />
+
+                    <ShareButton
+                      product={model}
+                      className="hover:text-[var(--maroon)]"
+                    />
+
                     <MoreOptionsMenu product={model} />
                   </div>
                 )}
@@ -126,30 +280,42 @@ export default function Hero({ models }) {
           })}
         </div>
 
-        <div className="relative z-10 flex justify-center gap-1.5 mt-4">
-          {models.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setSelectedId(m.id)}
-              aria-label={`View ${m.placeholder ? "piece" : m.name}`}
-              className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                m.id === selectedId ? "bg-[var(--ink)]" : "bg-[var(--line)]"
-              }`}
-            />
-          ))}
-        </div>
+        {/* NO DOTS */}
+        {/* The old carousel dots have intentionally been removed. */}
 
-        {/* Price — its own shared-layout block so it slides to match
-            whichever slot is selected, showing THAT model's own price,
-            not a leftover from the previous selection. */}
+        {/* PRODUCT INFORMATION */}
         <motion.div
-          layout
-          className="relative z-10 w-40 sm:w-48 md:w-56 mx-auto flex items-center justify-between mt-3 text-sm"
+          key={selected.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.35,
+            ease: "easeOut",
+          }}
+          className="
+            relative
+            z-30
+            w-44
+            sm:w-52
+            md:w-60
+            mx-auto
+            flex
+            items-center
+            justify-between
+            mt-1
+            text-sm
+          "
         >
-          <span className="uppercase tracking-wide">{selected.name}</span>
-          <span className="font-semibold">{formatPrice(selected.price)}</span>
+          <span className="uppercase tracking-wide">
+            {selected.name}
+          </span>
+
+          <span className="font-semibold">
+            {formatPrice(selected.price)}
+          </span>
         </motion.div>
       </div>
     </section>
   );
 }
+```
