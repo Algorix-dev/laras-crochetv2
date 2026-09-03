@@ -12,40 +12,28 @@ import scatterTeal from "../assets/scatter-teal.png";
 import arcFlourish1 from "../assets/arc-flourish-1.png";
 import arcFlourish2 from "../assets/arc-flourish-2.png";
 
-/*
-  LARA SHOWCASE
+/* ============================================================
+   BRAND STORY
+   ============================================================ */
 
-  This section is controlled by one scroll progress value.
-
-  The animation moves through three major stages:
-
-  1. The three scattered photos fade in and converge into
-     a small, tight tilted stack.
-
-  2. The Lara wordmark and brand story appear.
-     The paragraphs cross-fade instead of sitting on top
-     of each other.
-
-  3. The customer reviews appear in groups of three.
-     Only the middle review is raised.
-*/
-
-/* Brand story paragraphs */
 const PARAGRAPHS = [
-  "Welcome to Lara's Crochet! Here, every piece here starts as a single strand of yarn and a pair of hands, no factories, no shortcuts. Made-to-order, one piece at a time, out of Lagos, Nigeria.",
+  "Welcome to Lara's Crochet! Here, every piece starts as a single strand of yarn and a pair of hands. No factories, no shortcuts. Made-to-order, one piece at a time, out of Lagos, Nigeria.",
 
   "We don't keep a stockroom.",
 
-  "When you order, your piece is made for you — your size, your color, your fit. It takes time, because handmade always does, but it means what arrives at your door was never sitting on a shelf waiting for someone else.",
+  "When you order, your piece is made for you, your size, your color, your fit. It takes time, because handmade always does, but it means what arrives at your door was never sitting on a shelf waiting for someone else.",
 
   "This isn't fast fashion. It's handmade, made with love.",
 ];
 
-/* Customer testimonials */
+/* ============================================================
+   CUSTOMER TESTIMONIALS
+   ============================================================ */
+
 const TESTIMONIALS = [
   {
     quote:
-      "I've never had a piece fit this well straight out of the box — literally made to my measurements. No alterations needed.",
+      "I've never had a piece fit this well straight out of the box. Literally made to my measurements. No alterations needed.",
     name: "Teniola Aladese",
   },
   {
@@ -55,7 +43,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "The bikini set held up through an entire beach trip — no stretching, no losing shape. Genuinely impressed.",
+      "The bikini set held up through an entire beach trip. No stretching, no losing shape. Genuinely impressed.",
     name: "Halima Finny",
   },
   {
@@ -75,17 +63,10 @@ const TESTIMONIALS = [
   },
 ];
 
-/*
-  Divide the testimonials into groups of three.
+/* ============================================================
+   GROUP TESTIMONIALS INTO ROWS OF THREE
+   ============================================================ */
 
-  This gives us:
-
-  Row 1:
-  [ review ] [ review ] [ review ]
-
-  Row 2:
-  [ review ] [ review ] [ review ]
-*/
 const TESTIMONIAL_GROUPS = [];
 
 for (let i = 0; i < TESTIMONIALS.length; i += 3) {
@@ -94,20 +75,10 @@ for (let i = 0; i < TESTIMONIALS.length; i += 3) {
   );
 }
 
-/*
-  FIGMA PHOTO STACK
+/* ============================================================
+   PHOTO STACK LAYOUT
+   ============================================================ */
 
-  The final positions are intentionally close together.
-
-  They overlap like a real tilted photo stack, but each image
-  remains visible instead of collapsing into one image.
-
-  Approximate Figma values:
-  - 175.6 × 103.73
-  - 0°
-  - 19.63°
-  - -8.21°
-*/
 const SCATTER_LAYOUT = [
   {
     src: scatterBeach,
@@ -170,12 +141,10 @@ const SCATTER_LAYOUT = [
   },
 ];
 
-/*
-  Scroll stages.
+/* ============================================================
+   SCROLL STAGES
+   ============================================================ */
 
-  More room is given to the story section so the paragraphs
-  do not feel too close to the Lara/photo area.
-*/
 const STAGES = {
   scatterStart: 0,
   scatterEnd: 0.18,
@@ -192,50 +161,36 @@ const STAGES = {
    ============================================================ */
 
 function ScatterImage({ layout, progress }) {
-  /*
-    Convert the overall scroll progress into a local
-    0 → 1 progress for the scatter animation.
-  */
   const localProgress = useTransform(
     progress,
     [STAGES.scatterStart, STAGES.scatterEnd],
     [0, 1]
   );
 
-  /* Horizontal movement */
   const x = useTransform(
     localProgress,
     [0, 1],
     [layout.from.x, layout.to.x]
   );
 
-  /* Vertical movement */
   const y = useTransform(
     localProgress,
     [0, 1],
     [layout.from.y, layout.to.y]
   );
 
-  /* Rotation */
   const rotate = useTransform(
     localProgress,
     [0, 1],
     [layout.from.rotate, layout.to.rotate]
   );
 
-  /* Scale */
   const scale = useTransform(
     localProgress,
     [0, 1],
     [layout.from.scale, layout.to.scale]
   );
 
-  /*
-    Fade in fairly quickly.
-
-    After the image has appeared, it remains fully visible
-    while the other parts of the section continue.
-  */
   const opacity = useTransform(
     progress,
     [0, 0.05, STAGES.scatterEnd],
@@ -257,18 +212,18 @@ function ScatterImage({ layout, progress }) {
         absolute
         left-1/2
         top-1/2
+        z-10
+        w-[140px]
         -translate-x-1/2
         -translate-y-1/2
-        w-[140px]
-        sm:w-[155px]
-        md:w-[176px]
-        aspect-[175.6/103.73]
         rounded-[2px]
         object-cover
         shadow-xl
         ring-2
         ring-[var(--cream)]
         will-change-transform
+        sm:w-[155px]
+        md:w-[176px]
       "
     />
   );
@@ -279,13 +234,6 @@ function ScatterImage({ layout, progress }) {
    ============================================================ */
 
 function LaraWordmark({ progress }) {
-  /*
-    "Lara" is intentionally kept as live text because the existing
-    project already uses the Yellowtail font treatment.
-
-    The word fades in and rises slightly as the scroll reaches
-    the Lara section.
-  */
   const opacity = useTransform(
     progress,
     [0.12, 0.22],
@@ -314,14 +262,14 @@ function LaraWordmark({ progress }) {
       className="
         relative
         z-20
+        select-none
         font-['Yellowtail']
         text-[4rem]
-        sm:text-[5rem]
-        md:text-[6.5rem]
         leading-none
         text-[var(--maroon)]
-        select-none
         pointer-events-none
+        sm:text-[5rem]
+        md:text-[6.5rem]
       "
     >
       Lara
@@ -338,10 +286,6 @@ function ScrollParagraph({
   index,
   progress,
 }) {
-  /*
-    Divide the paragraph section equally between all
-    four paragraphs.
-  */
   const span =
     (STAGES.paragraphsEnd -
       STAGES.paragraphsStart) /
@@ -360,10 +304,6 @@ function ScrollParagraph({
   const fadeOut =
     start + span * 0.96;
 
-  /*
-    Each paragraph:
-    fade in → remain visible → become transparent.
-  */
   const opacity = useTransform(
     progress,
     [start, fadeIn, hold, fadeOut],
@@ -391,9 +331,9 @@ function ScrollParagraph({
         px-6
         text-center
         text-sm
-        md:text-base
         leading-[1.8]
         text-[var(--ink)]
+        md:text-base
       "
     >
       {text}
@@ -405,7 +345,10 @@ function ScrollParagraph({
    REVIEW CARD
    ============================================================ */
 
-function ReviewCard({ testimonial, raised }) {
+function ReviewCard({
+  testimonial,
+  raised,
+}) {
   return (
     <motion.div
       animate={{
@@ -426,7 +369,6 @@ function ReviewCard({ testimonial, raised }) {
         text-center
       "
     >
-      {/* Review text */}
       <p
         className="
           mb-4
@@ -438,7 +380,6 @@ function ReviewCard({ testimonial, raised }) {
         "{testimonial.quote}"
       </p>
 
-      {/* Customer name */}
       <p
         className="
           flex
@@ -452,7 +393,6 @@ function ReviewCard({ testimonial, raised }) {
       >
         {testimonial.name}
 
-        {/* Verification mark */}
         <span
           aria-hidden="true"
           className="
@@ -471,7 +411,6 @@ function ReviewCard({ testimonial, raised }) {
         </span>
       </p>
 
-      {/* Verified customer label */}
       <p
         className="
           mt-1
@@ -494,9 +433,6 @@ function ScrollReviewGroup({
   index,
   progress,
 }) {
-  /*
-    Divide the review section between each group of three.
-  */
   const span =
     (STAGES.reviewsEnd -
       STAGES.reviewsStart) /
@@ -515,14 +451,12 @@ function ScrollReviewGroup({
   const fadeOut =
     start + span * 0.96;
 
-  /* Group fade */
   const opacity = useTransform(
     progress,
     [start, fadeIn, hold, fadeOut],
     [0, 1, 1, 0]
   );
 
-  /* Group entrance */
   const y = useTransform(
     progress,
     [start, fadeIn],
@@ -563,18 +497,11 @@ function ScrollReviewGroup({
 export default function LaraShowcase() {
   const sectionRef = useRef(null);
 
-  /*
-    Track how far the user has scrolled through the entire
-    Lara showcase section.
-  */
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end end"],
   });
 
-  /*
-    Fade the decorative arcs in as the section begins.
-  */
   const arcOpacity = useTransform(
     scrollYProgress,
     [0, 0.08, 0.2],
@@ -589,7 +516,10 @@ export default function LaraShowcase() {
         h-[275vh]
       "
     >
-      {/* Sticky viewport for the entire scroll animation */}
+      {/* ==================================================
+          STICKY VIEWPORT
+          ================================================== */}
+
       <div
         className="
           sticky
@@ -600,9 +530,9 @@ export default function LaraShowcase() {
         "
       >
 
-        {/* ======================================================
-            LEFT ARC FLOURISH
-            ====================================================== */}
+        {/* ==================================================
+            LEFT ARC
+            ================================================== */}
 
         <motion.img
           src={arcFlourish1}
@@ -622,9 +552,9 @@ export default function LaraShowcase() {
           "
         />
 
-        {/* ======================================================
-            RIGHT ARC FLOURISH
-            ====================================================== */}
+        {/* ==================================================
+            RIGHT ARC
+            ================================================== */}
 
         <motion.img
           src={arcFlourish2}
@@ -645,9 +575,9 @@ export default function LaraShowcase() {
           "
         />
 
-        {/* ======================================================
-            MAIN CONTENT
-            ====================================================== */}
+        {/* ==================================================
+            CONTENT
+            ================================================== */}
 
         <div
           className="
@@ -662,9 +592,9 @@ export default function LaraShowcase() {
           "
         >
 
-          {/* ====================================================
+          {/* ==================================================
               LARA + PHOTO STACK
-              ==================================================== */}
+              ================================================== */}
 
           <div
             className="
@@ -679,12 +609,10 @@ export default function LaraShowcase() {
               md:h-[330px]
             "
           >
-            {/* Lara wordmark */}
             <LaraWordmark
               progress={scrollYProgress}
             />
 
-            {/* Scattered photos */}
             {SCATTER_LAYOUT.map(
               (layout, index) => (
                 <ScatterImage
@@ -696,15 +624,9 @@ export default function LaraShowcase() {
             )}
           </div>
 
-          {/* ====================================================
+          {/* ==================================================
               BRAND STORY
-              ====================================================
-
-              Extra margin is intentionally added here.
-
-              This keeps the paragraphs away from the Lara image
-              and gives the section more breathing room.
-          */}
+              ================================================== */}
 
           <div
             className="
@@ -729,14 +651,9 @@ export default function LaraShowcase() {
             )}
           </div>
 
-          {/* ====================================================
+          {/* ==================================================
               REVIEWS
-              ====================================================
-
-              The review section has its own breathing room.
-
-              Only the middle card in each row is raised.
-          */}
+              ================================================== */}
 
           <div
             className="
