@@ -32,6 +32,13 @@ import sunsetFront from "../assets/model-images/sunset-front.png";
 import sunsetAngle from "../assets/model-images/sunset-angle.png";
 import terraFront from "../assets/model-images/terra-front.png";
 
+// ShopPage.jsx sends each of these slugs straight to your API as
+// `getProducts(activeCategory)`, so these must match the `category`
+// field values your MongoDB products actually have. Matches the
+// Figma's 5 tabs — lowercase, hyphenated, since formatLabel() turns
+// 'two-pieces' into 'Two Pieces' for display automatically.
+export const CATEGORIES = ["dresses", "bikinis", "two-pieces", "shirts", "skirts"];
+
 export const products = [
   {
     id: "wisteria",
