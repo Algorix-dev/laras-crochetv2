@@ -87,7 +87,7 @@ export default function AboutPage() {
               needing a separate rotated wrapper. */}
           <div className="relative mt-10 w-full max-w-[380px]">
             <p
-              className="absolute bottom-0 right-full mr-2 whitespace-nowrap text-base font-bold"
+              className="absolute bottom-0 right-full mr-1 whitespace-nowrap text-base font-bold"
               style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
             >
               MEET LARA
