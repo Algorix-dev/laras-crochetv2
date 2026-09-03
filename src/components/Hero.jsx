@@ -13,14 +13,19 @@
     Model 5  (inner-right, dimmed, mirrored)     -> kj37u6
     Model 6  (outer-right, dimmed, mirrored)     -> yyuymy
 
-  ⚠ REINA PLACEHOLDER: the Figma spec's center image is
-  "Gemini_Generated_Image_1pffku...", which was never in the assets
-  you uploaded to me — that's presumably your existing Reina photo
-  already sitting in your repo. I don't know its filename/path, so
-  the import below points at sunset-front.png (one of the 7 extra
-  product photos, unused elsewhere in this hero) purely as a visible
-  placeholder so the page isn't broken. Swap `import heroCenter` to
-  wherever your real Reina image lives.
+  FIX (build was broken): these 4 imports pointed at
+  src/assets/model-images/model2-swuvvw.png etc., but those files
+  were never actually placed in the repo — only referenced by a
+  filename that matched Figma's internal layer names. Vercel's build
+  caught it (UNRESOLVED_IMPORT x4). The real images were sitting in
+  the Figma export the whole time (Gemini_Generated_Image_swuvvw...,
+  _3lo3ls..., _kj37u6..., _yyuymy...) — copied them into
+  src/assets/model-images/ under the names Hero.jsx already expected,
+  so this file itself didn't need to change, just the missing files.
+
+  REINA: was pointing at sunset-front.png as a visible-but-wrong
+  placeholder (noted below). Swapped for your actual reina-front.png,
+  which already exists and is used elsewhere (CustomOrderBanner).
 
   WHY NO OVERSIZED/NEGATIVE-OFFSET IMAGE TRICK: Figma's own CSS
   handles the dimmed models with an oversized image + overflow-clip
@@ -36,7 +41,7 @@ import model2 from "../assets/model-images/model2-swuvvw.png";
 import model3 from "../assets/model-images/model3-3lo3ls.png";
 import model5 from "../assets/model-images/model5-kj37u6.png";
 import model6 from "../assets/model-images/model6-yyuymy.png";
-import heroCenter from "../assets/model-images/sunset-front.png"; // placeholder — see note above
+import heroCenter from "../assets/reina-front.png";
 
 export default function Hero() {
   return (
