@@ -47,6 +47,20 @@ export default function SearchOverlay({ open, onClose }) {
     ? products.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
     : [];
 
+  // TIP: `staggerChildren` on the parent tells framer-motion to
+  // offset each child's entrance by 0.05s automatically — no need to
+  // hand-calculate delay={i * 0.05} per item like ProductGrid does.
+  // Both approaches work; this one's cleaner when the parent and
+  // children are defined right next to each other like this.
+  const listVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.05 } },
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } },
+  };
+
   return (
     // TIP: AnimatePresence enables exit animations on the overlay when `open` becomes false
     <AnimatePresence>
@@ -74,12 +88,22 @@ export default function SearchOverlay({ open, onClose }) {
               </button>
             </div>
 
-            {/* TIP: Results list — each item is a clickable button that navigates to the product page */}
-            <div className="mt-8 space-y-3">
+            {/* TIP: Results list — each item is a clickable button that navigates to the product page.
+                key={query} on the motion.div forces a remount every time the search text
+                changes, which is what makes the stagger replay on every keystroke rather
+                than only the very first time results appear. */}
+            <motion.div
+              key={query}
+              variants={listVariants}
+              initial="hidden"
+              animate="visible"
+              className="mt-8 space-y-3"
+            >
               {matches.length ? (
                 matches.map((p) => (
-                  <button
+                  <motion.button
                     key={p.id}
+                    variants={itemVariants}
                     onClick={() => {
                       navigate(`/product/${p.id}`);
                       onClose();
@@ -95,15 +119,17 @@ export default function SearchOverlay({ open, onClose }) {
                       <b className="block uppercase">{p.name}</b>
                       <small>{formatPrice(p.price)}</small>
                     </span>
-                  </button>
+                  </motion.button>
                 ))
               ) : query ? (
                 // TIP: Empty state shown when no products match the query
-                <p className="text-[var(--muted)]">No products found</p>
+                <motion.p variants={itemVariants} className="text-[var(--muted)]">
+                  No products found
+                </motion.p>
               ) : (
                 <p className="text-[var(--muted)]">Start typing to search pieces</p>
               )}
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       )}

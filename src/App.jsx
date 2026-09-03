@@ -6,6 +6,8 @@ import Hero from "./components/Hero";
 import ProductGrid from "./components/ProductGrid";
 import CustomOrderBanner from "./components/CustomOrderBanner";
 import Footer from "./components/Footer";
+import Reveal from "./components/Reveal";
+import CursorFollow from "./components/CursorFollow";
 import { products, heroProduct } from "./data/products";
 import { getProducts, normalizeProduct } from "./api";
 
@@ -113,72 +115,99 @@ function HomePage() {
 
   return (
     <>
+      <CursorFollow />
       <Hero product={heroProduct} />
 
-      {/* Brand story — verbatim from the Figma landing page export */}
+      {/* Brand story — verbatim from the Figma landing page export.
+          TIP: staggered delays (0, .08, .16, .24) on the four
+          paragraphs mirror the portfolio's d1/d2/d3/d4 rhythm — each
+          line fades up slightly after the one before it, instead of
+          the whole block appearing at once. */}
       <section className="max-w-2xl mx-auto px-5 py-16 md:py-20 text-center">
-        <p className="text-sm md:text-base leading-relaxed text-[var(--ink)] mb-6">
-          Welcome to Lara's Crochet! Here, every piece here starts as a single strand of
-          yarn and a pair of hands, no factories, no shortcuts. Made-to-order, one piece at
-          a time, out of Lagos, Nigeria.
-        </p>
-        <p className="text-sm md:text-base font-semibold text-[var(--ink)] mb-6">
-          We don't keep a stockroom.
-        </p>
-        <p className="text-sm md:text-base leading-relaxed text-[var(--ink)] mb-6">
-          When you order, your piece is made for you — your size, your color, your fit. It
-          takes time, because handmade always does, but it means what arrives at your door
-          was never sitting on a shelf waiting for someone else.
-        </p>
-        <p className="text-sm text-[var(--muted)]">
-          This isn't fast fashion. It's handmade, made with love.
-        </p>
+        <Reveal>
+          <p className="text-sm md:text-base leading-relaxed text-[var(--ink)] mb-6">
+            Welcome to Lara's Crochet! Here, every piece here starts as a single strand of
+            yarn and a pair of hands, no factories, no shortcuts. Made-to-order, one piece at
+            a time, out of Lagos, Nigeria.
+          </p>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <p className="text-sm md:text-base font-semibold text-[var(--ink)] mb-6">
+            We don't keep a stockroom.
+          </p>
+        </Reveal>
+        <Reveal delay={0.16}>
+          <p className="text-sm md:text-base leading-relaxed text-[var(--ink)] mb-6">
+            When you order, your piece is made for you — your size, your color, your fit. It
+            takes time, because handmade always does, but it means what arrives at your door
+            was never sitting on a shelf waiting for someone else.
+          </p>
+        </Reveal>
+        <Reveal delay={0.24}>
+          <p className="text-sm text-[var(--muted)]">
+            This isn't fast fashion. It's handmade, made with love.
+          </p>
+        </Reveal>
       </section>
 
-      {/* Testimonials — real quotes from the Figma export, not placeholder text */}
+      {/* Testimonials — real quotes from the Figma export, not placeholder text.
+          TIP: each card gets a small delay based on its index, capped
+          at 0.3s so a 6-card grid doesn't feel sluggish by the last one. */}
       <section className="max-w-6xl mx-auto px-5 pb-10 md:pb-14">
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {TESTIMONIALS.map((t) => (
-            <div key={t.name} className="border border-[var(--line)] p-5 h-full">
-              <p className="text-sm text-[var(--ink)] mb-4 leading-relaxed">"{t.quote}"</p>
-              <p className="text-xs font-bold text-[var(--ink)] flex items-center gap-1">
-                {t.name}
-                <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-white text-[9px]">✓</span>
-              </p>
-              <p className="text-[11px] text-[var(--muted)]">Verified Customer</p>
-            </div>
+          {TESTIMONIALS.map((t, i) => (
+            <Reveal key={t.name} delay={Math.min(i * 0.08, 0.3)}>
+              <div className="border border-[var(--line)] p-5 h-full">
+                <p className="text-sm text-[var(--ink)] mb-4 leading-relaxed">"{t.quote}"</p>
+                <p className="text-xs font-bold text-[var(--ink)] flex items-center gap-1">
+                  {t.name}
+                  <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-white text-[9px]">✓</span>
+                </p>
+                <p className="text-[11px] text-[var(--muted)]">Verified Customer</p>
+              </div>
+            </Reveal>
           ))}
         </div>
-        <div className="text-center mt-10">
-          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
-            Go to Shop
-          </Link>
-        </div>
+        <Reveal delay={0.1}>
+          <div className="text-center mt-10">
+            <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+              Go to Shop
+            </Link>
+          </div>
+        </Reveal>
       </section>
 
       {/* Shop Our Pieces — a curated 4-item taste of the catalog, not the full grid */}
       <section className="max-w-6xl mx-auto px-5 py-10 md:py-16">
-        <div className="flex items-end justify-between mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
-            Shop Our Pieces
-          </h2>
-          <Link to="/shop" className="text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
-            Go to shop
-          </Link>
-        </div>
+        <Reveal>
+          <div className="flex items-end justify-between mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
+              Shop Our Pieces
+            </h2>
+            <Link to="/shop" className="text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
+              Go to shop
+            </Link>
+          </div>
+        </Reveal>
         {loading ? (
           <p className="text-sm text-[var(--muted)]">Loading products...</p>
         ) : (
-          <ProductGrid products={liveProducts.slice(0, 4)} />
+          <Reveal delay={0.1}>
+            <ProductGrid products={liveProducts.slice(0, 4)} />
+          </Reveal>
         )}
-        <div className="text-center mt-10">
-          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
-            Go to Shop
-          </Link>
-        </div>
+        <Reveal delay={0.15}>
+          <div className="text-center mt-10">
+            <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+              Go to Shop
+            </Link>
+          </div>
+        </Reveal>
       </section>
 
-      <CustomOrderBanner />
+      <Reveal>
+        <CustomOrderBanner />
+      </Reveal>
       <Footer />
     </>
   );
