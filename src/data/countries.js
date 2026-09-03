@@ -1,5 +1,5 @@
 export const countries = [
-  { code: "NG", iso3: "NGA", name: "Nigeria", dial: "+234", flag: "🇳🇬" },
+  { code: "NG", iso3: "NGN", name: "Nigeria", dial: "+234", flag: "🇳🇬" },
 
   { code: "DZ", iso3: "DZA", name: "Algeria", dial: "+213", flag: "🇩🇿" },
   { code: "AO", iso3: "AGO", name: "Angola", dial: "+244", flag: "🇦🇴" },

@@ -167,7 +167,7 @@ const COUNTRIES = [
   { "name": "New Zealand", "code": "NZ", "code3": "NZL", "currency": "NZD" },
   { "name": "Nicaragua", "code": "NI", "code3": "NIC", "currency": "NIO" },
   { "name": "Niger", "code": "NE", "code3": "NER", "currency": "XOF" },
-  { "name": "Nigeria", "code": "NG", "code3": "NGA", "currency": "NGN" },
+  { "name": "Nigeria", "code": "NG", "code3": "NGN", "currency": "NGN" },
   { "name": "Niue", "code": "NU", "code3": "NIU", "currency": "NZD" },
   { "name": "Norfolk Island", "code": "NF", "code3": "NFK", "currency": "AUD" },
   { "name": "North Macedonia", "code": "MK", "code3": "MKD", "currency": "MKD" },
