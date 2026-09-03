@@ -34,22 +34,24 @@ export default function AboutPage() {
           than 1280px, a centered container would leave a visible gap the
           image shouldn't have. Padding for readability is applied only
           to the text column below, not to this outer grid. */}
-      <main className="grid items-start md:grid-cols-[944px_1fr]">
+      <main className="grid items-start gap-10 md:grid-cols-2 md:gap-20 lg:gap-28">
         {/* TIP: Left column — the crosswalk/sunglasses photo, genuinely
             full-bleed: flush with the top and left edges of the browser
-            viewport. Locked to the exact Figma spec (Rectangle 45:
-            944x1024) on both axes, not just height — the source image's
-            aspect ratio (2832x3072 ≈ 0.922) exactly matches 944/1024, so
-            with both dimensions fixed there's nothing left for
-            object-cover to crop. Previously only height was fixed while
-            width stayed w-full (i.e. whatever the grid column happened
-            to render at); on any column narrower than 944px that forced
-            object-cover to crop hard from the sides, zooming in on just
-            her face instead of showing the full photo. */}
+            viewport. Uses a locked aspect-ratio (944:1024, matching the
+            Figma spec and the source image's real proportions) instead
+            of hard-coded md:h-[1024px]/md:w-[944px] pixel values.
+            Hard pixel values only look right at the exact 1920px Figma
+            viewport width — on any narrower real screen (which is most
+            laptops), a fixed 944px width either overflows its grid
+            column or forces awkward cropping. Locking the ratio instead
+            means the image always keeps its correct proportions and
+            scales down cleanly to fit whatever width the column actually
+            has, only reaching the literal 944x1024px size on screens
+            wide enough to fit it. */}
         <img
           src={laraSunglasses}
           alt="Lara — founder of Lara's Crochet"
-          className="aspect-[3/4] w-full object-cover md:aspect-auto md:h-[1024px] md:w-[944px]"
+          className="aspect-[3/4] w-full object-cover md:aspect-[944/1024] md:max-w-[944px]"
         />
 
         {/* TIP: Right column — heading, rotated label, lifestyle image, story, and links.
@@ -83,9 +85,9 @@ export default function AboutPage() {
               matter what the image does. writing-mode: vertical-rl plus
               a 180deg rotation gives bottom-to-top vertical text without
               needing a separate rotated wrapper. */}
-          <div className="relative mt-10 w-full max-w-[440px]">
+          <div className="relative mt-10 w-full max-w-[380px]">
             <p
-              className="absolute bottom-0 left-0 -translate-x-full whitespace-nowrap text-base font-bold"
+              className="absolute bottom-0 right-full mr-2 whitespace-nowrap text-base font-bold"
               style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
             >
               MEET LARA
@@ -98,7 +100,7 @@ export default function AboutPage() {
             <img
               src={laraPortrait}
               alt="Lara close-up portrait"
-              className="ml-auto aspect-[416/391] w-[416px] object-cover"
+              className="aspect-[416/391] w-full object-cover"
             />
           </div>
 
