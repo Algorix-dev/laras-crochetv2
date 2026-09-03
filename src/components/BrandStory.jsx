@@ -1,5 +1,6 @@
 import Reveal from "./Reveal";
 
+import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
@@ -14,6 +15,9 @@ import scatterTeal from "../assets/scatter-teal.png";
 // same gentle fade-up-on-scroll-into-view used elsewhere on the
 // site (Hero, ProductGrid, etc.) — so this section still feels
 // consistent with the rest of the page instead of flat and static.
+// The LARA wordmark itself is the real Genty Demo export
+// (lara-wordmark-solid.png), not a font substitute — same approach
+// as the Footer's monogram and the Navbar logo.
 
 const PARAGRAPHS = [
   "Welcome to Lara's Crochet! Here, every piece starts as a single strand of yarn and a pair of hands. No factories, no shortcuts. Made-to-order, one piece at a time, out of Lagos, Nigeria.",
@@ -48,13 +52,18 @@ const SCATTER_PHOTOS = [
 export default function BrandStory() {
   return (
     <section className="max-w-4xl mx-auto px-5 py-16 md:py-24 text-center">
-      {/* Lara wordmark + photo stack */}
+      {/* Lara wordmark + photo stack — real Genty Demo export now
+          (lara-wordmark-solid.png), photos centered over it the way
+          the Figma has them sitting over the R/A, instead of the old
+          Yellowtail-text-plus-side-photos placeholder. */}
       <Reveal>
-        <div className="relative inline-flex items-center justify-center mb-14 md:mb-20">
-          <span className="font-logo text-[4rem] sm:text-[5rem] md:text-[6.5rem] leading-none text-[var(--maroon-dark)] select-none">
-            Lara
-          </span>
-          <div className="relative w-[110px] h-[80px] sm:w-[140px] sm:h-[100px] md:w-[155px] md:h-[110px] ml-1">
+        <div className="relative mx-auto mb-14 md:mb-20 w-full max-w-[560px] md:max-w-[720px]">
+          <img
+            src={laraWordmark}
+            alt="Lara's Crochet"
+            className="w-full h-auto select-none pointer-events-none"
+          />
+          <div className="absolute left-1/2 top-1/2 w-[110px] h-[80px] sm:w-[140px] sm:h-[100px] md:w-[160px] md:h-[115px] -translate-x-1/2 -translate-y-1/2">
             {SCATTER_PHOTOS.map((p) => (
               <img
                 key={p.alt}
