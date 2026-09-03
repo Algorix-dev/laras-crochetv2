@@ -34,7 +34,7 @@ export default function AboutPage() {
           than 1280px, a centered container would leave a visible gap the
           image shouldn't have. Padding for readability is applied only
           to the text column below, not to this outer grid. */}
-      <main className="grid items-start gap-10 md:grid-cols-2 md:gap-20 lg:gap-28">
+      <main className="grid items-start md:grid-cols-[944px_1fr]">
         {/* TIP: Left column — the crosswalk/sunglasses photo, genuinely
             full-bleed: flush with the top and left edges of the browser
             viewport. Locked to the exact Figma spec (Rectangle 45:
@@ -83,9 +83,9 @@ export default function AboutPage() {
               matter what the image does. writing-mode: vertical-rl plus
               a 180deg rotation gives bottom-to-top vertical text without
               needing a separate rotated wrapper. */}
-          <div className="relative mt-10 w-full max-w-[380px]">
+          <div className="relative mt-10 w-full max-w-[440px]">
             <p
-              className="absolute bottom-0 right-full mr-2 whitespace-nowrap text-base font-bold"
+              className="absolute bottom-0 left-0 -translate-x-full whitespace-nowrap text-base font-bold"
               style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
             >
               MEET LARA
@@ -98,7 +98,7 @@ export default function AboutPage() {
             <img
               src={laraPortrait}
               alt="Lara close-up portrait"
-              className="aspect-[416/391] w-full object-cover"
+              className="ml-auto aspect-[416/391] w-[416px] object-cover"
             />
           </div>
 
