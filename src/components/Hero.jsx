@@ -75,19 +75,28 @@ export default function Hero({ models }) {
   // markerX — the horizontal distance the NAME needs to shift by.
   // (The podium no longer uses this value — see TIP above.)
   const rowRef = useRef(null);
+  const containerRef = useRef(null);
   const slotRefs = useRef({});
   const [markerX, setMarkerX] = useState(0);
+  const [nameTop, setNameTop] = useState(0);
 
   useEffect(() => {
     function measure() {
       const row = rowRef.current;
+      const container = containerRef.current;
       const slotEl = slotRefs.current[selectedId];
-      if (!row || !slotEl) return;
+      if (!row || !container || !slotEl) return;
       const rowRect = row.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
       const slotRect = slotEl.getBoundingClientRect();
       const rowCenter = rowRect.left + rowRect.width / 2;
       const slotCenter = slotRect.left + slotRect.width / 2;
       setMarkerX(slotCenter - rowCenter);
+      // Name sits a small gap above whichever image is selected —
+      // measured off the actual slot, not a per-model magic number,
+      // so it's always at "head level" no matter which piece or
+      // breakpoint. Gap scales with the image's own height.
+      setNameTop(slotRect.top - containerRect.top - slotRect.height * 0.14);
     }
     measure();
     window.addEventListener("resize", measure);
@@ -96,7 +105,7 @@ export default function Hero({ models }) {
 
   return (
     <section className="pt-10 md:pt-16 pb-10 text-center px-5">
-      <div className="relative max-w-5xl mx-auto">
+      <div ref={containerRef} className="relative max-w-5xl mx-auto">
         {/* Gap widened to roughly match Figma's 128px : 173.14px
             (gap : model-width) ratio, scaled down for our smaller
             photo sizes at each breakpoint. */}
@@ -157,8 +166,8 @@ export default function Hero({ models }) {
                   // no matter which slot was selected before.
                   className={`relative z-10 w-auto cursor-pointer focus-visible:outline-none transition-[opacity,filter,height] duration-500 ${
                     isSelected
-                      ? "h-48 sm:h-56 md:h-64 opacity-100"
-                      : "h-40 sm:h-48 md:h-56 opacity-30"
+                      ? "h-56 sm:h-64 md:h-72 opacity-100"
+                      : "h-48 sm:h-56 md:h-64 opacity-30"
                   }`}
                 />
 
@@ -186,11 +195,12 @@ export default function Hero({ models }) {
 
         {/* Name — sits BEHIND the photos (z-0), one persistent element
             that slides to sit over whichever slot is selected (via
-            markerX, see the effect above) and swaps to that model's
-            name/head-height as it arrives. This is the "name transfers
-            to the selected item" behavior. */}
+            markerX) and sits at a fixed gap above that slot's own top
+            edge (via nameTop, measured live — see the effect above),
+            so it reads at "head level" for every model, not just the
+            one a hardcoded number happened to be tuned for. */}
         <motion.h1
-          animate={{ x: `calc(-50% + ${markerX}px)`, top: selected.nameTop }}
+          animate={{ x: `calc(-50% + ${markerX}px)`, top: nameTop }}
           transition={{ type: "spring", stiffness: 260, damping: 28 }}
           // TIP: font/color/tracking pulled straight from the Figma
           // dev-mode CSS for this element — Raleway 700, -0.07em
@@ -214,37 +224,25 @@ export default function Hero({ models }) {
             slower 14s pace to match the original spin speed. */}
         <div
           aria-hidden="true"
-          className="podium-spin absolute left-1/2 bottom-2 z-0 w-40 sm:w-48 md:w-56 aspect-[243.81/116.05] pointer-events-none"
+          className="podium-spin absolute left-1/2 bottom-4 z-0 w-28 sm:w-32 md:w-40 aspect-[243.81/116.05] pointer-events-none"
         >
           {PODIUM_ELLIPSES.map((e, i) => (
             <span
               key={i}
-              className="absolute rounded-[50%] border-[2.5px] border-dashed border-[var(--maroon-dark)]"
+              className="absolute rounded-[50%] border border-dashed border-[var(--maroon)]/35"
               style={{ left: e.left, top: e.top, width: e.width, height: e.height }}
             />
           ))}
         </div>
 
-        <div className="relative z-10 flex justify-center gap-1.5 mt-4">
-          {models.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setSelectedId(m.id)}
-              aria-label={`View ${m.placeholder ? "piece" : m.name}`}
-              className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                m.id === selectedId ? "bg-[var(--ink)]" : "bg-[var(--line)]"
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Price — reads straight from `selected`, so it always shows
-            whichever model is currently picked; `layout` just animates
-            it sliding/resizing smoothly when that changes. No delay —
-            this updates the instant selectedId changes. */}
+        {/* Price — reads straight from `selected`, so the text is
+            always right; the `x` animation is what makes it actually
+            slide under whichever slot is selected instead of staying
+            pinned to the row's center regardless of the click. */}
         <motion.div
-          layout
-          className="relative z-10 w-40 sm:w-48 md:w-56 mx-auto flex items-center justify-between mt-3 text-xl"
+          animate={{ x: markerX }}
+          transition={{ type: "spring", stiffness: 260, damping: 28 }}
+          className="relative z-10 w-40 sm:w-48 md:w-56 mx-auto flex items-center justify-between mt-6 text-xl"
         >
           <span className="uppercase tracking-wide">{selected.name}</span>
           <span className="font-bold tracking-[-0.04em]">{formatPrice(selected.price)}</span>
