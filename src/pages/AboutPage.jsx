@@ -33,8 +33,18 @@ export default function AboutPage() {
           the edge of a centered max-w-7xl container — on any screen wider
           than 1280px, a centered container would leave a visible gap the
           image shouldn't have. Padding for readability is applied only
-          to the text column below, not to this outer grid. */}
-      <main className="grid items-start gap-10 md:grid-cols-2 md:gap-20 lg:gap-28">
+          to the text column below, not to this outer grid.
+
+          md:grid-cols-[minmax(0,944px)_1fr] instead of md:grid-cols-2:
+          an even 1fr/1fr split divides (viewport - gap) exactly in half,
+          so the image column was always ~40-100px short of the full
+          944px Figma width (the gap eats into both sides equally). This
+          explicitly caps the LEFT column at up to 944px and lets the
+          text column (1fr) absorb whatever space is left over, so the
+          image actually reaches 944px on wide screens instead of being
+          shortchanged by the gap. minmax(0, ...) still lets it shrink
+          below 944px on narrower real screens instead of overflowing. */}
+      <main className="grid items-start gap-10 md:grid-cols-[minmax(0,944px)_1fr] md:gap-20 lg:gap-28">
         {/* TIP: Left column — the crosswalk/sunglasses photo, genuinely
             full-bleed: flush with the top and left edges of the browser
             viewport. Uses a locked aspect-ratio (944:1024, matching the
@@ -87,7 +97,7 @@ export default function AboutPage() {
               needing a separate rotated wrapper. */}
           <div className="relative mt-10 w-full max-w-[380px]">
             <p
-              className="absolute bottom-0 right-full mr-1 whitespace-nowrap text-base font-bold"
+              className="absolute bottom-0 right-full mr-2 whitespace-nowrap text-base font-bold"
               style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
             >
               MEET LARA
