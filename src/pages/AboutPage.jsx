@@ -35,16 +35,19 @@ export default function AboutPage() {
           image shouldn't have. Padding for readability is applied only
           to the text column below, not to this outer grid.
 
-          md:grid-cols-[minmax(0,944px)_1fr] instead of md:grid-cols-2:
-          an even 1fr/1fr split divides (viewport - gap) exactly in half,
-          so the image column was always ~40-100px short of the full
-          944px Figma width (the gap eats into both sides equally). This
-          explicitly caps the LEFT column at up to 944px and lets the
-          text column (1fr) absorb whatever space is left over, so the
-          image actually reaches 944px on wide screens instead of being
-          shortchanged by the gap. minmax(0, ...) still lets it shrink
-          below 944px on narrower real screens instead of overflowing. */}
-      <main className="grid items-start gap-10 md:grid-cols-[minmax(0,944px)_1fr] md:gap-20 lg:gap-28">
+          md:flex-row md:items-center — switched this row from CSS Grid to
+          Flexbox specifically so the right column can be vertically
+          CENTERED against the image's height without resizing anything.
+          Grid's default align-items: stretch would force the shorter
+          column (the text) to grow to match the taller one (the image) —
+          fine for equal-height matching, but wrong for centering, and
+          risky for the image specifically (stretching a definite-width +
+          aspect-ratio image to an explicit taller height can break its
+          proportions). Flexbox's items-center instead just POSITIONS the
+          shorter flex item in the middle of the row's cross-axis space,
+          leaving each item's own size (width, and the image's
+          aspect-ratio-derived height) completely untouched. */}
+      <main className="flex flex-col gap-10 md:flex-row md:items-center md:gap-20 lg:gap-28">
         {/* TIP: Left column — the crosswalk/sunglasses photo, genuinely
             full-bleed: flush with the top and left edges of the browser
             viewport. Uses a locked aspect-ratio (944:1024, matching the
@@ -55,9 +58,12 @@ export default function AboutPage() {
             laptops), a fixed 944px width either overflows its grid
             column or forces awkward cropping. Locking the ratio instead
             means the image always keeps its correct proportions and
-            scales down cleanly to fit whatever width the column actually
-            has, only reaching the literal 944x1024px size on screens
-            wide enough to fit it. */}
+            scales down cleanly to fit whatever width it's given, only
+            reaching the literal 944x1024px size on screens wide enough
+            to fit it. Default flex sizing (grow:0, shrink:1, basis:auto)
+            already caps it at max-w-[944px] while still letting it
+            shrink on narrower screens — same behavior the old grid-cols
+            minmax(0,944px) track gave it, no extra classes needed. */}
         <img
           src={laraSunglasses}
           alt="Lara — founder of Lara's Crochet"
@@ -67,9 +73,13 @@ export default function AboutPage() {
         {/* TIP: Right column — heading, rotated label, lifestyle image, story, and links.
             Padding lives here instead of on the outer grid, so this column
             stays readable while the image column stays edge-to-edge.
-            items-center + text-center centers every child (heading image,
-            Meet Lara block, paragraph, link) horizontally within the column. */}
-        <section className="flex flex-col items-center px-5 pt-10 pb-10 text-center md:px-8 md:pt-14 lg:pr-16">
+            md:flex-1 lets it absorb whatever width is left over once the
+            image claims up to 944px (same role the old 1fr grid track
+            played). items-center + text-center centers every child
+            (heading image, Meet Lara block, paragraph, link) horizontally
+            within the column, and the parent's md:items-center now also
+            centers this whole column vertically against the image. */}
+        <section className="flex flex-col items-center px-5 py-10 text-center md:flex-1 md:px-8 lg:pr-16">
           {/* TIP: Page heading — real logo lockup image, not live text.
               Width capped and height auto so it scales proportionally;
               the source image is 484x43, so this stays reasonably crisp
