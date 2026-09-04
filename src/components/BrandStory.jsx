@@ -56,10 +56,18 @@ export default function BrandStory() {
       {/* Decorative crochet-thread arcs behind the wordmark/copy —
           Figma's Group 30 (left) + Group 32 (right, same asset
           mirrored via scaleX(-1) rather than a second file, since
-          Group 32 is pixel-for-pixel Group 30 flipped). Figma had
-          these at width:1341/1365px, left:-184/726px, top:824px on a
-          1920px frame — converted to vw here (1920px frame = 100vw)
-          so it scales the same way Hero.jsx's model images do.
+          Group 32 is pixel-for-pixel Group 30 flipped).
+
+          Group 30/32 are the exact same 1341x556 / 1365x556 boxes
+          used behind the Custom Orders wordmark in
+          CustomOrderBanner.jsx — Figma just repositions them lower
+          on the page here (top:824/823px vs top:194/193px), nothing
+          else changes. So this reuses CustomOrderBanner's width/left
+          values (98.24vw / -13.48vw and 53.44vw, tuned there to
+          match the arc-swirl.png asset's actual padding, since the
+          literal 1341px/1920 conversion undersizes it) and only
+          swaps in this section's own top offset: 824.32/1920=42.9vw,
+          823/1920=42.86vw.
 
           This layer lives in its own full-bleed wrapper (same
           pattern as CustomOrderBanner) instead of inside the
@@ -75,13 +83,13 @@ export default function BrandStory() {
           src={arcSwirl}
           alt=""
           className="select-none absolute opacity-20 blur-[4.5px]"
-          style={{ width: "69.84vw", left: "-9.58vw", top: "42.9vw", maxWidth: "none" }}
+          style={{ width: "98.24vw", left: "-13.48vw", top: "42.9vw", maxWidth: "none" }}
         />
         <img
           src={arcSwirl}
           alt=""
           className="select-none absolute opacity-20 blur-[4.5px]"
-          style={{ width: "71.09vw", left: "37.81vw", top: "42.86vw", maxWidth: "none", transform: "scaleX(-1)" }}
+          style={{ width: "98.24vw", left: "53.44vw", top: "42.86vw", maxWidth: "none", transform: "scaleX(-1)" }}
         />
       </div>
 
