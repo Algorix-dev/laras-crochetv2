@@ -33,10 +33,13 @@ export default function ProductCard({ product }) {
 
   return (
     <div className="group">
-      {/* Image — links to product detail page */}
+      {/* Image — white card background (was #efece6 grey), aspect
+          ratio 640/731 from Figma's Frame 34 (640x818.11 card minus
+          the 69.25px footer row and 17.86px gap between them). */}
       <Link
         to={`/product/${product.id}`}
-        className="relative block aspect-[3/4] overflow-hidden bg-[#efece6]"
+        className="relative block overflow-hidden bg-white"
+        style={{ aspectRatio: "640 / 731" }}
       >
         {product.image ? (
           <img
@@ -48,7 +51,8 @@ export default function ProductCard({ product }) {
           <ProductPlaceholder className="h-full w-full" />
         )}
 
-        {/* Wishlist heart — positioned top-left */}
+        {/* Wishlist heart — Figma's "Favorites" badge: 28x28 circle,
+            #EFE7E7, positioned 20px from top/left of the image. */}
         <button
           aria-label={`${isInWishlist(product.id) ? 'Remove' : 'Add'} ${product.name} ${isInWishlist(product.id) ? 'from' : 'to'} wishlist`}
           aria-pressed={isInWishlist(product.id)}
@@ -56,24 +60,29 @@ export default function ProductCard({ product }) {
             e.preventDefault();
             toggleWishlist(product.id);
           }}
-          className="absolute left-3 top-3 hover:text-[var(--maroon)]"
+          className="absolute left-5 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-[#EFE7E7] hover:text-[var(--maroon)]"
         >
           <Heart
-            size={16}
+            size={14}
             strokeWidth={1.5}
             fill={isInWishlist(product.id) ? 'currentColor' : 'none'}
           />
         </button>
       </Link>
 
-      {/* Name + price on the left, Add to Bag on the right */}
-      <div className="mt-3 flex items-end justify-between">
-        <Link
-          to={`/product/${product.id}`}
-          className="text-sm"
-        >
-          <div className="uppercase tracking-wide">{product.name}</div>
-          <div className="text-[var(--muted)]">
+      {/* Footer row — Figma's Frame 23: 17.86px gap above, 12px
+          side padding, category label stacked over name, price
+          below, bag icon top-aligned on the right (no circle/border
+          around it in the Figma, unlike the old version). */}
+      <div className="mt-[1.1rem] flex items-start justify-between gap-2 px-3">
+        <Link to={`/product/${product.id}`} className="min-w-0 flex-1">
+          <div className="whitespace-nowrap text-xs leading-[18px] text-[#737373]">
+            {product.categoryLabel?.toUpperCase() || 'PRODUCT'}
+          </div>
+          <div className="truncate text-base font-bold leading-6 text-[#404040] uppercase">
+            {product.name}
+          </div>
+          <div className="whitespace-nowrap text-base leading-6 text-[#404040]">
             {formatPrice(product.price)}
           </div>
         </Link>
@@ -81,9 +90,9 @@ export default function ProductCard({ product }) {
         <button
           aria-label={`Add ${product.name} to bag`}
           onClick={handleAddToBag}
-          className="shrink-0 rounded-full border border-[var(--line)] p-2 transition-colors hover:border-[var(--maroon)] hover:bg-[var(--maroon)] hover:text-white"
+          className="shrink-0 text-[#404040] transition-colors hover:text-[var(--maroon)]"
         >
-          <ShoppingBag size={15} strokeWidth={1.5} />
+          <ShoppingBag size={19} strokeWidth={1.5} />
         </button>
       </div>
     </div>

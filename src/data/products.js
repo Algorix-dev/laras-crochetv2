@@ -47,6 +47,7 @@ export const products = [
     image: wisteriaFront,
     angleImage: null,
     placeholder: true,
+    categoryLabel: "Two-Piece",
   },
   {
     id: "sunset",
@@ -55,6 +56,7 @@ export const products = [
     image: sunsetFront,
     angleImage: sunsetAngle,
     placeholder: true,
+    categoryLabel: "Two-Piece",
   },
   {
     id: "palm",
@@ -63,6 +65,7 @@ export const products = [
     image: palmFront,
     angleImage: palmAngle,
     placeholder: true,
+    categoryLabel: "Two-Piece",
   },
   {
     id: "rosewood",
@@ -71,6 +74,7 @@ export const products = [
     image: rosewoodFront,
     angleImage: null,
     placeholder: true,
+    categoryLabel: "Two-Piece",
   },
   {
     id: "sahara",
@@ -79,6 +83,7 @@ export const products = [
     image: saharaFront,
     angleImage: null,
     placeholder: true,
+    categoryLabel: "Two-Piece",
   },
   {
     id: "lagoon",
@@ -87,6 +92,7 @@ export const products = [
     image: lagoonFront,
     angleImage: null,
     placeholder: true,
+    categoryLabel: "Two-Piece",
   },
   {
     id: "terra",
@@ -95,6 +101,7 @@ export const products = [
     image: terraFront,
     angleImage: null,
     placeholder: true,
+    categoryLabel: "Two-Piece",
   },
 ];
 

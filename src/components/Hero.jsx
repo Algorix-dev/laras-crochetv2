@@ -83,7 +83,7 @@ export default function Hero() {
                 Ellipse 24-25-26), fully static. */}
             <div
               aria-hidden="true"
-              className="absolute left-1/2 -translate-x-1/2 bottom-4 z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
+              className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
             >
               <span
                 className="absolute rounded-[50%] border-[var(--maroon-dark)]"
@@ -102,7 +102,7 @@ export default function Hero() {
             <img
               src={heroCenter}
               alt="Reina"
-              className="relative z-10 w-auto shrink-0 h-[clamp(11rem,31.40625vw,37.6875rem)]"
+              className="relative z-10 w-auto max-w-none shrink-0 h-[clamp(11rem,31.40625vw,37.6875rem)]"
             />
 
             {/* Price row — Frame 62's "Name and Price tag", centered

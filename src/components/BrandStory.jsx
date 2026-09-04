@@ -4,6 +4,7 @@ import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
+import arcSwirl from "../assets/decor/arc-swirl.png";
 
 // TIP: this replaces the old LaraShowcase.jsx. That version pinned
 // the section and scrubbed everything (photos, paragraphs,
@@ -51,7 +52,29 @@ const SCATTER_PHOTOS = [
 
 export default function BrandStory() {
   return (
-    <section className="max-w-4xl mx-auto px-5 py-16 md:py-24 text-center">
+    <section className="relative overflow-clip max-w-4xl mx-auto px-5 py-16 md:py-24 text-center">
+      {/* Decorative crochet-thread arcs behind the wordmark/copy —
+          Figma's Group 30 (left) + Group 32 (right, same asset
+          mirrored via scaleX(-1) rather than a second file, since
+          Group 32 is pixel-for-pixel Group 30 flipped). Figma had
+          these at width:1341/1365px, left:-184/726px, top:824px on a
+          1920px frame — converted to vw here (1920px frame = 100vw)
+          so it scales the same way Hero.jsx's model images do. */}
+      <img
+        src={arcSwirl}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute z-0 opacity-20 blur-[4.5px]"
+        style={{ width: "69.84vw", left: "-9.58vw", top: "42.9vw", maxWidth: "none" }}
+      />
+      <img
+        src={arcSwirl}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute z-0 opacity-20 blur-[4.5px]"
+        style={{ width: "71.09vw", left: "37.81vw", top: "42.86vw", maxWidth: "none", transform: "scaleX(-1)" }}
+      />
+
       {/* Lara wordmark + photo stack — real Genty Demo export now
           (lara-wordmark-solid.png), photos centered over it the way
           the Figma has them sitting over the R/A, instead of the old
@@ -80,7 +103,7 @@ export default function BrandStory() {
       {/* Brand story copy — all visible at once, like the Figma, not
           cycled one paragraph at a time */}
       <Reveal delay={0.1}>
-        <div className="max-w-lg mx-auto space-y-5 text-sm md:text-base leading-[1.8] text-[var(--ink)]">
+        <div className="relative max-w-lg mx-auto space-y-5 text-sm md:text-base leading-[1.8] text-[var(--ink)]">
           {PARAGRAPHS.map((p) => (
             <p key={p}>{p}</p>
           ))}
@@ -88,7 +111,7 @@ export default function BrandStory() {
       </Reveal>
 
       {/* Testimonials */}
-      <div className="mt-16 md:mt-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+      <div className="relative mt-16 md:mt-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
         {TESTIMONIALS.map((t, i) => (
           <Reveal key={t.name} delay={0.05 * i}>
             <div className="h-full border border-[var(--line)] bg-[var(--cream)] p-5 text-center">
