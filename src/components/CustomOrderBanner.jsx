@@ -19,20 +19,18 @@ export default function CustomOrderBanner() {
       {/* ========================================================
           FIGMA DECORATIVE BACKGROUND
 
-          OPACITY CONTROLS:
+          TIP: pulled straight from the Figma dev-mode CSS export
+          (Desktop - 5 frame). Group 30/32 (the arcs) are
+          opacity 0.2 / blur(4.5px) there — this file had them at
+          0.65 / 1.5px, more than 3x stronger and much less soft
+          than the design. Group 33 (thread band) is opacity 0.3 /
+          blur(6.5px) in Figma vs 0.75 / 2px here. Both corrected
+          below to match the export exactly.
 
-          ARC:
-          opacity-[0.65]
-
-          THREAD BAND:
-          opacity-[0.75]
-
-          Try:
-          0.50 = medium
-          0.65 = clearly visible
-          0.75 = strong
-          0.85 = very strong
-          1.00 = fully visible
+          If you want more/less punch than the real design, tweak
+          from THESE numbers (0.20/0.30) rather than sliding back
+          up toward 0.65/0.75 — those were guesses from before this
+          spec existed.
           ======================================================== */}
 
       <div
@@ -52,8 +50,8 @@ export default function CustomOrderBanner() {
           className="
             absolute
             select-none
-            opacity-[0.65]
-            blur-[1.5px]
+            opacity-[0.2]
+            blur-[4.5px]
           "
           style={{
             width: "98.24vw",
@@ -70,8 +68,8 @@ export default function CustomOrderBanner() {
           className="
             absolute
             select-none
-            opacity-[0.65]
-            blur-[1.5px]
+            opacity-[0.2]
+            blur-[4.5px]
           "
           style={{
             width: "98.24vw",
@@ -87,8 +85,6 @@ export default function CustomOrderBanner() {
             COLOURED THREAD BAND
 
             This is the colourful decoration behind Custom.
-
-            Start with 0.75.
             ====================================================== */}
 
         <img
@@ -97,8 +93,8 @@ export default function CustomOrderBanner() {
           className="
             absolute
             select-none
-            opacity-[0.75]
-            blur-[2px]
+            opacity-[0.3]
+            blur-[6.5px]
           "
           style={{
             width: "100vw",
@@ -106,6 +102,32 @@ export default function CustomOrderBanner() {
             top: "18.69vw",
             maxWidth: "none",
             transform: "translateX(-50%)",
+          }}
+        />
+
+        {/* ======================================================
+            "Ellipse 27" from Figma — a soft rose glow sitting
+            behind the supporting text + button. Wasn't in the
+            code at all before; the area under the CTA rendered
+            completely flat. Figma: 640x78, top 744px on a 1920px
+            frame (=38.75vw), Rose/900 (--maroon-dark) @ 25%
+            opacity, blur(24.5px).
+            ====================================================== */}
+        <div
+          aria-hidden="true"
+          className="
+            absolute
+            select-none
+            left-1/2
+            -translate-x-1/2
+            opacity-[0.25]
+            blur-[24.5px]
+            bg-[var(--maroon-dark)]
+          "
+          style={{
+            width: "33.33vw",
+            height: "4.06vw",
+            top: "38.75vw",
           }}
         />
       </div>
@@ -180,14 +202,18 @@ export default function CustomOrderBanner() {
           time, out of Lagos.
         </p>
 
-        {/* CTA */}
+        {/* CTA
+            TIP: Figma spec for this button is Gray/600 (#564345),
+            which is var(--ink-warm) — NOT var(--maroon)
+            (#412b2d, Gray/700). Was using --maroon before, which
+            reads a full shade darker than the design. */}
         <Link
           to="/contact?flow=custom"
           className="
             relative
             mt-6
             inline-block
-            bg-[var(--maroon)]
+            bg-[var(--ink-warm)]
             px-6
             py-3
             text-xs

@@ -55,6 +55,23 @@ const TESTIMONIALS = [
       "Customer service walked me through sizing so patiently. Made ordering online feel less scary.",
     name: "Ejiro Okezie",
   },
+  // TIP: placeholders so the 3x3 grid is real — swap these three
+  // for actual quotes whenever you have them, same shape as above.
+  {
+    quote:
+      "Placeholder quote — swap this for a real customer testimonial.",
+    name: "Customer Name",
+  },
+  {
+    quote:
+      "Placeholder quote — swap this for a real customer testimonial.",
+    name: "Customer Name",
+  },
+  {
+    quote:
+      "Placeholder quote — swap this for a real customer testimonial.",
+    name: "Customer Name",
+  },
 ];
 
 /* ============================================================
@@ -94,69 +111,6 @@ export default function LaraShowcase() {
   return (
     <section className="relative overflow-hidden bg-[var(--cream)]">
       {/* ========================================================
-          FIGMA THREAD / ARC BACKGROUND
-
-          IMPORTANT:
-          Change opacity-[0.65] below if you want the arcs
-          lighter or stronger.
-
-          0.40 = subtle
-          0.50 = medium
-          0.65 = clearly visible
-          0.80 = very strong
-          1.00 = fully visible
-          ======================================================== */}
-
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          z-0
-          overflow-hidden
-        "
-      >
-        {/* Left sweeping arc */}
-        <img
-          src={arcSwirl}
-          alt=""
-          className="
-            absolute
-            select-none
-            opacity-[0.65]
-            blur-[1.5px]
-          "
-          style={{
-            width: "98.24vw",
-            left: "-13.48vw",
-            top: "42.9vw",
-            maxWidth: "none",
-          }}
-        />
-
-        {/* Right sweeping arc */}
-        <img
-          src={arcSwirl}
-          alt=""
-          className="
-            absolute
-            select-none
-            opacity-[0.65]
-            blur-[1.5px]
-          "
-          style={{
-            width: "98.24vw",
-            left: "53.44vw",
-            top: "42.9vw",
-            maxWidth: "none",
-            transform: "scaleX(-1)",
-            transformOrigin: "center",
-          }}
-        />
-      </div>
-
-      {/* ========================================================
           CONTENT
           ======================================================== */}
 
@@ -172,6 +126,74 @@ export default function LaraShowcase() {
           md:py-24
         "
       >
+        {/* ======================================================
+            HERO BLOCK (wordmark + brand story)
+
+            TIP: the arc-swirl background used to sit on the
+            OUTER <section>, so it stretched full-height and
+            bled behind whatever got added below it (like when
+            testimonials grew past 6 cards — the arcs showed
+            through the card gaps). It now lives inside THIS
+            wrapper instead, which is `relative overflow-hidden`
+            and only as tall as the wordmark + paragraphs. That
+            keeps it permanently confined to the hero — it can't
+            leak into the testimonials grid no matter how many
+            cards you add below.
+
+            Change opacity-[0.65] below if you want the arcs
+            lighter/stronger: 0.40 subtle, 0.65 clearly visible,
+            1.00 fully visible.
+            ====================================================== */}
+        <div className="relative overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="
+              pointer-events-none
+              absolute
+              inset-0
+              z-0
+              overflow-hidden
+            "
+          >
+            {/* Left sweeping arc */}
+            <img
+              src={arcSwirl}
+              alt=""
+              className="
+                absolute
+                select-none
+                opacity-[0.65]
+                blur-[1.5px]
+              "
+              style={{
+                width: "98.24vw",
+                left: "-13.48vw",
+                top: "42.9vw",
+                maxWidth: "none",
+              }}
+            />
+
+            {/* Right sweeping arc */}
+            <img
+              src={arcSwirl}
+              alt=""
+              className="
+                absolute
+                select-none
+                opacity-[0.65]
+                blur-[1.5px]
+              "
+              style={{
+                width: "98.24vw",
+                left: "53.44vw",
+                top: "42.9vw",
+                maxWidth: "none",
+                transform: "scaleX(-1)",
+                transformOrigin: "center",
+              }}
+            />
+          </div>
+
         {/* ======================================================
             LARA WORDMARK + PHOTOS
             ====================================================== */}
@@ -261,9 +283,20 @@ export default function LaraShowcase() {
             ))}
           </div>
         </Reveal>
+        </div>
+        {/* ^ closes the hero wrapper (arc background + wordmark +
+            brand story) — testimonials below sit OUTSIDE it now,
+            so they're guaranteed arc-free regardless of card count. */}
 
         {/* ======================================================
             TESTIMONIALS
+
+            TIP: 9 cards now (3x3 on md+). The middle column
+            (index 1, 4, 7) gets a small upward shift on md+ via
+            `md:-translate-y-6` so it reads as "stepped up" against
+            its left/right neighbors, matching the Figma. It's
+            skipped below md because at 1-2 columns there's no
+            true middle column to offset.
             ====================================================== */}
 
         <div
@@ -280,18 +313,19 @@ export default function LaraShowcase() {
         >
           {TESTIMONIALS.map((testimonial, index) => (
             <Reveal
-              key={testimonial.name}
+              key={`${testimonial.name}-${index}`}
               delay={0.05 * index}
             >
               <div
-                className="
+                className={`
+                  ${index % 3 === 1 ? "md:-translate-y-6" : ""}
                   h-full
                   border
                   border-[var(--line)]
                   bg-[var(--cream)]
                   p-5
                   text-center
-                "
+                `}
               >
                 <p
                   className="
