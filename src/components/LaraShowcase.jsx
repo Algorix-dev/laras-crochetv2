@@ -18,7 +18,7 @@ import arcSwirl from "../assets/decor/arc-swirl.png";
    1.00 = maximum
    ============================================================ */
 
-const LARA_ARC_OPACITY = 0.65;
+const LARA_ARC_OPACITY = 0.75;
 
 /* ============================================================
    BRAND STORY
@@ -162,7 +162,6 @@ export default function LaraShowcase() {
           style={{
             width: "69.84vw",
             left: "-9.58vw",
-            top: "10px",
             opacity: LARA_ARC_OPACITY,
           }}
         />
@@ -180,7 +179,6 @@ export default function LaraShowcase() {
           style={{
             width: "71.09vw",
             left: "37.81vw",
-            top: "9px",
             opacity: LARA_ARC_OPACITY,
             transform: "scaleX(-1)",
             transformOrigin: "center",
