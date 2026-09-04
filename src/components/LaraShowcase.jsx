@@ -129,20 +129,25 @@ export default function LaraShowcase() {
         {/* ======================================================
             HERO BLOCK (wordmark + brand story)
 
-            TIP: the arc-swirl background used to sit on the
-            OUTER <section>, so it stretched full-height and
-            bled behind whatever got added below it (like when
-            testimonials grew past 6 cards — the arcs showed
-            through the card gaps). It now lives inside THIS
-            wrapper instead, which is `relative overflow-hidden`
-            and only as tall as the wordmark + paragraphs. That
-            keeps it permanently confined to the hero — it can't
-            leak into the testimonials grid no matter how many
-            cards you add below.
+            FIX (was invisible): these arcs used to sit on the
+            OUTER <section> (full height, so a big vw-based `top`
+            offset like 42.9vw still landed inside it). They were
+            moved into THIS shorter wrapper (only as tall as the
+            wordmark + paragraphs) to stop them leaking into the
+            testimonials grid below — but the old 42.9vw offset
+            was never recalculated for the new, much shorter
+            parent. On most viewports that pushed the arc image
+            below this wrapper's bottom edge, where
+            `overflow-hidden` clipped it out completely — hence
+            "no arc behind LARA at all".
 
-            Change opacity-[0.65] below if you want the arcs
-            lighter/stronger: 0.40 subtle, 0.65 clearly visible,
-            1.00 fully visible.
+            Fix: position relative to THIS wrapper's own height
+            (top: 50% + translateY(-50%)) instead of a fixed vw
+            number, so it's centered behind the wordmark no matter
+            how tall the wrapper ends up being. If you have the
+            exact Figma dev-mode offset for this frame (measured
+            from the hero block itself, not the full page), swap
+            the translateY value for that instead.
             ====================================================== */}
         <div className="relative overflow-hidden">
           <div
@@ -168,7 +173,8 @@ export default function LaraShowcase() {
               style={{
                 width: "98.24vw",
                 left: "-13.48vw",
-                top: "42.9vw",
+                top: "50%",
+                transform: "translateY(-50%)",
                 maxWidth: "none",
               }}
             />
@@ -186,9 +192,9 @@ export default function LaraShowcase() {
               style={{
                 width: "98.24vw",
                 left: "53.44vw",
-                top: "42.9vw",
+                top: "50%",
                 maxWidth: "none",
-                transform: "scaleX(-1)",
+                transform: "translateY(-50%) scaleX(-1)",
                 transformOrigin: "center",
               }}
             />
