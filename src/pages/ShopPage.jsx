@@ -117,12 +117,12 @@ export default function ShopPage() {
         <span className="text-[var(--ink)]">Shop</span>
       </p>
 
-      {/* Category tabs — bordered pills, matching the Figma. Kept
-          horizontally scrollable on mobile so it doesn't wrap
-          awkwardly if Lara adds more categories later. No "All" pill
-          in the design, so clearing the filter happens by clicking
-          the active pill again. */}
-      <div className="flex gap-3 overflow-x-auto pb-1 mb-10 text-xs uppercase tracking-wide">
+      {/* Category tabs — bordered pills, matching the Figma. Figma's
+          mobile version wraps these into multiple rows rather than
+          scrolling horizontally, so that's what this does too. No
+          "All" pill in the design, so clearing the filter happens by
+          clicking the active pill again. */}
+      <div className="flex flex-wrap gap-3 mb-10 text-xs uppercase tracking-wide">
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
