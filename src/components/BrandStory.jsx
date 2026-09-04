@@ -52,80 +52,92 @@ const SCATTER_PHOTOS = [
 
 export default function BrandStory() {
   return (
-    <section className="relative overflow-clip max-w-4xl mx-auto px-5 py-16 md:py-24 text-center">
+    <section className="relative overflow-hidden py-16 md:py-24 text-center">
       {/* Decorative crochet-thread arcs behind the wordmark/copy —
           Figma's Group 30 (left) + Group 32 (right, same asset
           mirrored via scaleX(-1) rather than a second file, since
           Group 32 is pixel-for-pixel Group 30 flipped). Figma had
           these at width:1341/1365px, left:-184/726px, top:824px on a
           1920px frame — converted to vw here (1920px frame = 100vw)
-          so it scales the same way Hero.jsx's model images do. */}
-      <img
-        src={arcSwirl}
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none select-none absolute z-0 opacity-20 blur-[4.5px]"
-        style={{ width: "69.84vw", left: "-9.58vw", top: "42.9vw", maxWidth: "none" }}
-      />
-      <img
-        src={arcSwirl}
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none select-none absolute z-0 opacity-20 blur-[4.5px]"
-        style={{ width: "71.09vw", left: "37.81vw", top: "42.86vw", maxWidth: "none", transform: "scaleX(-1)" }}
-      />
+          so it scales the same way Hero.jsx's model images do.
 
-      {/* Lara wordmark + photo stack — real Genty Demo export now
-          (lara-wordmark-solid.png), photos centered over it the way
-          the Figma has them sitting over the R/A, instead of the old
-          Yellowtail-text-plus-side-photos placeholder. */}
-      <Reveal>
-        <div className="relative mx-auto mb-14 md:mb-20 w-full max-w-[560px] md:max-w-[720px]">
-          <img
-            src={laraWordmark}
-            alt="Lara's Crochet"
-            className="w-full h-auto select-none pointer-events-none"
-          />
-          <div className="absolute left-1/2 top-1/2 w-[110px] h-[80px] sm:w-[140px] sm:h-[100px] md:w-[160px] md:h-[115px] -translate-x-1/2 -translate-y-1/2">
-            {SCATTER_PHOTOS.map((p) => (
-              <img
-                key={p.alt}
-                src={p.src}
-                alt={p.alt}
-                style={p.style}
-                className="absolute inset-0 w-full h-full object-cover shadow-md"
-              />
+          This layer lives in its own full-bleed wrapper (same
+          pattern as CustomOrderBanner) instead of inside the
+          max-w-4xl content box below. It was nested inside that
+          narrow, overflow-clipped box before, which cut the arcs
+          down to whatever sliver fell inside 896px — that's why
+          they weren't showing up. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      >
+        <img
+          src={arcSwirl}
+          alt=""
+          className="select-none absolute opacity-20 blur-[4.5px]"
+          style={{ width: "69.84vw", left: "-9.58vw", top: "42.9vw", maxWidth: "none" }}
+        />
+        <img
+          src={arcSwirl}
+          alt=""
+          className="select-none absolute opacity-20 blur-[4.5px]"
+          style={{ width: "71.09vw", left: "37.81vw", top: "42.86vw", maxWidth: "none", transform: "scaleX(-1)" }}
+        />
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto px-5">
+        {/* Lara wordmark + photo stack — real Genty Demo export now
+            (lara-wordmark-solid.png), photos centered over it the way
+            the Figma has them sitting over the R/A, instead of the old
+            Yellowtail-text-plus-side-photos placeholder. */}
+        <Reveal>
+          <div className="relative mx-auto mb-14 md:mb-20 w-full max-w-[560px] md:max-w-[720px]">
+            <img
+              src={laraWordmark}
+              alt="Lara's Crochet"
+              className="w-full h-auto select-none pointer-events-none"
+            />
+            <div className="absolute left-1/2 top-1/2 w-[110px] h-[80px] sm:w-[140px] sm:h-[100px] md:w-[160px] md:h-[115px] -translate-x-1/2 -translate-y-1/2">
+              {SCATTER_PHOTOS.map((p) => (
+                <img
+                  key={p.alt}
+                  src={p.src}
+                  alt={p.alt}
+                  style={p.style}
+                  className="absolute inset-0 w-full h-full object-cover shadow-md"
+                />
+              ))}
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Brand story copy — all visible at once, like the Figma, not
+            cycled one paragraph at a time */}
+        <Reveal delay={0.1}>
+          <div className="relative max-w-lg mx-auto space-y-5 text-sm md:text-base leading-[1.8] text-[var(--ink)]">
+            {PARAGRAPHS.map((p) => (
+              <p key={p}>{p}</p>
             ))}
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
 
-      {/* Brand story copy — all visible at once, like the Figma, not
-          cycled one paragraph at a time */}
-      <Reveal delay={0.1}>
-        <div className="relative max-w-lg mx-auto space-y-5 text-sm md:text-base leading-[1.8] text-[var(--ink)]">
-          {PARAGRAPHS.map((p) => (
-            <p key={p}>{p}</p>
+        {/* Testimonials */}
+        <div className="relative mt-16 md:mt-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          {TESTIMONIALS.map((t, i) => (
+            <Reveal key={t.name} delay={0.05 * i}>
+              <div className="h-full border border-[var(--line)] bg-[var(--cream)] p-5 text-center">
+                <p className="mb-4 text-sm leading-relaxed text-[var(--ink)]">"{t.quote}"</p>
+                <p className="flex items-center justify-center gap-1 text-xs font-bold text-[var(--ink)]">
+                  {t.name}
+                  <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white">
+                    ✓
+                  </span>
+                </p>
+                <p className="mt-1 text-[11px] text-[var(--muted)]">Verified Customer</p>
+              </div>
+            </Reveal>
           ))}
         </div>
-      </Reveal>
-
-      {/* Testimonials */}
-      <div className="relative mt-16 md:mt-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-        {TESTIMONIALS.map((t, i) => (
-          <Reveal key={t.name} delay={0.05 * i}>
-            <div className="h-full border border-[var(--line)] bg-[var(--cream)] p-5 text-center">
-              <p className="mb-4 text-sm leading-relaxed text-[var(--ink)]">"{t.quote}"</p>
-              <p className="flex items-center justify-center gap-1 text-xs font-bold text-[var(--ink)]">
-                {t.name}
-                <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white">
-                  ✓
-                </span>
-              </p>
-              <p className="mt-1 text-[11px] text-[var(--muted)]">Verified Customer</p>
-            </div>
-          </Reveal>
-        ))}
       </div>
     </section>
   );
