@@ -58,7 +58,7 @@ const TESTIMONIALS = [
 ];
 
 /* ============================================================
-   STATIC PHOTO POSITIONS
+   STATIC LARA PHOTO STACK
    ============================================================ */
 
 const SCATTER_PHOTOS = [
@@ -73,7 +73,7 @@ const SCATTER_PHOTOS = [
   },
   {
     src: scatterStreet,
-    alt: "Street-style portrait, styling reference",
+    alt: "Street-style portrait",
     style: {
       transform: "translate(7px, -8px) rotate(19.63deg)",
       zIndex: 2,
@@ -81,8 +81,7 @@ const SCATTER_PHOTOS = [
   },
   {
     src: scatterTeal,
-    alt:
-      "Lara's Crochet customer wearing a teal crochet dress",
+    alt: "Lara's Crochet customer wearing a teal crochet dress",
     style: {
       transform: "translate(23px, 10px) rotate(-8.21deg)",
       zIndex: 1,
@@ -90,60 +89,60 @@ const SCATTER_PHOTOS = [
   },
 ];
 
-/* ============================================================
-   LARA SHOWCASE
-   ============================================================ */
-
 export default function LaraShowcase() {
   return (
-    <section className="relative overflow-clip bg-[var(--cream)]">
+    <section className="relative overflow-hidden bg-[var(--cream)]">
       {/* ========================================================
-          DECORATIVE ARCS
+          FIGMA DECORATION
+          Large crochet-thread arcs behind the Lara section.
+          These are intentionally static for now.
           ======================================================== */}
 
-      <img
-        src={arcSwirl}
-        alt=""
+      <div
         aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          z-0
-          select-none
-          opacity-20
-          blur-[4.5px]
-        "
-        style={{
-          width: "69.84vw",
-          left: "-9.58vw",
-          top: "42.9vw",
-          maxWidth: "none",
-        }}
-      />
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      >
+        {/* Left arc */}
+        <img
+          src={arcSwirl}
+          alt=""
+          className="
+            absolute
+            select-none
+            opacity-[0.32]
+            blur-[3.5px]
+          "
+          style={{
+            width: "98.24vw",
+            left: "-13.48vw",
+            top: "42.9vw",
+            maxWidth: "none",
+          }}
+        />
 
-      <img
-        src={arcSwirl}
-        alt=""
-        aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          z-0
-          select-none
-          opacity-20
-          blur-[4.5px]
-        "
-        style={{
-          width: "71.09vw",
-          left: "37.81vw",
-          top: "42.86vw",
-          maxWidth: "none",
-          transform: "scaleX(-1)",
-        }}
-      />
+        {/* Right mirrored arc */}
+        <img
+          src={arcSwirl}
+          alt=""
+          className="
+            absolute
+            select-none
+            opacity-[0.32]
+            blur-[3.5px]
+          "
+          style={{
+            width: "98.24vw",
+            left: "53.44vw",
+            top: "42.9vw",
+            maxWidth: "none",
+            transform: "scaleX(-1)",
+            transformOrigin: "center",
+          }}
+        />
+      </div>
 
       {/* ========================================================
-          MAIN CONTENT
+          CONTENT
           ======================================================== */}
 
       <div
@@ -159,7 +158,7 @@ export default function LaraShowcase() {
         "
       >
         {/* ======================================================
-            LARA WORDMARK + PHOTO STACK
+            LARA WORDMARK + PHOTOS
             ====================================================== */}
 
         <Reveal>
@@ -174,7 +173,6 @@ export default function LaraShowcase() {
               md:max-w-[720px]
             "
           >
-            {/* Real LARA wordmark from the Figma design */}
             <img
               src={laraWordmark}
               alt="Lara's Crochet"
@@ -187,7 +185,7 @@ export default function LaraShowcase() {
               "
             />
 
-            {/* Static photo stack */}
+            {/* Static photo cluster over the LARA wordmark */}
             <div
               className="
                 absolute
@@ -214,8 +212,11 @@ export default function LaraShowcase() {
                     inset-0
                     h-full
                     w-full
+                    rounded-[2px]
                     object-cover
                     shadow-md
+                    ring-1
+                    ring-[var(--cream)]
                   "
                 />
               ))}
@@ -224,7 +225,7 @@ export default function LaraShowcase() {
         </Reveal>
 
         {/* ======================================================
-            BRAND STORY
+            BRAND STORY COPY
             ====================================================== */}
 
         <Reveal delay={0.1}>
@@ -257,8 +258,8 @@ export default function LaraShowcase() {
             grid
             grid-cols-1
             gap-5
-            md:mt-20
             sm:grid-cols-2
+            md:mt-20
             md:grid-cols-3
           "
         >
