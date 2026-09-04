@@ -7,6 +7,20 @@ import scatterTeal from "../assets/scatter-teal.png";
 import arcSwirl from "../assets/decor/arc-swirl.png";
 
 /* ============================================================
+   EASY DECORATION CONTROLS
+   Change only this number to adjust visibility.
+
+   0.20 = Figma original
+   0.35 = subtle
+   0.50 = clearly visible
+   0.65 = strong
+   0.80 = very strong
+   1.00 = maximum
+   ============================================================ */
+
+const LARA_ARC_OPACITY = 0.65;
+
+/* ============================================================
    BRAND STORY
    ============================================================ */
 
@@ -55,8 +69,6 @@ const TESTIMONIALS = [
       "Customer service walked me through sizing so patiently. Made ordering online feel less scary.",
     name: "Ejiro Okezie",
   },
-  // TIP: placeholders so the 3x3 grid is real — swap these three
-  // for actual quotes whenever you have them, same shape as above.
   {
     quote:
       "Placeholder quote — swap this for a real customer testimonial.",
@@ -81,8 +93,7 @@ const TESTIMONIALS = [
 const SCATTER_PHOTOS = [
   {
     src: scatterBeach,
-    alt:
-      "Lara's Crochet customer wearing a turquoise two-piece on the beach",
+    alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
     style: {
       transform: "translate(-13px, 8px) rotate(0deg)",
       zIndex: 3,
@@ -98,8 +109,7 @@ const SCATTER_PHOTOS = [
   },
   {
     src: scatterTeal,
-    alt:
-      "Lara's Crochet customer wearing a teal crochet dress",
+    alt: "Lara's Crochet customer wearing a teal crochet dress",
     style: {
       transform: "translate(23px, 10px) rotate(-8.21deg)",
       zIndex: 1,
@@ -109,7 +119,75 @@ const SCATTER_PHOTOS = [
 
 export default function LaraShowcase() {
   return (
-    <section className="relative overflow-hidden bg-[var(--cream)]">
+    <section
+      className="
+        relative
+        w-full
+        overflow-hidden
+        bg-[var(--cream)]
+        md:min-h-[801px]
+      "
+    >
+      {/* ========================================================
+          FULL-WIDTH LARA DECORATION
+
+          Figma:
+          Left group  = left:-184px, top:194px
+          Right group = left:726px, top:193px
+
+          The decoration is attached to the SECTION,
+          not the smaller content wrapper.
+          ======================================================== */}
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          inset-0
+          z-0
+          overflow-hidden
+        "
+      >
+        {/* LEFT SWEEP */}
+        <img
+          src={arcSwirl}
+          alt=""
+          className="
+            absolute
+            max-w-none
+            select-none
+            blur-[1px]
+          "
+          style={{
+            width: "69.84vw",
+            left: "-9.58vw",
+            top: "194px",
+            opacity: LARA_ARC_OPACITY,
+          }}
+        />
+
+        {/* RIGHT SWEEP */}
+        <img
+          src={arcSwirl}
+          alt=""
+          className="
+            absolute
+            max-w-none
+            select-none
+            blur-[1px]
+          "
+          style={{
+            width: "71.09vw",
+            left: "37.81vw",
+            top: "193px",
+            opacity: LARA_ARC_OPACITY,
+            transform: "scaleX(-1)",
+            transformOrigin: "center",
+          }}
+        />
+      </div>
+
       {/* ========================================================
           CONTENT
           ======================================================== */}
@@ -126,80 +204,6 @@ export default function LaraShowcase() {
           md:py-24
         "
       >
-        {/* ======================================================
-            HERO BLOCK (wordmark + brand story)
-
-            FIX (was invisible): these arcs used to sit on the
-            OUTER <section> (full height, so a big vw-based `top`
-            offset like 42.9vw still landed inside it). They were
-            moved into THIS shorter wrapper (only as tall as the
-            wordmark + paragraphs) to stop them leaking into the
-            testimonials grid below — but the old 42.9vw offset
-            was never recalculated for the new, much shorter
-            parent. On most viewports that pushed the arc image
-            below this wrapper's bottom edge, where
-            `overflow-hidden` clipped it out completely — hence
-            "no arc behind LARA at all".
-
-            Fix: position relative to THIS wrapper's own height
-            (top: 50% + translateY(-50%)) instead of a fixed vw
-            number, so it's centered behind the wordmark no matter
-            how tall the wrapper ends up being. If you have the
-            exact Figma dev-mode offset for this frame (measured
-            from the hero block itself, not the full page), swap
-            the translateY value for that instead.
-            ====================================================== */}
-        <div className="relative overflow-hidden">
-          <div
-            aria-hidden="true"
-            className="
-              pointer-events-none
-              absolute
-              inset-0
-              z-0
-              overflow-hidden
-            "
-          >
-            {/* Left sweeping arc */}
-            <img
-              src={arcSwirl}
-              alt=""
-              className="
-                absolute
-                select-none
-                opacity-[0.65]
-                blur-[1.5px]
-              "
-              style={{
-                width: "98.24vw",
-                left: "-13.48vw",
-                top: "50%",
-                transform: "translateY(-50%)",
-                maxWidth: "none",
-              }}
-            />
-
-            {/* Right sweeping arc */}
-            <img
-              src={arcSwirl}
-              alt=""
-              className="
-                absolute
-                select-none
-                opacity-[0.65]
-                blur-[1.5px]
-              "
-              style={{
-                width: "98.24vw",
-                left: "53.44vw",
-                top: "50%",
-                maxWidth: "none",
-                transform: "translateY(-50%) scaleX(-1)",
-                transformOrigin: "center",
-              }}
-            />
-          </div>
-
         {/* ======================================================
             LARA WORDMARK + PHOTOS
             ====================================================== */}
@@ -289,20 +293,9 @@ export default function LaraShowcase() {
             ))}
           </div>
         </Reveal>
-        </div>
-        {/* ^ closes the hero wrapper (arc background + wordmark +
-            brand story) — testimonials below sit OUTSIDE it now,
-            so they're guaranteed arc-free regardless of card count. */}
 
         {/* ======================================================
             TESTIMONIALS
-
-            TIP: 9 cards now (3x3 on md+). The middle column
-            (index 1, 4, 7) gets a small upward shift on md+ via
-            `md:-translate-y-6` so it reads as "stepped up" against
-            its left/right neighbors, matching the Figma. It's
-            skipped below md because at 1-2 columns there's no
-            true middle column to offset.
             ====================================================== */}
 
         <div

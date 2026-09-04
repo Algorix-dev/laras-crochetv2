@@ -2,7 +2,32 @@ import customTrio from "../assets/model-images/custom-orders-trio.png";
 import customWordmark from "../assets/custom-orders-wordmark.png";
 import arcSwirl from "../assets/decor/arc-swirl.png";
 import threadBand from "../assets/decor/thread-band.png";
-import { Link } from "react-router-dom";
+
+/* ============================================================
+   DECORATION CONTROLS
+
+   ARC:
+   0.20 = original Figma
+   0.35 = subtle
+   0.50 = clearly visible
+   0.65 = strong
+   0.80 = very strong
+   1.00 = maximum
+
+   THREAD:
+   0.30 = original Figma
+   0.50 = clearly visible
+   0.65 = strong
+   0.75 = very strong
+   1.00 = maximum
+   ============================================================ */
+
+const CUSTOM_ARC_OPACITY = 0.65;
+const CUSTOM_THREAD_OPACITY = 0.75;
+
+/* ============================================================
+   CUSTOM ORDER BANNER
+   ============================================================ */
 
 export default function CustomOrderBanner() {
   return (
@@ -10,27 +35,26 @@ export default function CustomOrderBanner() {
       id="custom-orders"
       className="
         relative
+        min-h-[1098px]
+        w-full
         overflow-hidden
-        py-14
-        text-center
-        md:py-20
+        bg-[#FAFAFA]
       "
     >
       {/* ========================================================
-          FIGMA DECORATIVE BACKGROUND
+          FULL-WIDTH DECORATION LAYER
 
-          TIP: pulled straight from the Figma dev-mode CSS export
-          (Desktop - 5 frame). Group 30/32 (the arcs) are
-          opacity 0.2 / blur(4.5px) there — this file had them at
-          0.65 / 1.5px, more than 3x stronger and much less soft
-          than the design. Group 33 (thread band) is opacity 0.3 /
-          blur(6.5px) in Figma vs 0.75 / 2px here. Both corrected
-          below to match the export exactly.
+          Figma frame:
+          1920 × 1098
 
-          If you want more/less punch than the real design, tweak
-          from THESE numbers (0.20/0.30) rather than sliding back
-          up toward 0.65/0.75 — those were guesses from before this
-          spec existed.
+          Arcs:
+          top ≈ 193px
+          height ≈ 557px
+
+          Thread band:
+          top = 358.78px
+          width = 1920px
+          height = 193.73px
           ======================================================== */}
 
       <div
@@ -43,39 +67,54 @@ export default function CustomOrderBanner() {
           overflow-hidden
         "
       >
-        {/* Left arc */}
+        {/* ======================================================
+            LEFT ARC
+            Figma:
+            left: -184px
+            top: 194.1px
+            width: 1341px
+            ====================================================== */}
+
         <img
           src={arcSwirl}
           alt=""
           className="
             absolute
+            max-w-none
             select-none
-            opacity-[0.2]
-            blur-[4.5px]
+            blur-[1px]
           "
           style={{
-            width: "98.24vw",
-            left: "-13.48vw",
-            top: "10.11vw",
-            maxWidth: "none",
+            width: "69.84vw",
+            left: "-9.58vw",
+            top: "194px",
+            opacity: CUSTOM_ARC_OPACITY,
           }}
         />
 
-        {/* Right arc */}
+        {/* ======================================================
+            RIGHT ARC
+            Figma:
+            left: 726px
+            top: 192.78px
+            width: 1365px
+            mirrored horizontally
+            ====================================================== */}
+
         <img
           src={arcSwirl}
           alt=""
           className="
             absolute
+            max-w-none
             select-none
-            opacity-[0.2]
-            blur-[4.5px]
+            blur-[1px]
           "
           style={{
-            width: "98.24vw",
-            left: "53.44vw",
-            top: "10.04vw",
-            maxWidth: "none",
+            width: "71.09vw",
+            left: "37.81vw",
+            top: "193px",
+            opacity: CUSTOM_ARC_OPACITY,
             transform: "scaleX(-1)",
             transformOrigin: "center",
           }}
@@ -84,7 +123,11 @@ export default function CustomOrderBanner() {
         {/* ======================================================
             COLOURED THREAD BAND
 
-            This is the colourful decoration behind Custom.
+            Figma:
+            width: 1920px
+            top: 358.78px
+            opacity: 0.3
+            blur: 6.5px
             ====================================================== */}
 
         <img
@@ -92,138 +135,166 @@ export default function CustomOrderBanner() {
           alt=""
           className="
             absolute
+            left-1/2
+            w-full
+            max-w-none
+            -translate-x-1/2
             select-none
-            opacity-[0.3]
-            blur-[6.5px]
+            blur-[2px]
           "
           style={{
-            width: "100vw",
-            left: "50%",
-            top: "18.69vw",
-            maxWidth: "none",
-            transform: "translateX(-50%)",
+            top: "359px",
+            opacity: CUSTOM_THREAD_OPACITY,
           }}
         />
 
         {/* ======================================================
-            "Ellipse 27" from Figma — a soft rose glow sitting
-            behind the supporting text + button. Wasn't in the
-            code at all before; the area under the CTA rendered
-            completely flat. Figma: 640x78, top 744px on a 1920px
-            frame (=38.75vw), Rose/900 (--maroon-dark) @ 25%
-            opacity, blur(24.5px).
+            FIGMA ELLIPSE 27
+
+            width: 640px
+            height: 78px
+            top: 744px
+            opacity: 0.25
+            blur: 24.4576px
             ====================================================== */}
+
         <div
           aria-hidden="true"
           className="
             absolute
-            select-none
             left-1/2
+            top-[744px]
+            h-[78px]
+            w-[640px]
             -translate-x-1/2
-            opacity-[0.25]
-            blur-[24.5px]
-            bg-[var(--maroon-dark)]
+            rounded-[50%]
+            bg-[#4C0519]
+            blur-[24px]
           "
           style={{
-            width: "33.33vw",
-            height: "4.06vw",
-            top: "38.75vw",
+            opacity: 0.25,
           }}
         />
       </div>
 
       {/* ========================================================
-          CONTENT
+          CONTENT LAYER
           ======================================================== */}
 
-      <div className="relative z-10">
-        {/* Custom wordmark */}
-        <h2 className="relative mb-8 inline-block">
+      <div
+        className="
+          relative
+          z-10
+          mx-auto
+          w-full
+          max-w-[1200px]
+          px-5
+        "
+      >
+        {/* ======================================================
+            CUSTOM WORDMARK
+            ====================================================== */}
+
+        <div className="flex justify-center pt-[15px]">
           <img
             src={customWordmark}
-            alt="Custom"
+            alt="Custom Orders"
             className="
-              h-16
-              w-auto
+              relative
+              z-20
+              w-[547px]
+              max-w-[80vw]
               select-none
-              pointer-events-none
-              md:h-24
             "
           />
+        </div>
 
-          <span
+        {/* ======================================================
+            MODELS
+
+            Figma:
+            Group 34
+            left: 556.12px
+            top: 94.78px
+            width: 805.47px
+            height: 746px
+            ====================================================== */}
+
+        <div
+          className="
+            relative
+            mx-auto
+            mt-[-15px]
+            flex
+            justify-center
+          "
+        >
+          <img
+            src={customTrio}
+            alt="Lara's Crochet custom pieces"
             className="
-              absolute
-              right-[6%]
-              top-0
-              text-xs
-              font-bold
-              uppercase
-              tracking-wide
-              text-[var(--ink)]
-              md:text-sm
+              relative
+              z-20
+              w-[805px]
+              max-w-[90vw]
+              select-none
+            "
+          />
+        </div>
+
+        {/* ======================================================
+            SUPPORTING TEXT + BUTTON
+            ====================================================== */}
+
+        <div
+          className="
+            relative
+            z-20
+            mx-auto
+            mt-[45px]
+            flex
+            max-w-[617px]
+            flex-col
+            items-center
+            gap-[14px]
+            text-center
+          "
+        >
+          <p
+            className="
+              w-full
+              text-[16px]
+              leading-6
+              text-[#404040]
             "
           >
-            Orders
-          </span>
-        </h2>
+            Every piece tells a story. Tell us yours and let Lara create
+            something made especially for you, from the color and fit to the
+            smallest details.
+          </p>
 
-        {/* Three custom models */}
-        <img
-          src={customTrio}
-          alt="Three custom crochet pieces from Lara's Crochet"
-          className="
-            relative
-            z-10
-            mx-auto
-            h-72
-            w-auto
-            object-contain
-            md:h-96
-          "
-        />
-
-        {/* Description */}
-        <p
-          className="
-            relative
-            mx-auto
-            mt-8
-            max-w-lg
-            px-5
-            text-sm
-            leading-relaxed
-            text-[var(--muted)]
-          "
-        >
-          Not seeing exactly what you want? Tell us your size, your
-          color, your vision, and we'll crochet it just for you.
-          Every custom piece is made from scratch, one stitch at a
-          time, out of Lagos.
-        </p>
-
-        {/* CTA
-            TIP: Figma spec for this button is Gray/600 (#564345),
-            which is var(--ink-warm) — NOT var(--maroon)
-            (#412b2d, Gray/700). Was using --maroon before, which
-            reads a full shade darker than the design. */}
-        <Link
-          to="/contact?flow=custom"
-          className="
-            relative
-            mt-6
-            inline-block
-            bg-[var(--ink-warm)]
-            px-6
-            py-3
-            text-xs
-            font-bold
-            text-white
-            hover:bg-[var(--maroon-dark)]
-          "
-        >
-          Make a custom order
-        </Link>
+          <button
+            type="button"
+            className="
+              flex
+              h-[46px]
+              w-[245px]
+              items-center
+              justify-center
+              gap-[10px]
+              bg-[#564345]
+              px-[40px]
+              text-[16px]
+              font-bold
+              text-[#FAFAFA]
+              transition-opacity
+              duration-200
+              hover:opacity-90
+            "
+          >
+            ADD TO BAG
+          </button>
+        </div>
       </div>
     </section>
   );
