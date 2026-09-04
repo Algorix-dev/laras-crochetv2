@@ -131,12 +131,11 @@ export default function LaraShowcase() {
       {/* ========================================================
           FULL-WIDTH LARA DECORATION
 
-          Figma:
-          Left group  = left:-184px, top:194px
-          Right group = left:726px, top:193px
+          The arcs are attached to the SECTION so they remain
+          independent of the text/content width.
 
-          The decoration is attached to the SECTION,
-          not the smaller content wrapper.
+          Using clamp() keeps their vertical position responsive
+          instead of relying on a fixed -20px / -19px value.
           ======================================================== */}
 
       <div
@@ -162,7 +161,10 @@ export default function LaraShowcase() {
           style={{
             width: "69.84vw",
             left: "-9.58vw",
-            top: "-20px",
+
+            /* Responsive vertical position */
+            top: "clamp(-35px, -1vw, -10px)",
+
             opacity: LARA_ARC_OPACITY,
           }}
         />
@@ -180,7 +182,10 @@ export default function LaraShowcase() {
           style={{
             width: "71.09vw",
             left: "37.81vw",
-            top: "-19px",
+
+            /* Responsive vertical position */
+            top: "clamp(-34px, -0.95vw, -9px)",
+
             opacity: LARA_ARC_OPACITY,
             transform: "scaleX(-1)",
             transformOrigin: "center",

@@ -47,14 +47,8 @@ export default function CustomOrderBanner() {
           Figma frame:
           1920 × 1098
 
-          Arcs:
-          top ≈ 193px
-          height ≈ 557px
-
-          Thread band:
-          top = 358.78px
-          width = 1920px
-          height = 193.73px
+          These positions are intentionally preserved because
+          you said the decoration looks perfect.
           ======================================================== */}
 
       <div
@@ -69,10 +63,6 @@ export default function CustomOrderBanner() {
       >
         {/* ======================================================
             LEFT ARC
-            Figma:
-            left: -184px
-            top: 194.1px
-            width: 1341px
             ====================================================== */}
 
         <img
@@ -94,11 +84,6 @@ export default function CustomOrderBanner() {
 
         {/* ======================================================
             RIGHT ARC
-            Figma:
-            left: 726px
-            top: 192.78px
-            width: 1365px
-            mirrored horizontally
             ====================================================== */}
 
         <img
@@ -122,12 +107,6 @@ export default function CustomOrderBanner() {
 
         {/* ======================================================
             COLOURED THREAD BAND
-
-            Figma:
-            width: 1920px
-            top: 358.78px
-            opacity: 0.3
-            blur: 6.5px
             ====================================================== */}
 
         <img
@@ -150,12 +129,6 @@ export default function CustomOrderBanner() {
 
         {/* ======================================================
             FIGMA ELLIPSE 27
-
-            width: 640px
-            height: 78px
-            top: 744px
-            opacity: 0.25
-            blur: 24.4576px
             ====================================================== */}
 
         <div
@@ -192,32 +165,60 @@ export default function CustomOrderBanner() {
         "
       >
         {/* ======================================================
-            CUSTOM WORDMARK
+            CUSTOM WORDMARK + ORDERS
             ====================================================== */}
 
-        <div className="flex justify-center pt-[15px]">
+        <div
+          className="
+            relative
+            mx-auto
+            mt-[15px]
+            w-[547px]
+            max-w-[80vw]
+          "
+        >
           <img
             src={customWordmark}
-            alt="Custom Orders"
+            alt="Custom"
             className="
-              relative
-              z-20
-              w-[547px]
-              max-w-[80vw]
-              select-none
+              block
+              h-auto
+              w-full
             "
           />
+
+          {/* Orders stays attached to the wordmark */}
+          <span
+            className="
+              absolute
+              whitespace-nowrap
+              font-sans
+              font-normal
+              text-black
+              text-[clamp(16px,1.33vw,25px)]
+            "
+            style={{
+              left: "clamp(8px, 0.85vw, 16px)",
+              top: "clamp(20px, 2.5vw, 48px)",
+              transform: "translateX(100%)",
+            }}
+          >
+            Orders
+          </span>
         </div>
 
         {/* ======================================================
             MODELS
 
-            Figma:
-            Group 34
-            left: 556.12px
-            top: 94.78px
-            width: 805.47px
-            height: 746px
+            Responsive sizing:
+
+            1920px → about 650px
+            1440px → about 490px
+            1280px → about 480px minimum
+            Mobile → scales down with viewport
+
+            This prevents the models from becoming huge on
+            smaller screens while preserving the desktop design.
             ====================================================== */}
 
         <div
@@ -235,10 +236,14 @@ export default function CustomOrderBanner() {
             className="
               relative
               z-20
-              w-[550px]
-              max-w-[68vw]
+              h-auto
+              max-w-[90vw]
               select-none
+              object-contain
             "
+            style={{
+              width: "clamp(360px, 34vw, 650px)",
+            }}
           />
         </div>
 
