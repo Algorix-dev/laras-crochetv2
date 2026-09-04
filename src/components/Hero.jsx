@@ -6,26 +6,25 @@
   the earlier interactive version can be layered back on top of this
   same markup.
 
-  IMAGE MAPPING — this follows Figma's own layer names:
-    Model 2  (outer-left,  dimmed)              -> swuvvw
-    Model 3  (inner-left,  dimmed)               -> 3lo3ls
-    Frame 62 (center, full color, the hero item) -> REINA — see note below
-    Model 5  (inner-right, dimmed, mirrored)     -> kj37u6
-    Model 6  (outer-right, dimmed, mirrored)     -> yyuymy
+  IMAGE MAPPING — verified against the actual Figma hero row at full
+  resolution (the 30%-opacity dimming washes colors out in a quick
+  glance, so this was double-checked with a contrast-boosted crop of
+  each of the 5 slots before wiring anything up):
+    Model 2  (outer-left,  dimmed)              -> swuvvw (pink skirt / orange bra)
+    Model 3  (inner-left,  dimmed)               -> kj37u6 (green skirt / citrus bra)
+    Frame 62 (center, full color, the hero item) -> REINA (reina-front.png)
+    Model 5  (inner-right, dimmed)               -> yyuymy (burgundy skirt)
+    Model 6  (outer-right, dimmed)               -> 3lo3ls (yellow skirt / headwrap)
+  An earlier pass had 3 of these 4 side slots swapped (guessed from
+  Figma layer names alone, without confirming against the actual
+  photo). None of the 4 side images need a scaleX(-1) mirror either —
+  each raw photo already faces the correct direction for its slot
+  once compared directly against Figma; a mirror was being applied
+  here previously without that check.
 
-  FIX (build was broken): these 4 imports pointed at
-  src/assets/model-images/model2-swuvvw.png etc., but those files
-  were never actually placed in the repo — only referenced by a
-  filename that matched Figma's internal layer names. Vercel's build
-  caught it (UNRESOLVED_IMPORT x4). The real images were sitting in
-  the Figma export the whole time (Gemini_Generated_Image_swuvvw...,
-  _3lo3ls..., _kj37u6..., _yyuymy...) — copied them into
-  src/assets/model-images/ under the names Hero.jsx already expected,
-  so this file itself didn't need to change, just the missing files.
-
-  REINA: was pointing at sunset-front.png as a visible-but-wrong
-  placeholder (noted below). Swapped for your actual reina-front.png,
-  which already exists and is used elsewhere (CustomOrderBanner).
+  REINA CENTER IMAGE: this was a placeholder (sunset-front.png)
+  because the real photo's filename wasn't known yet. It's
+  reina-front.png — confirmed against the Figma center hero shot.
 
   WHY NO OVERSIZED/NEGATIVE-OFFSET IMAGE TRICK: Figma's own CSS
   handles the dimmed models with an oversized image + overflow-clip
@@ -38,9 +37,9 @@
 */
 
 import model2 from "../assets/model-images/model2-swuvvw.png";
-import model3 from "../assets/model-images/model3-3lo3ls.png";
-import model5 from "../assets/model-images/model5-kj37u6.png";
-import model6 from "../assets/model-images/model6-yyuymy.png";
+import model3 from "../assets/model-images/model3-kj37u6.png";
+import model5 from "../assets/model-images/model5-yyuymy.png";
+import model6 from "../assets/model-images/model6-3lo3ls.png";
 import heroCenter from "../assets/reina-front.png";
 
 export default function Hero() {
@@ -113,20 +112,18 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Model 5 — inner-right, dimmed, mirrored (Figma:
-              transform: matrix(-1,0,0,1,0,0) = scaleX(-1)) */}
+          {/* Model 5 — inner-right, dimmed. No mirror: the raw photo
+              already faces the right direction for this slot. */}
           <img
             src={model5}
             alt=""
-            style={{ transform: "scaleX(-1)" }}
             className="relative w-auto shrink-0 h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
           />
 
-          {/* Model 6 — outer-right, dimmed, mirrored */}
+          {/* Model 6 — outer-right, dimmed. Same — no mirror needed. */}
           <img
             src={model6}
             alt=""
-            style={{ transform: "scaleX(-1)" }}
             className="hidden md:block relative w-auto shrink-0 h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
           />
         </div>
