@@ -60,7 +60,7 @@ export default function Hero() {
 
           {/* Model 3 — inner-left, dimmed */}
           <img
-            src={model3}
+            src={model6}
             alt=""
             className="relative w-auto shrink-0 h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
           />
@@ -122,7 +122,7 @@ export default function Hero() {
 
           {/* Model 6 — outer-right, dimmed. Same — no mirror needed. */}
           <img
-            src={model6}
+            src={model3}
             alt=""
             className="hidden md:block relative w-auto shrink-0 h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
           />
