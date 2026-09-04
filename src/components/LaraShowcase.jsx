@@ -162,6 +162,7 @@ export default function LaraShowcase() {
           style={{
             width: "69.84vw",
             left: "-9.58vw",
+            top: "-20px",
             opacity: LARA_ARC_OPACITY,
           }}
         />
@@ -179,6 +180,7 @@ export default function LaraShowcase() {
           style={{
             width: "71.09vw",
             left: "37.81vw",
+            top: "-19px",
             opacity: LARA_ARC_OPACITY,
             transform: "scaleX(-1)",
             transformOrigin: "center",
