@@ -1,36 +1,19 @@
-import reinaFront from '../assets/reina-front.png';
-import customWordmark from '../assets/custom-orders-wordmark.png';
+import customOrdersTrio from '../assets/model-images/custom-orders-trio.png';
 import { Link } from 'react-router-dom';
 
 export default function CustomOrderBanner() {
   return (
     <section id="custom-orders" className="py-14 md:py-20 text-center">
-      {/* TIP: "Custom" is the real Genty Demo export
-          (custom-orders-wordmark.png), same as BrandStory's LARA
-          wordmark and the Footer/Navbar logos — font-logo/Yellowtail
-          is no longer used anywhere on the site now that both script
-          text spots have real exports. "ORDERS" sits DM-Sans/uppercase
-          to its upper right, matching where the Figma places it
-          relative to the "t" in Custom. */}
-      <h2 className="relative mb-8 inline-block">
-        <img
-          src={customWordmark}
-          alt="Custom"
-          className="h-16 md:h-24 w-auto select-none pointer-events-none"
-        />
-        <span className="absolute right-[6%] top-0 text-xs md:text-sm font-bold uppercase tracking-wide text-[var(--ink)]">
-          Orders
-        </span>
+      <h2 className="mb-8 flex items-center justify-center gap-3 text-3xl md:text-4xl">
+        <span className="font-logo text-[var(--maroon)]">Custom</span>
+        <span className="font-bold uppercase tracking-wide text-[var(--ink)]">Orders</span>
       </h2>
 
-      {/* TIP: design shows three different models/outfits standing
-          together — we only have single-model product photography as
-          assets right now, so this uses the one available shot rather
-          than fabricating a composite that doesn't exist. Swap for the
-          real 3-model photo once Lara/Teniayo provide it. */}
+      {/* Real 3-model photo from Lara, matching the Figma composite —
+          replaces the earlier single-model stand-in. */}
       <img
-        src={reinaFront}
-        alt="A custom crochet piece from Lara's Crochet"
+        src={customOrdersTrio}
+        alt="Three custom crochet pieces from Lara's Crochet"
         className="mx-auto h-72 md:h-96 w-auto object-contain"
       />
 
