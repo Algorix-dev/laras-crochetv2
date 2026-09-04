@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ProductGrid from "./components/ProductGrid";
 import CustomOrderBanner from "./components/CustomOrderBanner";
+import LaraShowcase from "./components/LaraShowcase";
 import Footer from "./components/Footer";
 import { products, heroModels } from "./data/products";
 import { getProducts, normalizeProduct } from "./api";
