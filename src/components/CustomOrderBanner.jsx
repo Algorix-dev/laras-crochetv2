@@ -235,8 +235,8 @@ export default function CustomOrderBanner() {
             className="
               relative
               z-20
-              w-[805px]
-              max-w-[90vw]
+              w-[650px]
+              max-w-[78vw]
               select-none
             "
           />
