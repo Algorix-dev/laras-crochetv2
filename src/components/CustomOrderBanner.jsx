@@ -1,9 +1,8 @@
-import { Link } from "react-router-dom";
-
 import customTrio from "../assets/model-images/custom-orders-trio.png";
 import customWordmark from "../assets/custom-orders-wordmark.png";
 import arcSwirl from "../assets/decor/arc-swirl.png";
 import threadBand from "../assets/decor/thread-band.png";
+import { Link } from "react-router-dom";
 
 export default function CustomOrderBanner() {
   return (
@@ -18,7 +17,22 @@ export default function CustomOrderBanner() {
       "
     >
       {/* ========================================================
-          DECORATIVE BACKGROUND
+          FIGMA DECORATIVE BACKGROUND
+
+          OPACITY CONTROLS:
+
+          ARC:
+          opacity-[0.65]
+
+          THREAD BAND:
+          opacity-[0.75]
+
+          Try:
+          0.50 = medium
+          0.65 = clearly visible
+          0.75 = strong
+          0.85 = very strong
+          1.00 = fully visible
           ======================================================== */}
 
       <div
@@ -31,15 +45,15 @@ export default function CustomOrderBanner() {
           overflow-hidden
         "
       >
-        {/* Left crochet arc */}
+        {/* Left arc */}
         <img
           src={arcSwirl}
           alt=""
           className="
             absolute
             select-none
-            opacity-[0.32]
-            blur-[3.5px]
+            opacity-[0.65]
+            blur-[1.5px]
           "
           style={{
             width: "98.24vw",
@@ -49,15 +63,15 @@ export default function CustomOrderBanner() {
           }}
         />
 
-        {/* Right mirrored crochet arc */}
+        {/* Right arc */}
         <img
           src={arcSwirl}
           alt=""
           className="
             absolute
             select-none
-            opacity-[0.32]
-            blur-[3.5px]
+            opacity-[0.65]
+            blur-[1.5px]
           "
           style={{
             width: "98.24vw",
@@ -72,9 +86,9 @@ export default function CustomOrderBanner() {
         {/* ======================================================
             COLOURED THREAD BAND
 
-            More visible than before:
-            opacity 0.48
-            blur reduced from 6.5px to 4px
+            This is the colourful decoration behind Custom.
+
+            Start with 0.75.
             ====================================================== */}
 
         <img
@@ -83,8 +97,8 @@ export default function CustomOrderBanner() {
           className="
             absolute
             select-none
-            opacity-[0.48]
-            blur-[4px]
+            opacity-[0.75]
+            blur-[2px]
           "
           style={{
             width: "100vw",
@@ -132,10 +146,7 @@ export default function CustomOrderBanner() {
           </span>
         </h2>
 
-        {/* ======================================================
-            CUSTOM MODELS
-            ====================================================== */}
-
+        {/* Three custom models */}
         <img
           src={customTrio}
           alt="Three custom crochet pieces from Lara's Crochet"
@@ -150,10 +161,7 @@ export default function CustomOrderBanner() {
           "
         />
 
-        {/* ======================================================
-            DESCRIPTION
-            ====================================================== */}
-
+        {/* Description */}
         <p
           className="
             relative
@@ -172,10 +180,7 @@ export default function CustomOrderBanner() {
           time, out of Lagos.
         </p>
 
-        {/* ======================================================
-            CTA
-            ====================================================== */}
-
+        {/* CTA */}
         <Link
           to="/contact?flow=custom"
           className="
@@ -188,7 +193,6 @@ export default function CustomOrderBanner() {
             text-xs
             font-bold
             text-white
-            transition-colors
             hover:bg-[var(--maroon-dark)]
           "
         >

@@ -58,7 +58,7 @@ const TESTIMONIALS = [
 ];
 
 /* ============================================================
-   STATIC LARA PHOTO STACK
+   STATIC PHOTO STACK
    ============================================================ */
 
 const SCATTER_PHOTOS = [
@@ -81,7 +81,8 @@ const SCATTER_PHOTOS = [
   },
   {
     src: scatterTeal,
-    alt: "Lara's Crochet customer wearing a teal crochet dress",
+    alt:
+      "Lara's Crochet customer wearing a teal crochet dress",
     style: {
       transform: "translate(23px, 10px) rotate(-8.21deg)",
       zIndex: 1,
@@ -93,24 +94,38 @@ export default function LaraShowcase() {
   return (
     <section className="relative overflow-hidden bg-[var(--cream)]">
       {/* ========================================================
-          FIGMA DECORATION
-          Large crochet-thread arcs behind the Lara section.
-          These are intentionally static for now.
+          FIGMA THREAD / ARC BACKGROUND
+
+          IMPORTANT:
+          Change opacity-[0.65] below if you want the arcs
+          lighter or stronger.
+
+          0.40 = subtle
+          0.50 = medium
+          0.65 = clearly visible
+          0.80 = very strong
+          1.00 = fully visible
           ======================================================== */}
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        className="
+          pointer-events-none
+          absolute
+          inset-0
+          z-0
+          overflow-hidden
+        "
       >
-        {/* Left arc */}
+        {/* Left sweeping arc */}
         <img
           src={arcSwirl}
           alt=""
           className="
             absolute
             select-none
-            opacity-[0.32]
-            blur-[3.5px]
+            opacity-[0.65]
+            blur-[1.5px]
           "
           style={{
             width: "98.24vw",
@@ -120,15 +135,15 @@ export default function LaraShowcase() {
           }}
         />
 
-        {/* Right mirrored arc */}
+        {/* Right sweeping arc */}
         <img
           src={arcSwirl}
           alt=""
           className="
             absolute
             select-none
-            opacity-[0.32]
-            blur-[3.5px]
+            opacity-[0.65]
+            blur-[1.5px]
           "
           style={{
             width: "98.24vw",
@@ -185,7 +200,7 @@ export default function LaraShowcase() {
               "
             />
 
-            {/* Static photo cluster over the LARA wordmark */}
+            {/* Static photos over the LARA wordmark */}
             <div
               className="
                 absolute
@@ -225,7 +240,7 @@ export default function LaraShowcase() {
         </Reveal>
 
         {/* ======================================================
-            BRAND STORY COPY
+            BRAND STORY
             ====================================================== */}
 
         <Reveal delay={0.1}>
