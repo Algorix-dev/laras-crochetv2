@@ -1,16 +1,11 @@
-<<<<<<< HEAD
 import customTrio from '../assets/model-images/custom-orders-trio.png';
 import customWordmark from '../assets/custom-orders-wordmark.png';
 import arcSwirl from '../assets/decor/arc-swirl.png';
 import threadBand from '../assets/decor/thread-band.png';
-=======
-import customOrdersTrio from '../assets/model-images/custom-orders-trio.png';
->>>>>>> 031125810c1a8e15383e81d8975eeba0dbb16685
 import { Link } from 'react-router-dom';
 
 export default function CustomOrderBanner() {
   return (
-<<<<<<< HEAD
     <section id="custom-orders" className="relative overflow-clip py-14 md:py-20 text-center">
       {/* Same decorative arcs as BrandStory (Figma's Group 30/32),
           this section's own instance sits higher up its frame
@@ -60,21 +55,8 @@ export default function CustomOrderBanner() {
         src={customTrio}
         alt="Three custom crochet pieces from Lara's Crochet"
         className="relative z-10 mx-auto h-72 md:h-96 w-auto object-contain"
-=======
-    <section id="custom-orders" className="py-14 md:py-20 text-center">
-      <h2 className="mb-8 flex items-center justify-center gap-3 text-3xl md:text-4xl">
-        <span className="font-logo text-[var(--maroon)]">Custom</span>
-        <span className="font-bold uppercase tracking-wide text-[var(--ink)]">Orders</span>
-      </h2>
-
-      {/* Real 3-model photo from Lara, matching the Figma composite —
-          replaces the earlier single-model stand-in. */}
-      <img
-        src={customOrdersTrio}
-        alt="Three custom crochet pieces from Lara's Crochet"
-        className="mx-auto h-72 md:h-96 w-auto object-contain"
->>>>>>> 031125810c1a8e15383e81d8975eeba0dbb16685
       />
+
 
       <p className="relative mx-auto mt-8 max-w-lg text-sm text-[var(--muted)] leading-relaxed">
         Not seeing exactly what you want? Tell us your size, your color, your vision — and
