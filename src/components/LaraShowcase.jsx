@@ -5,6 +5,8 @@ import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
 import arcSwirl from "../assets/decor/arc-swirl.png";
+// If you have the bolder recolored version, point this at it instead:
+// import arcSwirl from "../assets/decor/arc-swirl-fixed.png";
 
 /* ============================================================
    EASY DECORATION CONTROL
@@ -14,10 +16,14 @@ import arcSwirl from "../assets/decor/arc-swirl.png";
    0.50 = clearly visible
    0.65 = strong
    0.75 = very strong
-   1.00 = maximum
+   1.00 = maximum (opacity alone can't go further — see filter below)
    ============================================================ */
 
-const LARA_ARC_OPACITY = 1.00;
+const LARA_ARC_OPACITY = 1.0;
+
+// Opacity was already maxed — the real fix is less blur + more contrast/saturation
+// so the faint line art actually reads. Tune these if you swap in a bolder asset.
+const LARA_ARC_FILTER = "blur(1px) contrast(2.2) saturate(1.6)";
 
 /* ============================================================
    BRAND STORY
@@ -128,88 +134,6 @@ export default function LaraShowcase() {
       "
     >
       {/* ========================================================
-          LARA DECORATION
-
-          Figma:
-
-          LEFT GROUP 30
-          width: 1341px
-          left: -184px
-          top: 824.32px
-          opacity: 0.2
-          blur: 4.5px
-
-          RIGHT GROUP 32
-          width: 1365px
-          left: 726px
-          top: 823px
-          opacity: 0.2
-          blur: 4.5px
-
-          The Figma top values are page coordinates.
-          Inside this section, the decoration belongs around
-          the LARA/photo composition, so the position is
-          calculated responsively from the viewport.
-          ======================================================== */}
-
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          z-0
-          overflow-hidden
-        "
-      >
-        {/* ======================================================
-            LEFT FIGMA GROUP 30
-            ====================================================== */}
-
-        <img
-          src={arcSwirl}
-          alt=""
-          className="
-            absolute
-            max-w-none
-            select-none
-            pointer-events-none
-          "
-          style={{
-            width: "69.84vw",
-            left: "-9.58vw",
-            top: "clamp(45px, 3.65vw, 70px)",
-            opacity: LARA_ARC_OPACITY,
-            filter: "blur(4.5px)",
-          }}
-        />
-
-        {/* ======================================================
-            RIGHT FIGMA GROUP 32
-            ====================================================== */}
-
-        <img
-          src={arcSwirl}
-          alt=""
-          className="
-            absolute
-            max-w-none
-            select-none
-            pointer-events-none
-          "
-          style={{
-            width: "71.09vw",
-            left: "37.81vw",
-            top: "clamp(44px, 3.60vw, 69px)",
-            opacity: LARA_ARC_OPACITY,
-            filter: "blur(4.5px)",
-            transform: "scaleX(-1)",
-            transformOrigin: "center",
-          }}
-        />
-      </div>
-
-      {/* ========================================================
           CONTENT
           ======================================================== */}
 
@@ -226,7 +150,15 @@ export default function LaraShowcase() {
         "
       >
         {/* ======================================================
-            LARA WORDMARK + PHOTOS
+            LARA WORDMARK + ARC DECORATION + PHOTOS
+
+            The two arc-swirl images now live inside this wrapper
+            instead of being absolutely positioned against the
+            whole section. Each image's own crossing point sits at
+            its visual center, so centering both images on this
+            container (top-1/2 / left-1/2 + -translate) pins both
+            crossings — and therefore the "spiral" effect — exactly
+            on the Lara wordmark, no matter the viewport width.
             ====================================================== */}
 
         <Reveal>
@@ -241,10 +173,66 @@ export default function LaraShowcase() {
               md:max-w-[720px]
             "
           >
+            {/* Decoration layer — behind the wordmark/photos */}
+            <div
+              aria-hidden="true"
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                z-0
+                overflow-visible
+              "
+            >
+              {/* Left-orientation arc, centered on this container */}
+              <img
+                src={arcSwirl}
+                alt=""
+                className="
+                  absolute
+                  top-1/2
+                  left-1/2
+                  max-w-none
+                  select-none
+                  pointer-events-none
+                  -translate-x-1/2
+                  -translate-y-1/2
+                "
+                style={{
+                  width: "69.84vw",
+                  opacity: LARA_ARC_OPACITY,
+                  filter: LARA_ARC_FILTER,
+                }}
+              />
+
+              {/* Mirrored arc, centered on the same point */}
+              <img
+                src={arcSwirl}
+                alt=""
+                className="
+                  absolute
+                  top-1/2
+                  left-1/2
+                  max-w-none
+                  select-none
+                  pointer-events-none
+                "
+                style={{
+                  width: "71.09vw",
+                  opacity: LARA_ARC_OPACITY,
+                  filter: LARA_ARC_FILTER,
+                  transform: "translate(-50%, -50%) scaleX(-1)",
+                }}
+              />
+            </div>
+
+            {/* Wordmark — above the decoration */}
             <img
               src={laraWordmark}
               alt="Lara's Crochet"
               className="
+                relative
+                z-10
                 block
                 h-auto
                 w-full
@@ -262,6 +250,7 @@ export default function LaraShowcase() {
                 absolute
                 left-1/2
                 top-1/2
+                z-20
                 h-[80px]
                 w-[110px]
                 -translate-x-1/2
