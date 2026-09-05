@@ -181,7 +181,7 @@ export default function LaraShowcase() {
                Figma: Group 30 top (824.32px) minus where the
                "Reviews section" frame starts (847px) = -22.68px,
                ÷ 1920px frame width = -1.18vw. */
-            top: "-5.25vw",
+            top: "-3vw",
 
             opacity: LARA_ARC_OPACITY,
           }}
@@ -202,7 +202,7 @@ export default function LaraShowcase() {
 
             /* Same idea: Group 32's top (823px) minus 847px section
                start = -24px, ÷ 1920px = -1.25vw. */
-            top: "-5.25vw",
+            top: "-3vw",
 
             opacity: LARA_ARC_OPACITY,
             transform: "scaleX(-1)",
