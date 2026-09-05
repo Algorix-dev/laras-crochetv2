@@ -153,119 +153,107 @@ export default function LaraShowcase() {
         "
       >
         {/* ======================================================
-        LARA WORDMARK + ARCS + PHOTOS
-        (arcs now live in the same wrapper as the wordmark,
-        centered off the same anchor point instead of the
-        full-width section)
-        ====================================================== */}
+              LARA WORDMARK + ARCS + PHOTOS
+              Single shared wrapper, full width — arcs and the
+              wordmark cluster both measure from the same box,
+              so there's no cross-container assumption to drift.
+              ====================================================== */}
 
-        <Reveal>
-          <div
-            className="
-              relative
-              mx-auto
-              mb-14
-              w-full
-              max-w-[560px]
-              md:mb-20
-              md:max-w-[720px]
-            "
-          >
-            {/* ARC DECORATION — centered on this wrapper's midline */}
-            <div
-              aria-hidden="true"
-              className="
-                pointer-events-none
-                absolute
-                inset-0
-                z-0
-              "
-            >
-              {/* LEFT SWEEP: original center = -9.58vw + 69.84vw/2 = 25.34vw
-                  from screen's left edge; screen center is 50vw, so this
-                  arc's center sits 24.66vw left of center. */}
-              <img
-                src={arcSwirl}
-                alt=""
-                className="absolute max-w-none select-none"
-                style={{
-                  width: "69.84vw",
-                  left: "50%",
-                  transform: "translateX(calc(-50% - 24.66vw))",
-                  opacity: LARA_ARC_OPACITY,
-                }}
-              />
-
-              {/* RIGHT SWEEP: original center = 37.81vw + 71.09vw/2 = 73.36vw
-                  from left edge, i.e. 23.36vw right of screen center. */}
-              <img
-                src={arcSwirl}
-                alt=""
-                className="absolute max-w-none select-none"
-                style={{
-                  width: "71.09vw",
-                  left: "50%",
-                  transform: "translateX(calc(-50% + 23.36vw)) scaleX(-1)",
-                  transformOrigin: "center",
-                  opacity: LARA_ARC_OPACITY,
-                }}
-              />
-            </div>
-
-            {/* WORDMARK */}
-            <img
-              src={laraWordmark}
-              alt="Lara's Crochet"
-              className="
-                relative
-                z-10
-                block
-                h-auto
-                w-full
-                select-none
-                pointer-events-none
-              "
-            />
-
-            {/* Static photos over the LARA wordmark */}
-            <div
-              className="
-                absolute
-                z-20
-                left-1/2
-                top-1/2
-                h-[80px]
-                w-[110px]
-                -translate-x-1/2
-                -translate-y-1/2
-                sm:h-[100px]
-                sm:w-[140px]
-                md:h-[115px]
-                md:w-[160px]
-              "
-            >
-              {SCATTER_PHOTOS.map((photo) => (
+          <Reveal>
+            <div className="relative w-full">
+              {/* ARC DECORATION — anchored to this full-width wrapper */}
+              <div
+                aria-hidden="true"
+                className="
+                  pointer-events-none
+                  absolute
+                  inset-0
+                  z-0
+                  overflow-hidden
+                "
+              >
                 <img
-                  key={photo.alt}
-                  src={photo.src}
-                  alt={photo.alt}
-                  style={photo.style}
+                  src={arcSwirl}
+                  alt=""
+                  className="absolute max-w-none select-none"
+                  style={{
+                    width: "69.84vw",
+                    left: "-9.58vw",
+                    opacity: LARA_ARC_OPACITY,
+                  }}
+                />
+                <img
+                  src={arcSwirl}
+                  alt=""
+                  className="absolute max-w-none select-none"
+                  style={{
+                    width: "71.09vw",
+                    left: "37.81vw",
+                    opacity: LARA_ARC_OPACITY,
+                    transform: "scaleX(-1)",
+                    transformOrigin: "center",
+                  }}
+                />
+              </div>
+
+              {/* WORDMARK + PHOTOS — centered independently in the same wrapper */}
+              <div
+                className="
+                  relative
+                  z-10
+                  mx-auto
+                  mb-14
+                  w-full
+                  max-w-[560px]
+                  md:mb-20
+                  md:max-w-[720px]
+                "
+              >
+                <img
+                  src={laraWordmark}
+                  alt="Lara's Crochet"
+                  className="block h-auto w-full select-none pointer-events-none"
+                />
+
+                <div
                   className="
                     absolute
-                    inset-0
-                    h-full
-                    w-full
-                    rounded-[2px]
-                    object-cover
-                    shadow-md
-                    ring-1
-                    ring-[var(--cream)]
+                    z-20
+                    left-1/2
+                    top-1/2
+                    h-[80px]
+                    w-[110px]
+                    -translate-x-1/2
+                    -translate-y-1/2
+                    sm:h-[100px]
+                    sm:w-[140px]
+                    md:h-[115px]
+                    md:w-[160px]
                   "
-                />
-              ))}
+                >
+                  {SCATTER_PHOTOS.map((photo) => (
+                    <img
+                      key={photo.alt}
+                      src={photo.src}
+                      alt={photo.alt}
+                      style={photo.style}
+                      className="
+                        absolute
+                        inset-0
+                        h-full
+                        w-full
+                        rounded-[2px]
+                        object-cover
+                        shadow-md
+                        ring-1
+                        ring-[var(--cream)]
+                      "
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </Reveal>
+          </Reveal>
 
         {/* ======================================================
             BRAND STORY
