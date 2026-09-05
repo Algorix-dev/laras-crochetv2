@@ -17,7 +17,7 @@ import arcSwirl from "../assets/decor/arc-swirl.png";
    1.00 = maximum
    ============================================================ */
 
-const LARA_ARC_OPACITY = 0.75;
+const LARA_ARC_OPACITY = 1.00;
 
 /* ============================================================
    BRAND STORY
