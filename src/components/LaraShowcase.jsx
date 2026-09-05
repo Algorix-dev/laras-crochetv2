@@ -210,18 +210,11 @@ export default function LaraShowcase() {
         "
       >
         {/* ======================================================
-            LARA WORDMARK + PHOTOS
-
-            TIP: top padding above is md:pt-[51px], not the old
-            md:py-24 (96px). Figma's "Reviews section" frame is
-            801px tall, and the LARA lettering group sits at
-            top: calc(50% - 231.76px/2 - 233.63px) inside it — that
-            works out to 400.5 - 115.88 - 233.63 = ~51px from the
-            section's top. The old 96px was pushing it down almost
-            twice as far as the design calls for. Bottom padding
-            (md:pb-24) left alone — no Figma number for that side
-            yet, only the top was measured here.
-            ====================================================== */}
+        LARA WORDMARK + ARCS + PHOTOS
+        (arcs now live in the same wrapper as the wordmark,
+        centered off the same anchor point instead of the
+        full-width section)
+        ====================================================== */}
 
         <Reveal>
           <div
@@ -235,10 +228,54 @@ export default function LaraShowcase() {
               md:max-w-[720px]
             "
           >
+            {/* ARC DECORATION — centered on this wrapper's midline */}
+            <div
+              aria-hidden="true"
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                z-0
+              "
+            >
+              {/* LEFT SWEEP: original center = -9.58vw + 69.84vw/2 = 25.34vw
+                  from screen's left edge; screen center is 50vw, so this
+                  arc's center sits 24.66vw left of center. */}
+              <img
+                src={arcSwirl}
+                alt=""
+                className="absolute max-w-none select-none"
+                style={{
+                  width: "69.84vw",
+                  left: "50%",
+                  transform: "translateX(calc(-50% - 24.66vw))",
+                  opacity: LARA_ARC_OPACITY,
+                }}
+              />
+
+              {/* RIGHT SWEEP: original center = 37.81vw + 71.09vw/2 = 73.36vw
+                  from left edge, i.e. 23.36vw right of screen center. */}
+              <img
+                src={arcSwirl}
+                alt=""
+                className="absolute max-w-none select-none"
+                style={{
+                  width: "71.09vw",
+                  left: "50%",
+                  transform: "translateX(calc(-50% + 23.36vw)) scaleX(-1)",
+                  transformOrigin: "center",
+                  opacity: LARA_ARC_OPACITY,
+                }}
+              />
+            </div>
+
+            {/* WORDMARK */}
             <img
               src={laraWordmark}
               alt="Lara's Crochet"
               className="
+                relative
+                z-10
                 block
                 h-auto
                 w-full
@@ -251,6 +288,7 @@ export default function LaraShowcase() {
             <div
               className="
                 absolute
+                z-20
                 left-1/2
                 top-1/2
                 h-[80px]
