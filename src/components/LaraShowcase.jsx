@@ -4,21 +4,20 @@ import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
-import laraDecor from "../assets/decor/lara-decor-composite-fixed.png";
+import arcSwirl from "../assets/decor/arc-swirl.png";
 
 /* ============================================================
-   EASY DECORATION CONTROLS
+   EASY DECORATION CONTROL
 
    0.20 = Figma original
    0.35 = subtle
    0.50 = clearly visible
    0.65 = strong
-   0.80 = very strong
+   0.75 = very strong
    1.00 = maximum
-
    ============================================================ */
 
-const LARA_ARC_OPACITY = 1.00;
+const LARA_ARC_OPACITY = 0.75;
 
 /* ============================================================
    BRAND STORY
@@ -44,49 +43,41 @@ const TESTIMONIALS = [
       "I've never had a piece fit this well straight out of the box. Literally made to my measurements. No alterations needed.",
     name: "Teniola Aladese",
   },
-
   {
     quote:
       "You can tell this isn't machine-made. The detail in the stitching is unreal.",
     name: "Tolu Coker",
   },
-
   {
     quote:
       "The bikini set held up through an entire beach trip. No stretching, no losing shape. Genuinely impressed.",
     name: "Halima Finny",
   },
-
   {
     quote:
       "The Reina dress is a whole moment. I get stopped every single time I wear it.",
     name: "Chidinma K.",
   },
-
   {
     quote:
       "Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.",
     name: "Precious Ehizoge",
   },
-
   {
     quote:
       "Customer service walked me through sizing so patiently. Made ordering online feel less scary.",
     name: "Ejiro Okezie",
   },
-
   {
     quote:
       "Placeholder quote — swap this for a real customer testimonial.",
     name: "Customer Name",
   },
-
   {
     quote:
       "Placeholder quote — swap this for a real customer testimonial.",
     name: "Customer Name",
   },
-
   {
     quote:
       "Placeholder quote — swap this for a real customer testimonial.",
@@ -102,27 +93,22 @@ const SCATTER_PHOTOS = [
   {
     src: scatterBeach,
     alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
-
     style: {
       transform: "translate(-13px, 8px) rotate(0deg)",
       zIndex: 3,
     },
   },
-
   {
     src: scatterStreet,
     alt: "Street-style portrait",
-
     style: {
       transform: "translate(7px, -8px) rotate(19.63deg)",
       zIndex: 2,
     },
   },
-
   {
     src: scatterTeal,
     alt: "Lara's Crochet customer wearing a teal crochet dress",
-
     style: {
       transform: "translate(23px, 10px) rotate(-8.21deg)",
       zIndex: 1,
@@ -142,30 +128,28 @@ export default function LaraShowcase() {
       "
     >
       {/* ========================================================
-          FULL-WIDTH LARA DECORATION
+          LARA DECORATION
 
-          The Figma Group 30 and Group 32 decorations have been
-          combined into one image.
+          Figma:
 
-          This keeps both sides locked together as one composition
-          and prevents them from shifting independently between
-          different screen sizes.
-
-          Figma reference:
-
-          LEFT:
+          LEFT GROUP 30
           width: 1341px
           left: -184px
           top: 824.32px
           opacity: 0.2
           blur: 4.5px
 
-          RIGHT:
+          RIGHT GROUP 32
           width: 1365px
           left: 726px
           top: 823px
           opacity: 0.2
           blur: 4.5px
+
+          The Figma top values are page coordinates.
+          Inside this section, the decoration belongs around
+          the LARA/photo composition, so the position is
+          calculated responsively from the viewport.
           ======================================================== */}
 
       <div
@@ -173,28 +157,54 @@ export default function LaraShowcase() {
         className="
           pointer-events-none
           absolute
-          inset-x-0
-          top-0
+          inset-0
           z-0
           overflow-hidden
         "
       >
+        {/* ======================================================
+            LEFT FIGMA GROUP 30
+            ====================================================== */}
+
         <img
-          src={laraDecor}
+          src={arcSwirl}
           alt=""
           className="
             absolute
-            left-1/2
-            top-0
-            w-full
-            max-w-[1920px]
-            -translate-x-1/2
+            max-w-none
             select-none
             pointer-events-none
           "
           style={{
+            width: "69.84vw",
+            left: "-9.58vw",
+            top: "clamp(45px, 3.65vw, 70px)",
             opacity: LARA_ARC_OPACITY,
             filter: "blur(4.5px)",
+          }}
+        />
+
+        {/* ======================================================
+            RIGHT FIGMA GROUP 32
+            ====================================================== */}
+
+        <img
+          src={arcSwirl}
+          alt=""
+          className="
+            absolute
+            max-w-none
+            select-none
+            pointer-events-none
+          "
+          style={{
+            width: "71.09vw",
+            left: "37.81vw",
+            top: "clamp(44px, 3.60vw, 69px)",
+            opacity: LARA_ARC_OPACITY,
+            filter: "blur(4.5px)",
+            transform: "scaleX(-1)",
+            transformOrigin: "center",
           }}
         />
       </div>
@@ -244,7 +254,7 @@ export default function LaraShowcase() {
             />
 
             {/* ==================================================
-                STATIC PHOTOS OVER THE LARA WORDMARK
+                STATIC PHOTOS OVER LARA
                 ================================================== */}
 
             <div
