@@ -4,7 +4,7 @@ import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
-import laraDecor from "../assets/decor/lara-decor-composite-fixed.png";
+import laraDecor from "../assets/decor/lara-decor-composite.png";
 
 /* ============================================================
    EASY DECORATION CONTROL
