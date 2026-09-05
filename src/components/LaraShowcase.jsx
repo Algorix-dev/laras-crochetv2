@@ -4,26 +4,17 @@ import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
-import laraDecor from "../assets/decor/lara-decor-composite.png";
-// If you have the bolder recolored version, point this at it instead:
-// import arcSwirl from "../assets/decor/arc-swirl-fixed.png";
+import laraDecor from "../assets/decor/lara-decor-composite-fixed.png";
 
 /* ============================================================
    EASY DECORATION CONTROL
-
-   0.20 = Figma original
-   0.35 = subtle
-   0.50 = clearly visible
-   0.65 = strong
-   0.75 = very strong
-   1.00 = maximum (opacity alone can't go further — see filter below)
    ============================================================ */
 
 const LARA_ARC_OPACITY = 1.0;
 
-// Opacity was already maxed — the real fix is less blur + more contrast/saturation
-// so the faint line art actually reads. Tune these if you swap in a bolder asset.
-const LARA_ARC_FILTER = "blur(1px) contrast(2.2) saturate(1.6)";
+// Now pointing at the bold/fixed asset, so this only needs to be
+// light-touch — a small crispness boost, not a rescue job.
+const LARA_ARC_FILTER = "contrast(1.1) saturate(1.05)";
 
 /* ============================================================
    BRAND STORY
@@ -133,10 +124,6 @@ export default function LaraShowcase() {
         md:min-h-[801px]
       "
     >
-      {/* ========================================================
-          CONTENT
-          ======================================================== */}
-
       <div
         className="
           relative
@@ -149,18 +136,6 @@ export default function LaraShowcase() {
           md:py-24
         "
       >
-        {/* ======================================================
-            LARA WORDMARK + ARC DECORATION + PHOTOS
-
-            The two arc-swirl images now live inside this wrapper
-            instead of being absolutely positioned against the
-            whole section. Each image's own crossing point sits at
-            its visual center, so centering both images on this
-            container (top-1/2 / left-1/2 + -translate) pins both
-            crossings — and therefore the "spiral" effect — exactly
-            on the Lara wordmark, no matter the viewport width.
-            ====================================================== */}
-
         <Reveal>
           <div
             className="
@@ -184,7 +159,6 @@ export default function LaraShowcase() {
                 overflow-visible
               "
             >
-              {/* Left-orientation arc, centered on this container */}
               <img
                 src={laraDecor}
                 alt=""
@@ -205,7 +179,6 @@ export default function LaraShowcase() {
                 }}
               />
 
-              {/* Mirrored arc, centered on the same point */}
               <img
                 src={laraDecor}
                 alt=""
@@ -243,6 +216,12 @@ export default function LaraShowcase() {
 
             {/* ==================================================
                 STATIC PHOTOS OVER LARA
+
+                Sizing moved to inline style (clamp-based, so it's
+                still responsive) instead of Tailwind arbitrary
+                classes — those weren't being generated in the
+                build, which is why the photos were rendering at
+                native/intrinsic size and swallowing the wordmark.
                 ================================================== */}
 
             <div
@@ -251,27 +230,28 @@ export default function LaraShowcase() {
                 left-1/2
                 top-1/2
                 z-20
-                h-[80px]
-                w-[110px]
                 -translate-x-1/2
                 -translate-y-1/2
-                sm:h-[100px]
-                sm:w-[140px]
-                md:h-[115px]
-                md:w-[160px]
+                overflow-hidden
               "
+              style={{
+                width: "clamp(90px, 14vw, 160px)",
+                height: "clamp(65px, 10vw, 115px)",
+              }}
             >
               {SCATTER_PHOTOS.map((photo) => (
                 <img
                   key={photo.alt}
                   src={photo.src}
                   alt={photo.alt}
-                  style={photo.style}
+                  style={{
+                    ...photo.style,
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                  }}
                   className="
-                    absolute
-                    inset-0
-                    h-full
-                    w-full
                     rounded-[2px]
                     object-cover
                     shadow-md
