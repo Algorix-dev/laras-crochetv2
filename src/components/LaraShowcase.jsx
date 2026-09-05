@@ -170,7 +170,7 @@ export default function LaraShowcase() {
             left: "-9.58vw",
 
             /* Responsive vertical position */
-            top: "clamp(-50px, -1vw, -10px)",
+            top: "clamp(-80px, -1vw, -10px)",
 
             opacity: LARA_ARC_OPACITY,
           }}
@@ -190,7 +190,7 @@ export default function LaraShowcase() {
             left: "37.81vw",
 
             /* Responsive vertical position */
-            top: "clamp(-49px, -0.95vw, -9px)",
+            top: "clamp(-79px, -0.95vw, -9px)",
 
             opacity: LARA_ARC_OPACITY,
             transform: "scaleX(-1)",
