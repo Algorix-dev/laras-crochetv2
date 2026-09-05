@@ -4,7 +4,7 @@ import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
-import laraDecor from "../assets/decor/lara-decor-composite.png";
+import laraDecor from "../assets/decor/lara-decor-composite-fixed.png";
 
 /* ============================================================
    EASY DECORATION CONTROLS
@@ -18,7 +18,7 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
 
    ============================================================ */
 
-const LARA_ARC_OPACITY = 1.00;
+const LARA_ARC_OPACITY = 0.75;
 
 /* ============================================================
    BRAND STORY
@@ -144,30 +144,28 @@ export default function LaraShowcase() {
       {/* ========================================================
           FULL-WIDTH LARA DECORATION
 
-          The two Figma arc groups have been combined into ONE
-          transparent image.
+          The Figma Group 30 and Group 32 decorations have been
+          combined into one image.
 
-          This prevents the left and right decorations from
-          drifting apart on different screen sizes.
+          This keeps both sides locked together as one composition
+          and prevents them from shifting independently between
+          different screen sizes.
 
           Figma reference:
 
-          Group 30:
+          LEFT:
           width: 1341px
           left: -184px
           top: 824.32px
           opacity: 0.2
           blur: 4.5px
 
-          Group 32:
+          RIGHT:
           width: 1365px
           left: 726px
           top: 823px
           opacity: 0.2
           blur: 4.5px
-
-          The combined image scales with the viewport while
-          keeping the entire composition together.
           ======================================================== */}
 
       <div
