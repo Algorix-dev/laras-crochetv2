@@ -10,6 +10,11 @@ import arcSwirl from "../assets/decor/arc-swirl.png";
    EASY DECORATION CONTROLS
    Change only this number to adjust visibility.
 
+   TIP: set to 1.00 right now so you can actually SEE the arcs
+   and dial them in. Once you've found a look you like, bring
+   this back down — 0.20 is the original Figma value, anything
+   above ~0.65 starts looking heavy on a cream background.
+
    0.20 = Figma original
    0.35 = subtle
    0.50 = clearly visible
@@ -18,7 +23,7 @@ import arcSwirl from "../assets/decor/arc-swirl.png";
    1.00 = maximum
    ============================================================ */
 
-const LARA_ARC_OPACITY = 0.75;
+const LARA_ARC_OPACITY = 1.0;
 
 /* ============================================================
    BRAND STORY
@@ -136,6 +141,13 @@ export default function LaraShowcase() {
 
           Using clamp() keeps their vertical position responsive
           instead of relying on a fixed -20px / -19px value.
+
+          TIP: blur was removed (no more blur-[1px]) while you're
+          calibrating — blur softens contrast against the cream
+          background, which was part of why these read as
+          basically invisible before. Add blur back in once
+          you've picked a position/opacity you like, if you want
+          the softer look again.
           ======================================================== */}
 
       <div
@@ -156,7 +168,6 @@ export default function LaraShowcase() {
             absolute
             max-w-none
             select-none
-            blur-[1px]
           "
           style={{
             width: "69.84vw",
@@ -177,7 +188,6 @@ export default function LaraShowcase() {
             absolute
             max-w-none
             select-none
-            blur-[1px]
           "
           style={{
             width: "71.09vw",
