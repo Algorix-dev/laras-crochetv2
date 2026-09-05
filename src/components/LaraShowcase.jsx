@@ -18,7 +18,7 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
 
    ============================================================ */
 
-const LARA_ARC_OPACITY = 0.8;
+const LARA_ARC_OPACITY = 1.00;
 
 /* ============================================================
    BRAND STORY
