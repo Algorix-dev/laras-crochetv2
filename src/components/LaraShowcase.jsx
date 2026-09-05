@@ -169,8 +169,19 @@ export default function LaraShowcase() {
             width: "69.84vw",
             left: "-9.58vw",
 
-            /* Responsive vertical position */
-            top: "clamp(-35px, -1vw, -10px)",
+            /* TIP: this is vw, not % — on purpose. % of "top"
+               would resolve against this section's REAL final
+               height (wordmark + paragraphs + all 9 testimonial
+               cards), which is way taller than the isolated 801px
+               Figma frame this offset came from, and would keep
+               changing as testimonials are added/removed. vw
+               scales with page WIDTH instead, same as every other
+               measurement in this decoration (width, left), which
+               is what actually matches how Figma's frame scales.
+               Figma: Group 30 top (824.32px) minus where the
+               "Reviews section" frame starts (847px) = -22.68px,
+               ÷ 1920px frame width = -1.18vw. */
+            top: "-1.18vw",
 
             opacity: LARA_ARC_OPACITY,
           }}
@@ -189,8 +200,9 @@ export default function LaraShowcase() {
             width: "71.09vw",
             left: "37.81vw",
 
-            /* Responsive vertical position */
-            top: "clamp(-34px, -0.95vw, -9px)",
+            /* Same idea: Group 32's top (823px) minus 847px section
+               start = -24px, ÷ 1920px = -1.25vw. */
+            top: "-1.25vw",
 
             opacity: LARA_ARC_OPACITY,
             transform: "scaleX(-1)",
