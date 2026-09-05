@@ -210,13 +210,25 @@ export default function LaraShowcase() {
           mx-auto
           max-w-4xl
           px-5
-          py-16
+          pb-16
+          pt-16
           text-center
-          md:py-24
+          md:pb-24
+          md:pt-[51px]
         "
       >
         {/* ======================================================
             LARA WORDMARK + PHOTOS
+
+            TIP: top padding above is md:pt-[51px], not the old
+            md:py-24 (96px). Figma's "Reviews section" frame is
+            801px tall, and the LARA lettering group sits at
+            top: calc(50% - 231.76px/2 - 233.63px) inside it — that
+            works out to 400.5 - 115.88 - 233.63 = ~51px from the
+            section's top. The old 96px was pushing it down almost
+            twice as far as the design calls for. Bottom padding
+            (md:pb-24) left alone — no Figma number for that side
+            yet, only the top was measured here.
             ====================================================== */}
 
         <Reveal>
