@@ -134,76 +134,6 @@ export default function LaraShowcase() {
       "
     >
       {/* ========================================================
-          FULL-WIDTH LARA DECORATION
-
-          The arcs are attached to the SECTION so they remain
-          independent of the text/content width.
-
-          Using clamp() keeps their vertical position responsive
-          instead of relying on a fixed -20px / -19px value.
-
-          TIP: blur was removed (no more blur-[1px]) while you're
-          calibrating — blur softens contrast against the cream
-          background, which was part of why these read as
-          basically invisible before. Add blur back in once
-          you've picked a position/opacity you like, if you want
-          the softer look again.
-          ======================================================== */}
-
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          z-0
-          overflow-hidden
-        "
-      >
-        {/* LEFT SWEEP */}
-        <img
-          src={arcSwirl}
-          alt=""
-          className="
-            absolute
-            max-w-none
-            select-none
-          "
-          style={{
-            width: "69.84vw",
-            left: "-9.58vw",
-
-            /* Responsive vertical position */
-            top: "clamp(-35px, -1vw, -10px)",
-
-            opacity: LARA_ARC_OPACITY,
-          }}
-        />
-
-        {/* RIGHT SWEEP */}
-        <img
-          src={arcSwirl}
-          alt=""
-          className="
-            absolute
-            max-w-none
-            select-none
-          "
-          style={{
-            width: "71.09vw",
-            left: "37.81vw",
-
-            /* Responsive vertical position */
-            top: "clamp(-34px, -0.95vw, -9px)",
-
-            opacity: LARA_ARC_OPACITY,
-            transform: "scaleX(-1)",
-            transformOrigin: "center",
-          }}
-        />
-      </div>
-
-      {/* ========================================================
           CONTENT
           ======================================================== */}
 
@@ -219,6 +149,75 @@ export default function LaraShowcase() {
           md:py-24
         "
       >
+        {/* ========================================================
+            LARA DECORATION
+
+            TIP: moved INSIDE the same max-w-4xl container as the
+            content (was on the outer full-width section before),
+            and switched from vw units to % units. That's the fix
+            for "looks fine on my screen but wrong at 1920px":
+            vw scales with the WHOLE page forever, but the wordmark
+            above is capped at max-w-4xl (896px) and stops growing.
+            Past that point the two drift apart — the wider the
+            screen, the further apart. % is relative to THIS
+            container instead, which has the same 896px cap, so
+            the arcs now stop scaling at exactly the same point the
+            wordmark does, at every screen size.
+            ======================================================== */}
+
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            z-0
+            overflow-hidden
+          "
+        >
+          {/* LEFT SWEEP */}
+          <img
+            src={arcSwirl}
+            alt=""
+            className="
+              absolute
+              max-w-none
+              select-none
+            "
+            style={{
+              width: "69.84%",
+              left: "-9.58%",
+
+              /* Responsive vertical position */
+              top: "clamp(-35px, -1vw, -10px)",
+
+              opacity: LARA_ARC_OPACITY,
+            }}
+          />
+
+          {/* RIGHT SWEEP */}
+          <img
+            src={arcSwirl}
+            alt=""
+            className="
+              absolute
+              max-w-none
+              select-none
+            "
+            style={{
+              width: "71.09%",
+              left: "37.81%",
+
+              /* Responsive vertical position */
+              top: "clamp(-34px, -0.95vw, -9px)",
+
+              opacity: LARA_ARC_OPACITY,
+              transform: "scaleX(-1)",
+              transformOrigin: "center",
+            }}
+          />
+        </div>
+
         {/* ======================================================
             LARA WORDMARK + PHOTOS
             ====================================================== */}
