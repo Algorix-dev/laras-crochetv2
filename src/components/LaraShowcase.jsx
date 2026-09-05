@@ -12,9 +12,10 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
 
 const LARA_ARC_OPACITY = 1.0;
 
-// Now pointing at the bold/fixed asset, so this only needs to be
-// light-touch — a small crispness boost, not a rescue job.
-const LARA_ARC_FILTER = "contrast(1.1) saturate(1.05)";
+// This IS the real asset (no separate bold version exists) — so
+// unlike last time, we do need the stronger contrast/saturate
+// treatment to make the faint line art actually read.
+const LARA_ARC_FILTER = "contrast(2.2) saturate(1.6)";
 
 /* ============================================================
    BRAND STORY
@@ -148,56 +149,31 @@ export default function LaraShowcase() {
               md:max-w-[720px]
             "
           >
-            {/* Decoration layer — behind the wordmark/photos */}
-            <div
+            {/* Decoration — ONE full-bleed image, centered on this
+                wrapper's center point via the left:50% + translate
+                trick, so it stretches edge-to-edge across the whole
+                viewport while still lining up on the wordmark. */}
+            <img
+              src={laraDecor}
+              alt=""
               aria-hidden="true"
               className="
                 pointer-events-none
                 absolute
-                inset-0
+                top-1/2
+                left-1/2
                 z-0
-                overflow-visible
+                max-w-none
+                select-none
+                -translate-x-1/2
+                -translate-y-1/2
               "
-            >
-              <img
-                src={laraDecor}
-                alt=""
-                className="
-                  absolute
-                  top-1/2
-                  left-1/2
-                  max-w-none
-                  select-none
-                  pointer-events-none
-                  -translate-x-1/2
-                  -translate-y-1/2
-                "
-                style={{
-                  width: "69.84vw",
-                  opacity: LARA_ARC_OPACITY,
-                  filter: LARA_ARC_FILTER,
-                }}
-              />
-
-              <img
-                src={laraDecor}
-                alt=""
-                className="
-                  absolute
-                  top-1/2
-                  left-1/2
-                  max-w-none
-                  select-none
-                  pointer-events-none
-                "
-                style={{
-                  width: "71.09vw",
-                  opacity: LARA_ARC_OPACITY,
-                  filter: LARA_ARC_FILTER,
-                  transform: "translate(-50%, -50%) scaleX(-1)",
-                }}
-              />
-            </div>
+              style={{
+                width: "100vw",
+                opacity: LARA_ARC_OPACITY,
+                filter: LARA_ARC_FILTER,
+              }}
+            />
 
             {/* Wordmark — above the decoration */}
             <img
@@ -214,16 +190,7 @@ export default function LaraShowcase() {
               "
             />
 
-            {/* ==================================================
-                STATIC PHOTOS OVER LARA
-
-                Sizing moved to inline style (clamp-based, so it's
-                still responsive) instead of Tailwind arbitrary
-                classes — those weren't being generated in the
-                build, which is why the photos were rendering at
-                native/intrinsic size and swallowing the wordmark.
-                ================================================== */}
-
+            {/* STATIC PHOTOS OVER LARA */}
             <div
               className="
                 absolute
@@ -264,10 +231,7 @@ export default function LaraShowcase() {
           </div>
         </Reveal>
 
-        {/* ======================================================
-            BRAND STORY
-            ====================================================== */}
-
+        {/* BRAND STORY */}
         <Reveal delay={0.1}>
           <div
             className="
@@ -287,10 +251,7 @@ export default function LaraShowcase() {
           </div>
         </Reveal>
 
-        {/* ======================================================
-            TESTIMONIALS
-            ====================================================== */}
-
+        {/* TESTIMONIALS */}
         <div
           className="
             relative
