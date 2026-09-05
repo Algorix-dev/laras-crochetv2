@@ -17,7 +17,15 @@ import arcSwirl from "../assets/decor/arc-swirl.png";
    1.00 = maximum
    ============================================================ */
 
-const LARA_ARC_OPACITY = 1.00;
+const LARA_ARC_OPACITY = 1;
+
+/*
+  The PNG itself contains transparency, so one image can still
+  look faint even at opacity: 1.
+
+  Multiple identical layers build up the visual strength.
+*/
+const LARA_ARC_LAYERS = 6;
 
 /* ============================================================
    BRAND STORY
@@ -127,87 +135,97 @@ export default function LaraShowcase() {
         md:min-h-[801px]
       "
     >
-      {/* ========================================================
-          LARA DECORATION
+              {/* ========================================================
+                  LARA SPIRAL DECORATION
 
-          Figma:
+                  The two Figma groups are kept separate so we can preserve
+                  their original left/right composition.
 
-          LEFT GROUP 30
-          width: 1341px
-          left: -184px
-          top: 824.32px
-          opacity: 0.2
-          blur: 4.5px
+                  The vertical position has been moved upward so the LARA
+                  wordmark sits inside the central area of the spirals.
 
-          RIGHT GROUP 32
-          width: 1365px
-          left: 726px
-          top: 823px
-          opacity: 0.2
-          blur: 4.5px
+                  Multiple layers are used because arcSwirl.png already
+                  contains transparency. CSS opacity alone cannot make an
+                  already-transparent PNG darker.
+                  ======================================================== */}
 
-          The Figma top values are page coordinates.
-          Inside this section, the decoration belongs around
-          the LARA/photo composition, so the position is
-          calculated responsively from the viewport.
-          ======================================================== */}
-
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none
-          absolute
-          inset-0
-          z-0
-          overflow-hidden
-        "
-      >
-        {/* ======================================================
-            LEFT FIGMA GROUP 30
-            ====================================================== */}
-
-        <img
-          src={arcSwirl}
-          alt=""
+        <div
+          aria-hidden="true"
           className="
-            absolute
-            max-w-none
-            select-none
             pointer-events-none
-          "
-          style={{
-            width: "69.84vw",
-            left: "-9.58vw",
-            top: "clamp(45px, 3.65vw, 70px)",
-            opacity: LARA_ARC_OPACITY,
-            filter: "blur(4.5px)",
-          }}
-        />
-
-        {/* ======================================================
-            RIGHT FIGMA GROUP 32
-            ====================================================== */}
-
-        <img
-          src={arcSwirl}
-          alt=""
-          className="
             absolute
-            max-w-none
-            select-none
-            pointer-events-none
+            inset-0
+            z-0
+            overflow-hidden
           "
-          style={{
-            width: "71.09vw",
-            left: "37.81vw",
-            top: "clamp(44px, 3.60vw, 69px)",
-            opacity: LARA_ARC_OPACITY,
-            filter: "blur(4.5px)",
-            transform: "scaleX(-1)",
-            transformOrigin: "center",
-          }}
-        />
-      </div>
+        >
+          {/* ======================================================
+              LEFT SPIRAL
+              ====================================================== */}
+
+          {Array.from({ length: LARA_ARC_LAYERS }).map((_, index) => (
+            <img
+              key={`left-arc-${index}`}
+              src={arcSwirl}
+              alt=""
+              className="
+                absolute
+                max-w-none
+                select-none
+                pointer-events-none
+              "
+              style={{
+                width: "69.84vw",
+                left: "-9.58vw",
+
+                /*
+                  This is the important change.
+
+                  The previous position put the spiral too low.
+                  Moving it upward places the LARA wordmark around
+                  the visual centre of the curved lines.
+                */
+                top: "clamp(-165px, -7.5vw, -110px)",
+
+                opacity: LARA_ARC_OPACITY,
+                filter: "blur(4.5px)",
+              }}
+            />
+          ))}
+
+          {/* ======================================================
+              RIGHT SPIRAL
+              ====================================================== */}
+
+          {Array.from({ length: LARA_ARC_LAYERS }).map((_, index) => (
+            <img
+              key={`right-arc-${index}`}
+              src={arcSwirl}
+              alt=""
+              className="
+                absolute
+                max-w-none
+                select-none
+                pointer-events-none
+              "
+              style={{
+                width: "71.09vw",
+                left: "37.81vw",
+
+                /*
+                  Same vertical position as the left spiral so
+                  both sides meet symmetrically around LARA.
+                */
+                top: "clamp(-166px, -7.55vw, -111px)",
+
+                opacity: LARA_ARC_OPACITY,
+                filter: "blur(4.5px)",
+                transform: "scaleX(-1)",
+                transformOrigin: "center",
+              }}
+            />
+          ))}
+        </div>
 
       {/* ========================================================
           CONTENT
