@@ -4,16 +4,10 @@ import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
-import arcSwirl from "../assets/decor/arc-swirl.png";
+import laraDecor from "../assets/decor/lara-decor-composite.png";
 
 /* ============================================================
    EASY DECORATION CONTROLS
-   Change only this number to adjust visibility.
-
-   TIP: set to 1.00 right now so you can actually SEE the arcs
-   and dial them in. Once you've found a look you like, bring
-   this back down — 0.20 is the original Figma value, anything
-   above ~0.65 starts looking heavy on a cream background.
 
    0.20 = Figma original
    0.35 = subtle
@@ -21,9 +15,10 @@ import arcSwirl from "../assets/decor/arc-swirl.png";
    0.65 = strong
    0.80 = very strong
    1.00 = maximum
+
    ============================================================ */
 
-const LARA_ARC_OPACITY = 1.0;
+const LARA_ARC_OPACITY = 0.2;
 
 /* ============================================================
    BRAND STORY
@@ -49,41 +44,49 @@ const TESTIMONIALS = [
       "I've never had a piece fit this well straight out of the box. Literally made to my measurements. No alterations needed.",
     name: "Teniola Aladese",
   },
+
   {
     quote:
       "You can tell this isn't machine-made. The detail in the stitching is unreal.",
     name: "Tolu Coker",
   },
+
   {
     quote:
       "The bikini set held up through an entire beach trip. No stretching, no losing shape. Genuinely impressed.",
     name: "Halima Finny",
   },
+
   {
     quote:
       "The Reina dress is a whole moment. I get stopped every single time I wear it.",
     name: "Chidinma K.",
   },
+
   {
     quote:
       "Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.",
     name: "Precious Ehizoge",
   },
+
   {
     quote:
       "Customer service walked me through sizing so patiently. Made ordering online feel less scary.",
     name: "Ejiro Okezie",
   },
+
   {
     quote:
       "Placeholder quote — swap this for a real customer testimonial.",
     name: "Customer Name",
   },
+
   {
     quote:
       "Placeholder quote — swap this for a real customer testimonial.",
     name: "Customer Name",
   },
+
   {
     quote:
       "Placeholder quote — swap this for a real customer testimonial.",
@@ -99,22 +102,27 @@ const SCATTER_PHOTOS = [
   {
     src: scatterBeach,
     alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
+
     style: {
       transform: "translate(-13px, 8px) rotate(0deg)",
       zIndex: 3,
     },
   },
+
   {
     src: scatterStreet,
     alt: "Street-style portrait",
+
     style: {
       transform: "translate(7px, -8px) rotate(19.63deg)",
       zIndex: 2,
     },
   },
+
   {
     src: scatterTeal,
     alt: "Lara's Crochet customer wearing a teal crochet dress",
+
     style: {
       transform: "translate(23px, 10px) rotate(-8.21deg)",
       zIndex: 1,
@@ -133,7 +141,66 @@ export default function LaraShowcase() {
         md:min-h-[801px]
       "
     >
-      
+      {/* ========================================================
+          FULL-WIDTH LARA DECORATION
+
+          The two Figma arc groups have been combined into ONE
+          transparent image.
+
+          This prevents the left and right decorations from
+          drifting apart on different screen sizes.
+
+          Figma reference:
+
+          Group 30:
+          width: 1341px
+          left: -184px
+          top: 824.32px
+          opacity: 0.2
+          blur: 4.5px
+
+          Group 32:
+          width: 1365px
+          left: 726px
+          top: 823px
+          opacity: 0.2
+          blur: 4.5px
+
+          The combined image scales with the viewport while
+          keeping the entire composition together.
+          ======================================================== */}
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          inset-x-0
+          top-0
+          z-0
+          overflow-hidden
+        "
+      >
+        <img
+          src={laraDecor}
+          alt=""
+          className="
+            absolute
+            left-1/2
+            top-0
+            w-full
+            max-w-[1920px]
+            -translate-x-1/2
+            select-none
+            pointer-events-none
+          "
+          style={{
+            opacity: LARA_ARC_OPACITY,
+            filter: "blur(4.5px)",
+          }}
+        />
+      </div>
+
       {/* ========================================================
           CONTENT
           ======================================================== */}
@@ -145,115 +212,80 @@ export default function LaraShowcase() {
           mx-auto
           max-w-4xl
           px-5
-          pb-16
-          pt-16
+          py-16
           text-center
-          md:pb-24
-          md:pt-[51px]
+          md:py-24
         "
       >
         {/* ======================================================
-              LARA WORDMARK + ARCS + PHOTOS
-              Single shared wrapper, full width — arcs and the
-              wordmark cluster both measure from the same box,
-              so there's no cross-container assumption to drift.
-              ====================================================== */}
+            LARA WORDMARK + PHOTOS
+            ====================================================== */}
 
-          <Reveal>
-            <div className="relative w-full">
-              {/* ARC DECORATION — anchored to this full-width wrapper */}
-              <div
-                aria-hidden="true"
-                className="
-                  pointer-events-none
-                  absolute
-                  inset-0
-                  z-0
-                  overflow-hidden
-                "
-              >
-                <img
-                  src={arcSwirl}
-                  alt=""
-                  className="absolute max-w-none select-none"
-                  style={{
-                    width: "69.84vw",
-                    left: "-9.58vw",
-                    opacity: LARA_ARC_OPACITY,
-                  }}
-                />
-                <img
-                  src={arcSwirl}
-                  alt=""
-                  className="absolute max-w-none select-none"
-                  style={{
-                    width: "71.09vw",
-                    left: "37.81vw",
-                    opacity: LARA_ARC_OPACITY,
-                    transform: "scaleX(-1)",
-                    transformOrigin: "center",
-                  }}
-                />
-              </div>
+        <Reveal>
+          <div
+            className="
+              relative
+              mx-auto
+              mb-14
+              w-full
+              max-w-[560px]
+              md:mb-20
+              md:max-w-[720px]
+            "
+          >
+            <img
+              src={laraWordmark}
+              alt="Lara's Crochet"
+              className="
+                block
+                h-auto
+                w-full
+                select-none
+                pointer-events-none
+              "
+            />
 
-              {/* WORDMARK + PHOTOS — centered independently in the same wrapper */}
-              <div
-                className="
-                  relative
-                  z-10
-                  mx-auto
-                  mb-14
-                  w-full
-                  max-w-[560px]
-                  md:mb-20
-                  md:max-w-[720px]
-                "
-              >
-                <img
-                  src={laraWordmark}
-                  alt="Lara's Crochet"
-                  className="block h-auto w-full select-none pointer-events-none"
-                />
+            {/* ==================================================
+                STATIC PHOTOS OVER THE LARA WORDMARK
+                ================================================== */}
 
-                <div
+            <div
+              className="
+                absolute
+                left-1/2
+                top-1/2
+                h-[80px]
+                w-[110px]
+                -translate-x-1/2
+                -translate-y-1/2
+                sm:h-[100px]
+                sm:w-[140px]
+                md:h-[115px]
+                md:w-[160px]
+              "
+            >
+              {SCATTER_PHOTOS.map((photo) => (
+                <img
+                  key={photo.alt}
+                  src={photo.src}
+                  alt={photo.alt}
+                  style={photo.style}
                   className="
                     absolute
-                    z-20
-                    left-1/2
-                    top-1/2
-                    h-[80px]
-                    w-[110px]
-                    -translate-x-1/2
-                    -translate-y-1/2
-                    sm:h-[100px]
-                    sm:w-[140px]
-                    md:h-[115px]
-                    md:w-[160px]
+                    inset-0
+                    h-full
+                    w-full
+                    rounded-[2px]
+                    object-cover
+                    shadow-md
+                    ring-1
+                    ring-[var(--cream)]
                   "
-                >
-                  {SCATTER_PHOTOS.map((photo) => (
-                    <img
-                      key={photo.alt}
-                      src={photo.src}
-                      alt={photo.alt}
-                      style={photo.style}
-                      className="
-                        absolute
-                        inset-0
-                        h-full
-                        w-full
-                        rounded-[2px]
-                        object-cover
-                        shadow-md
-                        ring-1
-                        ring-[var(--cream)]
-                      "
-                    />
-                  ))}
-                </div>
-              </div>
+                />
+              ))}
             </div>
-          </Reveal>
+          </div>
+        </Reveal>
 
         {/* ======================================================
             BRAND STORY
