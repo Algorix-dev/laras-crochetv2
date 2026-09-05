@@ -139,27 +139,11 @@ export default function CustomOrderBanner() {
           }}
         />
 
-        {/* ======================================================
-            FIGMA ELLIPSE 27
-            ====================================================== */}
-
-        <div
-          aria-hidden="true"
-          className="
-            absolute
-            left-1/2
-            top-[744px]
-            h-[78px]
-            w-[640px]
-            -translate-x-1/2
-            rounded-[50%]
-            bg-[#4C0519]
-            blur-[24px]
-          "
-          style={{
-            opacity: CUSTOM_ELLIPSE_OPACITY,
-          }}
-        />
+        {/* Ellipse 27 removed from here — it wasn't actually tied
+            to the models, just to a fixed pixel on the page, so it
+            drifted away from their feet on your screen. Moved
+            below into the MODELS block where it's now positioned
+            relative to the models image itself. */}
       </div>
 
       {/* ========================================================
@@ -199,13 +183,17 @@ export default function CustomOrderBanner() {
             "
           />
 
-          {/* Orders — TIP: position is % of the wordmark box, not
-              fixed px, so it stays locked to the same spot on the
-              "m" of Custom at any screen size. Figma: ORDERS sits
-              at left 1110.29px / top 63.4px inside a 1920px frame
-              where the Custom box itself starts at left 686.6px,
-              top 15px, sized 547x277 — i.e. 77.46% across, 17.47%
-              down from the wordmark's own top-left corner. */}
+          {/* Orders — TIP: the 17.47% used before assumed the
+              exported PNG matched Figma's 547x277 text-box
+              proportions. It doesn't — the actual file is
+              1665x412 (a much flatter crop, no padding in it —
+              checked with getbbox()), so that math put ORDERS way
+              above the wordmark instead of on it. Measured the
+              real "m" glyph directly: cropping just the rightmost
+              28% of the asset and checking where its ink starts
+              gives 30.8% down. That's what "top" is set to now.
+              Nudge a few % either way if you want it sitting
+              deeper into/further off the "m". */}
           <span
             className="
               absolute
@@ -217,7 +205,7 @@ export default function CustomOrderBanner() {
             "
             style={{
               left: "77.46%",
-              top: "17.47%",
+              top: "30.8%",
             }}
           >
             ORDERS
@@ -236,6 +224,16 @@ export default function CustomOrderBanner() {
 
             This prevents the models from becoming huge on
             smaller screens while preserving the desktop design.
+
+            TIP: the glow ("Ellipse 27" in Figma) now lives INSIDE
+            this same wrapper, positioned as a % of the models
+            image itself (left-1/2, top-[98%], centered) instead
+            of a fixed page pixel. Checked the actual trio PNG with
+            getbbox() — the models' feet sit right at the very
+            bottom edge of the file (ink runs 0% to 100%, no
+            padding), so 98% down puts the glow right under their
+            feet at ANY screen size, because it's now anchored to
+            the image, not the page.
             ====================================================== */}
 
         <div
@@ -247,6 +245,34 @@ export default function CustomOrderBanner() {
             justify-center
           "
         >
+          {/* TIP: this inner wrapper is `inline-block` (shrinks to
+              fit the image) rather than the outer flex row (which
+              spans the full container width). That matters because
+              the glow below is positioned with %, and % needs to
+              be measured against the IMAGE's own box, not the
+              wider row around it — otherwise "75% wide" would mean
+              75% of the whole row, not 75% of the models. */}
+          <div className="relative inline-block">
+            <div
+              aria-hidden="true"
+              className="
+                absolute
+                left-1/2
+                top-[98%]
+                z-10
+                w-[75%]
+                max-w-[640px]
+                -translate-x-1/2
+                -translate-y-1/2
+                rounded-[50%]
+                bg-[#4C0519]
+                blur-[24px]
+                aspect-[640/78]
+              "
+              style={{
+                opacity: CUSTOM_ELLIPSE_OPACITY,
+              }}
+            />
           <img
             src={customTrio}
             alt="Lara's Crochet custom pieces"
@@ -262,6 +288,7 @@ export default function CustomOrderBanner() {
               width: "clamp(360px, 34vw, 650px)",
             }}
           />
+          </div>
         </div>
 
         {/* ======================================================
