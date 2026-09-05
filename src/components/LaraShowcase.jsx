@@ -180,7 +180,7 @@ export default function LaraShowcase() {
                   z-0
                 "
                 style={{
-                  width: "165vw", // tune this until the sweep width matches your Figma reference
+                  width: "118.5vw",
                   opacity: LARA_ARC_OPACITY,
                 }}
               />
