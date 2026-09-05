@@ -205,7 +205,7 @@ export default function CustomOrderBanner() {
             "
             style={{
               left: "77.46%",
-              top: "30.8%",
+              top: "10.8%",
             }}
           >
             ORDERS
