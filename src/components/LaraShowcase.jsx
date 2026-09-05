@@ -5,7 +5,7 @@ import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
 import arcSwirl from "../assets/decor/arc-swirl.png";
-import arcSwirlCombined from "../assets/decor/arc-swirl-combined.png";
+import arcSwirlCombined from "../assets/decor/arc-swirl-combined-v2.png";
 
 /* ============================================================
    EASY DECORATION CONTROLS
