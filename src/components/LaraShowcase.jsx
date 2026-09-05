@@ -5,7 +5,6 @@ import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
 import arcSwirl from "../assets/decor/arc-swirl.png";
-import arcSwirlCombined from "../assets/decor/arc-swirl-combined-v2.png";
 
 /* ============================================================
    EASY DECORATION CONTROLS
@@ -153,60 +152,105 @@ export default function LaraShowcase() {
           md:pt-[51px]
         "
       >
-            {/* ======================================================
+        {/* ======================================================
               LARA WORDMARK + ARCS + PHOTOS
               Single shared wrapper, full width — arcs and the
               wordmark cluster both measure from the same box,
               so there's no cross-container assumption to drift.
               ====================================================== */}
 
-          
           <Reveal>
-            <div className="relative mx-auto mb-14 w-full max-w-[560px] md:mb-20 md:max-w-[720px]">
-              {/* ARC DECORATION — one image, centered exactly like the wordmark */}
-              <img
-                src={arcSwirlCombined}
-                alt=""
+            <div className="relative w-full">
+              {/* ARC DECORATION — anchored to this full-width wrapper */}
+              <div
                 aria-hidden="true"
                 className="
                   pointer-events-none
                   absolute
-                  left-1/2
-                  top-1/2
-                  max-w-none
-                  select-none
-                  -translate-x-1/2
-                  -translate-y-1/2
+                  inset-0
                   z-0
-                "
-                style={{
-                  width: "118.5vw",
-                  opacity: LARA_ARC_OPACITY,
-                }}
-              />
-
-              <img
-                src={laraWordmark}
-                alt="Lara's Crochet"
-                className="relative z-10 block h-auto w-full select-none pointer-events-none"
-              />
-
-              <div
-                className="
-                  absolute z-20 left-1/2 top-1/2 h-[80px] w-[110px]
-                  -translate-x-1/2 -translate-y-1/2
-                  sm:h-[100px] sm:w-[140px] md:h-[115px] md:w-[160px]
+                  overflow-hidden
                 "
               >
-                {SCATTER_PHOTOS.map((photo) => (
-                  <img
-                    key={photo.alt}
-                    src={photo.src}
-                    alt={photo.alt}
-                    style={photo.style}
-                    className="absolute inset-0 h-full w-full rounded-[2px] object-cover shadow-md ring-1 ring-[var(--cream)]"
-                  />
-                ))}
+                <img
+                  src={arcSwirl}
+                  alt=""
+                  className="absolute max-w-none select-none"
+                  style={{
+                    width: "69.84vw",
+                    left: "-9.58vw",
+                    opacity: LARA_ARC_OPACITY,
+                  }}
+                />
+                <img
+                  src={arcSwirl}
+                  alt=""
+                  className="absolute max-w-none select-none"
+                  style={{
+                    width: "71.09vw",
+                    left: "37.81vw",
+                    opacity: LARA_ARC_OPACITY,
+                    transform: "scaleX(-1)",
+                    transformOrigin: "center",
+                  }}
+                />
+              </div>
+
+              {/* WORDMARK + PHOTOS — centered independently in the same wrapper */}
+              <div
+                className="
+                  relative
+                  z-10
+                  mx-auto
+                  mb-14
+                  w-full
+                  max-w-[560px]
+                  md:mb-20
+                  md:max-w-[720px]
+                "
+              >
+                <img
+                  src={laraWordmark}
+                  alt="Lara's Crochet"
+                  className="block h-auto w-full select-none pointer-events-none"
+                />
+
+                <div
+                  className="
+                    absolute
+                    z-20
+                    left-1/2
+                    top-1/2
+                    h-[80px]
+                    w-[110px]
+                    -translate-x-1/2
+                    -translate-y-1/2
+                    sm:h-[100px]
+                    sm:w-[140px]
+                    md:h-[115px]
+                    md:w-[160px]
+                  "
+                >
+                  {SCATTER_PHOTOS.map((photo) => (
+                    <img
+                      key={photo.alt}
+                      src={photo.src}
+                      alt={photo.alt}
+                      style={photo.style}
+                      className="
+                        absolute
+                        inset-0
+                        h-full
+                        w-full
+                        rounded-[2px]
+                        object-cover
+                        shadow-md
+                        ring-1
+                        ring-[var(--cream)]
+                      "
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </Reveal>
