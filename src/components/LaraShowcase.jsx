@@ -25,7 +25,7 @@ const LARA_ARC_OPACITY = 1;
 
   Multiple identical layers build up the visual strength.
 */
-const LARA_ARC_LAYERS = 6;
+const LARA_ARC_LAYERS = 3;
 
 /* ============================================================
    BRAND STORY
@@ -185,7 +185,7 @@ export default function LaraShowcase() {
                   Moving it upward places the LARA wordmark around
                   the visual centre of the curved lines.
                 */
-                top: "clamp(-165px, -7.5vw, -110px)",
+                top: "clamp(-140px, -7.5vw, -110px)",
 
                 opacity: LARA_ARC_OPACITY,
                 filter: "blur(4.5px)",
@@ -216,7 +216,7 @@ export default function LaraShowcase() {
                   Same vertical position as the left spiral so
                   both sides meet symmetrically around LARA.
                 */
-                top: "clamp(-166px, -7.55vw, -111px)",
+                top: "clamp(-141px, -7.55vw, -111px)",
 
                 opacity: LARA_ARC_OPACITY,
                 filter: "blur(4.5px)",
