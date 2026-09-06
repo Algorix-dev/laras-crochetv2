@@ -45,7 +45,7 @@ export default function AboutPage() {
             <div className="relative mt-10 w-full max-w-[416px]">
               {/* Desktop: rotated caption running up the left edge */}
               <p
-                className="absolute bottom-0 right-full mr-2 hidden whitespace-nowrap text-base font-bold md:block"
+                className="absolute bottom-0 right-full hidden whitespace-nowrap text-base font-bold md:block"
                 style={{
                   writingMode: "vertical-rl",
                   transform: "rotate(180deg)",
