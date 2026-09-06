@@ -12,15 +12,21 @@
      JS interpolator struggling with clamp() strings, and Tailwind
      class-generation issues.
 
-  2. PODIUM SPIN, NO RESTART GLITCH: the dash animation is a CSS
-     @keyframes rule (injected once via the <style> tag below), with
-     each ellipse's `animationDelay` computed from real elapsed time
-     since PODIUM_SPIN_START (captured once, at module load). A
-     negative delay tells the browser "act as if this had already
-     been running for N seconds" — so however many times the podium
-     unmounts and remounts as you switch models, its visual phase
-     always matches a single continuous clock, instead of resetting
-     to 0 on every remount.
+  2. PODIUM SPIN, NO RESTART GLITCH: the ring is drawn as dense
+     dashed ellipses (matching the tick-mark border from Figma), NOT
+     a single dashed line — that texture has to stay intact. A
+     second, identical set of dashed ellipses sits on top, stroked
+     with a rotating gradient instead of a flat color, so its ticks
+     swing from bright to fully transparent as the gradient sweeps
+     past — that's what makes the ring dim smoothly into the
+     background instead of switching straight from drawn to gap. The
+     rotation is SMIL (<animateTransform>), with `begin` computed
+     from real elapsed time since PODIUM_SPIN_START (captured once,
+     at module load). A negative begin tells the browser "act as if
+     this had already been running for N seconds" — so however many
+     times the podium unmounts and remounts as you switch models, its
+     visual phase always matches a single continuous clock, instead
+     of resetting to 0 on every remount.
 
   3. MOVING TO THE CLICKED MODEL: name/podium/price are only
      rendered in the selected slot but share a `layoutId` across
@@ -50,7 +56,7 @@ import heroCenter from "../assets/reina-front.png";
 /* ============================================================
    EASY TUNING
    ============================================================ */
-const SPIN_DURATION_SECONDS = 6;    // time for the dash pattern to loop once
+const SPIN_DURATION_SECONDS = 6;    // time for the podium ring to complete one spin
 const SIDE_TILT_DEGREES = 28;       // how far unselected models rotateY away
 const PRICE_TOP_OFFSET = "2.25rem"; // was 1.5rem (mt-6) — a bit lower now
 
@@ -83,16 +89,43 @@ const DEFAULT_SELECTED_INDEX = 2; // "Reina" — matches the original static lay
 const IMAGE_HEIGHT_SELECTED = "h-[clamp(11rem,31.40625vw,37.6875rem)]";
 const IMAGE_HEIGHT_UNSELECTED = "h-[clamp(9rem,27.8125vw,33.375rem)]";
 
-/* Podium geometry — true SVG ellipses matching the original Figma
-   percentages of the 243.81 x 116.05 box. */
+/* Podium geometry — matches the original Figma ellipse percentages
+   of a 243.81 x 116.05 box. cx/cy/rx/ry are in that box's own units
+   (NOT pixels) — TIP: nudge these to reshape a ring. */
 const PODIUM_VIEWBOX = "0 0 243.81 116.05";
+const PODIUM_BOX_WIDTH = 243.81;
+const PODIUM_BOX_HEIGHT = 116.05;
 const PODIUM_RINGS = [
   { cx: 121.9, cy: 59.94, rx: 121.9, ry: 56.11 },
   { cx: 121.9, cy: 59.99, rx: 110.45, ry: 50.83 },
   { cx: 124.34, cy: 50.83, rx: 110.45, ry: 50.83 },
 ];
-const PODIUM_DASH = "10 8"; // dash length, gap length
-const PODIUM_LOOP_DISTANCE = 180; // must stay a clean multiple of 10+8
+
+// TIP: this is the tick-mark texture itself — match these against
+// the Figma spec if the density/thickness looks off. Everything is
+// in the same 243.81-wide viewBox units as PODIUM_RINGS above, so
+// they scale together automatically at any screen size.
+const PODIUM_STROKE_WIDTH = 2.5;  // how thick each tick is
+const PODIUM_DASH_LENGTH = 4;     // how long each tick is
+const PODIUM_DASH_GAP = 3;        // how much empty space between ticks
+const PODIUM_DASH = `${PODIUM_DASH_LENGTH} ${PODIUM_DASH_GAP}`;
+
+// TIP: the "comet" is a gradient line, rotated through the ring's
+// center, painted on a second copy of the same dashed ellipses. Its
+// bright stop sits at 50% (dead center) and fades to transparent
+// toward both ends, so as it spins it lights up two ticks 180°
+// apart and lets them fade back out — a soft, gradual dim rather
+// than a hard on/off. COMET_BAND_WIDTH is in gradient-percent: a
+// bigger number = a wider, lazier fade; smaller = a tighter, snappier
+// flash.
+const COMET_BAND_WIDTH = 32;
+const COMET_STOPS = [
+  { offset: "0%", opacity: 0 },
+  { offset: `${50 - COMET_BAND_WIDTH / 2}%`, opacity: 0 },
+  { offset: "50%", opacity: 1 },
+  { offset: `${50 + COMET_BAND_WIDTH / 2}%`, opacity: 0 },
+  { offset: "100%", opacity: 0 },
+];
 
 function getPodiumAnimationDelay() {
   const now = typeof performance !== "undefined" ? performance.now() : 0;
@@ -113,14 +146,10 @@ export default function Hero() {
       className="pt-10 md:pt-16 pb-16 text-center"
       style={{ perspective: "1800px" }}
     >
-      {/* One-time keyframes definition for the podium's continuous
-          spin. Kept as a plain CSS animation (not SMIL) so it can be
-          phase-synced via animationDelay — see getPodiumAnimationDelay. */}
-      <style>{`
-        @keyframes podium-spin {
-          to { stroke-dashoffset: -${PODIUM_LOOP_DISTANCE}; }
-        }
-      `}</style>
+      {/* No CSS @keyframes needed here — the spin is driven by SMIL
+          (<animateTransform> inside the podium SVG below), which can
+          take a negative `begin` directly for the same "no restart
+          glitch" trick the CSS version used with animationDelay. */}
 
       <div className="relative mx-auto px-[clamp(1rem,15.83vw,19rem)]">
         <div className="flex items-end justify-center gap-[clamp(1.5rem,6.667vw,8rem)]">
@@ -128,6 +157,11 @@ export default function Hero() {
             const isSelected = model.id === selectedId;
             const isOuter = index === 0 || index === MODELS.length - 1;
             const side = index < DEFAULT_SELECTED_INDEX ? -1 : 1;
+            // TIP: Reina is the one exception to the enlarge effect —
+            // selecting her still un-tilts + fades in to full opacity
+            // (below), she just never grows to IMAGE_HEIGHT_SELECTED.
+            // Everyone else grows on select as before.
+            const isReina = model.id === "reina";
 
             return (
               <button
@@ -159,19 +193,27 @@ export default function Hero() {
                 )}
 
                 {/* Podium — moves to the selected slot via layoutId.
-                    Each ellipse's dash pattern runs on a real-time-
-                    synced CSS animation, so remounting here on slot
-                    change never resets the visible phase. */}
+                    Two stacked SVGs sharing the exact same dashed
+                    ellipses: the bottom one is the always-visible
+                    dim tick-mark ring (this is the part that has to
+                    keep matching Figma), the top one is an identical
+                    copy stroked with a rotating gradient instead of
+                    a flat color, so its ticks glow bright then fade
+                    back to nothing as the gradient sweeps past —
+                    smooth dimming, not a hard on/off switch.
+                    Remounting here on slot change never resets the
+                    visible phase (see file header note). */}
                 {isSelected && (
                   <motion.div
                     layoutId="hero-podium"
                     transition={MOVE_TRANSITION}
                     aria-hidden="true"
-                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
+                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] pointer-events-none"
                   >
+                    {/* Base ring — always-on, dim, matches Figma. */}
                     <svg
                       viewBox={PODIUM_VIEWBOX}
-                      className="h-full w-full"
+                      className="absolute inset-0 h-full w-full opacity-30"
                       fill="none"
                     >
                       {PODIUM_RINGS.map((ring, i) => (
@@ -182,12 +224,58 @@ export default function Hero() {
                           rx={ring.rx}
                           ry={ring.ry}
                           stroke="var(--maroon-dark)"
-                          strokeWidth="2"
+                          strokeWidth={PODIUM_STROKE_WIDTH}
                           strokeDasharray={PODIUM_DASH}
-                          style={{
-                            animation: `podium-spin ${SPIN_DURATION_SECONDS}s linear infinite`,
-                            animationDelay: getPodiumAnimationDelay(),
-                          }}
+                          strokeLinecap="round"
+                        />
+                      ))}
+                    </svg>
+
+                    {/* Comet overlay — same dashes, gradient stroke. */}
+                    <svg
+                      viewBox={PODIUM_VIEWBOX}
+                      className="absolute inset-0 h-full w-full"
+                      fill="none"
+                    >
+                      <defs>
+                        <linearGradient
+                          id="podium-comet"
+                          gradientUnits="userSpaceOnUse"
+                          x1={PODIUM_RINGS[0].cx - PODIUM_RINGS[0].rx * 1.4}
+                          y1={PODIUM_RINGS[0].cy}
+                          x2={PODIUM_RINGS[0].cx + PODIUM_RINGS[0].rx * 1.4}
+                          y2={PODIUM_RINGS[0].cy}
+                        >
+                          {COMET_STOPS.map((stop, i) => (
+                            <stop
+                              key={i}
+                              offset={stop.offset}
+                              stopColor="var(--maroon-dark)"
+                              stopOpacity={stop.opacity}
+                            />
+                          ))}
+                          <animateTransform
+                            attributeName="gradientTransform"
+                            type="rotate"
+                            from={`0 ${PODIUM_RINGS[0].cx} ${PODIUM_RINGS[0].cy}`}
+                            to={`360 ${PODIUM_RINGS[0].cx} ${PODIUM_RINGS[0].cy}`}
+                            dur={`${SPIN_DURATION_SECONDS}s`}
+                            begin={getPodiumAnimationDelay()}
+                            repeatCount="indefinite"
+                          />
+                        </linearGradient>
+                      </defs>
+                      {PODIUM_RINGS.map((ring, i) => (
+                        <ellipse
+                          key={i}
+                          cx={ring.cx}
+                          cy={ring.cy}
+                          rx={ring.rx}
+                          ry={ring.ry}
+                          stroke="url(#podium-comet)"
+                          strokeWidth={PODIUM_STROKE_WIDTH}
+                          strokeDasharray={PODIUM_DASH}
+                          strokeLinecap="round"
                         />
                       ))}
                     </svg>
@@ -216,7 +304,7 @@ export default function Hero() {
                   style={{ transformOrigin: "50% 100%", maxWidth: "none" }}
                   className={`
                     relative z-10 w-auto shrink-0
-                    ${isSelected ? IMAGE_HEIGHT_SELECTED : IMAGE_HEIGHT_UNSELECTED}
+                    ${isSelected && !isReina ? IMAGE_HEIGHT_SELECTED : IMAGE_HEIGHT_UNSELECTED}
                   `}
                 />
 
