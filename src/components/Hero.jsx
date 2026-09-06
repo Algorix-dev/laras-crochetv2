@@ -37,6 +37,12 @@
      so this stays a rotateY tilt + opacity fade (your call,
      confirmed earlier: simple tilt illusion, no back view).
 
+  5. SELECTED IMAGE HEIGHT: every model — including Reina — grows to
+     IMAGE_HEIGHT_SELECTED when selected. (There used to be a special
+     case that kept Reina at the smaller unselected height even when
+     picked, which is why her enlarged photo looked mismatched next
+     to the others — removed.)
+
   PLACEHOLDER PRODUCT DATA
   ------------------------------------------------------------
   Only "Reina" had a real name + price before. The rest (Model 2,
@@ -157,11 +163,6 @@ export default function Hero() {
             const isSelected = model.id === selectedId;
             const isOuter = index === 0 || index === MODELS.length - 1;
             const side = index < DEFAULT_SELECTED_INDEX ? -1 : 1;
-            // TIP: Reina is the one exception to the enlarge effect —
-            // selecting her still un-tilts + fades in to full opacity
-            // (below), she just never grows to IMAGE_HEIGHT_SELECTED.
-            // Everyone else grows on select as before.
-            const isReina = model.id === "reina";
 
             return (
               <button
@@ -304,7 +305,7 @@ export default function Hero() {
                   style={{ transformOrigin: "50% 100%", maxWidth: "none" }}
                   className={`
                     relative z-10 w-auto shrink-0
-                    ${isSelected && !isReina ? IMAGE_HEIGHT_SELECTED : IMAGE_HEIGHT_UNSELECTED}
+                    ${isSelected ? IMAGE_HEIGHT_SELECTED : IMAGE_HEIGHT_UNSELECTED}
                   `}
                 />
 
