@@ -5,13 +5,15 @@
 
   HOW THE THREE EFFECTS WORK
   ------------------------------------------------------------
-  1. PODIUM SPIN: the 3 dashed ellipses live in their own inner
-     wrapper and get an infinite `rotate: 360` animation with a
-     default transform-origin (their own center). Since that
-     wrapper is already positioned under the model's feet
-     (bottom: -7.2%), rotating it in place reads as a turntable
-     spinning under the model, rather than the whole thing
-     drifting or wobbling.
+  1. PODIUM SPIN: two nested 3D transforms instead of one flat
+     rotate. An outer wrapper applies a STATIC rotateX tilt to real
+     circles — that's what actually creates the ellipse look, as a
+     true 3D projection rather than a pre-squashed oval shape, so
+     the silhouette never changes shape as it spins. An inner
+     wrapper then animates rotateY infinitely — nested inside the
+     tilted wrapper (with preserve-3d passed down), so the dashes
+     travel around inside that fixed ellipse outline instead of the
+     outline itself swinging around like a stretched oval would.
 
   2. MOVING TO THE CLICKED MODEL: the name, podium, and price are
      each only rendered inside the currently-*selected* slot, but
@@ -27,8 +29,7 @@
      illusion, no back view). Each photo gets a `rotateY` tilt (via
      CSS 3D transform, pivoted at the bottom edge — the feet — via
      transformOrigin) plus a reduced opacity when it's not selected.
-     It reads as "turning away" without ever showing an impossible
-     flipped image.
+     It reads as "turning," but nobody's actual back is ever shown.
 
   PLACEHOLDER PRODUCT DATA
   ------------------------------------------------------------
@@ -52,8 +53,9 @@ import heroCenter from "../assets/reina-front.png";
 /* ============================================================
    EASY TUNING
    ============================================================ */
-const SPIN_DURATION_SECONDS = 9;   // one full podium rotation
-const SIDE_TILT_DEGREES = 28;      // how far unselected models rotateY away
+const SPIN_DURATION_SECONDS = 9;    // one full podium rotation
+const PODIUM_TILT_DEGREES = 61.6;   // matches the original 243.81/116.05 oval ratio
+const SIDE_TILT_DEGREES = 28;       // how far unselected models rotateY away
 const SELECT_SPRING = { type: "spring", stiffness: 240, damping: 28 };
 
 /* Order matches the original slot order left → right. Swap in real
@@ -114,37 +116,49 @@ export default function Hero() {
                   </motion.h1>
                 )}
 
-                {/* Podium — moves to the selected slot via layoutId,
-                    and spins continuously via the inner wrapper. */}
+                {/* Podium — moves to the selected slot via layoutId.
+                    Two nested 3D transforms create the spin: a static
+                    rotateX tilt on real circles (giving the fixed
+                    ellipse silhouette), and an inner rotateY spin that
+                    animates the dashes around inside that silhouette. */}
                 {isSelected && (
                   <motion.div
                     layoutId="hero-podium"
                     transition={{ layout: SELECT_SPRING }}
                     aria-hidden="true"
-                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
+                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 aspect-square w-[clamp(9rem,12.7vw,15.24rem)] opacity-30 pointer-events-none"
                   >
-                    <motion.div
-                      className="absolute inset-0"
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        ease: "linear",
-                        duration: SPIN_DURATION_SECONDS,
+                    <div
+                      className="relative h-full w-full"
+                      style={{
+                        transformStyle: "preserve-3d",
+                        transform: `rotateX(${PODIUM_TILT_DEGREES}deg)`,
+                        transformOrigin: "50% 100%",
                       }}
                     >
-                      <span
-                        className="absolute rounded-[50%] border-[var(--maroon-dark)]"
-                        style={{ left: "0%", top: "3.3%", width: "100%", height: "96.7%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-                      />
-                      <span
-                        className="absolute rounded-[50%] border-[var(--maroon-dark)]"
-                        style={{ left: "4.7%", top: "7.9%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-                      />
-                      <span
-                        className="absolute rounded-[50%] border-[var(--maroon-dark)]"
-                        style={{ left: "5.7%", top: "0%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-                      />
-                    </motion.div>
+                      <motion.div
+                        className="absolute inset-0"
+                        animate={{ rotateY: 360 }}
+                        transition={{
+                          repeat: Infinity,
+                          ease: "linear",
+                          duration: SPIN_DURATION_SECONDS,
+                        }}
+                      >
+                        <span
+                          className="absolute rounded-full border-[var(--maroon-dark)]"
+                          style={{ left: "0%", top: "3.3%", width: "100%", height: "96.7%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
+                        />
+                        <span
+                          className="absolute rounded-full border-[var(--maroon-dark)]"
+                          style={{ left: "4.7%", top: "7.9%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
+                        />
+                        <span
+                          className="absolute rounded-full border-[var(--maroon-dark)]"
+                          style={{ left: "5.7%", top: "0%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
+                        />
+                      </motion.div>
+                    </div>
                   </motion.div>
                 )}
 
