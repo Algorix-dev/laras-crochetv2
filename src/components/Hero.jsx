@@ -1,50 +1,41 @@
 /*
   INTERACTIVE VERSION — click any dimmed model to make it the hero.
-  Builds on the static rebuild: same slot layout, same podium/name/
-  price markup, now driven by selection state + Framer Motion.
 
-  HOW THE THREE EFFECTS WORK
+  HOW THE KEY EFFECTS WORK
   ------------------------------------------------------------
-  1. PODIUM SPIN: the ellipse OUTLINE never moves, rotates, or
-     changes shape — it's a real, static SVG <ellipse>, same fixed
-     geometry as the original Figma oval, all the time. The "spin"
-     is purely the dash pattern sliding along that fixed path via
-     `stroke-dashoffset` (the classic SVG "marching ants" technique).
-     Because the shape itself is never touched, there's no way for
-     it to drift, distort, or wander off position — only the dashes
-     travel.
+  1. IMAGE ENLARGE: the img has Framer's `layout` prop, NOT a
+     value-tweened height. `layout` makes Framer measure the
+     element's real rendered box before and after a re-render and
+     animate between those actual pixel measurements (a FLIP
+     technique) — it doesn't care what CSS produced those sizes, so
+     it's immune to the two failure modes tried earlier: Framer's
+     JS interpolator struggling with clamp() strings, and Tailwind
+     class-generation issues.
 
-  2. MOVING TO THE CLICKED MODEL: the name, podium, and price are
-     each only rendered inside the currently-*selected* slot, but
-     they share a `layoutId` across renders. Framer Motion detects
-     that the same layoutId un-mounted from one slot and mounted in
-     another within the same update, and automatically crossfades +
-     animates the position/size change between the two. MOVE_TRANSITION
-     gives layout (position/size) and opacity the SAME duration/ease,
-     so the fade finishes exactly when the move finishes.
+  2. PODIUM SPIN, NO RESTART GLITCH: the dash animation is a CSS
+     @keyframes rule (injected once via the <style> tag below), with
+     each ellipse's `animationDelay` computed from real elapsed time
+     since PODIUM_SPIN_START (captured once, at module load). A
+     negative delay tells the browser "act as if this had already
+     been running for N seconds" — so however many times the podium
+     unmounts and remounts as you switch models, its visual phase
+     always matches a single continuous clock, instead of resetting
+     to 0 on every remount.
 
-  3. ENLARGING ON SELECT: height is a plain CSS transition on a
-     toggled Tailwind class, NOT Framer's animate prop. Framer's JS
-     interpolator has to parse and tween between two value STRINGS,
-     and multi-part CSS clamp() expressions aren't something it
-     reliably animates — it can silently stick at one value. A CSS
-     transition lets the browser resolve each clamp() to real pixels
-     and interpolate natively. rotateY/opacity stay on Framer since
-     those are plain numbers.
+  3. MOVING TO THE CLICKED MODEL: name/podium/price are only
+     rendered in the selected slot but share a `layoutId` across
+     renders, so Framer animates their position between slots
+     automatically — this part was already working correctly.
 
-  4. FACING FRONT / TURNING AWAY: these are flat photos with no
-     actual "back" shot, so a true 180° turn isn't possible (your
-     call, confirmed: simple tilt illusion, no back view). Each
-     photo gets a `rotateY` tilt (pivoted at the bottom edge — the
-     feet — via transformOrigin) plus reduced opacity when unselected.
+  4. FACING FRONT / TURNING AWAY: flat photos, no real "back" shot,
+     so this stays a rotateY tilt + opacity fade (your call,
+     confirmed earlier: simple tilt illusion, no back view).
 
   PLACEHOLDER PRODUCT DATA
   ------------------------------------------------------------
-  Only "Reina" had a real name + price before — the other 4 were
-  purely decorative dimmed photos with no product identity attached.
-  The values below (Model 2 / Model 6 / etc., ₦70,000 each) are
-  placeholders — swap in the real product name + price for each
-  before this ships.
+  Only "Reina" had a real name + price before. The rest (Model 2,
+  Model 6, etc. at ₦70,000) are placeholders — swap in the real
+  product name + price per model before this ships.
 */
 
 import { useState } from "react";
@@ -63,15 +54,19 @@ const SPIN_DURATION_SECONDS = 6;    // time for the dash pattern to loop once
 const SIDE_TILT_DEGREES = 28;       // how far unselected models rotateY away
 const PRICE_TOP_OFFSET = "2.25rem"; // was 1.5rem (mt-6) — a bit lower now
 
-// Photo rotate/opacity — plain numbers, safe to animate via Framer.
-const TILT_SPRING = { type: "spring", stiffness: 240, damping: 28 };
+const SELECT_SPRING = { type: "spring", stiffness: 240, damping: 28 };
 
 // Podium/name/price — layout (position/size) and opacity share the
-// SAME timing so the fade and the move finish together.
+// same timing so the fade and the move finish together.
 const MOVE_TRANSITION = {
   layout: { duration: 0.55, ease: [0.4, 0, 0.2, 1] },
   opacity: { duration: 0.55, ease: [0.4, 0, 0.2, 1] },
 };
+
+// Real-world reference point for the podium's animation phase — see
+// PODIUM SPIN note above. Captured once when the module first loads.
+const PODIUM_SPIN_START =
+  typeof performance !== "undefined" ? performance.now() : 0;
 
 /* Order matches the original slot order left → right. Swap in real
    product name/price per model — see note above. */
@@ -85,21 +80,26 @@ const MODELS = [
 
 const DEFAULT_SELECTED_INDEX = 2; // "Reina" — matches the original static layout
 
-// Selected vs. unselected heights — toggled Tailwind classes (CSS
-// transition) instead of Framer's animate prop.
 const IMAGE_HEIGHT_SELECTED = "h-[clamp(11rem,31.40625vw,37.6875rem)]";
 const IMAGE_HEIGHT_UNSELECTED = "h-[clamp(9rem,27.8125vw,33.375rem)]";
 
-/* Podium geometry — reconstructed as true SVG ellipses directly
-   from the original Figma percentages (left/top/width/height as %
-   of the 243.81 x 116.05 box), so the shape is pixel-identical to
-   the original static oval. */
+/* Podium geometry — true SVG ellipses matching the original Figma
+   percentages of the 243.81 x 116.05 box. */
 const PODIUM_VIEWBOX = "0 0 243.81 116.05";
 const PODIUM_RINGS = [
   { cx: 121.9, cy: 59.94, rx: 121.9, ry: 56.11 },
   { cx: 121.9, cy: 59.99, rx: 110.45, ry: 50.83 },
   { cx: 124.34, cy: 50.83, rx: 110.45, ry: 50.83 },
 ];
+const PODIUM_DASH = "10 8"; // dash length, gap length
+const PODIUM_LOOP_DISTANCE = 180; // must stay a clean multiple of 10+8
+
+function getPodiumAnimationDelay() {
+  const now = typeof performance !== "undefined" ? performance.now() : 0;
+  const elapsedSeconds = (now - PODIUM_SPIN_START) / 1000;
+  const phase = elapsedSeconds % SPIN_DURATION_SECONDS;
+  return `-${phase.toFixed(3)}s`;
+}
 
 function formatNaira(amount) {
   return `₦${amount.toLocaleString("en-NG")}`;
@@ -113,6 +113,15 @@ export default function Hero() {
       className="pt-10 md:pt-16 pb-16 text-center"
       style={{ perspective: "1800px" }}
     >
+      {/* One-time keyframes definition for the podium's continuous
+          spin. Kept as a plain CSS animation (not SMIL) so it can be
+          phase-synced via animationDelay — see getPodiumAnimationDelay. */}
+      <style>{`
+        @keyframes podium-spin {
+          to { stroke-dashoffset: -${PODIUM_LOOP_DISTANCE}; }
+        }
+      `}</style>
+
       <div className="relative mx-auto px-[clamp(1rem,15.83vw,19rem)]">
         <div className="flex items-end justify-center gap-[clamp(1.5rem,6.667vw,8rem)]">
           {MODELS.map((model, index) => {
@@ -134,9 +143,11 @@ export default function Hero() {
                 `}
               >
                 {/* Name — z-0, behind the image (z-10), which is what
-                    makes it sit "behind the head." Only exists in the
-                    selected slot; layoutId carries the shared-element
-                    animation between slots. */}
+                    makes it sit "behind the head." Positioned as a
+                    percentage of this button's real height, which now
+                    reliably matches the image's actual rendered size
+                    because the image uses `layout` (see below), not a
+                    tweened value. */}
                 {isSelected && (
                   <motion.h1
                     layoutId="hero-name"
@@ -148,8 +159,9 @@ export default function Hero() {
                 )}
 
                 {/* Podium — moves to the selected slot via layoutId.
-                    Static SVG ellipses; only the dash pattern along
-                    each path animates via stroke-dashoffset. */}
+                    Each ellipse's dash pattern runs on a real-time-
+                    synced CSS animation, so remounting here on slot
+                    change never resets the visible phase. */}
                 {isSelected && (
                   <motion.div
                     layoutId="hero-podium"
@@ -171,37 +183,39 @@ export default function Hero() {
                           ry={ring.ry}
                           stroke="var(--maroon-dark)"
                           strokeWidth="2"
-                          strokeDasharray="10 8"
-                        >
-                          <animate
-                            attributeName="stroke-dashoffset"
-                            from="0"
-                            to="-180"
-                            dur={`${SPIN_DURATION_SECONDS}s`}
-                            repeatCount="indefinite"
-                          />
-                        </ellipse>
+                          strokeDasharray={PODIUM_DASH}
+                          style={{
+                            animation: `podium-spin ${SPIN_DURATION_SECONDS}s linear infinite`,
+                            animationDelay: getPodiumAnimationDelay(),
+                          }}
+                        />
                       ))}
                     </svg>
                   </motion.div>
                 )}
 
-                {/* The model photo. Height is a plain CSS-transitioned
-                    Tailwind class (toggled by isSelected). rotateY/
-                    opacity stay on Framer. transformOrigin pins the
-                    pivot at the bottom-center (the feet). */}
+                {/* The model photo. `layout` makes Framer measure and
+                    smoothly animate the actual size change between
+                    the two height classes — no value tweening, so
+                    this can't silently fail the way a CSS-transition
+                    or string-interpolated height could. rotateY/
+                    opacity are plain numbers, animated as before. */}
                 <motion.img
+                  layout
                   src={model.image}
                   alt={isSelected ? model.name : ""}
                   animate={{
                     rotateY: isSelected ? 0 : side * SIDE_TILT_DEGREES,
                     opacity: isSelected ? 1 : 0.3,
                   }}
-                  transition={TILT_SPRING}
+                  transition={{
+                    layout: SELECT_SPRING,
+                    rotateY: SELECT_SPRING,
+                    opacity: SELECT_SPRING,
+                  }}
                   style={{ transformOrigin: "50% 100%", maxWidth: "none" }}
                   className={`
                     relative z-10 w-auto shrink-0
-                    transition-[height] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
                     ${isSelected ? IMAGE_HEIGHT_SELECTED : IMAGE_HEIGHT_UNSELECTED}
                   `}
                 />
