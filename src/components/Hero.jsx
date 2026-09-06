@@ -1,40 +1,47 @@
 /*
-  STATIC REBUILD — no click handlers, no state, no Framer Motion.
-  Matches Figma's Frame 61 / Group 29 / Frame 62 layout exactly, at
-  the request to "just make it static like the figma, we'll do the
-  interactions later." When that's ready, the selection logic from
-  the earlier interactive version can be layered back on top of this
-  same markup.
+  INTERACTIVE VERSION — click any dimmed model to make it the hero.
+  Builds on the static rebuild: same slot layout, same podium/name/
+  price markup, now driven by selection state + Framer Motion.
 
-  IMAGE MAPPING — verified against the actual Figma hero row at full
-  resolution (the 30%-opacity dimming washes colors out in a quick
-  glance, so this was double-checked with a contrast-boosted crop of
-  each of the 5 slots before wiring anything up):
-    Model 2  (outer-left,  dimmed)              -> swuvvw (pink skirt / orange bra)
-    Model 3  (inner-left,  dimmed)               -> kj37u6 (green skirt / citrus bra)
-    Frame 62 (center, full color, the hero item) -> REINA (reina-front.png)
-    Model 5  (inner-right, dimmed)               -> yyuymy (burgundy skirt)
-    Model 6  (outer-right, dimmed)               -> 3lo3ls (yellow skirt / headwrap)
-  An earlier pass had 3 of these 4 side slots swapped (guessed from
-  Figma layer names alone, without confirming against the actual
-  photo). None of the 4 side images need a scaleX(-1) mirror either —
-  each raw photo already faces the correct direction for its slot
-  once compared directly against Figma; a mirror was being applied
-  here previously without that check.
+  HOW THE THREE EFFECTS WORK
+  ------------------------------------------------------------
+  1. PODIUM SPIN: the 3 dashed ellipses live in their own inner
+     wrapper and get an infinite `rotate: 360` animation with a
+     default transform-origin (their own center). Since that
+     wrapper is already positioned under the model's feet
+     (bottom: -7.2%), rotating it in place reads as a turntable
+     spinning under the model, rather than the whole thing
+     drifting or wobbling.
 
-  REINA CENTER IMAGE: this was a placeholder (sunset-front.png)
-  because the real photo's filename wasn't known yet. It's
-  reina-front.png — confirmed against the Figma center hero shot.
+  2. MOVING TO THE CLICKED MODEL: the name, podium, and price are
+     each only rendered inside the currently-*selected* slot, but
+     they share a `layoutId` across renders. Framer Motion detects
+     that the same layoutId un-mounted from one slot and mounted in
+     another within the same update, and automatically animates the
+     position/size change between the two — that's what makes them
+     visually "travel" to the new model instead of popping there.
 
-  WHY NO OVERSIZED/NEGATIVE-OFFSET IMAGE TRICK: Figma's own CSS
-  handles the dimmed models with an oversized image + overflow-clip
-  box + negative left offset (e.g. width:335px, left:-96px inside a
-  173px box) — that's their workaround for the same "huge invisible
-  side padding" problem covered a few messages back. Since these
-  4 images are already tightly cropped to the real subject (not the
-  raw uploads), that workaround isn't needed here — they're just
-  sized directly by height, same clamp() approach as before.
+  3. FACING FRONT / TURNING AWAY: this is the one real compromise.
+     These are flat photos with no actual "back" shot, so a true
+     180° turn isn't possible (your call, confirmed: simple tilt
+     illusion, no back view). Each photo gets a `rotateY` tilt (via
+     CSS 3D transform, pivoted at the bottom edge — the feet — via
+     transformOrigin) plus a reduced opacity when it's not selected.
+     It reads as "turning away" without ever showing an impossible
+     flipped image.
+
+  PLACEHOLDER PRODUCT DATA
+  ------------------------------------------------------------
+  Only "Reina" had a real name + price before — the other 4 were
+  purely decorative dimmed photos with no product identity attached.
+  Making them selectable means they need a name + price too. The
+  values below (Model 2 / Model 6 / etc., ₦70,000 each) are
+  placeholders so the interaction works end-to-end right now — swap
+  in the real product name + price for each before this ships.
 */
+
+import { useState } from "react";
+import { motion } from "framer-motion";
 
 import model2 from "../assets/model-images/model2-swuvvw.png";
 import model3 from "../assets/model-images/model3-kj37u6.png";
@@ -42,90 +49,139 @@ import model5 from "../assets/model-images/model5-yyuymy.png";
 import model6 from "../assets/model-images/model6-3lo3ls.png";
 import heroCenter from "../assets/reina-front.png";
 
+/* ============================================================
+   EASY TUNING
+   ============================================================ */
+const SPIN_DURATION_SECONDS = 9;   // one full podium rotation
+const SIDE_TILT_DEGREES = 28;      // how far unselected models rotateY away
+const SELECT_SPRING = { type: "spring", stiffness: 240, damping: 28 };
+
+/* Order matches the original slot order left → right. Swap in real
+   product name/price per model — see note above. */
+const MODELS = [
+  { id: "model2", name: "Model 2", price: 70000, image: model2 },
+  { id: "model6", name: "Model 6", price: 70000, image: model6 },
+  { id: "reina", name: "Reina", price: 70000, image: heroCenter },
+  { id: "model5", name: "Model 5", price: 70000, image: model5 },
+  { id: "model3", name: "Model 3", price: 70000, image: model3 },
+];
+
+const DEFAULT_SELECTED_INDEX = 2; // "Reina" — matches the original static layout
+
+function formatNaira(amount) {
+  return `₦${amount.toLocaleString("en-NG")}`;
+}
+
 export default function Hero() {
+  const [selectedId, setSelectedId] = useState(MODELS[DEFAULT_SELECTED_INDEX].id);
+
   return (
-    <section className="pt-10 md:pt-16 pb-16 text-center">
-      {/* Padding: 304/1920 = 15.83vw of Figma's frame, capped at
-          304px (19rem). */}
+    <section
+      className="pt-10 md:pt-16 pb-16 text-center"
+      style={{ perspective: "1800px" }}
+    >
       <div className="relative mx-auto px-[clamp(1rem,15.83vw,19rem)]">
-        {/* Gap: 128px / 173.14px model width in Figma ≈ 6.667vw,
-            capped at 128px (8rem). */}
         <div className="flex items-end justify-center gap-[clamp(1.5rem,6.667vw,8rem)]">
-          {/* Model 2 — outer-left, dimmed */}
-          <img
-            src={model2}
-            alt=""
-            className="hidden md:block relative w-auto shrink-0 h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
-          />
+          {MODELS.map((model, index) => {
+            const isSelected = model.id === selectedId;
+            const isOuter = index === 0 || index === MODELS.length - 1;
+            // Left-side slots tilt one way when deselected, right-side
+            // slots tilt the other — based on which side of center they sit.
+            const side = index < DEFAULT_SELECTED_INDEX ? -1 : 1;
 
-          {/* Model 3 — inner-left, dimmed */}
-          <img
-            src={model6}
-            alt=""
-            className="relative w-auto shrink-0 h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
-          />
+            return (
+              <button
+                key={model.id}
+                type="button"
+                onClick={() => setSelectedId(model.id)}
+                aria-label={`Show ${model.name}`}
+                aria-pressed={isSelected}
+                className={`
+                  relative shrink-0 border-0 bg-transparent p-0
+                  ${isOuter ? "hidden md:block" : ""}
+                  ${isSelected ? "cursor-default" : "cursor-pointer"}
+                `}
+              >
+                {/* Name — only exists in the selected slot; layoutId
+                    carries the shared-element animation between slots. */}
+                {isSelected && (
+                  <motion.h1
+                    layoutId="hero-name"
+                    transition={SELECT_SPRING}
+                    className="absolute left-1/2 -translate-x-1/2 bottom-[87.9%] z-0 font-['Raleway'] font-bold tracking-[-0.07em] text-[clamp(2.5rem,5vw,6rem)] leading-[1.18] text-[var(--maroon-dark)] select-none whitespace-nowrap pointer-events-none"
+                  >
+                    {model.name.toUpperCase()}
+                  </motion.h1>
+                )}
 
-          {/* Frame 62 — center, the hero piece. Name + podium + price
-              are nested inside this slot's own wrapper so they're
-              trivially centered on this exact image with plain CSS,
-              no measurement needed. */}
-          <div className="relative">
-            {/* Name — z-0, BEHIND the image (z-10). Bottom-anchored
-                at 87.9% (73px overlap / 603px image height from
-                Figma) so it's correct regardless of the image's
-                actual rendered height. */}
-            <h1 className="absolute left-1/2 -translate-x-1/2 bottom-[87.9%] z-0 font-['Raleway'] font-bold tracking-[-0.07em] text-[clamp(2.5rem,5vw,6rem)] leading-[1.18] text-[var(--maroon-dark)] select-none whitespace-nowrap pointer-events-none">
-              REINA
-            </h1>
+                {/* Podium — moves to the selected slot via layoutId,
+                    and spins continuously via the inner wrapper. */}
+                {isSelected && (
+                  <motion.div
+                    layoutId="hero-podium"
+                    transition={{ layout: SELECT_SPRING }}
+                    aria-hidden="true"
+                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
+                  >
+                    <motion.div
+                      className="absolute inset-0"
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        repeat: Infinity,
+                        ease: "linear",
+                        duration: SPIN_DURATION_SECONDS,
+                      }}
+                    >
+                      <span
+                        className="absolute rounded-[50%] border-[var(--maroon-dark)]"
+                        style={{ left: "0%", top: "3.3%", width: "100%", height: "96.7%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
+                      />
+                      <span
+                        className="absolute rounded-[50%] border-[var(--maroon-dark)]"
+                        style={{ left: "4.7%", top: "7.9%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
+                      />
+                      <span
+                        className="absolute rounded-[50%] border-[var(--maroon-dark)]"
+                        style={{ left: "5.7%", top: "0%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
+                      />
+                    </motion.div>
+                  </motion.div>
+                )}
 
-            {/* Podium — 3 dashed ellipses (Figma's Group 29 /
-                Ellipse 24-25-26), fully static. */}
-            <div
-              aria-hidden="true"
-              className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
-            >
-              <span
-                className="absolute rounded-[50%] border-[var(--maroon-dark)]"
-                style={{ left: "0%", top: "3.3%", width: "100%", height: "96.7%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-              />
-              <span
-                className="absolute rounded-[50%] border-[var(--maroon-dark)]"
-                style={{ left: "4.7%", top: "7.9%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-              />
-              <span
-                className="absolute rounded-[50%] border-[var(--maroon-dark)]"
-                style={{ left: "5.7%", top: "0%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-              />
-            </div>
+                {/* The model photo. transformOrigin pins the pivot at
+                    the bottom-center (the feet), so rotateY reads as
+                    turning on the spot rather than swinging sideways. */}
+                <motion.img
+                  src={model.image}
+                  alt={isSelected ? model.name : ""}
+                  animate={{
+                    rotateY: isSelected ? 0 : side * SIDE_TILT_DEGREES,
+                    opacity: isSelected ? 1 : 0.3,
+                    height: isSelected
+                      ? "clamp(11rem,31.40625vw,37.6875rem)"
+                      : "clamp(9rem,27.8125vw,33.375rem)",
+                  }}
+                  transition={SELECT_SPRING}
+                  style={{ transformOrigin: "50% 100%", maxWidth: "none" }}
+                  className="relative z-10 w-auto shrink-0"
+                />
 
-            <img
-              src={heroCenter}
-              alt="Reina"
-              className="relative z-10 w-auto max-w-none shrink-0 h-[clamp(11rem,31.40625vw,37.6875rem)]"
-            />
-
-            {/* Price row — Frame 62's "Name and Price tag", centered
-                on this same slot, sitting right below the image. */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-6 z-10 w-[clamp(11rem,18.75vw,22.5rem)] flex items-center justify-between text-xl">
-              <span className="uppercase tracking-wide">Reina</span>
-              <span className="font-bold tracking-[-0.04em]">₦70,000</span>
-            </div>
-          </div>
-
-          {/* Model 5 — inner-right, dimmed. No mirror: the raw photo
-              already faces the right direction for this slot. */}
-          <img
-            src={model5}
-            alt=""
-            className="relative w-auto shrink-0 h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
-          />
-
-          {/* Model 6 — outer-right, dimmed. Same — no mirror needed. */}
-          <img
-            src={model3}
-            alt=""
-            className="hidden md:block relative w-auto shrink-0 h-[clamp(9rem,27.8125vw,33.375rem)] opacity-30"
-          />
+                {/* Price row — same shared-layout treatment as the name. */}
+                {isSelected && (
+                  <motion.div
+                    layoutId="hero-price"
+                    transition={SELECT_SPRING}
+                    className="absolute left-1/2 -translate-x-1/2 top-full mt-6 z-10 w-[clamp(11rem,18.75vw,22.5rem)] flex items-center justify-between text-xl"
+                  >
+                    <span className="uppercase tracking-wide">{model.name}</span>
+                    <span className="font-bold tracking-[-0.04em]">
+                      {formatNaira(model.price)}
+                    </span>
+                  </motion.div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     </section>
