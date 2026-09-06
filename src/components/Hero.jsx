@@ -37,12 +37,6 @@
      so this stays a rotateY tilt + opacity fade (your call,
      confirmed earlier: simple tilt illusion, no back view).
 
-  5. SELECTED IMAGE HEIGHT: every model — including Reina — grows to
-     IMAGE_HEIGHT_SELECTED when selected. (There used to be a special
-     case that kept Reina at the smaller unselected height even when
-     picked, which is why her enlarged photo looked mismatched next
-     to the others — removed.)
-
   PLACEHOLDER PRODUCT DATA
   ------------------------------------------------------------
   Only "Reina" had a real name + price before. The rest (Model 2,
@@ -83,11 +77,11 @@ const PODIUM_SPIN_START =
 /* Order matches the original slot order left → right. Swap in real
    product name/price per model — see note above. */
 const MODELS = [
-  { id: "model2", name: "Model 2", price: 70000, image: model2 },
-  { id: "model6", name: "Model 6", price: 70000, image: model6 },
+  { id: "model2", name: "Coral", price: 70000, image: model2 },
+  { id: "model6", name: "Amber", price: 70000, image: model6 },
   { id: "reina", name: "Reina", price: 70000, image: heroCenter },
-  { id: "model5", name: "Model 5", price: 70000, image: model5 },
-  { id: "model3", name: "Model 3", price: 70000, image: model3 },
+  { id: "model5", name: "Sienna", price: 70000, image: model5 },
+  { id: "model3", name: "Marina", price: 70000, image: model3 },
 ];
 
 const DEFAULT_SELECTED_INDEX = 2; // "Reina" — matches the original static layout
