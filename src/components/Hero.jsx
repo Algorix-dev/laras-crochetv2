@@ -5,15 +5,14 @@
 
   HOW THE THREE EFFECTS WORK
   ------------------------------------------------------------
-  1. PODIUM SPIN: two nested 3D transforms instead of one flat
-     rotate. An outer wrapper applies a STATIC rotateX tilt to real
-     circles — that's what actually creates the ellipse look, as a
-     true 3D projection rather than a pre-squashed oval shape, so
-     the silhouette never changes shape as it spins. An inner
-     wrapper then animates rotateY infinitely — nested inside the
-     tilted wrapper (with preserve-3d passed down), so the dashes
-     travel around inside that fixed ellipse outline instead of the
-     outline itself swinging around like a stretched oval would.
+  1. PODIUM SPIN: the ellipse OUTLINE never moves, rotates, or
+     changes shape — it's a real, static SVG <ellipse>, same fixed
+     geometry as the original Figma oval, all the time. The "spin"
+     is purely the dash pattern sliding along that fixed path via
+     `stroke-dashoffset` (the classic SVG "marching ants" technique,
+     same idea as a circular progress loader). Because the shape
+     itself is never touched, there's no way for it to drift,
+     distort, or wander off position — only the dashes travel.
 
   2. MOVING TO THE CLICKED MODEL: the name, podium, and price are
      each only rendered inside the currently-*selected* slot, but
@@ -53,8 +52,7 @@ import heroCenter from "../assets/reina-front.png";
 /* ============================================================
    EASY TUNING
    ============================================================ */
-const SPIN_DURATION_SECONDS = 9;    // one full podium rotation
-const PODIUM_TILT_DEGREES = 61.6;   // matches the original 243.81/116.05 oval ratio
+const SPIN_DURATION_SECONDS = 6;    // time for the dash pattern to loop once
 const SIDE_TILT_DEGREES = 28;       // how far unselected models rotateY away
 const SELECT_SPRING = { type: "spring", stiffness: 240, damping: 28 };
 
@@ -69,6 +67,18 @@ const MODELS = [
 ];
 
 const DEFAULT_SELECTED_INDEX = 2; // "Reina" — matches the original static layout
+
+/* Podium geometry — reconstructed as true SVG ellipses directly
+   from the original Figma percentages (left/top/width/height as %
+   of the 243.81 x 116.05 box), so the shape is pixel-identical to
+   the original static oval. viewBox uses those same dimensions as
+   its coordinate space, so these numbers drop in directly. */
+const PODIUM_VIEWBOX = "0 0 243.81 116.05";
+const PODIUM_RINGS = [
+  { cx: 121.9, cy: 59.94, rx: 121.9, ry: 56.11 },
+  { cx: 121.9, cy: 59.99, rx: 110.45, ry: 50.83 },
+  { cx: 124.34, cy: 50.83, rx: 110.45, ry: 50.83 },
+];
 
 function formatNaira(amount) {
   return `₦${amount.toLocaleString("en-NG")}`;
@@ -117,48 +127,44 @@ export default function Hero() {
                 )}
 
                 {/* Podium — moves to the selected slot via layoutId.
-                    Two nested 3D transforms create the spin: a static
-                    rotateX tilt on real circles (giving the fixed
-                    ellipse silhouette), and an inner rotateY spin that
-                    animates the dashes around inside that silhouette. */}
+                    The ellipses themselves are a completely static,
+                    fixed SVG path; only the dash pattern along each
+                    path animates via stroke-dashoffset, so the shape
+                    never moves, rotates, or distorts — only the
+                    "marks" on it travel around it, like a wheel. */}
                 {isSelected && (
                   <motion.div
                     layoutId="hero-podium"
                     transition={{ layout: SELECT_SPRING }}
                     aria-hidden="true"
-                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 aspect-square w-[clamp(9rem,12.7vw,15.24rem)] opacity-30 pointer-events-none"
+                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] opacity-30 pointer-events-none"
                   >
-                    <div
-                      className="relative h-full w-full"
-                      style={{
-                        transformStyle: "preserve-3d",
-                        transform: `rotateX(${PODIUM_TILT_DEGREES}deg)`,
-                        transformOrigin: "50% 100%",
-                      }}
+                    <svg
+                      viewBox={PODIUM_VIEWBOX}
+                      className="h-full w-full"
+                      fill="none"
                     >
-                      <motion.div
-                        className="absolute inset-0"
-                        animate={{ rotateY: 360 }}
-                        transition={{
-                          repeat: Infinity,
-                          ease: "linear",
-                          duration: SPIN_DURATION_SECONDS,
-                        }}
-                      >
-                        <span
-                          className="absolute rounded-full border-[var(--maroon-dark)]"
-                          style={{ left: "0%", top: "3.3%", width: "100%", height: "96.7%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-                        />
-                        <span
-                          className="absolute rounded-full border-[var(--maroon-dark)]"
-                          style={{ left: "4.7%", top: "7.9%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-                        />
-                        <span
-                          className="absolute rounded-full border-[var(--maroon-dark)]"
-                          style={{ left: "5.7%", top: "0%", width: "90.6%", height: "87.6%", borderStyle: "dashed", borderWidth: "clamp(1px, 0.26vw, 5px)" }}
-                        />
-                      </motion.div>
-                    </div>
+                      {PODIUM_RINGS.map((ring, i) => (
+                        <ellipse
+                          key={i}
+                          cx={ring.cx}
+                          cy={ring.cy}
+                          rx={ring.rx}
+                          ry={ring.ry}
+                          stroke="var(--maroon-dark)"
+                          strokeWidth="2"
+                          strokeDasharray="10 8"
+                        >
+                          <animate
+                            attributeName="stroke-dashoffset"
+                            from="0"
+                            to="-180"
+                            dur={`${SPIN_DURATION_SECONDS}s`}
+                            repeatCount="indefinite"
+                          />
+                        </ellipse>
+                      ))}
+                    </svg>
                   </motion.div>
                 )}
 
