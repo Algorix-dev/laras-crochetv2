@@ -116,7 +116,7 @@ export default function BagDrawer({ open, onClose }) {
                       <img
                         src={item.product.image}
                         alt={item.product.name}
-                        className="h-28 w-20 bg-[#efece6] object-contain"
+                        className="h-28 w-20 bg-white object-contain"
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex justify-between gap-2">
@@ -241,7 +241,7 @@ export default function BagDrawer({ open, onClose }) {
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="aspect-[3/4] w-full bg-[#efece6] object-contain"
+                        className="aspect-[3/4] w-full bg-white object-contain"
                       />
                       <Heart size={14} className="absolute right-2 top-2" />
                       <p className="mt-2 text-[11px] uppercase">

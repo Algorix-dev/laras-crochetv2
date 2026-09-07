@@ -349,8 +349,8 @@ export default function ProductDetail() {
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
-            {/* Main image in a light gray container */}
-            <div className="aspect-[4/5] bg-[#efece6]">
+            {/* Main image container — white per Figma */}
+            <div className="aspect-[4/5] bg-white">
               {gallery[selectedImage] && (
                 <img
                   src={gallery[selectedImage]}
@@ -369,7 +369,7 @@ export default function ProductDetail() {
                     key={src + index}
                     aria-label={`View ${product.name} angle ${index + 1}`}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square bg-[#efece6] ${
+                    className={`aspect-square bg-white ${
                       index === selectedImage
                         ? 'ring-1 ring-[var(--ink)] ring-offset-2'
                         : ''

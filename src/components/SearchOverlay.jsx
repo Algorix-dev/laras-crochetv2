@@ -113,7 +113,7 @@ export default function SearchOverlay({ open, onClose }) {
                     <img
                       src={p.image}
                       alt=""
-                      className="h-20 w-16 object-contain bg-[#efece6]"
+                      className="h-20 w-16 object-contain bg-white"
                     />
                     <span>
                       <b className="block uppercase">{p.name}</b>

@@ -289,6 +289,11 @@ function MeasurementRow({ values, onChange }) {
 export default function ContactPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const flowParam = searchParams.get('flow') || '';
+  // TIP: `?step=size` lets another page (the Product Detail size guide)
+  // deep-link straight into this flow's sizing screen instead of
+  // re-asking "what garment type" first — the `size` phase doesn't
+  // depend on garmentType being set, so it's safe to skip ahead to.
+  const stepParam = searchParams.get('step') || '';
 
   const [flow, setFlow] = useState(flowParam === 'custom' ? 'custom' : '');
 
@@ -302,7 +307,8 @@ export default function ContactPage() {
     setFlow(nextFlow);
     setSearchParams(nextFlow === 'custom' ? { flow: 'custom' } : {}, { replace: true });
   };
-  const [phase, setPhase] = useState(flowParam === 'custom' ? 'garment' : 'chooser');
+  const initialCustomPhase = stepParam === 'size' ? 'size' : 'garment';
+  const [phase, setPhase] = useState(flowParam === 'custom' ? initialCustomPhase : 'chooser');
   const [history, setHistory] = useState([]);
   const [direction, setDirection] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -311,13 +317,14 @@ export default function ContactPage() {
   useEffect(() => {
     if (flowParam === 'custom') {
       setFlow('custom');
-      setPhase('garment');
+      setPhase(stepParam === 'size' ? 'size' : 'garment');
     } else {
       setFlow('');
       setPhase('chooser');
     }
     setHistory([]);
-  }, [flowParam]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowParam, stepParam]);
 
   const [formData, setFormData] = useState({
     // Enquiry

@@ -5,7 +5,7 @@
 export default function ProductPlaceholder({ className = '' }) {
   return (
     <div
-      className={`bg-[#e9e6e0] flex items-center justify-center ${className}`}
+      className={`bg-white flex items-center justify-center ${className}`}
       role="img"
       aria-label="Product photo placeholder"
     >

@@ -129,7 +129,7 @@ export default function MyBagPage() {
                       <img
                         src={item.product.image}
                         alt={item.product.name}
-                        className="h-32 w-24 bg-[#efece6] object-contain"
+                        className="h-32 w-24 bg-white object-contain"
                       />
                     </Link>
 

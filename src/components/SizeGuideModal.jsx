@@ -4,12 +4,12 @@
   and no "Size guide" trigger link anywhere on the Product Detail
   page to open it. Both are now wired up.
 
-  The "Do you want custom sizing?" row is a collapsible per Figma
-  that expands into the Custom Orders measurement flow — since that
-  flow isn't built yet (see the Custom Orders page, still a
-  ComingSoon placeholder), this links out to /custom-orders instead
-  of expanding inline. Swap this for the real inline expansion once
-  that flow exists.
+  The "Do you want custom sizing?" row links out to the real Custom
+  Orders flow (ContactPage.jsx, ?flow=custom) instead of expanding
+  inline here — that flow already asks for measurements as its own
+  step, so this deep-links straight to that step (?step=size) rather
+  than making the person re-pick a garment type they didn't come here
+  to choose.
 */
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -77,7 +77,7 @@ export default function SizeGuideModal({ onClose }) {
         </table>
 
         <Link
-          to="/custom-orders"
+          to="/contact?flow=custom&step=size"
           onClick={onClose}
           className="mt-6 flex items-center justify-between text-sm font-bold text-[var(--ink)]"
         >
