@@ -1,7 +1,17 @@
 import Reveal from './Reveal';
 import ProductCard from './ProductCard';
 
-export default function ProductGrid({ products }) {
+// This grid is shared by two different places in Figma that use
+// different column counts: the homepage's "Shop Our Pieces" teaser
+// (2 columns) and the full Shop page (3 columns). It used to be
+// hardcoded to grid-cols-2 everywhere, which is why the Shop page
+// was inheriting the homepage's column count instead of its own.
+const GRID_COLS = {
+  2: "grid-cols-2",
+  3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+};
+
+export default function ProductGrid({ products, columns = 2 }) {
   /*
     Figma's "Content" wrapper: 1920px frame, padding: 0 304px 77px,
     row-gap 100px, bg #FAFAFA, exactly 2 cards per row (Frame 34 is
@@ -19,7 +29,7 @@ export default function ProductGrid({ products }) {
   return (
     <section className="mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28 pb-16 md:pb-24">
       <div
-        className="grid grid-cols-2"
+        className={`grid ${GRID_COLS[columns] || GRID_COLS[2]}`}
         style={{
           columnGap: "clamp(1rem, 1.67vw, 2rem)",
           rowGap: "clamp(2.5rem, 5.21vw, 6.25rem)",

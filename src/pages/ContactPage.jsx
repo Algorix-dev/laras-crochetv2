@@ -12,11 +12,11 @@
   "Step X of 6" label is looked up per-phase from STEP_META below —
   see the note above STEP_META for why the numbers aren't 1,2,3....
 */
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, HelpCircle, UploadCloud } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
-import Footer from '../components/Footer';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Check, HelpCircle, UploadCloud } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import Footer from "../components/Footer";
 
 const stepVariants = {
   enter: (dir) => ({ x: dir > 0 ? 50 : -50, opacity: 0 }),
@@ -38,25 +38,25 @@ const TOTAL_STEPS = 6;
 const ENQUIRY_STEP_META = {
   chooser: { n: 1, show: true },
   topic: { n: 2, show: true },
-  'sizing-field': { n: 3, show: true },
-  'sizing-chart': { n: 4, show: true },
-  'sizing-done': { n: 4, show: false },
-  'os-field': { n: 3, show: true },
-  'os-tracker': { n: 4, show: true },
-  'pay-field': { n: 3, show: true },
-  'pay-issue': { n: 5, show: true },
+  "sizing-field": { n: 3, show: true },
+  "sizing-chart": { n: 4, show: true },
+  "sizing-done": { n: 4, show: false },
+  "os-field": { n: 3, show: true },
+  "os-tracker": { n: 4, show: true },
+  "pay-field": { n: 3, show: true },
+  "pay-issue": { n: 5, show: true },
   // TIP: the "Something else" issue screen has no step header/dots at
   // all in the Figma export (unlike every other question screen) —
   // preserved as-is rather than "fixed", since it reads as intentional.
-  'se-issue': { n: 5, show: false },
+  "se-issue": { n: 5, show: false },
   email: { n: 6, show: true },
 };
 
 const CUSTOM_STEP_META = {
   garment: { n: 1, show: true },
-  'other-fit': { n: 2, show: true },
+  "other-fit": { n: 2, show: true },
   size: { n: 2, show: true },
-  'custom-measurements': { n: 2, show: true },
+  "custom-measurements": { n: 2, show: true },
   color: { n: 3, show: true },
   photo: { n: 4, show: true },
   more: { n: 5, show: true },
@@ -64,19 +64,43 @@ const CUSTOM_STEP_META = {
 };
 
 const SIZE_CHART_ROWS = [
-  { size: 'XS', bust: 32, waist: 25, hip: 32 },
-  { size: 'S', bust: 34, waist: 27, hip: 37 },
-  { size: 'M', bust: 36, waist: 29, hip: 39 },
-  { size: 'L', bust: 38, waist: 32, hip: 42 },
-  { size: 'XL', bust: 40, waist: 34, hip: 44 },
-  { size: 'XXL', bust: 42, waist: 36, hip: 46 },
+  { size: "XS", bust: 32, waist: 25, hip: 32 },
+  { size: "S", bust: 34, waist: 27, hip: 37 },
+  { size: "M", bust: 36, waist: 29, hip: 39 },
+  { size: "L", bust: 38, waist: 32, hip: 42 },
+  { size: "XL", bust: 40, waist: 34, hip: 44 },
+  { size: "XXL", bust: 42, waist: 36, hip: 46 },
 ];
 
-const GARMENT_TYPES = ['Dress', 'Bikini', 'Shirt', 'Two piece', 'Skirt', 'Other'];
-const SIZE_OPTIONS = ['Small', 'Large', 'Extra Large', 'XXL', 'Custom sizing'];
-const ENQUIRY_TOPICS = ['Sizing help', 'Order status', 'Payment', 'Something else'];
-const COLOR_SWATCHES = ['#EF4444', '#EAB308', '#3B82F6', '#22C55E', '#D946EF', '#FFFFFF'];
-const ORDER_STATUSES = ['Order received', 'In production', 'Packaging', 'Delivery'];
+const GARMENT_TYPES = [
+  "Dress",
+  "Bikini",
+  "Shirt",
+  "Two piece",
+  "Skirt",
+  "Other",
+];
+const SIZE_OPTIONS = ["Small", "Large", "Extra Large", "XXL", "Custom sizing"];
+const ENQUIRY_TOPICS = [
+  "Sizing help",
+  "Order status",
+  "Payment",
+  "Something else",
+];
+const COLOR_SWATCHES = [
+  "#EF4444",
+  "#EAB308",
+  "#3B82F6",
+  "#22C55E",
+  "#D946EF",
+  "#FFFFFF",
+];
+const ORDER_STATUSES = [
+  "Order received",
+  "In production",
+  "Packaging",
+  "Delivery",
+];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -90,14 +114,14 @@ function hashString(str) {
 
 /* ---------- Shared building blocks ---------- */
 
-function PillButton({ active, children, className = '', ...props }) {
+function PillButton({ active, children, className = "", ...props }) {
   return (
     <button
       {...props}
       className={`border py-3 px-4 text-xs font-medium transition-all text-center cursor-pointer ${
         active
-          ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
-          : 'border-[var(--line)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)]'
+          ? "border-[var(--ink)] bg-[var(--ink)] text-white"
+          : "border-[var(--line)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)]"
       } ${className}`}
     >
       {children}
@@ -105,7 +129,7 @@ function PillButton({ active, children, className = '', ...props }) {
   );
 }
 
-function PrimaryButton({ children, className = '', ...props }) {
+function PrimaryButton({ children, className = "", ...props }) {
   return (
     <button
       {...props}
@@ -116,7 +140,14 @@ function PrimaryButton({ children, className = '', ...props }) {
   );
 }
 
-function TextField({ value, onChange, placeholder, helpText, error, ...props }) {
+function TextField({
+  value,
+  onChange,
+  placeholder,
+  helpText,
+  error,
+  ...props
+}) {
   return (
     <div>
       <div className="relative flex items-center">
@@ -126,11 +157,14 @@ function TextField({ value, onChange, placeholder, helpText, error, ...props }) 
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className={`w-full border pl-4 pr-11 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] ${
-            error ? 'border-red-500' : 'border-[var(--line)]'
+            error ? "border-red-500" : "border-[var(--line)]"
           }`}
         />
         {helpText && (
-          <div className="absolute right-4 text-[var(--muted)]" title={helpText}>
+          <div
+            className="absolute right-4 text-[var(--muted)]"
+            title={helpText}
+          >
             <HelpCircle size={16} />
           </div>
         )}
@@ -140,7 +174,13 @@ function TextField({ value, onChange, placeholder, helpText, error, ...props }) 
   );
 }
 
-function StepShell({ stepNumber, totalSteps = TOTAL_STEPS, showHeader = true, onBack, children }) {
+function StepShell({
+  stepNumber,
+  totalSteps = TOTAL_STEPS,
+  showHeader = true,
+  onBack,
+  children,
+}) {
   return (
     <div className="relative max-w-lg w-full">
       <div className="min-h-8 mb-3">
@@ -160,12 +200,17 @@ function StepShell({ stepNumber, totalSteps = TOTAL_STEPS, showHeader = true, on
             <p className="text-[10px] tracking-[0.2em] font-semibold text-[var(--muted)] uppercase mb-2">
               Step {stepNumber} of {totalSteps}
             </p>
-            <div className="flex items-center justify-center gap-1.5" aria-hidden="true">
+            <div
+              className="flex items-center justify-center gap-1.5"
+              aria-hidden="true"
+            >
               {Array.from({ length: totalSteps }).map((_, idx) => (
                 <div
                   key={idx}
                   className={`rounded-full transition-all duration-300 ${
-                    idx + 1 === stepNumber ? 'w-2.5 h-2.5 bg-[var(--ink)] scale-110' : 'w-1.5 h-1.5 bg-[var(--mauve)]'
+                    idx + 1 === stepNumber
+                      ? "w-2.5 h-2.5 bg-[var(--ink)] scale-110"
+                      : "w-1.5 h-1.5 bg-[var(--mauve)]"
                   }`}
                 />
               ))}
@@ -182,16 +227,29 @@ function StepShell({ stepNumber, totalSteps = TOTAL_STEPS, showHeader = true, on
 // from every wizard step — rounded corners + soft shadow vs. the
 // wizard's sharp corners — so it's its own component, not a StepShell
 // variant.
-function SuccessCard({ heading, subtext, linkTo = '/shop', linkLabel = 'Back to shop' }) {
+function SuccessCard({
+  heading,
+  subtext,
+  linkTo = "/shop",
+  linkLabel = "Back to shop",
+}) {
   return (
     <div className="text-center max-w-md mx-auto">
       <div className="bg-[#FAFAFA] border border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 sm:p-10">
-        <div className="flex items-center justify-center gap-1.5 mb-6" aria-hidden="true">
+        <div
+          className="flex items-center justify-center gap-1.5 mb-6"
+          aria-hidden="true"
+        >
           {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
-            <div key={idx} className="w-1.5 h-1.5 rounded-full bg-[var(--mauve)]" />
+            <div
+              key={idx}
+              className="w-1.5 h-1.5 rounded-full bg-[var(--mauve)]"
+            />
           ))}
         </div>
-        <h2 className="font-display text-2xl text-[var(--ink)] font-bold mb-1">{heading}</h2>
+        <h2 className="font-display text-2xl text-[var(--ink)] font-bold mb-1">
+          {heading}
+        </h2>
         <p className="text-sm text-[var(--muted)]">{subtext}</p>
         <div className="mx-auto mt-6 flex items-center justify-center w-14 h-14 rounded-full bg-[#10B981] text-white">
           <Check size={26} />
@@ -212,7 +270,12 @@ function SuccessCard({ heading, subtext, linkTo = '/shop', linkLabel = 'Back to 
 // the tracker frames, but re-using it for sizing-help's completion is
 // a reasonable inference since Figma doesn't include a dedicated
 // "done" frame for that self-serve branch. Flagged in the handoff notes.
-function TerminalActions({ primaryTo, primaryLabel, secondaryTo = '/contact', secondaryLabel = 'Back to Contact Page' }) {
+function TerminalActions({
+  primaryTo,
+  primaryLabel,
+  secondaryTo = "/contact",
+  secondaryLabel = "Back to Contact Page",
+}) {
   return (
     <div className="flex flex-col gap-3 mt-8">
       <Link
@@ -246,9 +309,15 @@ function SizeChartTable() {
           className="grid grid-cols-4 text-sm border-b border-[var(--line)] last:border-b-0 bg-[var(--cream)]/40"
         >
           <span className="px-3 py-2">{row.size}</span>
-          <span className="px-3 py-2 border-l border-[var(--line)]">{row.bust}&quot;</span>
-          <span className="px-3 py-2 border-l border-[var(--line)]">{row.waist}&quot;</span>
-          <span className="px-3 py-2 border-l border-[var(--line)]">{row.hip}&quot;</span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">
+            {row.bust}&quot;
+          </span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">
+            {row.waist}&quot;
+          </span>
+          <span className="px-3 py-2 border-l border-[var(--line)]">
+            {row.hip}&quot;
+          </span>
         </div>
       ))}
     </div>
@@ -257,16 +326,21 @@ function SizeChartTable() {
 
 function MeasurementRow({ values, onChange }) {
   const fields = [
-    ['size', 'Size'],
-    ['bust', 'Bust'],
-    ['waist', 'Waist'],
-    ['hip', 'Hip'],
+    ["size", "Size"],
+    ["bust", "Bust"],
+    ["waist", "Waist"],
+    ["hip", "Hip"],
   ];
   return (
     <div className="border border-[var(--line)] mt-4">
       <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
         {fields.map(([, label], idx) => (
-          <span key={label} className={`px-3 py-2 ${idx > 0 ? 'border-l border-[var(--line)]' : ''}`}>{label}</span>
+          <span
+            key={label}
+            className={`px-3 py-2 ${idx > 0 ? "border-l border-[var(--line)]" : ""}`}
+          >
+            {label}
+          </span>
         ))}
       </div>
       <div className="grid grid-cols-4">
@@ -274,9 +348,17 @@ function MeasurementRow({ values, onChange }) {
           <input
             key={key}
             value={values[key]}
-            onChange={(e) => onChange(key, e.target.value)}
+            onChange={(e) => {
+              const raw = e.target.value;
+              const cleaned =
+                key === "size"
+                  ? raw.replace(/[^a-zA-Z]/g, "").toUpperCase()
+                  : raw.replace(/[^0-9]/g, "");
+              onChange(key, cleaned);
+            }}
+            inputMode={key === "size" ? "text" : "numeric"}
             className={`w-full text-center text-sm px-2 py-2.5 outline-none bg-[var(--cream)]/40 focus:bg-white focus:border-[var(--ink)] border-[var(--line)] ${
-              idx > 0 ? 'border-l' : ''
+              idx > 0 ? "border-l" : ""
             }`}
           />
         ))}
@@ -289,14 +371,14 @@ function MeasurementRow({ values, onChange }) {
 
 export default function ContactPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const flowParam = searchParams.get('flow') || '';
+  const flowParam = searchParams.get("flow") || "";
   // TIP: `?step=size` lets another page (the Product Detail size guide)
   // deep-link straight into this flow's sizing screen instead of
   // re-asking "what garment type" first — the `size` phase doesn't
   // depend on garmentType being set, so it's safe to skip ahead to.
-  const stepParam = searchParams.get('step') || '';
+  const stepParam = searchParams.get("step") || "";
 
-  const [flow, setFlow] = useState(flowParam === 'custom' ? 'custom' : '');
+  const [flow, setFlow] = useState(flowParam === "custom" ? "custom" : "");
 
   // TIP: internal `flow` state and the `?flow=` URL param used to drift
   // apart — clicking "Make a custom order" from the chooser switched
@@ -306,22 +388,26 @@ export default function ContactPage() {
   // truth whenever the flow changes from inside the page.
   const switchFlow = (nextFlow) => {
     setFlow(nextFlow);
-    setSearchParams(nextFlow === 'custom' ? { flow: 'custom' } : {}, { replace: true });
+    setSearchParams(nextFlow === "custom" ? { flow: "custom" } : {}, {
+      replace: true,
+    });
   };
-  const initialCustomPhase = stepParam === 'size' ? 'size' : 'garment';
-  const [phase, setPhase] = useState(flowParam === 'custom' ? initialCustomPhase : 'chooser');
+  const initialCustomPhase = stepParam === "size" ? "size" : "garment";
+  const [phase, setPhase] = useState(
+    flowParam === "custom" ? initialCustomPhase : "chooser",
+  );
   const [history, setHistory] = useState([]);
   const [direction, setDirection] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (flowParam === 'custom') {
-      setFlow('custom');
-      setPhase(stepParam === 'size' ? 'size' : 'garment');
+    if (flowParam === "custom") {
+      setFlow("custom");
+      setPhase(stepParam === "size" ? "size" : "garment");
     } else {
-      setFlow('');
-      setPhase('chooser');
+      setFlow("");
+      setPhase("chooser");
     }
     setHistory([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -329,31 +415,31 @@ export default function ContactPage() {
 
   const [formData, setFormData] = useState({
     // Enquiry
-    enquiryTopic: '',
-    itemName: '',
-    orderRef: '',
-    issueDetails: '',
-    enquiryEmail: '',
-    wantsSizeHelp: '',
-    sizingMeasurements: { size: '', bust: '', waist: '', hip: '' },
+    enquiryTopic: "",
+    itemName: "",
+    orderRef: "",
+    issueDetails: "",
+    enquiryEmail: "",
+    wantsSizeHelp: "",
+    sizingMeasurements: { size: "", bust: "", waist: "", hip: "" },
 
     // Custom order
-    garmentType: '',
-    otherFitDetails: '',
-    sizeChoice: '',
-    showSizeChart: '',
-    wantsCustomSizing: '',
-    customMeasurements: { size: '', bust: '', waist: '', hip: '' },
-    colorSwatch: '',
-    colorNote: '',
+    garmentType: "",
+    otherFitDetails: "",
+    sizeChoice: "",
+    showSizeChart: "",
+    wantsCustomSizing: "",
+    customMeasurements: { size: "", bust: "", waist: "", hip: "" },
+    colorSwatch: "",
+    colorNote: "",
     photos: [],
-    customDetails: '',
-    customEmail: '',
+    customDetails: "",
+    customEmail: "",
   });
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: '' }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const goTo = (nextPhase) => {
@@ -371,77 +457,83 @@ export default function ContactPage() {
   };
 
   const resetAll = () => {
-    switchFlow('');
-    setPhase('chooser');
+    switchFlow("");
+    setPhase("chooser");
     setHistory([]);
     setDirection(-1);
     setErrors({});
     setFormData({
-      enquiryTopic: '',
-      itemName: '',
-      orderRef: '',
-      issueDetails: '',
-      enquiryEmail: '',
-      wantsSizeHelp: '',
-      sizingMeasurements: { size: '', bust: '', waist: '', hip: '' },
-      garmentType: '',
-      otherFitDetails: '',
-      sizeChoice: '',
-      showSizeChart: '',
-      wantsCustomSizing: '',
-      customMeasurements: { size: '', bust: '', waist: '', hip: '' },
-      colorSwatch: '',
-      colorNote: '',
+      enquiryTopic: "",
+      itemName: "",
+      orderRef: "",
+      issueDetails: "",
+      enquiryEmail: "",
+      wantsSizeHelp: "",
+      sizingMeasurements: { size: "", bust: "", waist: "", hip: "" },
+      garmentType: "",
+      otherFitDetails: "",
+      sizeChoice: "",
+      showSizeChart: "",
+      wantsCustomSizing: "",
+      customMeasurements: { size: "", bust: "", waist: "", hip: "" },
+      colorSwatch: "",
+      colorNote: "",
       photos: [],
-      customDetails: '',
-      customEmail: '',
+      customDetails: "",
+      customEmail: "",
     });
   };
 
   const selectTopic = (topic) => {
-    updateField('enquiryTopic', topic);
-    if (topic === 'Sizing help') goTo('sizing-field');
-    else if (topic === 'Order status') goTo('os-field');
-    else if (topic === 'Payment') goTo('pay-field');
-    else goTo('se-issue');
+    updateField("enquiryTopic", topic);
+    if (topic === "Sizing help") goTo("sizing-field");
+    else if (topic === "Order status") goTo("os-field");
+    else if (topic === "Payment") goTo("pay-field");
+    else goTo("se-issue");
   };
 
   const selectGarment = (garment) => {
-    updateField('garmentType', garment);
-    goTo(garment === 'Other' ? 'other-fit' : 'size');
+    updateField("garmentType", garment);
+    goTo(garment === "Other" ? "other-fit" : "size");
   };
 
   const submitEnquiry = (e) => {
     e.preventDefault();
     if (!formData.enquiryEmail) {
-      setErrors((p) => ({ ...p, enquiryEmail: 'Email is required' }));
+      setErrors((p) => ({ ...p, enquiryEmail: "Email is required" }));
       return;
     }
     if (!EMAIL_REGEX.test(formData.enquiryEmail)) {
-      setErrors((p) => ({ ...p, enquiryEmail: 'Please enter a valid email address' }));
+      setErrors((p) => ({
+        ...p,
+        enquiryEmail: "Please enter a valid email address",
+      }));
       return;
     }
     setSubmitting(true);
     setTimeout(() => {
       setSubmitting(false);
-      goTo('success');
+      goTo("success");
     }, 1000);
   };
 
   const submitCustom = (e) => {
     e.preventDefault();
     if (!formData.customEmail) {
-      setErrors((p) => ({ ...p, customEmail: 'Email is required' }));
+      setErrors((p) => ({ ...p, customEmail: "Email is required" }));
       return;
     }
     if (!EMAIL_REGEX.test(formData.customEmail)) {
-      setErrors((p) => ({ ...p, customEmail: 'Please enter a valid email address' }));
+      setErrors((p) => ({
+        ...p,
+        customEmail: "Please enter a valid email address",
+      }));
       return;
     }
     setSubmitting(true);
     setTimeout(() => {
       setSubmitting(false);
-      goTo('success');
+      goTo("success");
     }, 1000);
   };
 
@@ -450,14 +542,26 @@ export default function ContactPage() {
   // straight past. That pushes every step after it — size, color,
   // photo, more, email — one number later, and the total step count
   // to 7 for this path specifically, rather than the usual 6.
-  const otherPath = flow === 'custom' && formData.garmentType === 'Other';
-  const otherOffset = otherPath && ['size', 'color', 'photo', 'more', 'email'].includes(phase) ? 1 : 0;
-  const baseMeta = flow === 'custom' ? CUSTOM_STEP_META[phase] : ENQUIRY_STEP_META[phase];
-  const meta = baseMeta ? { ...baseMeta, n: baseMeta.n + otherOffset } : baseMeta;
+  const otherPath = flow === "custom" && formData.garmentType === "Other";
+  const otherOffset =
+    otherPath && ["size", "color", "photo", "more", "email"].includes(phase)
+      ? 1
+      : 0;
+  const baseMeta =
+    flow === "custom" ? CUSTOM_STEP_META[phase] : ENQUIRY_STEP_META[phase];
+  const meta = baseMeta
+    ? { ...baseMeta, n: baseMeta.n + otherOffset }
+    : baseMeta;
   const totalStepsForFlow = otherPath ? TOTAL_STEPS + 1 : TOTAL_STEPS;
   const showBack = history.length > 0;
-  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const orderStatusIndex = formData.orderRef ? hashString(formData.orderRef) % ORDER_STATUSES.length : 1;
+  const today = new Date().toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const orderStatusIndex = formData.orderRef
+    ? hashString(formData.orderRef) % ORDER_STATUSES.length
+    : 1;
   const currentStatus = ORDER_STATUSES[orderStatusIndex];
 
   return (
@@ -471,19 +575,30 @@ export default function ContactPage() {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
             className="w-full flex justify-center"
           >
-            {phase === 'success' ? (
-              flow === 'custom' ? (
-                <SuccessCard heading="All Done!" subtext="Your quote is on it's way!" />
+            {phase === "success" ? (
+              flow === "custom" ? (
+                <SuccessCard
+                  heading="All Done!"
+                  subtext="Your quote is on it's way!"
+                />
               ) : (
-                <SuccessCard heading="All Done!" subtext="Lara is working on it." />
+                <SuccessCard
+                  heading="All Done!"
+                  subtext="Lara is working on it."
+                />
               )
             ) : (
-              <StepShell stepNumber={meta.n} totalSteps={totalStepsForFlow} showHeader={meta.show} onBack={showBack ? goBack : undefined}>
+              <StepShell
+                stepNumber={meta.n}
+                totalSteps={totalStepsForFlow}
+                showHeader={meta.show}
+                onBack={showBack ? goBack : undefined}
+              >
                 {/* ============ SHARED CHOOSER ============ */}
-                {phase === 'chooser' && (
+                {phase === "chooser" && (
                   <div className="text-center">
                     <h1 className="font-display text-2xl text-[var(--ink)] mb-8 font-bold">
                       How would you like Lara to help you?
@@ -491,8 +606,8 @@ export default function ContactPage() {
                     <div className="space-y-4 max-w-sm mx-auto">
                       <button
                         onClick={() => {
-                          switchFlow('custom');
-                          goTo('garment');
+                          switchFlow("custom");
+                          goTo("garment");
                         }}
                         className="w-full border border-[var(--line)] py-4 px-6 text-sm font-semibold tracking-wide bg-white text-[var(--ink)] transition-all hover:border-[var(--ink)] focus-visible:border-[var(--ink)] cursor-pointer"
                       >
@@ -500,8 +615,8 @@ export default function ContactPage() {
                       </button>
                       <button
                         onClick={() => {
-                          switchFlow('enquiry');
-                          goTo('topic');
+                          switchFlow("enquiry");
+                          goTo("topic");
                         }}
                         className="w-full border border-[var(--ink)] py-4 px-6 text-sm font-semibold tracking-wide bg-[var(--ink)] text-white transition-all hover:bg-[var(--maroon)] hover:border-[var(--maroon)] cursor-pointer"
                       >
@@ -512,14 +627,18 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ ENQUIRY: topic select ============ */}
-                {phase === 'topic' && (
+                {phase === "topic" && (
                   <div>
                     <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
                       What&apos;s your enquiry about?
                     </h2>
                     <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
                       {ENQUIRY_TOPICS.map((topic) => (
-                        <PillButton key={topic} active={formData.enquiryTopic === topic} onClick={() => selectTopic(topic)}>
+                        <PillButton
+                          key={topic}
+                          active={formData.enquiryTopic === topic}
+                          onClick={() => selectTopic(topic)}
+                        >
                           {topic}
                         </PillButton>
                       ))}
@@ -528,17 +647,22 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ ENQUIRY: sizing → which item ============ */}
-                {phase === 'sizing-field' && (
+                {phase === "sizing-field" && (
                   <div className="max-w-sm mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">Which item?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      Which item?
+                    </h2>
                     <div className="space-y-4">
                       <TextField
                         value={formData.itemName}
-                        onChange={(v) => updateField('itemName', v)}
+                        onChange={(v) => updateField("itemName", v)}
                         placeholder="Input item name"
                         helpText="This helps Lara pull up the right size chart."
                       />
-                      <PrimaryButton disabled={!formData.itemName.trim()} onClick={() => goTo('sizing-chart')}>
+                      <PrimaryButton
+                        disabled={!formData.itemName.trim()}
+                        onClick={() => goTo("sizing-chart")}
+                      >
                         Next
                       </PrimaryButton>
                     </div>
@@ -546,27 +670,34 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ ENQUIRY: sizing → chart + custom sizing ============ */}
-                {phase === 'sizing-chart' && (
+                {phase === "sizing-chart" && (
                   <div>
                     <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
-                      Here is our size chart for {formData.itemName || '(item name)'}
+                      Here is our size chart for{" "}
+                      {formData.itemName || "(item name)"}
                     </h2>
                     <SizeChartTable />
                     <div className="flex items-center justify-between mt-5">
-                      <span className="text-sm font-semibold text-[var(--ink)]">Do you want custom sizing?</span>
+                      <span className="text-sm font-semibold text-[var(--ink)]">
+                        Do you want custom sizing?
+                      </span>
                       <div className="flex gap-3 text-sm">
                         <button
-                          onClick={() => updateField('wantsSizeHelp', 'yes')}
+                          onClick={() => updateField("wantsSizeHelp", "yes")}
                           className={`cursor-pointer ${
-                            formData.wantsSizeHelp === 'yes' ? 'underline font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'
+                            formData.wantsSizeHelp === "yes"
+                              ? "underline font-semibold text-[var(--ink)]"
+                              : "text-[var(--muted)]"
                           }`}
                         >
                           Yes
                         </button>
                         <button
-                          onClick={() => updateField('wantsSizeHelp', 'no')}
+                          onClick={() => updateField("wantsSizeHelp", "no")}
                           className={`cursor-pointer ${
-                            formData.wantsSizeHelp !== 'yes' ? 'underline font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'
+                            formData.wantsSizeHelp !== "yes"
+                              ? "underline font-semibold text-[var(--ink)]"
+                              : "text-[var(--muted)]"
                           }`}
                         >
                           No
@@ -574,37 +705,54 @@ export default function ContactPage() {
                       </div>
                     </div>
 
-                    {formData.wantsSizeHelp === 'yes' && (
-                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-                        <p className="text-xs text-[var(--muted)] mt-4 mb-1">Fill in your measurements</p>
+                    {formData.wantsSizeHelp === "yes" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <p className="text-xs text-[var(--muted)] mt-4 mb-1">
+                          Fill in your measurements
+                        </p>
                         <MeasurementRow
                           values={formData.sizingMeasurements}
                           onChange={(key, val) =>
-                            updateField('sizingMeasurements', { ...formData.sizingMeasurements, [key]: val })
+                            updateField("sizingMeasurements", {
+                              ...formData.sizingMeasurements,
+                              [key]: val,
+                            })
                           }
                         />
                       </motion.div>
                     )}
 
-                    <PrimaryButton className="mt-6" onClick={() => goTo('sizing-done')}>
-                      {formData.wantsSizeHelp === 'yes' ? 'Done' : 'Next'}
+                    <PrimaryButton
+                      className="mt-6"
+                      onClick={() => goTo("sizing-done")}
+                    >
+                      {formData.wantsSizeHelp === "yes" ? "Done" : "Next"}
                     </PrimaryButton>
                   </div>
                 )}
 
                 {/* ============ ENQUIRY: sizing → done (self-serve, no email) ============ */}
-                {phase === 'sizing-done' && (
+                {phase === "sizing-done" && (
                   <div>
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-3 font-bold">All set!</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-3 font-bold">
+                      All set!
+                    </h2>
                     <p className="text-lg text-[var(--muted)] text-center leading-relaxed">
-                      Thanks — hope that helps with your sizing! Reach out anytime if you need anything else.
+                      Thanks — hope that helps with your sizing! Reach out
+                      anytime if you need anything else.
                     </p>
-                    <TerminalActions primaryTo="/shop" primaryLabel="Back to shop" />
+                    <TerminalActions
+                      primaryTo="/shop"
+                      primaryLabel="Back to shop"
+                    />
                   </div>
                 )}
 
                 {/* ============ ENQUIRY: order status / payment → order ref ============ */}
-                {(phase === 'os-field' || phase === 'pay-field') && (
+                {(phase === "os-field" || phase === "pay-field") && (
                   <div className="max-w-sm mx-auto">
                     <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
                       What is your order reference number?
@@ -612,13 +760,17 @@ export default function ContactPage() {
                     <div className="space-y-4">
                       <TextField
                         value={formData.orderRef}
-                        onChange={(v) => updateField('orderRef', v)}
+                        onChange={(v) => updateField("orderRef", v)}
                         placeholder="Input order ref. number"
                         helpText="Found in your order confirmation email."
                       />
                       <PrimaryButton
                         disabled={!formData.orderRef.trim()}
-                        onClick={() => goTo(phase === 'os-field' ? 'os-tracker' : 'pay-issue')}
+                        onClick={() =>
+                          goTo(
+                            phase === "os-field" ? "os-tracker" : "pay-issue",
+                          )
+                        }
                       >
                         Next
                       </PrimaryButton>
@@ -627,14 +779,17 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ ENQUIRY: order status → tracker (self-serve, no email) ============ */}
-                {phase === 'os-tracker' && (
+                {phase === "os-tracker" && (
                   <div>
                     <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
                       Here is the status of your order
                     </h2>
                     <div className="flex items-center justify-between mb-10 px-1">
                       {ORDER_STATUSES.map((status, idx) => (
-                        <div key={status} className="flex items-center flex-1 last:flex-none">
+                        <div
+                          key={status}
+                          className="flex items-center flex-1 last:flex-none"
+                        >
                           <div className="flex flex-col items-center gap-2 relative">
                             <span className="text-[9px] text-[var(--muted)] uppercase tracking-wide absolute -top-5 whitespace-nowrap">
                               {status}
@@ -642,27 +797,36 @@ export default function ContactPage() {
                             <div
                               className={`w-4 h-4 rounded-full ${
                                 idx === orderStatusIndex
-                                  ? 'bg-[#10B981] ring-4 ring-[#10B981]/25'
+                                  ? "bg-[#10B981] ring-4 ring-[#10B981]/25"
                                   : idx < orderStatusIndex
-                                  ? 'bg-[var(--line-2)]'
-                                  : 'bg-[var(--line)]'
+                                    ? "bg-[var(--line-2)]"
+                                    : "bg-[var(--line)]"
                               }`}
                             />
                           </div>
                           {idx < ORDER_STATUSES.length - 1 && (
-                            <div className={`flex-1 h-px mx-2 ${idx < orderStatusIndex ? 'bg-[var(--line-2)]' : 'bg-[var(--line)]'}`} />
+                            <div
+                              className={`flex-1 h-px mx-2 ${idx < orderStatusIndex ? "bg-[var(--line-2)]" : "bg-[var(--line)]"}`}
+                            />
                           )}
                         </div>
                       ))}
                     </div>
                     <p className="text-lg text-[var(--ink)] leading-relaxed">
-                      Your order (#{formData.orderRef}) has been received on {today} and{' '}
-                      {currentStatus === 'Order received' && 'is being reviewed.'}
-                      {currentStatus === 'In production' && 'is currently in production.'}
-                      {currentStatus === 'Packaging' && 'is currently in packaging undergoing proper inspection and quality check.'}
-                      {currentStatus === 'Delivery' && 'is finally on its way to you!'}
+                      Your order (#{formData.orderRef}) has been received on{" "}
+                      {today} and{" "}
+                      {currentStatus === "Order received" &&
+                        "is being reviewed."}
+                      {currentStatus === "In production" &&
+                        "is currently in production."}
+                      {currentStatus === "Packaging" &&
+                        "is currently in packaging undergoing proper inspection and quality check."}
+                      {currentStatus === "Delivery" &&
+                        "is finally on its way to you!"}
                     </p>
-                    <p className="text-lg text-[var(--ink)] mt-4">Thank you for choosing Lara&apos;s Crochet.</p>
+                    <p className="text-lg text-[var(--ink)] mt-4">
+                      Thank you for choosing Lara&apos;s Crochet.
+                    </p>
                     <p className="text-lg text-[var(--ink)] mt-4">
                       Yours in love,
                       <br />
@@ -671,28 +835,45 @@ export default function ContactPage() {
                     <TerminalActions
                       primaryTo="/shop"
                       primaryLabel="Back to shop"
-                      secondaryTo={currentStatus === 'Delivery' ? '/account/orders' : '/contact'}
-                      secondaryLabel={currentStatus === 'Delivery' ? 'Track delivery' : 'Back to Contact Page'}
+                      secondaryTo={
+                        currentStatus === "Delivery"
+                          ? "/account/orders"
+                          : "/contact"
+                      }
+                      secondaryLabel={
+                        currentStatus === "Delivery"
+                          ? "Track delivery"
+                          : "Back to Contact Page"
+                      }
                     />
                   </div>
                 )}
 
                 {/* ============ ENQUIRY: payment → issue ============ */}
-                {phase === 'pay-issue' && (
+                {phase === "pay-issue" && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">What's the issue?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      What's the issue?
+                    </h2>
                     <div className="space-y-4">
                       <div>
                         <textarea
                           rows={4}
                           value={formData.issueDetails}
-                          onChange={(e) => updateField('issueDetails', e.target.value)}
+                          onChange={(e) =>
+                            updateField("issueDetails", e.target.value)
+                          }
                           placeholder="Speak, Lara is listening..."
                           className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                         />
-                        <p className="text-xs text-[var(--muted)] mt-1.5">This might help Lara understand you better.</p>
+                        <p className="text-xs text-[var(--muted)] mt-1.5">
+                          This might help Lara understand you better.
+                        </p>
                       </div>
-                      <PrimaryButton disabled={!formData.issueDetails.trim()} onClick={() => goTo('email')}>
+                      <PrimaryButton
+                        disabled={!formData.issueDetails.trim()}
+                        onClick={() => goTo("email")}
+                      >
                         Next
                       </PrimaryButton>
                     </div>
@@ -700,21 +881,30 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ ENQUIRY: something else → issue (no step header) ============ */}
-                {phase === 'se-issue' && (
+                {phase === "se-issue" && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">What&apos;s the issue?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      What&apos;s the issue?
+                    </h2>
                     <div className="space-y-4">
                       <div>
                         <textarea
                           rows={4}
                           value={formData.issueDetails}
-                          onChange={(e) => updateField('issueDetails', e.target.value)}
+                          onChange={(e) =>
+                            updateField("issueDetails", e.target.value)
+                          }
                           placeholder="Speak, Lara is listening..."
                           className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                         />
-                        <p className="text-xs text-[var(--muted)] mt-1.5">This might help Lara resolve it faster.</p>
+                        <p className="text-xs text-[var(--muted)] mt-1.5">
+                          This might help Lara resolve it faster.
+                        </p>
                       </div>
-                      <PrimaryButton disabled={!formData.issueDetails.trim()} onClick={() => goTo('email')}>
+                      <PrimaryButton
+                        disabled={!formData.issueDetails.trim()}
+                        onClick={() => goTo("email")}
+                      >
                         Next
                       </PrimaryButton>
                     </div>
@@ -722,35 +912,44 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ ENQUIRY: email (payment + something-else only) ============ */}
-                {phase === 'email' && flow !== 'custom' && (
+                {phase === "email" && flow !== "custom" && (
                   <form onSubmit={submitEnquiry} className="max-w-sm mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">Where can Lara email you?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      Where can Lara email you?
+                    </h2>
                     <div className="space-y-4">
                       <TextField
                         type="email"
                         value={formData.enquiryEmail}
-                        onChange={(v) => updateField('enquiryEmail', v)}
+                        onChange={(v) => updateField("enquiryEmail", v)}
                         placeholder="Email address"
                         helpText="We will only use your email to reply to your enquiry."
                         error={errors.enquiryEmail}
                         required
                       />
-                      <PrimaryButton type="submit" disabled={submitting || !formData.enquiryEmail.trim()}>
-                        {submitting ? 'Sending...' : 'Done'}
+                      <PrimaryButton
+                        type="submit"
+                        disabled={submitting || !formData.enquiryEmail.trim()}
+                      >
+                        {submitting ? "Sending..." : "Done"}
                       </PrimaryButton>
                     </div>
                   </form>
                 )}
 
                 {/* ============ CUSTOM: garment type ============ */}
-                {phase === 'garment' && (
+                {phase === "garment" && (
                   <div>
                     <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
                       What would you like Lara to make for you?
                     </h2>
                     <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
                       {GARMENT_TYPES.map((garment) => (
-                        <PillButton key={garment} active={formData.garmentType === garment} onClick={() => selectGarment(garment)}>
+                        <PillButton
+                          key={garment}
+                          active={formData.garmentType === garment}
+                          onClick={() => selectGarment(garment)}
+                        >
                           {garment}
                         </PillButton>
                       ))}
@@ -759,19 +958,28 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ CUSTOM: "Other" → free-text fit ============ */}
-                {phase === 'other-fit' && (
+                {phase === "other-fit" && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">What would this fit be?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      What would this fit be?
+                    </h2>
                     <div className="space-y-4">
                       <textarea
                         rows={4}
                         value={formData.otherFitDetails}
-                        onChange={(e) => updateField('otherFitDetails', e.target.value)}
+                        onChange={(e) =>
+                          updateField("otherFitDetails", e.target.value)
+                        }
                         placeholder="Speak Lara's listening 😅..."
                         className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                       />
-                      <p className="text-xs text-[var(--muted)] -mt-2.5">This might help Lara nail your vision faster.</p>
-                      <PrimaryButton disabled={!formData.otherFitDetails.trim()} onClick={() => goTo('size')}>
+                      <p className="text-xs text-[var(--muted)] -mt-2.5">
+                        This might help Lara nail your vision faster.
+                      </p>
+                      <PrimaryButton
+                        disabled={!formData.otherFitDetails.trim()}
+                        onClick={() => goTo("size")}
+                      >
                         Next
                       </PrimaryButton>
                     </div>
@@ -779,89 +987,121 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ CUSTOM: size ============ */}
-                {phase === 'size' && (
+                {phase === "size" && (
                   <div>
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">What size works for you?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
+                      What size works for you?
+                    </h2>
                     <div className="flex flex-wrap justify-center gap-3 max-w-sm mx-auto">
-                          {SIZE_OPTIONS.map((size) => (
-                            <PillButton
-                              key={size}
-                              active={formData.sizeChoice === size}
-                              onClick={() => {
-                                updateField('sizeChoice', size);
-                                if (size === 'Custom sizing') goTo('custom-measurements');
-                              }}
-                            >
-                              {size}
-                            </PillButton>
-                          ))}
+                      {SIZE_OPTIONS.map((size) => (
+                        <PillButton
+                          key={size}
+                          active={formData.sizeChoice === size}
+                          onClick={() => {
+                            updateField("sizeChoice", size);
+                            if (size === "Custom sizing")
+                              goTo("custom-measurements");
+                          }}
+                        >
+                          {size}
+                        </PillButton>
+                      ))}
                     </div>
 
                     <div className="flex items-center justify-between mt-6 max-w-sm mx-auto">
-                      <span className="text-sm font-semibold text-[var(--ink)]">See full size chart</span>
+                      <span className="text-sm font-semibold text-[var(--ink)]">
+                        See full size chart
+                      </span>
                       <div className="flex gap-3 text-sm">
                         <button
-                          onClick={() => updateField('showSizeChart', 'yes')}
+                          onClick={() => updateField("showSizeChart", "yes")}
                           className={`cursor-pointer ${
-                            formData.showSizeChart === 'yes' ? 'underline font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'
+                            formData.showSizeChart === "yes"
+                              ? "underline font-semibold text-[var(--ink)]"
+                              : "text-[var(--muted)]"
                           }`}
                         >
                           Yes
                         </button>
                         <button
-                          onClick={() => updateField('showSizeChart', 'no')}
+                          onClick={() => updateField("showSizeChart", "no")}
                           className={`cursor-pointer ${
-                            formData.showSizeChart !== 'yes' ? 'underline font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'
+                            formData.showSizeChart !== "yes"
+                              ? "underline font-semibold text-[var(--ink)]"
+                              : "text-[var(--muted)]"
                           }`}
                         >
                           No
                         </button>
                       </div>
                     </div>
-                    {formData.showSizeChart === 'yes' && (
-                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="max-w-sm mx-auto">
+                    {formData.showSizeChart === "yes" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-sm mx-auto"
+                      >
                         <SizeChartTable />
                       </motion.div>
                     )}
 
-                     {formData.sizeChoice && formData.sizeChoice !== 'Custom sizing' && (
-                            <PrimaryButton className="mt-6 max-w-sm mx-auto block" onClick={() => goTo('color')}>
-                              Next
-                            </PrimaryButton>
-                          )}
-                        </div>
-                     )}
+                    {formData.sizeChoice &&
+                      formData.sizeChoice !== "Custom sizing" && (
+                        <PrimaryButton
+                          className="mt-6 max-w-sm mx-auto block"
+                          onClick={() => goTo("color")}
+                        >
+                          Next
+                        </PrimaryButton>
+                      )}
+                  </div>
+                )}
 
-                    {/* ============ CUSTOM: custom-measurements (its own step, per Figma) ============ */}
-                    {phase === 'custom-measurements' && (
-                        <div className="max-w-sm mx-auto">
-                          <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-1 font-bold">Go ahead, fill in your measurements.</h2>
-                          <MeasurementRow
-                            values={formData.customMeasurements}
-                            onChange={(key, val) => updateField('customMeasurements', { ...formData.customMeasurements, [key]: val })}
-                          />
-                          <PrimaryButton
-                            className="mt-4"
-                            disabled={!formData.customMeasurements.bust.trim() || !formData.customMeasurements.waist.trim() || !formData.customMeasurements.hip.trim()}
-                            onClick={() => goTo('color')}
-                          >
-                            Next
-                          </PrimaryButton>
-                        </div>
-                    )}
+                {/* ============ CUSTOM: custom-measurements (its own step, per Figma) ============ */}
+                {phase === "custom-measurements" && (
+                  <div className="max-w-sm mx-auto">
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-1 font-bold">
+                      Go ahead, fill in your measurements.
+                    </h2>
+                    <MeasurementRow
+                      values={formData.customMeasurements}
+                      onChange={(key, val) =>
+                        updateField("customMeasurements", {
+                          ...formData.customMeasurements,
+                          [key]: val,
+                        })
+                      }
+                    />
+                    <PrimaryButton
+                      className="mt-4"
+                      disabled={
+                        !formData.customMeasurements.bust.trim() ||
+                        !formData.customMeasurements.waist.trim() ||
+                        !formData.customMeasurements.hip.trim()
+                      }
+                      onClick={() => goTo("color")}
+                    >
+                      Next
+                    </PrimaryButton>
+                  </div>
+                )}
 
                 {/* ============ CUSTOM: color ============ */}
-                {phase === 'color' && (
+                {phase === "color" && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">What color mix do you have in mind?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      What color mix do you have in mind?
+                    </h2>
                     <div className="flex justify-center gap-3 flex-wrap mb-4">
                       {COLOR_SWATCHES.map((hex) => (
                         <button
                           key={hex}
                           aria-label={`Select color ${hex}`}
-                          onClick={() => updateField('colorSwatch', hex)}
+                          onClick={() => updateField("colorSwatch", hex)}
                           className={`w-12 h-12 rounded-lg border-2 cursor-pointer transition-all ${
-                            formData.colorSwatch === hex ? 'border-[var(--ink)] scale-110' : 'border-[var(--line)]'
+                            formData.colorSwatch === hex
+                              ? "border-[var(--ink)] scale-110"
+                              : "border-[var(--line)]"
                           }`}
                           style={{
                             background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,0.85), ${hex} 55%)`,
@@ -872,23 +1112,29 @@ export default function ContactPage() {
 
                     <div className="flex items-center gap-3 my-5 max-w-xs mx-auto">
                       <div className="h-px flex-1 bg-[var(--line)]" />
-                      <span className="text-[10px] uppercase tracking-widest text-[var(--muted)]">Or</span>
+                      <span className="text-[10px] uppercase tracking-widest text-[var(--muted)]">
+                        Or
+                      </span>
                       <div className="h-px flex-1 bg-[var(--line)]" />
                     </div>
 
                     <textarea
                       rows={3}
                       value={formData.colorNote}
-                      onChange={(e) => updateField('colorNote', e.target.value)}
+                      onChange={(e) => updateField("colorNote", e.target.value)}
                       placeholder="Magenta and turquoise etc..."
                       className="w-full border border-[var(--line)] px-4 py-3 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                     />
-                    <p className="text-xs text-[var(--muted)] mt-1.5">Write the specific colors you want.</p>
+                    <p className="text-xs text-[var(--muted)] mt-1.5">
+                      Write the specific colors you want.
+                    </p>
 
                     <PrimaryButton
                       className="mt-5"
-                      disabled={!formData.colorSwatch && !formData.colorNote.trim()}
-                      onClick={() => goTo('photo')}
+                      disabled={
+                        !formData.colorSwatch && !formData.colorNote.trim()
+                      }
+                      onClick={() => goTo("photo")}
                     >
                       Next
                     </PrimaryButton>
@@ -896,9 +1142,11 @@ export default function ContactPage() {
                 )}
 
                 {/* ============ CUSTOM: photo ============ */}
-                {phase === 'photo' && (
+                {phase === "photo" && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">Got a picture of what you want?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      Got a picture of what you want?
+                    </h2>
 
                     <label
                       htmlFor="photo-upload"
@@ -906,9 +1154,12 @@ export default function ContactPage() {
                     >
                       <UploadCloud size={22} className="text-[var(--muted)]" />
                       <span className="text-lg text-[var(--ink)]">
-                        Drop your image here or <span className="text-blue-600 underline">browse</span>
+                        Drop your image here or{" "}
+                        <span className="text-blue-600 underline">browse</span>
                       </span>
-                      <span className="text-xs text-[var(--muted)]">Supports JPG &amp; PNG (4 images max)</span>
+                      <span className="text-xs text-[var(--muted)]">
+                        Supports JPG &amp; PNG (4 images max)
+                      </span>
                       <input
                         id="photo-upload"
                         type="file"
@@ -916,8 +1167,11 @@ export default function ContactPage() {
                         multiple
                         className="sr-only"
                         onChange={(e) => {
-                          const files = Array.from(e.target.files || []).slice(0, 4);
-                          updateField('photos', files);
+                          const files = Array.from(e.target.files || []).slice(
+                            0,
+                            4,
+                          );
+                          updateField("photos", files);
                         }}
                       />
                     </label>
@@ -925,53 +1179,76 @@ export default function ContactPage() {
                     {formData.photos.length > 0 && (
                       <div className="grid grid-cols-2 gap-3 mt-4">
                         {formData.photos.map((file, i) => (
-                          <div key={i} className="relative aspect-square overflow-hidden border border-[var(--line)]">
-                            <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                          <div
+                            key={i}
+                            className="relative aspect-square overflow-hidden border border-[var(--line)]"
+                          >
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         ))}
                       </div>
                     )}
 
-                    <PrimaryButton className="mt-6" onClick={() => goTo('more')}>
+                    <PrimaryButton
+                      className="mt-6"
+                      onClick={() => goTo("more")}
+                    >
                       Next
                     </PrimaryButton>
                   </div>
                 )}
 
                 {/* ============ CUSTOM: anything else ============ */}
-                {phase === 'more' && (
+                {phase === "more" && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-2 font-bold">Anything else you&apos;d like to mention?</h2>
-                    <p className="text-center text-lg text-[var(--muted)] mb-6">This might help Lara nail your vision faster.</p>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-2 font-bold">
+                      Anything else you&apos;d like to mention?
+                    </h2>
+                    <p className="text-center text-lg text-[var(--muted)] mb-6">
+                      This might help Lara nail your vision faster.
+                    </p>
                     <div className="space-y-4">
                       <textarea
                         rows={4}
                         value={formData.customDetails}
-                        onChange={(e) => updateField('customDetails', e.target.value)}
+                        onChange={(e) =>
+                          updateField("customDetails", e.target.value)
+                        }
                         placeholder="And for the lady, perhaps a matching bag 😉?"
                         className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
                       />
-                      <PrimaryButton onClick={() => goTo('email')}>{formData.customDetails.trim() ? 'Next' : 'No'}</PrimaryButton>
+                      <PrimaryButton onClick={() => goTo("email")}>
+                        {formData.customDetails.trim() ? "Next" : "No"}
+                      </PrimaryButton>
                     </div>
                   </div>
                 )}
 
                 {/* ============ CUSTOM: email ============ */}
-                {phase === 'email' && flow === 'custom' && (
+                {phase === "email" && flow === "custom" && (
                   <form onSubmit={submitCustom} className="max-w-sm mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">Where can Lara email you?</h2>
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
+                      Where can Lara email you?
+                    </h2>
                     <div className="space-y-4">
                       <TextField
                         type="email"
                         value={formData.customEmail}
-                        onChange={(v) => updateField('customEmail', v)}
+                        onChange={(v) => updateField("customEmail", v)}
                         placeholder="Email address"
                         helpText="We will only use your email to coordinate your custom piece details."
                         error={errors.customEmail}
                         required
                       />
-                      <PrimaryButton type="submit" disabled={submitting || !formData.customEmail.trim()}>
-                        {submitting ? 'Submitting...' : 'Send Custom Order'}
+                      <PrimaryButton
+                        type="submit"
+                        disabled={submitting || !formData.customEmail.trim()}
+                      >
+                        {submitting ? "Submitting..." : "Send Custom Order"}
                       </PrimaryButton>
                     </div>
                   </form>
@@ -982,9 +1259,12 @@ export default function ContactPage() {
         </AnimatePresence>
       </main>
 
-      {phase === 'success' && (
+      {phase === "success" && (
         <div className="text-center pb-4">
-          <button onClick={resetAll} className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--ink)] transition-colors py-2 cursor-pointer">
+          <button
+            onClick={resetAll}
+            className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--ink)] transition-colors py-2 cursor-pointer"
+          >
             Start another request
           </button>
         </div>
