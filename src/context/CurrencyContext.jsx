@@ -89,8 +89,13 @@ export function CurrencyProvider({ children }) {
              decimal places. USD and GBP show 2 decimals for cents/pence. */
           maximumFractionDigits: currency === 'NGN' ? 0 : 2,
         }).format(ngn / currencies[currency].rate),
+
+      formatPriceNumber: (ngn) =>
+        new Intl.NumberFormat(currencies[currency].locale, {
+          maximumFractionDigits: currency === 'NGN' ? 0 : 2,
+        }).format(ngn / currencies[currency].rate),
     }),
-    [currency, country]
+    [currency, country],
   );
 
   /* TIP: The Provider passes `value` down to all children. Any component

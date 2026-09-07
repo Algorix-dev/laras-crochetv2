@@ -70,17 +70,33 @@ export async function updateUsername(username) {
   if (!res.ok) throw new Error("Failed to update username");
   return res.json();
 }
-
 // TIP: maps a backend Product document onto the shape the existing
 // frontend components (ProductCard, ProductGrid, ProductDetail)
 // already expect — mainly `images[0]` → `image`, and `_id` → `id`.
 // This is the ONE place that bridges "what the database returns"
 // and "what the UI was built around," so if the backend shape
 // changes later, only this function needs updating.
+// Your DB stores categories as plural slugs (dresses, bikinis,
+// two-pieces, shirts, skirts) since that's what filters/URLs use,
+// but Figma's card label is singular (e.g. "TWO-PIECE" not
+// "TWO-PIECES"). ProductCard already uppercases whatever it's
+// given, so this just needs to fix the singular/plural mismatch.
+const CATEGORY_LABELS = {
+  dresses: "Dress",
+  bikinis: "Bikini",
+  "two-pieces": "Two-Piece",
+  shirts: "Shirt",
+  skirts: "Skirt",
+};
+
 export function normalizeProduct(apiProduct) {
   return {
     ...apiProduct,
     id: apiProduct._id,
     image: apiProduct.images?.[0],
+    // ProductCard reads `categoryLabel`, but the API only sends
+    // `category` (a slug like "two-pieces") — map it here so the
+    // real label shows instead of falling back to "PRODUCT".
+    categoryLabel: CATEGORY_LABELS[apiProduct.category] || apiProduct.category,
   };
 }
