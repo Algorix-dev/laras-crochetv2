@@ -86,7 +86,8 @@ const STAGE = {
 
 // How each STORY SLOT occupant divides its own local 0-1 window
 // between entering, holding still (fully visible), and exiting.
-const PARA_PHASES = { enterFrac: 0.5, holdFrac: 0.15, exitFrac: 0.35, travel: 46 };
+const PARA_PHASES = { enterFrac: 0.5, holdFrac: 0.15, exitFrac: 0.35, travel: 26 };
+const TESTI_PHASES = { enterFrac: 0.45, holdFrac: 0.15, exitFrac: 0.4, travel: 26 };
 
 function clamp01(n) {
   return Math.min(1, Math.max(0, n));
@@ -179,9 +180,9 @@ const TESTIMONIALS = [
    ============================================================ */
 
 const SCATTER_PHOTOS = [
-  { src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 3, finalX: -13, finalY: 8, finalRotate: 0, fromX: -520, fromY: -60, fromRotate: -35, localStart: 0.0, localEnd: 0.11, productSlug: null },
-  { src: scatterStreet, alt: "Street-style portrait", zIndex: 2, finalX: 7, finalY: -8, finalRotate: 19.63, fromX: 540, fromY: 40, fromRotate: 70, localStart: 0.02, localEnd: 0.135, productSlug: null },
-  { src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 1, finalX: 23, finalY: 10, finalRotate: -8.21, fromX: 60, fromY: 480, fromRotate: -60, localStart: 0.045, localEnd: 0.16, productSlug: null },
+  { src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 3, finalX: -13, finalY: 8, finalRotate: 0, fromX: -520, fromY: -60, fromRotate: -35, localStart: 0.0, localEnd: 0.65, productSlug: null },
+  { src: scatterStreet, alt: "Street-style portrait", zIndex: 2, finalX: 7, finalY: -8, finalRotate: 19.63, fromX: 540, fromY: 40, fromRotate: 70, localStart: 0.12, localEnd: 0.77, productSlug: null },
+  { src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 1, finalX: 23, finalY: 10, finalRotate: -8.21, fromX: 60, fromY: 480, fromRotate: -60, localStart: 0.24, localEnd: 0.9, productSlug: null },
 ];
 
 export default function LaraShowcase() {
@@ -301,6 +302,9 @@ export default function LaraShowcase() {
 
   const paraSlide = computeSlide(progress, STAGE.paraStart, STAGE.paraEnd, PARA_PHASES);
   const wordsRevealed = reduceMotion ? TOTAL_WORDS : Math.floor(paraSlide.enterT * TOTAL_WORDS);
+
+  const testiSlide = computeSlide(progress, STAGE.testiStart, STAGE.testiEnd, TESTI_PHASES);
+  const testiEnterT = reduceMotion ? 1 : testiSlide.enterT;
 
   let containerStyle;
   if (reduceMotion || pinState === "before") {
@@ -469,64 +473,61 @@ export default function LaraShowcase() {
               })}
             </div>
 
-            {/* TESTIMONIALS — split into 3 sequential groups of 3,
-                each getting its own dedicated slice of the REVIEWS
-                stage (no more inter-row overlap/stagger — simpler,
-                and it means only ONE group of 3 cards is EVER
-                actually in the DOM at a time (see the opacity<0.02
-                bail-out below), not all 9 sitting invisible in
-                layout. That was the real cause of the mobile
-                ballooning: with all 9 always mounted, a 1-column
-                mobile layout was secretly reserving vertical space
-                for all 9 stacked cards even though only 3 were ever
-                meant to be visible, which both wasted a lot of
-                blank space AND made the "only three" request not
-                actually true underneath. */}
-            <div ref={testiSlideRef} style={{ position: "absolute", top: 0, left: 0, right: 0 }}>
-              {[0, 1, 2].map((groupIndex) => {
-                const groupSpan = (STAGE.testiEnd - STAGE.testiStart) / 3;
-                const groupStart = STAGE.testiStart + groupIndex * groupSpan;
-                const groupEnd = groupStart + groupSpan;
-                const groupSlide = reduceMotion
-                  ? { opacity: 1, translateY: 0 }
-                  : computeSlide(progress, groupStart, groupEnd, {
-                      enterFrac: 0.4,
-                      holdFrac: 0.25,
-                      exitFrac: 0.35,
-                      travel: 40,
-                    });
+            {/* TESTIMONIALS — each row both enters AND exits with its
+                own stagger (row 0 first, row 2 last, same order both
+                ways) rather than the whole grid fading as one block,
+                so the exit reads as the cards leaving one at a time
+                instead of all at once. There's no container-level
+                opacity/transform here on purpose — every card fully
+                owns its own lifecycle. */}
+            <div
+              ref={testiSlideRef}
+              style={{ position: "absolute", top: 0, left: 0, right: 0 }}
+              className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3"
+            >
+              {TESTIMONIALS.map((testimonial, index) => {
+                const totalRows = 3;
+                const row = Math.floor(index / 3);
 
-                if (!reduceMotion && groupSlide.opacity < 0.02) return null;
+                const rowEnterT = clamp01((testiEnterT - row / totalRows) / (1 / totalRows));
+                const enterEased = reduceMotion ? 1 : easeOutCubic(rowEnterT);
 
-                const group = TESTIMONIALS.slice(groupIndex * 3, groupIndex * 3 + 3);
+                // Exit stagger: each row's own exit window is offset a
+                // little behind the previous row's, carved out of the
+                // shared testiSlide.exitT (0->1 across the whole EXIT
+                // sub-phase) — same idea as the entrance stagger above,
+                // just running on the way out instead of in.
+                const EXIT_STAGGER = 0.12;
+                const rowExitStart = row * EXIT_STAGGER;
+                const rowExitSpan = 1 - (totalRows - 1) * EXIT_STAGGER;
+                const rowExitT = clamp01((testiSlide.exitT - rowExitStart) / rowExitSpan);
+                const exitEased = reduceMotion ? 0 : easeOutCubic(rowExitT);
+
+                const opacity = enterEased * (1 - exitEased);
+                const translateY = (1 - enterEased) * 18 + exitEased * -22;
 
                 return (
-                  <div
-                    key={groupIndex}
-                    style={{
-                      opacity: groupSlide.opacity,
-                      transform: `translateY(${groupSlide.translateY}px)`,
-                      transition: "opacity 0.35s ease, transform 0.35s ease",
-                    }}
-                    className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3"
-                  >
-                    {group.map((testimonial, i) => (
-                      <div key={testimonial.name} className={i === 1 ? "md:-translate-y-6" : ""}>
-                        <div className="h-full border border-[var(--line)] bg-[var(--cream)] p-5 text-center">
-                          <p className="mb-4 text-sm leading-relaxed text-[var(--ink)]">"{testimonial.quote}"</p>
-                          <p className="flex items-center justify-center gap-1 text-xs font-bold text-[var(--ink)]">
-                            {testimonial.name}
-                            <span
-                              aria-hidden="true"
-                              className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
-                            >
-                              ✓
-                            </span>
-                          </p>
-                          <p className="mt-1 text-[11px] text-[var(--muted)]">Verified Customer</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div key={`${testimonial.name}-${index}`} className={index % 3 === 1 ? "md:-translate-y-6" : ""}>
+                    <div
+                      style={{
+                        opacity,
+                        transform: `translateY(${translateY}px)`,
+                        transition: "opacity 0.35s ease, transform 0.35s ease",
+                      }}
+                      className="h-full border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
+                    >
+                      <p className="mb-4 text-sm leading-relaxed text-[var(--ink)]">"{testimonial.quote}"</p>
+                      <p className="flex items-center justify-center gap-1 text-xs font-bold text-[var(--ink)]">
+                        {testimonial.name}
+                        <span
+                          aria-hidden="true"
+                          className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
+                        >
+                          ✓
+                        </span>
+                      </p>
+                      <p className="mt-1 text-[11px] text-[var(--muted)]">Verified Customer</p>
+                    </div>
                   </div>
                 );
               })}
