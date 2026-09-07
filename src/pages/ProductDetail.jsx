@@ -19,6 +19,7 @@ import Footer from '../components/Footer';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
 import ShareButton from '../components/ShareButton';
+import SizeGuideModal from '../components/SizeGuideModal';
 
 /* -----------------------------------------------------------
    Static data kept outside the component so React doesn't
@@ -283,6 +284,7 @@ export default function ProductDetail() {
   const [shade, setShade] = useState(null);
   const [size, setSize] = useState(null);
   const [activeTab, setActiveTab] = useState('Details');
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
   // TIP: product arrives asynchronously, so we can't set these
   // default selections at useState() time above — this effect fires
@@ -340,7 +342,11 @@ export default function ProductDetail() {
         {/* ============================
             TWO-COLUMN MAIN SECTION
             ============================ */}
-        <div className="grid gap-10 lg:grid-cols-[1.18fr_.82fr] lg:gap-16">
+        {/* Figma's "Container" splits the gallery and info columns
+            dead evenly — 945px / 945px out of a 1920px frame (minus
+            the 30px gap), i.e. a true 50/50 split, not the previous
+            1.18/.82 (~59/41) ratio. */}
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
             {/* Main image in a light gray container */}
@@ -448,7 +454,16 @@ export default function ProductDetail() {
               {/* Sizing */}
               {product.sizes?.length > 0 && (
                 <div>
-                  <p className="mb-3 text-sm font-medium">Sizing</p>
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-sm font-medium">Sizing</p>
+                    <button
+                      type="button"
+                      onClick={() => setSizeGuideOpen(true)}
+                      className="text-sm font-medium underline underline-offset-2 hover:text-[var(--maroon)]"
+                    >
+                      Size guide
+                    </button>
+                  </div>
                   <div className="flex gap-2">
                     {product.sizes.map((s) => (
                       <button
@@ -533,6 +548,8 @@ export default function ProductDetail() {
       </main>
 
       <Footer />
+
+      {sizeGuideOpen && <SizeGuideModal onClose={() => setSizeGuideOpen(false)} />}
     </>
   );
 }

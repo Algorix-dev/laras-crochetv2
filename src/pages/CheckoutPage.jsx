@@ -123,7 +123,11 @@ export default function CheckoutPage() {
         {/* TIP: Two-column grid — form on the left (1.1fr),
             order summary sidebar on the right (0.9fr).
             Stacks to single column on mobile. */}
-        <div className="mx-auto grid max-w-7xl lg:grid-cols-[1.1fr_.9fr]">
+        {/* Figma: form column (Frame 157) is 626px and the order-summary
+            column is also 626px within the 1312px content area
+            (626 + 60px gap + 626 = 1312) — an even 50/50 split, not the
+            previous 1.1/.9 (~55/45) ratio. */}
+        <div className="mx-auto grid max-w-7xl lg:grid-cols-2">
 
           {/* ================================================================
               LEFT COLUMN — Checkout form
@@ -388,7 +392,7 @@ export default function CheckoutPage() {
 
             {/* TIP: Policy notices — these match the Figma wording exactly. */}
             <div className="mt-5 space-y-3 text-xs leading-6 text-[var(--muted)]">
-              <p>Limit 15 items per order.</p>
+              <p>Limit 3 items per order.</p>
               <p>
                 Check that the item(s) in your cart are correct. Orders cannot
                 be changed or cancelled once placed.
