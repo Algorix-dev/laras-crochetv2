@@ -148,7 +148,7 @@ export default function ShopPage() {
         <p className="pb-24 text-sm text-red-500">{error}</p>
       ) : visibleProducts.length > 0 ? (
         <>
-          <ProductGrid products={visibleProducts} />
+          <ProductGrid products={visibleProducts} columns={3} />
           {hasMore && (
             <div className="flex justify-center py-14">
               <button

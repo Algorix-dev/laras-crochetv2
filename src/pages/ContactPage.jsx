@@ -56,6 +56,7 @@ const CUSTOM_STEP_META = {
   garment: { n: 1, show: true },
   'other-fit': { n: 2, show: true },
   size: { n: 2, show: true },
+  'custom-measurements': { n: 2, show: true },
   color: { n: 3, show: true },
   photo: { n: 4, show: true },
   more: { n: 5, show: true },
@@ -782,15 +783,18 @@ export default function ContactPage() {
                   <div>
                     <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">What size works for you?</h2>
                     <div className="flex flex-wrap justify-center gap-3 max-w-sm mx-auto">
-                      {SIZE_OPTIONS.map((size) => (
-                        <PillButton
-                          key={size}
-                          active={formData.sizeChoice === size}
-                          onClick={() => updateField('sizeChoice', size)}
-                        >
-                          {size}
-                        </PillButton>
-                      ))}
+                          {SIZE_OPTIONS.map((size) => (
+                            <PillButton
+                              key={size}
+                              active={formData.sizeChoice === size}
+                              onClick={() => {
+                                updateField('sizeChoice', size);
+                                if (size === 'Custom sizing') goTo('custom-measurements');
+                              }}
+                            >
+                              {size}
+                            </PillButton>
+                          ))}
                     </div>
 
                     <div className="flex items-center justify-between mt-6 max-w-sm mx-auto">
@@ -820,30 +824,31 @@ export default function ContactPage() {
                       </motion.div>
                     )}
 
-                    {formData.sizeChoice === 'Custom sizing' && (
-                      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 max-w-sm mx-auto">
-                        <p className="text-lg text-[var(--ink)] mb-1">Go ahead, fill in your measurements.</p>
-                        <MeasurementRow
-                          values={formData.customMeasurements}
-                          onChange={(key, val) => updateField('customMeasurements', { ...formData.customMeasurements, [key]: val })}
-                        />
-                        <PrimaryButton
-                          className="mt-4"
-                          disabled={!formData.customMeasurements.bust.trim() || !formData.customMeasurements.waist.trim() || !formData.customMeasurements.hip.trim()}
-                          onClick={() => goTo('color')}
-                        >
-                          Next
-                        </PrimaryButton>
-                      </motion.div>
-                    )}
+                     {formData.sizeChoice && formData.sizeChoice !== 'Custom sizing' && (
+                            <PrimaryButton className="mt-6 max-w-sm mx-auto block" onClick={() => goTo('color')}>
+                              Next
+                            </PrimaryButton>
+                          )}
+                        </div>
+                     )}
 
-                    {formData.sizeChoice && formData.sizeChoice !== 'Custom sizing' && (
-                      <PrimaryButton className="mt-6 max-w-sm mx-auto block" onClick={() => goTo('color')}>
-                        Next
-                      </PrimaryButton>
+                    {/* ============ CUSTOM: custom-measurements (its own step, per Figma) ============ */}
+                    {phase === 'custom-measurements' && (
+                        <div className="max-w-sm mx-auto">
+                          <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-1 font-bold">Go ahead, fill in your measurements.</h2>
+                          <MeasurementRow
+                            values={formData.customMeasurements}
+                            onChange={(key, val) => updateField('customMeasurements', { ...formData.customMeasurements, [key]: val })}
+                          />
+                          <PrimaryButton
+                            className="mt-4"
+                            disabled={!formData.customMeasurements.bust.trim() || !formData.customMeasurements.waist.trim() || !formData.customMeasurements.hip.trim()}
+                            onClick={() => goTo('color')}
+                          >
+                            Next
+                          </PrimaryButton>
+                        </div>
                     )}
-                  </div>
-                )}
 
                 {/* ============ CUSTOM: color ============ */}
                 {phase === 'color' && (
