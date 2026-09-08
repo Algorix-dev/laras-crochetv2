@@ -106,7 +106,7 @@ function HomePage() {
                 <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
                   Shop Our Pieces
                 </h2>
-                <Link to="/shop" className="text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
+                <Link to="/shop" className="pr-3 text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
                   Go to shop
                 </Link>
               </div>
