@@ -128,12 +128,17 @@ function HomePage() {
   );
 }
 
+function PageOffset({ children }) {
+  const { pathname } = useLocation();
+  return <div className={pathname === "/signin" ? "" : "pt-[66px]"}>{children}</div>;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ScrollToTop />
       <ConditionalNavbar />
-      <Routes>
+      <PageOffset><Routes>
         {/* ===== ROUTES VISIBLE TO CLIENT ===== */}
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
@@ -155,7 +160,7 @@ export default function App() {
 
         {/* Catch-all: unknown routes go home rather than a blank page */}
         <Route path="*" element={<SignInPage />} />
-      </Routes>
+      </Routes></PageOffset>
     </AuthProvider>
   );
 }

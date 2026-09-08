@@ -29,6 +29,7 @@ body {
   color: var(--ink);
   font-family: "DM Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 .font-ui {
   font-family: "DM Sans", sans-serif;
