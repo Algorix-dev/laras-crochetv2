@@ -81,72 +81,78 @@ export default function ShopPage() {
 
   return (
     <>
-    <section className="max-w-7xl mx-auto px-5 md:px-8 pt-10">
-      {/* Header row: title/subtitle on the left, search on the right */}
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-2">
-            Shop Lara's Crochet
-          </h1>
-          <p className="text-sm text-[var(--muted)]">
-            Shop the latest pieces and must-haves from Lara's Crochet
-          </p>
+    <section className="pt-10">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28">
+        {/* Header row: title/subtitle on the left, search on the right */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-2">
+              Shop Lara's Crochet
+            </h1>
+            <p className="text-sm text-[var(--muted)]">
+              Shop the latest pieces and must-haves from Lara's Crochet
+            </p>
+          </div>
+
+          <label className="relative w-full md:w-72 shrink-0">
+            <span className="sr-only">Search products</span>
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search"
+              className="w-full rounded-md border border-[var(--line)] bg-white py-2.5 pl-4 pr-10 text-sm outline-none focus-visible:border-[var(--ink)]"
+            />
+            <Search
+              size={16}
+              strokeWidth={1.5}
+              className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]"
+            />
+          </label>
         </div>
 
-        <label className="relative w-full md:w-72 shrink-0">
-          <span className="sr-only">Search products</span>
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search"
-            className="w-full rounded-md border border-[var(--line)] bg-white py-2.5 pl-4 pr-10 text-sm outline-none focus-visible:border-[var(--ink)]"
-          />
-          <Search
-            size={16}
-            strokeWidth={1.5}
-            className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]"
-          />
-        </label>
+        {/* Breadcrumb */}
+        <p className="text-xs text-[var(--muted)] mb-6">
+          <Link to="/" className="hover:text-[var(--ink)]">Home</Link>
+          {' / '}
+          <span className="text-[var(--ink)]">Shop</span>
+        </p>
+
+        {/* Category tabs — bordered pills, matching the Figma. Figma's
+            mobile version wraps these into multiple rows rather than
+            scrolling horizontally, so that's what this does too. No
+            "All" pill in the design, so clearing the filter happens by
+            clicking the active pill again. */}
+        <div className="flex flex-wrap gap-3 mb-10 text-xs uppercase tracking-wide">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(activeCategory === cat ? 'all' : cat)}
+              className={`shrink-0 uppercase border px-4 py-2 font-semibold transition-colors ${
+                activeCategory === cat
+                  ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
+                  : 'border-[var(--line)] text-[var(--ink)] hover:border-[var(--ink)]'
+              }`}
+            >
+              {formatLabel(cat)}
+            </button>
+          ))}
+        </div>
+
+        {/* TIP: distinct states so the person browsing always
+            understands what's happening — loading, error, genuinely-
+            empty, and no-search-results are each a different message
+            rather than one blank grid. */}
+        {loading && <p className="pb-24 text-sm text-[var(--muted)]">Loading products...</p>}
+        {!loading && error && <p className="pb-24 text-sm text-red-500">{error}</p>}
+        {!loading && !error && visibleProducts.length === 0 && (
+          <p className="pb-24 text-sm text-[var(--muted)]">
+            {search ? `No products match "${search}".` : 'No products in this category yet — check back soon.'}
+          </p>
+        )}
       </div>
 
-      {/* Breadcrumb */}
-      <p className="text-xs text-[var(--muted)] mb-6">
-        <Link to="/" className="hover:text-[var(--ink)]">Home</Link>
-        {' / '}
-        <span className="text-[var(--ink)]">Shop</span>
-      </p>
-
-      {/* Category tabs — bordered pills, matching the Figma. Figma's
-          mobile version wraps these into multiple rows rather than
-          scrolling horizontally, so that's what this does too. No
-          "All" pill in the design, so clearing the filter happens by
-          clicking the active pill again. */}
-      <div className="flex flex-wrap gap-3 mb-10 text-xs uppercase tracking-wide">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(activeCategory === cat ? 'all' : cat)}
-            className={`shrink-0 uppercase border px-4 py-2 font-semibold transition-colors ${
-              activeCategory === cat
-                ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
-                : 'border-[var(--line)] text-[var(--ink)] hover:border-[var(--ink)]'
-            }`}
-          >
-            {formatLabel(cat)}
-          </button>
-        ))}
-      </div>
-
-      {/* TIP: distinct states so the person browsing always
-          understands what's happening — loading, error, genuinely-
-          empty, and no-search-results are each a different message
-          rather than one blank grid. */}
-      {loading ? (
-        <p className="pb-24 text-sm text-[var(--muted)]">Loading products...</p>
-      ) : error ? (
-        <p className="pb-24 text-sm text-red-500">{error}</p>
-      ) : visibleProducts.length > 0 ? (
+      {!loading && !error && visibleProducts.length > 0 && (
         <>
           <ProductGrid products={visibleProducts} columns={3} />
           {hasMore && (
@@ -160,14 +166,6 @@ export default function ShopPage() {
             </div>
           )}
         </>
-      ) : search ? (
-        <p className="pb-24 text-sm text-[var(--muted)]">
-          No products match "{search}".
-        </p>
-      ) : (
-        <p className="pb-24 text-sm text-[var(--muted)]">
-          No products in this category yet — check back soon.
-        </p>
       )}
     </section>
     <Footer />
