@@ -48,11 +48,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 import model2 from "../assets/model-images/model2-swuvvw.png";
-import model3 from "../assets/model-images/model3-kj37u6.png";
-import model5 from "../assets/model-images/model5-yyuymy.png";
-import model6 from "../assets/model-images/model6-3lo3ls.png";
+import model3 from "../assets/model-images/model3-3lo3ls.png";
+import model5 from "../assets/model-images/model5-kj37u6.png";
+import model6 from "../assets/model-images/model6-yyuymy.png";
 import heroCenter from "../assets/reina-front.png";
-
 /* ============================================================
    EASY TUNING
    ============================================================ */
