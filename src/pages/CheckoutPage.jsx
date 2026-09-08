@@ -18,6 +18,17 @@ import { useCurrency } from '../context/CurrencyContext';
 import { initializePayment } from '../api';
 import Footer from '../components/Footer';
 
+
+// TIP: add this near the top of the file, above the Field component —
+// same mapping you already use in ShopPage/MyBagPage, kept here too
+// since Checkout renders item names independently.
+const categoryLabel = (category) => {
+  if (category === 'two-pieces') return 'Two-Piece';
+  if (category === 'bikinis') return 'Bikini';
+  if (category === 'skirts') return 'Skirt';
+  if (category === 'shirts') return 'Shirt';
+  return 'Dress';
+};
 /* TIP: Reusable input field component — renders a label + text input
    with shared styling matching the Figma's light gray borders.
    Now a controlled input (value + onChange) instead of defaultValue,
@@ -258,11 +269,6 @@ export default function CheckoutPage() {
                     <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[var(--line)] text-[10px]">?</span>
                   </button>
                 </div>
-
-                <label className="flex gap-2 text-xs">
-                  <input type="checkbox" className="rounded-sm" />
-                  Text me with news and offers
-                </label>
               </div>
             </section>
 
@@ -279,7 +285,7 @@ export default function CheckoutPage() {
               disabled={submitting || !cartItems.length}
               className="mt-8 w-full bg-[var(--ink)] py-4 text-xs font-bold tracking-widest text-white disabled:opacity-50"
             >
-              {submitting ? 'REDIRECTING TO PAYMENT…' : 'CONTINUE TO PAYMENT'}
+                {submitting ? 'REDIRECTING TO PAYMENT…' : 'CONTINUE TO SHIPPING'}
             </button>
           </form>
 
@@ -303,8 +309,11 @@ export default function CheckoutPage() {
                       className="h-20 w-16 bg-white object-contain"
                     />
                     <div className="flex-1 text-sm">
+                      // NEW — only appends "Dress" for actual dresses, so a two-piece or
+                      // skirt in the bag doesn't get mislabeled:
                       <b className="uppercase tracking-wide">
-                        The {item.product.name} Dress
+                        The {item.product.name}
+                        {item.product.category === 'dresses' ? ' Dress' : ''}
                       </b>
                       <p className="mt-1 text-xs text-[var(--muted)]">
                         {item.selectedColor} · {item.selectedSize}
@@ -385,7 +394,7 @@ export default function CheckoutPage() {
 
             {/* TIP: Tax/duties warning banner — light gray box with
                 warning triangle icon, matching the Figma exactly. */}
-            <div className="mt-5 flex items-start gap-2 rounded border border-[var(--line)] bg-white p-3 text-xs text-[var(--muted)]">
+            <div className="mt-5 flex items-start gap-2 rounded bg-[#f0ebe5] p-3 text-xs text-[var(--muted)]">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <p>Local taxes, duties or customs clearance fees may apply</p>
             </div>

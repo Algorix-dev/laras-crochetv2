@@ -26,6 +26,14 @@ import SizeGuideModal from '../components/SizeGuideModal';
    recreate these objects on every render.
 ----------------------------------------------------------- */
 
+// TIP: add near the top, same mapping used across the site
+const categoryLabel = (category) => {
+  if (category === 'two-pieces') return 'Two-Piece';
+  if (category === 'bikinis') return 'Bikini';
+  if (category === 'skirts') return 'Skirt';
+  if (category === 'shirts') return 'Shirt';
+  return 'Dress';
+};
 /* TIP: Tab content — the key is the tab label, the value is
    the paragraph that shows when that tab is active. Adding a
    new tab is just one more key/value pair here, plus the tab
@@ -117,6 +125,28 @@ function FitIndicator({ fit }) {
   );
 }
 
+// TIP: this is the horizontal version used once at the top of the
+// Reviews section for the aggregate fit consensus across all reviews —
+// different from FitIndicator, which is per-review and vertical.
+function FitScaleAggregate({ position = 'true' }) {
+  const leftPercent = position === 'small' ? '10%' : position === 'large' ? '90%' : '50%';
+  return (
+    <div className="mt-5 max-w-md">
+      <div className="relative h-px w-full bg-[var(--line)]">
+        <div
+          className="absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 -translate-x-1/2 rounded-full bg-[var(--ink)]"
+          style={{ left: leftPercent }}
+        />
+      </div>
+      <div className="mt-2 flex justify-between text-[10px] text-[var(--muted)]">
+        <span>Runs small</span>
+        <span>True to size</span>
+        <span>Runs large</span>
+      </div>
+    </div>
+  );
+}
+
 /* -----------------------------------------------------------
    Reviews section — pulled out as its own component so the
    main ProductDetail stays readable.
@@ -146,14 +176,16 @@ function Reviews() {
               ))}
             </span>
             <span className="text-xs text-[var(--muted)]">
-              Based on 10 reviews
+              Based on 18 reviews
             </span>
+            </div>
+            <h3 className="mt-6 text-sm font-semibold">Reviews Summary</h3>
+            <p className="mt-2 max-w-md text-sm leading-7 text-[var(--muted)]">
+              Customers love the one-of-a-kind crochet work, thoughtful fit, and
+              the care that goes into every order.
+            </p>
+            <FitScaleAggregate position="true" />
           </div>
-          <p className="mt-4 max-w-md text-sm leading-7 text-[var(--muted)]">
-            Customers love the one-of-a-kind crochet work, thoughtful fit, and
-            the care that goes into every order.
-          </p>
-        </div>
 
         {/* TIP: These are placeholder boxes for real customer photos.
             When Lara sends UGC (user-generated content) photos,
@@ -331,14 +363,6 @@ export default function ProductDetail() {
   return (
     <>
       <main className="mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-12">
-        {/* Back to shop link */}
-        <Link
-          to="/shop"
-          className="mb-6 inline-block text-xs uppercase tracking-wider text-[var(--muted)] hover:text-[var(--maroon)]"
-        >
-          ← Back to shop
-        </Link>
-
         {/* ============================
             TWO-COLUMN MAIN SECTION
             ============================ */}
@@ -385,10 +409,11 @@ export default function ProductDetail() {
           {/* ---- RIGHT: Product Info & Purchase ---- */}
           <section className="lg:pt-4">
             <p className="text-xs uppercase tracking-widest text-[var(--muted)] underline">
-              {product.category?.replace('-', ' ')}
+              {categoryLabel(product.category)}
             </p>
             <h1 className="mt-3 font-display text-5xl font-bold leading-none md:text-6xl">
-              {product.name}
+              The {product.name}
+              {product.category === 'dresses' ? ' Dress' : ''}
             </h1>
             <div className="mt-4 flex items-center gap-4">
               <p className="text-xl">{formatPrice(product.price)}</p>
