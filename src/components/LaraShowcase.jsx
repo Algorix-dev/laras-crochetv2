@@ -86,7 +86,7 @@ const STAGE = {
 
 // How each STORY SLOT occupant divides its own local 0-1 window
 // between entering, holding still (fully visible), and exiting.
-const PARA_PHASES = { enterFrac: 0.5, holdFrac: 0.15, exitFrac: 0.35, travel: 46 };
+const PARA_PHASES = { enterFrac: 0.5, holdFrac: 0.1, exitFrac: 0.4, travel: 140 };
 
 function clamp01(n) {
   return Math.min(1, Math.max(0, n));
@@ -427,7 +427,15 @@ export default function LaraShowcase() {
               ever meaningfully visible/opaque at a given progress. */}
           <div
             className="relative mx-auto"
-            style={{ height: slotHeight != null ? `${slotHeight}px` : "auto", maxWidth: "42rem" }}
+            style={{
+              height: slotHeight != null ? `${slotHeight}px` : "auto",
+              maxWidth: "42rem",
+              overflow: "hidden",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+              maskImage:
+                "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+            }}
           >
             {/* PARAGRAPHS */}
             <div
@@ -491,9 +499,9 @@ export default function LaraShowcase() {
                   ? { opacity: 1, translateY: 0 }
                   : computeSlide(progress, groupStart, groupEnd, {
                       enterFrac: 0.4,
-                      holdFrac: 0.25,
-                      exitFrac: 0.35,
-                      travel: 40,
+                      holdFrac: 0.2,
+                      exitFrac: 0.4,
+                      travel: 110,
                     });
 
                 if (!reduceMotion && groupSlide.opacity < 0.02) return null;

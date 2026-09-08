@@ -143,7 +143,7 @@ export default function Hero() {
 
   return (
     <section
-      className="pt-10 md:pt-16 pb-16 text-center"
+      className="pt-10 md:pt-16 pb-24 md:pb-40 text-center"
       style={{ perspective: "1800px" }}
     >
       {/* No CSS @keyframes needed here — the spin is driven by SMIL
