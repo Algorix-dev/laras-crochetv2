@@ -30,7 +30,7 @@ import threadBand from "../assets/decor/thread-band.png";
 
 const CUSTOM_ARC_OPACITY = 1.0;
 const CUSTOM_THREAD_OPACITY = 1.0;
-const CUSTOM_ELLIPSE_OPACITY = 1.0;
+const CUSTOM_ELLIPSE_OPACITY = 0.35;
 
 /* ============================================================
    CUSTOM ORDER BANNER

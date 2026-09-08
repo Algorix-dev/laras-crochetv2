@@ -203,7 +203,7 @@ export default function Hero() {
                     layoutId="hero-podium"
                     transition={MOVE_TRANSITION}
                     aria-hidden="true"
-                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(9rem,12.7vw,15.24rem)] aspect-[243.81/116.05] pointer-events-none"
+                    className="absolute left-1/2 -translate-x-1/2 bottom-[-7.2%] z-0 w-[clamp(6rem,12.7vw,15.24rem)] aspect-[243.81/116.05] pointer-events-none"
                   >
                     {/* Base ring — always-on, dim, matches Figma. */}
                     <svg

@@ -100,27 +100,27 @@ function HomePage() {
         </Link>
       </div>
 
-      {/* Shop Our Pieces — a curated 4-item taste of the catalog, not the full grid */}
-      <section className="max-w-6xl mx-auto px-5 py-10 md:py-16">
-        <div className="flex items-end justify-between mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
-            Shop Our Pieces
-          </h2>
-          <Link to="/shop" className="text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
-            Go to shop
-          </Link>
-        </div>
-        {loading ? (
-          <p className="text-sm text-[var(--muted)]">Loading products...</p>
-        ) : (
-          <ProductGrid products={liveProducts.slice(0, 4)} />
-        )}
-        <div className="text-center mt-10">
-          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
-            Go to Shop
-          </Link>
-        </div>
-      </section>
+            {/* Shop Our Pieces — a curated 4-item taste of the catalog, not the full grid */}
+            <section className="py-10 md:py-16">
+              <div className="mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28 flex items-end justify-between mb-8">
+                <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
+                  Shop Our Pieces
+                </h2>
+                <Link to="/shop" className="text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
+                  Go to shop
+                </Link>
+              </div>
+              {loading ? (
+                <p className="text-sm text-[var(--muted)] px-5">Loading products...</p>
+              ) : (
+                <ProductGrid products={liveProducts.slice(0, 4)} />
+              )}
+              <div className="text-center mt-10">
+                <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+                  Go to Shop
+                </Link>
+              </div>
+            </section>
 
       <CustomOrderBanner />
       <Footer />

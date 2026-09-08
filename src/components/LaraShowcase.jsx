@@ -436,7 +436,7 @@ export default function LaraShowcase() {
               maskImage:
                 "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
             }}
-          >
+          > I mean, I'm increasing.
             {/* PARAGRAPHS */}
             <div
               ref={paraSlideRef}
