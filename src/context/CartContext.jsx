@@ -20,6 +20,17 @@ const CartContext = createContext(null);
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
 
+  // TIP: the Bag Drawer (BagDrawer.jsx) is mounted once at the app
+  // root (see App.jsx) and controlled from here, so "Add to Bag"
+  // anywhere in the app — ProductDetail, ProductCard's quick-add
+  // icon, etc. — can open it just by calling openBag(), the same
+  // way they already call addToBag(). The header bag ICON in
+  // Navbar.jsx is intentionally separate: it navigates straight to
+  // the full /bag page, it does NOT open this drawer.
+  const [isBagOpen, setIsBagOpen] = useState(false);
+  const openBag = () => setIsBagOpen(true);
+  const closeBag = () => setIsBagOpen(false);
+
   /* TIP: addToBag creates a unique ID from the product + all
      selected options. If the exact same variant already exists
      in the cart, it just bumps the quantity instead of adding
@@ -76,13 +87,16 @@ export function CartProvider({ children }) {
       removeFromBag,
       updateQuantity,
       clearCart,
+      isBagOpen,
+      openBag,
+      closeBag,
       cartCount: cartItems.reduce((total, item) => total + item.quantity, 0),
       cartTotal: cartItems.reduce(
         (total, item) => total + item.product.price * item.quantity,
         0
       ),
     }),
-    [cartItems]
+    [cartItems, isBagOpen]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

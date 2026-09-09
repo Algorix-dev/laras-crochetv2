@@ -30,10 +30,9 @@ export default function BagDrawer({ open, onClose }) {
   const { toggleWishlist } = useWishlist();
   const navigate = useNavigate();
   const [promoOpen, setPromoOpen] = useState(false);
-  const [giftBag, setGiftBag] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
 
-  /* TIP: "Frequently Bought Together" — pulls from the real catalog
+  /* TIP: "Lara Thinks You'd Love These Too" — pulls from the real catalog
      now instead of the old static products.js file, so it reflects
      whatever Lara currently has listed. Only fetches once the drawer
      is actually opened, not on every render. */
@@ -45,7 +44,7 @@ export default function BagDrawer({ open, onClose }) {
     }
   }, [open, recommendations.length]);
 
-  const finalTotal = cartTotal + (giftBag ? 7400 : 0);
+  const finalTotal = cartTotal;
 
   return (
     <AnimatePresence>
@@ -122,7 +121,8 @@ export default function BagDrawer({ open, onClose }) {
                         <div className="flex justify-between gap-2">
                           <div>
                             <h3 className="text-sm uppercase tracking-wide">
-                              The {item.product.name} Dress
+                              The {item.product.name}
+                              {item.product.category === 'dresses' ? ' Dress' : ''}
                             </h3>
                             <p className="mt-1 text-sm">
                               {money(item.product.price)}
@@ -137,8 +137,10 @@ export default function BagDrawer({ open, onClose }) {
                         </div>
 
                         <p className="mt-2 text-xs text-[var(--muted)]">
-                          Size: {item.selectedSize} · Color:{' '}
-                          {item.selectedColor}
+                          Size <span className="font-bold text-[var(--ink)]">{item.selectedSize}</span>
+                        </p>
+                        <p className="text-xs text-[var(--muted)]">
+                          Color <span className="font-bold text-[var(--ink)]">{item.selectedColor}</span>
                         </p>
 
                         <div className="mt-3 flex items-center justify-between">
@@ -188,17 +190,6 @@ export default function BagDrawer({ open, onClose }) {
                 </div>
               )}
 
-              {/* Gift bag option */}
-              <label className="mt-6 flex cursor-pointer items-center gap-3 border-y border-[var(--line)] py-4 text-xs font-medium">
-                <input
-                  type="checkbox"
-                  checked={giftBag}
-                  onChange={(e) => setGiftBag(e.target.checked)}
-                  className="accent-[var(--maroon)]"
-                />
-                ADD GIFT BAG FOR {money(7400)}
-              </label>
-
               {/* Promo code accordion */}
               <div className="border-b border-[var(--line)]">
                 <button
@@ -225,10 +216,10 @@ export default function BagDrawer({ open, onClose }) {
                 )}
               </div>
 
-              {/* Frequently Bought Together */}
+              {/* Lara Thinks You'd Love These Too */}
               <section className="pt-7">
                 <h3 className="text-xs font-bold uppercase tracking-wide">
-                  Frequently Bought Together
+                  Lara Thinks You'd Love These Too
                 </h3>
                 <div className="mt-4 flex gap-3 overflow-x-auto">
                   {recommendations.map((product) => (

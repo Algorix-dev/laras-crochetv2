@@ -38,6 +38,19 @@ const categoryLabel = (category) => {
    the paragraph that shows when that tab is active. Adding a
    new tab is just one more key/value pair here, plus the tab
    will appear automatically because we map over Object.keys(). */
+/* TIP: Figma's product page text ("The Reina is a full-length gown
+   built entirely by hand...") is written specifically about the
+   Reina dress and repeats verbatim under every mockup, including
+   ones for other products like "The Lemonade" — that's a Figma
+   prototyping shortcut, not a real spec to copy literally (a skirt
+   isn't a "full-length gown"). Real per-product copy needs a
+   `description` field from the backend, which doesn't exist yet.
+   Until then, this keeps Figma's structure and brand voice (made by
+   hand, one stitch at a time, no two pieces identical) but swaps in
+   the actual product name instead of hardcoding "Reina" everywhere. */
+const productDescription = (product) =>
+  `The ${product.name} is built entirely by hand, one stitch at a time — designed to move with you rather than hold you stiff. No two ${product.name}s are identical, because no two hands crochet exactly the same way twice. Made to order, just for you.`;
+
 const tabs = {
   Details:
     'Hand-crocheted from premium yarn. Each piece is made to order from Lagos, Nigeria. Production time: 2-3 weeks. Ships within Nigeria and internationally.',
@@ -85,8 +98,25 @@ function ColorSwatch({ value, active, onClick, label }) {
       aria-label={label}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-8 w-8 border border-white outline-offset-2 ${
-        active ? 'outline outline-1 outline-[var(--ink)]' : ''
+      className={`h-8 w-8 border-2 border-white outline outline-offset-2 ${
+        active ? 'outline-2 outline-[var(--ink)]' : 'outline-1 outline-[var(--line)]'
+      }`}
+      style={{ backgroundColor: value }}
+    />
+  );
+}
+
+/* TIP: Shades use a wider, shorter rectangular chip — visually
+   distinct from the square Color Mix swatches above. Same active/
+   inactive outline logic, just a different shape. */
+function ShadeSwatch({ value, active, onClick, label }) {
+  return (
+    <button
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onClick}
+      className={`h-7 w-9 border-2 border-white outline outline-offset-2 ${
+        active ? 'outline-2 outline-[var(--ink)]' : 'outline-1 outline-[var(--line)]'
       }`}
       style={{ backgroundColor: value }}
     />
@@ -329,16 +359,13 @@ export default function ProductDetail() {
     setSize(product.sizes?.[0] ?? null);
   }, [product]);
 
-  /* Toast notification — shows briefly when item is added to bag */
-  const [toast, setToast] = useState(false);
-  const { addToBag } = useCart();
+  const { addToBag, openBag } = useCart();
   const { formatPrice } = useCurrency();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const handleAddToBag = () => {
     addToBag(product, color, shade, size);
-    setToast(true);
-    window.setTimeout(() => setToast(false), 2500);
+    openBag();
   };
 
   if (loading) {
@@ -430,9 +457,7 @@ export default function ProductDetail() {
             </div>
 
             <p className="mt-7 max-w-lg text-sm leading-7 text-[var(--muted)]">
-              At Lara&apos;s Crochet, every piece here starts as a single
-              strand of yarn and a pair of hands, no factories, no shortcuts.
-              Made to order, one piece at a time, out of Lagos, Nigeria.
+              {productDescription(product)}
             </p>
 
             {/* Selectors — each section only renders if the product
@@ -464,7 +489,7 @@ export default function ProductDetail() {
                   <p className="mb-3 text-sm font-medium">Shades</p>
                   <div className="flex gap-3">
                     {product.shades.map((s, i) => (
-                      <ColorSwatch
+                      <ShadeSwatch
                         key={`${s}-${i}`}
                         value={s}
                         active={shade === s}
@@ -489,16 +514,16 @@ export default function ProductDetail() {
                       Size guide
                     </button>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex border-y border-[var(--line)]">
                     {product.sizes.map((s) => (
                       <button
                         key={s}
                         aria-pressed={size === s}
                         onClick={() => setSize(s)}
-                        className={`rounded-sm border px-4 py-2 text-xs tracking-wide transition-colors ${
+                        className={`flex-1 py-3 text-xs tracking-wide transition-colors ${
                           size === s
-                            ? 'border-[var(--ink)] bg-[var(--ink)] text-white'
-                            : 'border-[var(--line)] text-[var(--ink)] hover:border-[var(--ink)]'
+                            ? 'bg-[var(--ink)] text-white'
+                            : 'text-[var(--ink)] hover:bg-[#f4eeee]'
                         }`}
                       >
                         {s}
@@ -516,13 +541,6 @@ export default function ProductDetail() {
             >
               Add to Bag
             </button>
-
-            {/* Toast confirmation */}
-            {toast && (
-              <p className="mt-3 text-center text-xs text-[var(--maroon)]">
-                ✓ Added to bag
-              </p>
-            )}
           </section>
         </div>
 
@@ -546,7 +564,7 @@ export default function ProductDetail() {
             ))}
           </div>
           <p className="mt-6 max-w-2xl text-sm leading-7 text-[var(--muted)]">
-            {tabs[activeTab]}
+            {activeTab === 'Details' ? productDescription(product) : tabs[activeTab]}
           </p>
         </div>
 

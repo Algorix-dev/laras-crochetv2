@@ -15,17 +15,19 @@ import { useWishlist } from '../context/WishlistContext';
 import { useCurrency } from '../context/CurrencyContext';
 
 export default function ProductCard({ product }) {
-  const { addToBag } = useCart();
+  const { addToBag, openBag } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { formatPriceNumber } = useCurrency();
 
-  const handleAddToBag = () =>
+  const handleAddToBag = () => {
     addToBag(
       product,
       product.colors?.[0] || 'Default',
       product.shades?.[0] || 'Default',
       product.sizes?.[0] || 'S'
     );
+    openBag();
+  };
 
   return (
     <div className="group">

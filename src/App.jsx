@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { useCart } from "./context/CartContext";
 import Navbar from "./components/Navbar";
+import BagDrawer from "./components/BagDrawer";
 import Hero from "./components/Hero";
 import ProductGrid from "./components/ProductGrid";
 import CustomOrderBanner from "./components/CustomOrderBanner";
@@ -111,7 +113,7 @@ function HomePage() {
                 </Link>
               </div>
               {loading ? (
-                <p className="text-sm text-[var(--muted)] px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28">Loading products...</p>
+                <p className="text-sm text-[var(--muted)] px-5">Loading products...</p>
               ) : (
                 <ProductGrid products={liveProducts.slice(0, 4)} />
               )}
@@ -134,10 +136,19 @@ function PageOffset({ children }) {
 }
 
 export default function App() {
+  // TIP: BagDrawer was built but never actually mounted anywhere in
+  // the app before this — "Add to Bag" had no visual confirmation
+  // beyond a small toast. Rendering it here, once, at the app root
+  // (rather than inside a single page) means any page can pop it
+  // open via the isBagOpen/openBag/closeBag CartContext already
+  // exposes, and it stays available no matter which route you're on.
+  const { isBagOpen, closeBag } = useCart();
+
   return (
     <AuthProvider>
       <ScrollToTop />
       <ConditionalNavbar />
+      <BagDrawer open={isBagOpen} onClose={closeBag} />
       <PageOffset><Routes>
         {/* ===== ROUTES VISIBLE TO CLIENT ===== */}
         <Route path="/" element={<HomePage />} />
