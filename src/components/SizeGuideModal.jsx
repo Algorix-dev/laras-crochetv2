@@ -1,18 +1,11 @@
 /*
-  TIP: This was entirely missing from the codebase before — Figma's
-  "Size Guide Modal" spec exists, but there was no component for it
-  and no "Size guide" trigger link anywhere on the Product Detail
-  page to open it. Both are now wired up.
-
-  The "Do you want custom sizing?" row links out to the real Custom
-  Orders flow (ContactPage.jsx, ?flow=custom) instead of expanding
-  inline here — that flow already asks for measurements as its own
-  step, so this deep-links straight to that step (?step=size) rather
-  than making the person re-pick a garment type they didn't come here
-  to choose.
+  TIP: "Do you want custom sizing?" expands INLINE within this same
+  modal — per the Figma "Size Guide Modal" frame, it reveals a small
+  "Fill in your measurements" table (Size / Bust / Waist / Hip, one
+  editable row) and a "Done" button, rather than navigating away to
+  the Contact page's Custom Orders flow.
 */
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 
 const SIZE_CHART = [
@@ -25,6 +18,12 @@ const SIZE_CHART = [
 ];
 
 export default function SizeGuideModal({ onClose }) {
+  const [customOpen, setCustomOpen] = useState(false);
+  const [measurements, setMeasurements] = useState({ size: '', bust: '', waist: '', hip: '' });
+
+  const updateMeasurement = (key) => (e) =>
+    setMeasurements((m) => ({ ...m, [key]: e.target.value }));
+
   // TIP: closing on Escape is a small thing but expected of any modal.
   useEffect(() => {
     const onKeyDown = (e) => e.key === 'Escape' && onClose();
@@ -76,14 +75,57 @@ export default function SizeGuideModal({ onClose }) {
           </tbody>
         </table>
 
-        <Link
-          to="/contact?flow=custom&step=size"
-          onClick={onClose}
-          className="mt-6 flex items-center justify-between text-sm font-bold text-[var(--ink)]"
+        <button
+          type="button"
+          onClick={() => setCustomOpen((v) => !v)}
+          aria-expanded={customOpen}
+          className="mt-6 flex w-full items-center justify-between text-sm font-bold text-[var(--ink)]"
         >
           Do you want custom sizing?
-          <ChevronDown size={20} className="-rotate-90" />
-        </Link>
+          <ChevronDown size={20} className={customOpen ? 'rotate-180' : ''} />
+        </button>
+
+        {customOpen && (
+          <div className="mt-4">
+            <p className="mb-2 text-xs text-[var(--muted)]">Fill in your measurements</p>
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  {['Size', 'Bust', 'Waist', 'Hip'].map((col) => (
+                    <th
+                      key={col}
+                      className="border border-[var(--line)] bg-white px-4 py-2 text-left font-medium text-[var(--ink)]"
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {['size', 'bust', 'waist', 'hip'].map((key) => (
+                    <td key={key} className="border border-[var(--line)] p-0">
+                      <input
+                        aria-label={key}
+                        value={measurements[key]}
+                        onChange={updateMeasurement(key)}
+                        className="w-full bg-transparent px-4 py-2 text-sm outline-none"
+                      />
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-6 w-full bg-[var(--ink)] py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon)]"
+            >
+              Done
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
