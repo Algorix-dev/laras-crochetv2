@@ -46,50 +46,54 @@ export default function WishlistPage() {
   return (
     <>
       <section className="mx-auto max-w-7xl px-5 pt-10 md:px-8">
-        {/* TIP: was missing the breadcrumb + AccountSidebar entirely —
-            Wishlist is one of the four account-section pages (see
-            AccountSidebar's LINKS), so it needs the same nav as
-            Account/Order History/Addresses for the section to feel
-            like one place instead of an orphaned page. */}
-        <p className="mb-6 text-xs text-[var(--muted)]">
-          <Link to="/" className="hover:underline">Home</Link> / Account
-        </p>
-
-        <div className="grid gap-10 md:grid-cols-[180px_1fr]">
+        {/* TIP: the Figma desktop Wishlist screenshots (Wishlist_Page.png,
+            Wishlist_Page__Empty_state_.png) show NO breadcrumb and NO
+            AccountSidebar at all — just the header straight into the
+            grid, full width. Only the MOBILE screenshot (Wishlist.png)
+            shows "Home / Account" plus AccountSidebar's collapsed
+            dropdown. So both are wrapped in md:hidden here — on desktop
+            they disappear entirely instead of showing a sidebar column
+            like Account/Orders/Addresses do. If Lara wants a real
+            "Account > Wishlist" sub-view WITH the sidebar on desktop
+            too, that'd need to be a separate route from this one. */}
+        <div className="md:hidden mb-6">
+          <p className="mb-6 text-xs text-[var(--muted)]">
+            <Link to="/" className="hover:underline">Home</Link> / Account
+          </p>
           <AccountSidebar active="wishlist" />
+        </div>
 
-          <div>
-            {wishlistedProducts.length > 0 ? (
-              <>
-                <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
-                  Wishlist ({wishlistedProducts.length})
-                </h1>
-                <p className="mb-8 text-sm text-[var(--muted)]">
-                  Some pieces you love from Lara's Crochet.
-                </p>
-                <ProductGrid products={wishlistedProducts} />
-              </>
-            ) : (
-              <div className="mb-12">
-                <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
-                  Wishlist
-                </h1>
-                <p className="text-sm text-[var(--muted)] mb-3">
-                  You have 0 items in your wishlist
-                </p>
-                <Link to="/shop" className="inline-flex items-center gap-1.5 text-xs font-semibold underline underline-offset-2 hover:text-[var(--maroon)]">
-                  Start shopping →
-                </Link>
-              </div>
-            )}
+        <div>
+          {wishlistedProducts.length > 0 ? (
+            <>
+              <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
+                Wishlist ({wishlistedProducts.length})
+              </h1>
+              <p className="mb-8 text-sm text-[var(--muted)]">
+                Some pieces you love from Lara's Crochet.
+              </p>
+              <ProductGrid products={wishlistedProducts} columns={4} />
+            </>
+          ) : (
+            <div className="mb-12">
+              <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
+                Wishlist
+              </h1>
+              <p className="text-sm text-[var(--muted)] mb-3">
+                You have 0 items in your wishlist
+              </p>
+              <Link to="/shop" className="inline-flex items-center gap-1.5 text-xs font-semibold underline underline-offset-2 hover:text-[var(--maroon)]">
+                Start shopping →
+              </Link>
+            </div>
+          )}
 
-            {recommended.length > 0 && (
-              <div className={wishlistedProducts.length > 0 ? 'mt-16 pb-16' : 'mt-2 pb-16'}>
-                <h2 className="font-display text-2xl md:text-3xl mb-8">Lara Thinks You'd Love These Too</h2>
-                <ProductGrid products={recommended} />
-              </div>
-            )}
-          </div>
+          {recommended.length > 0 && (
+            <div className={wishlistedProducts.length > 0 ? 'mt-16 pb-16' : 'mt-2 pb-16'}>
+              <h2 className="font-display text-2xl md:text-3xl mb-8">Lara Thinks You'd Love These Too</h2>
+              <ProductGrid products={recommended} columns={4} />
+            </div>
+          )}
         </div>
       </section>
 

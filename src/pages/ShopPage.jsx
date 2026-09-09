@@ -159,7 +159,7 @@ export default function ShopPage() {
             <div className="flex justify-center py-14">
               <button
                 onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-                className="bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon-dark)] cursor-pointer"
+                className="bg-[var(--ink)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)] cursor-pointer"
               >
                 View More Products
               </button>

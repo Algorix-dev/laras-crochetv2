@@ -39,6 +39,14 @@ export default function MyBagPage() {
   const shipping = cartItems.length ? 10000 : 0;
   const total = cartTotal + shipping;
 
+  // TIP: "Limit 3 items per order" is stated as real policy copy on
+  // the Checkout page, so it's enforced here too — total quantity
+  // across the whole bag, not per line item. Same sum-of-quantities
+  // calc as Checkout's totalItems, kept local since CartContext
+  // doesn't expose this directly.
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const atLimit = totalItems >= 3;
+
   // Recommendations: fetch real products from the API (like ShopPage
   // and ProductDetail do) and filter out anything already in the bag,
   // instead of reading the old hardcoded products.js array.
@@ -135,35 +143,29 @@ export default function MyBagPage() {
 
                     {/* Product details */}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <Link
-                            to={`/product/${item.product.id}`}
-                            className="text-sm uppercase tracking-wide hover:underline"
-                          >
-                            {item.product.category === 'two-pieces'
-                              ? 'Two-Piece'
-                              : item.product.category === 'bikinis'
-                                ? 'Bikini'
-                                : item.product.category === 'skirts'
-                                  ? 'Skirt'
-                                  : item.product.category === 'shirts'
-                                    ? 'Shirt'
-                                    : 'Dress'}{' '}
-                            — {item.product.name}
-                          </Link>
-                          <p className="mt-1 text-sm">
-                            {formatPrice(item.product.price)}
-                          </p>
-                        </div>
-                        <button
-                          aria-label={`Remove ${item.product.name}`}
-                          onClick={() => removeFromBag(item.id)}
-                          className="text-[var(--muted)] hover:text-[var(--ink)]"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      {/* TIP: category sits as its own muted uppercase
+                          line above the bold name — Figma shows these
+                          stacked, not run together on one line. */}
+                      <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+                        {item.product.category === 'two-pieces'
+                          ? 'Two-Piece'
+                          : item.product.category === 'bikinis'
+                            ? 'Bikini'
+                            : item.product.category === 'skirts'
+                              ? 'Skirt'
+                              : item.product.category === 'shirts'
+                                ? 'Shirt'
+                                : 'Dress'}
+                      </p>
+                      <Link
+                        to={`/product/${item.product.id}`}
+                        className="text-sm font-bold uppercase tracking-wide hover:underline"
+                      >
+                        {item.product.name}
+                      </Link>
+                      <p className="mt-1 text-sm">
+                        {formatPrice(item.product.price)}
+                      </p>
 
                       {/* Mobile labels — shown only on small screens */}
                       <div className="mt-2 flex gap-3 text-xs text-[var(--muted)] md:hidden">
@@ -177,12 +179,23 @@ export default function MyBagPage() {
                         <span className="w-[80px]">{item.selectedColor}</span>
                       </div>
 
-                      {/* Quantity selector + move to wishlist */}
+                      {/* TIP: quantity control differs by breakpoint,
+                          matching the two different Figma screenshots
+                          exactly — mobile (My_Bag_Page mobile shots)
+                          shows a plain Minus/qty/Plus stepper with no
+                          way to fully remove an item; desktop (the
+                          "MY BAG (2)" table shot) replaces the minus
+                          with a Trash icon that removes the line
+                          outright, and never shows a minus at all.
+                          Both share the same 3-item cap on the plus
+                          button. */}
                       <div className="mt-3 flex items-center gap-4">
-                        <div className="flex items-center border border-[var(--line)]">
+                        {/* Mobile stepper — Minus / qty / Plus */}
+                        <div className="flex items-center border border-[var(--line)] md:hidden">
                           <button
-                            className="p-2"
+                            className="p-2 disabled:opacity-30"
                             aria-label="Decrease quantity"
+                            disabled={item.quantity <= 1}
                             onClick={() =>
                               updateQuantity(item.id, item.quantity - 1)
                             }
@@ -193,8 +206,9 @@ export default function MyBagPage() {
                             {item.quantity}
                           </span>
                           <button
-                            className="p-2"
+                            className="p-2 disabled:opacity-30"
                             aria-label="Increase quantity"
+                            disabled={atLimit}
                             onClick={() =>
                               updateQuantity(item.id, item.quantity + 1)
                             }
@@ -202,6 +216,31 @@ export default function MyBagPage() {
                             <Plus size={12} />
                           </button>
                         </div>
+
+                        {/* Desktop stepper — Trash / qty / Plus */}
+                        <div className="hidden items-center border border-[var(--line)] md:flex">
+                          <button
+                            className="p-2 text-[var(--muted)] hover:text-[var(--ink)]"
+                            aria-label={`Remove ${item.product.name}`}
+                            onClick={() => removeFromBag(item.id)}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                          <span className="w-7 text-center text-xs">
+                            {item.quantity}
+                          </span>
+                          <button
+                            className="p-2 disabled:opacity-30"
+                            aria-label="Increase quantity"
+                            disabled={atLimit}
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+
                         <button
                           onClick={() => {
                             toggleWishlist(item.product.id);
@@ -216,6 +255,14 @@ export default function MyBagPage() {
                   </article>
                 ))}
               </div>
+
+              {/* TIP: only shows once the cap is actually hit, so it
+                  doesn't clutter the page for every normal order. */}
+              {atLimit && (
+                <p className="mt-4 text-xs text-[var(--muted)]">
+                  Limit 3 items per order.
+                </p>
+              )}
             </div>
 
             {/* ---- RIGHT: Order Summary ---- */}
@@ -324,7 +371,7 @@ export default function MyBagPage() {
             <h2 className="font-display text-2xl md:text-3xl mb-8">
               Lara Thinks You'd Love These Too
             </h2>
-            <ProductGrid products={recommendations} />
+            <ProductGrid products={recommendations} columns={4} />
           </section>
         )}
       </main>

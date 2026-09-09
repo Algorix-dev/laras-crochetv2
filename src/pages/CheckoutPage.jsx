@@ -19,16 +19,6 @@ import { initializePayment } from '../api';
 import Footer from '../components/Footer';
 
 
-// TIP: add this near the top of the file, above the Field component —
-// same mapping you already use in ShopPage/MyBagPage, kept here too
-// since Checkout renders item names independently.
-const categoryLabel = (category) => {
-  if (category === 'two-pieces') return 'Two-Piece';
-  if (category === 'bikinis') return 'Bikini';
-  if (category === 'skirts') return 'Skirt';
-  if (category === 'shirts') return 'Shirt';
-  return 'Dress';
-};
 /* TIP: Reusable input field component — renders a label + text input
    with shared styling matching the Figma's light gray borders.
    Now a controlled input (value + onChange) instead of defaultValue,
@@ -309,8 +299,6 @@ export default function CheckoutPage() {
                       className="h-20 w-16 bg-white object-contain"
                     />
                     <div className="flex-1 text-sm">
-                      // NEW — only appends "Dress" for actual dresses, so a two-piece or
-                      // skirt in the bag doesn't get mislabeled:
                       <b className="uppercase tracking-wide">
                         The {item.product.name}
                         {item.product.category === 'dresses' ? ' Dress' : ''}
