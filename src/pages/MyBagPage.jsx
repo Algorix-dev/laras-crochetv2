@@ -115,8 +115,14 @@ export default function MyBagPage() {
 
             {/* ---- LEFT: Cart Items Table ---- */}
             <div>
-              {/* Table header — hidden on mobile, visible on desktop */}
-              <div className="hidden md:grid md:grid-cols-[1fr_80px_80px_80px] gap-3 border-b border-[var(--line)] pb-2 text-[11px] uppercase tracking-wider text-[var(--muted)]">
+              {/* Table header — hidden on mobile, visible on desktop.
+                  TIP: this grid template is the source of truth for
+                  the row layout below — both use the exact same
+                  md:grid-cols-[...] so header and item cells actually
+                  line up in the same columns, instead of the item
+                  row just approximating the header's widths inside a
+                  separate flex layout. */}
+              <div className="hidden md:grid md:grid-cols-[1fr_80px_100px_150px] gap-3 border-b border-[var(--line)] pb-2 text-[11px] uppercase tracking-wider text-[var(--muted)]">
                 <span>Item</span>
                 <span>Size</span>
                 <span>Color</span>
@@ -127,12 +133,12 @@ export default function MyBagPage() {
                 {cartItems.map((item) => (
                   <article
                     key={item.id}
-                    className="flex gap-4 border-b border-[var(--line)] pb-6"
+                    className="grid grid-cols-[6rem_1fr] gap-4 border-b border-[var(--line)] pb-6 md:grid-cols-[6rem_1fr_80px_100px_150px] md:items-center md:gap-3"
                   >
                     {/* Product image */}
                     <Link
                       to={`/product/${item.product.id}`}
-                      className="shrink-0"
+                      className="row-span-2 shrink-0 md:row-span-1"
                     >
                       <img
                         src={item.product.image}
@@ -141,8 +147,8 @@ export default function MyBagPage() {
                       />
                     </Link>
 
-                    {/* Product details */}
-                    <div className="min-w-0 flex-1">
+                    {/* Product name/price column */}
+                    <div className="min-w-0">
                       {/* TIP: category sits as its own muted uppercase
                           line above the bold name — Figma shows these
                           stacked, not run together on one line. */}
@@ -167,90 +173,116 @@ export default function MyBagPage() {
                         {formatPrice(item.product.price)}
                       </p>
 
-                      {/* Mobile labels — shown only on small screens */}
-                      <div className="mt-2 flex gap-3 text-xs text-[var(--muted)] md:hidden">
-                        <span>Size: {item.selectedSize}</span>
-                        <span>Color: {item.selectedColor}</span>
-                      </div>
-
-                      {/* Desktop: size and color in table columns */}
-                      <div className="hidden md:flex md:items-center md:gap-3 md:mt-2 md:text-xs md:text-[var(--muted)]">
-                        <span className="w-[80px]">{item.selectedSize}</span>
-                        <span className="w-[80px]">{item.selectedColor}</span>
-                      </div>
-
-                      {/* TIP: quantity control differs by breakpoint,
-                          matching the two different Figma screenshots
-                          exactly — mobile (My_Bag_Page mobile shots)
-                          shows a plain Minus/qty/Plus stepper with no
-                          way to fully remove an item; desktop (the
-                          "MY BAG (2)" table shot) replaces the minus
-                          with a Trash icon that removes the line
-                          outright, and never shows a minus at all.
-                          Both share the same 3-item cap on the plus
-                          button. */}
-                      <div className="mt-3 flex items-center gap-4">
-                        {/* Mobile stepper — Minus / qty / Plus */}
-                        <div className="flex items-center border border-[var(--line)] md:hidden">
-                          <button
-                            className="p-2 disabled:opacity-30"
-                            aria-label="Decrease quantity"
-                            disabled={item.quantity <= 1}
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
-                          >
-                            <Minus size={12} />
-                          </button>
-                          <span className="w-7 text-center text-xs">
-                            {item.quantity}
+                      {/* Mobile labels — shown only on small screens,
+                          since the size/color columns collapse away below md.
+                          Figma has Size on its own line, then Color with
+                          "Move to wishlist" inline at the end of that same
+                          line — not paired with Size like the old version. */}
+                      <div className="mt-2 space-y-0.5 text-xs text-[var(--muted)] md:hidden">
+                        <p>
+                          Size{' '}
+                          <span className="font-bold text-[var(--ink)]">
+                            {[item.selectedSize, item.selectedShade].filter(Boolean).join('/')}
                           </span>
+                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                          <p>
+                            Color <span className="font-bold text-[var(--ink)]">{item.selectedColor}</span>
+                          </p>
                           <button
-                            className="p-2 disabled:opacity-30"
-                            aria-label="Increase quantity"
-                            disabled={atLimit}
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
+                            onClick={() => {
+                              toggleWishlist(item.product.id);
+                              removeFromBag(item.id);
+                            }}
+                            className="shrink-0 text-[10px] uppercase tracking-wider text-[var(--muted)] underline"
                           >
-                            <Plus size={12} />
+                            Move to wishlist
                           </button>
                         </div>
+                      </div>
+                    </div>
 
-                        {/* Desktop stepper — Trash / qty / Plus */}
-                        <div className="hidden items-center border border-[var(--line)] md:flex">
-                          <button
-                            className="p-2 text-[var(--muted)] hover:text-[var(--ink)]"
-                            aria-label={`Remove ${item.product.name}`}
-                            onClick={() => removeFromBag(item.id)}
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                          <span className="w-7 text-center text-xs">
-                            {item.quantity}
-                          </span>
-                          <button
-                            className="p-2 disabled:opacity-30"
-                            aria-label="Increase quantity"
-                            disabled={atLimit}
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
-                          >
-                            <Plus size={12} />
-                          </button>
-                        </div>
+                    {/* Desktop: size and color as real grid columns, aligned to the header */}
+                    <span className="hidden md:block md:text-xs md:text-[var(--muted)]">
+                      {item.selectedSize}
+                    </span>
+                    <span className="hidden md:block md:text-xs md:text-[var(--muted)]">
+                      {item.selectedColor}
+                    </span>
 
+                    {/* TIP: quantity control differs by breakpoint,
+                        matching the two different Figma screenshots
+                        exactly — mobile (My_Bag_Page mobile shots)
+                        shows a plain Minus/qty/Plus stepper with no
+                        way to fully remove an item; desktop (the
+                        "MY BAG (2)" table shot) replaces the minus
+                        with a Trash icon that removes the line
+                        outright, and never shows a minus at all.
+                        Both share the same 3-item cap on the plus
+                        button. This is its own grid cell (the Qty
+                        column) on desktop, stacked stepper-then-link
+                        exactly like the Figma table row. */}
+                    <div className="col-span-2 mt-3 flex items-center gap-4 md:col-span-1 md:mt-0 md:flex-col md:items-start md:gap-2">
+                      {/* Mobile stepper — Minus / qty / Plus */}
+                      <div className="flex items-center border border-[var(--line)] md:hidden">
                         <button
-                          onClick={() => {
-                            toggleWishlist(item.product.id);
-                            removeFromBag(item.id);
-                          }}
-                          className="text-[10px] uppercase tracking-wider text-[var(--muted)] underline"
+                          className="p-2 disabled:opacity-30"
+                          aria-label="Decrease quantity"
+                          disabled={item.quantity <= 1}
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
                         >
-                          Move to wishlist
+                          <Minus size={12} />
+                        </button>
+                        <span className="w-7 text-center text-xs">
+                          {item.quantity}
+                        </span>
+                        <button
+                          className="p-2 disabled:opacity-30"
+                          aria-label="Increase quantity"
+                          disabled={atLimit}
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
+                        >
+                          <Plus size={12} />
                         </button>
                       </div>
+
+                      {/* Desktop stepper — Trash / qty / Plus */}
+                      <div className="hidden items-center border border-[var(--line)] md:flex">
+                        <button
+                          className="p-2 text-[var(--muted)] hover:text-[var(--ink)]"
+                          aria-label={`Remove ${item.product.name}`}
+                          onClick={() => removeFromBag(item.id)}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                        <span className="w-7 text-center text-xs">
+                          {item.quantity}
+                        </span>
+                        <button
+                          className="p-2 disabled:opacity-30"
+                          aria-label="Increase quantity"
+                          disabled={atLimit}
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          toggleWishlist(item.product.id);
+                          removeFromBag(item.id);
+                        }}
+                        className="hidden text-[10px] uppercase tracking-wider text-[var(--muted)] underline md:block"
+                      >
+                        Move to wishlist
+                      </button>
                     </div>
                   </article>
                 ))}
@@ -371,7 +403,7 @@ export default function MyBagPage() {
             <h2 className="font-display text-2xl md:text-3xl mb-8">
               Lara Thinks You'd Love These Too
             </h2>
-            <ProductGrid products={recommendations} columns={4} />
+            <ProductGrid products={recommendations} columns={4} cardVariant="recommendation" />
           </section>
         )}
       </main>

@@ -155,24 +155,14 @@ function FitIndicator({ fit }) {
   );
 }
 
-// TIP: this is the horizontal version used once at the top of the
-// Reviews section for the aggregate fit consensus across all reviews —
-// different from FitIndicator, which is per-review and vertical.
+// TIP: Figma reuses the exact same vertical scale here as the
+// per-review FitIndicator below — it's not a distinct horizontal
+// widget. Kept as a thin wrapper (rather than calling FitIndicator
+// directly) so the aggregate case has a fixed height to sit in.
 function FitScaleAggregate({ position = 'true' }) {
-  const leftPercent = position === 'small' ? '10%' : position === 'large' ? '90%' : '50%';
   return (
-    <div className="mt-5 max-w-md">
-      <div className="relative h-px w-full bg-[var(--line)]">
-        <div
-          className="absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 -translate-x-1/2 rounded-full bg-[var(--ink)]"
-          style={{ left: leftPercent }}
-        />
-      </div>
-      <div className="mt-2 flex justify-between text-[10px] text-[var(--muted)]">
-        <span>Runs small</span>
-        <span>True to size</span>
-        <span>Runs large</span>
-      </div>
+    <div className="mt-5 h-28 max-w-[160px]">
+      <FitIndicator fit={position === 'small' ? 'small' : position === 'large' ? 'large' : 'true'} />
     </div>
   );
 }
@@ -234,32 +224,36 @@ function Reviews() {
       <div className="mt-8 space-y-4">
         {reviews.map((review) => (
           <article key={review.name} className="border-b border-[var(--line)] pb-6">
-            {/* Three-column layout: reviewer + fit | content | timestamp */}
-            <div className="flex gap-6">
-              {/* LEFT: Reviewer info + fit indicator scale */}
-              <div className="flex w-24 shrink-0 flex-col gap-4">
-                <div>
-                  <p className="text-sm font-medium">{review.name}</p>
-                  <span className="mt-1 flex items-center gap-1 text-[10px] uppercase text-[var(--muted)]">
-                    <Check size={11} /> Verified Buyer
-                  </span>
-                </div>
+            {/* Top row: reviewer name + badge, stars, and date all share one line */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <p className="text-sm font-medium">{review.name}</p>
+                <span className="flex items-center gap-1 text-[10px] uppercase text-[var(--muted)]">
+                  <Check size={11} /> Verified Buyer
+                </span>
+              </div>
+              <div className="flex text-[var(--maroon)]">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <Star
+                    key={i}
+                    size={13}
+                    fill={i < (review.rating || 5) ? 'currentColor' : 'none'}
+                  />
+                ))}
+              </div>
+              <time className="shrink-0 text-xs text-[var(--muted)]">
+                {review.date}
+              </time>
+            </div>
+
+            {/* Second row: fit scale on the left, title/photo/text on the right */}
+            <div className="mt-4 flex gap-6">
+              <div className="w-24 shrink-0">
                 <FitIndicator fit={review.fit} />
               </div>
 
-              {/* MIDDLE: Stars, title, photo, text */}
               <div className="min-w-0 flex-1">
-                <div className="flex text-[var(--maroon)]">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star
-                      key={i}
-                      size={13}
-                      fill={i < (review.rating || 5) ? 'currentColor' : 'none'}
-                    />
-                  ))}
-                </div>
-
-                <h3 className="mt-2 text-sm font-semibold">{review.title}</h3>
+                <h3 className="text-sm font-semibold">{review.title}</h3>
 
                 {/* TIP: Customer photo — show only if the review has one */}
                 {review.photo && (
@@ -278,11 +272,6 @@ function Reviews() {
                   Purchased: {review.variant}
                 </p>
               </div>
-
-              {/* RIGHT: Timestamp */}
-              <time className="shrink-0 text-xs text-[var(--muted)]">
-                {review.date}
-              </time>
             </div>
           </article>
         ))}
@@ -505,7 +494,7 @@ export default function ProductDetail() {
               {product.sizes?.length > 0 && (
                 <div>
                   <div className="mb-3 flex items-center justify-between">
-                    <p className="text-sm font-medium">Sizing</p>
+                    <p className="text-sm font-medium">Size</p>
                     <button
                       type="button"
                       onClick={() => setSizeGuideOpen(true)}
@@ -583,7 +572,7 @@ export default function ProductDetail() {
             </h2>
             <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4">
               {related.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} variant="recommendation" />
               ))}
             </div>
           </section>

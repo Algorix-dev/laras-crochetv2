@@ -6,13 +6,16 @@ import ProductCard from './ProductCard';
 // (2 columns) and the full Shop page (3 columns). It used to be
 // hardcoded to grid-cols-2 everywhere, which is why the Shop page
 // was inheriting the homepage's column count instead of its own.
+// Figma shows 2 columns starting at mobile for every variant (Shop
+// Page Mobile, Wishlist mobile) — it never drops to a single column,
+// so none of these should start at grid-cols-1.
 const GRID_COLS = {
   2: "grid-cols-2",
-  3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-  4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+  3: "grid-cols-2 lg:grid-cols-3",
+  4: "grid-cols-2 lg:grid-cols-4",
 };
 
-export default function ProductGrid({ products, columns = 2 }) {
+export default function ProductGrid({ products, columns = 2, cardVariant = 'default' }) {
   /*
     Figma's "Content" wrapper: 1920px frame, padding: 0 304px 77px,
     row-gap 100px, bg #FAFAFA, exactly 2 cards per row (Frame 34 is
@@ -42,7 +45,7 @@ export default function ProductGrid({ products, columns = 2 }) {
           // another rather than all popping in at once — a small
           // touch that reads as "designed," not just "animated."
           <Reveal key={product.id} delay={(i % 3) * 0.08}>
-            <ProductCard product={product} />
+            <ProductCard product={product} variant={cardVariant} />
           </Reveal>
         ))}
       </div>

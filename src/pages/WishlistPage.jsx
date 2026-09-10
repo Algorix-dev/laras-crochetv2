@@ -72,7 +72,7 @@ export default function WishlistPage() {
               <p className="mb-8 text-sm text-[var(--muted)]">
                 Some pieces you love from Lara's Crochet.
               </p>
-              <ProductGrid products={wishlistedProducts} columns={4} />
+              <ProductGrid products={wishlistedProducts} columns={3} />
             </>
           ) : (
             <div className="mb-12">
@@ -91,7 +91,7 @@ export default function WishlistPage() {
           {recommended.length > 0 && (
             <div className={wishlistedProducts.length > 0 ? 'mt-16 pb-16' : 'mt-2 pb-16'}>
               <h2 className="font-display text-2xl md:text-3xl mb-8">Lara Thinks You'd Love These Too</h2>
-              <ProductGrid products={recommended} columns={4} />
+              <ProductGrid products={recommended} columns={4} cardVariant="recommendation" />
             </div>
           )}
         </div>

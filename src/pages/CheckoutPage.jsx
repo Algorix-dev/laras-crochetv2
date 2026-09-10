@@ -12,11 +12,12 @@
 */
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, MessageCircleQuestion } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { initializePayment } from '../api';
 import Footer from '../components/Footer';
+import laraCrochetLogo from '../assets/lara-crochet-logo.png';
 
 
 /* TIP: Reusable input field component — renders a label + text input
@@ -136,8 +137,8 @@ export default function CheckoutPage() {
           <form onSubmit={submit} className="px-5 py-8 md:px-12">
 
             {/* TIP: Brand link back to the home/shop page. */}
-            <Link to="/" className="font-display text-3xl italic">
-              Lara&apos;s Crochet
+            <Link to="/" aria-label="Lara's Crochet home">
+              <img src={laraCrochetLogo} alt="Lara's Crochet" className="h-14 w-auto" />
             </Link>
 
             {/* TIP: Breadcrumb-style step indicator. This form covers
@@ -160,7 +161,7 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   aria-label="Email help"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--mauve-muted)]"
                   onClick={() =>
                     window.dispatchEvent(
                       new CustomEvent('lara-toast', {
@@ -169,7 +170,7 @@ export default function CheckoutPage() {
                     )
                   }
                 >
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[var(--line)] text-[10px]">?</span>
+                  <MessageCircleQuestion size={18} strokeWidth={1.5} />
                 </button>
               </div>
 
@@ -247,7 +248,7 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     aria-label="Phone help"
-                    className="mr-3 self-center text-[var(--muted)]"
+                    className="mr-3 self-center text-[var(--mauve-muted)]"
                     onClick={() =>
                       window.dispatchEvent(
                         new CustomEvent('lara-toast', {
@@ -256,7 +257,7 @@ export default function CheckoutPage() {
                       )
                     }
                   >
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[var(--line)] text-[10px]">?</span>
+                    <MessageCircleQuestion size={18} strokeWidth={1.5} />
                   </button>
                 </div>
               </div>
@@ -303,10 +304,12 @@ export default function CheckoutPage() {
                         The {item.product.name}
                         {item.product.category === 'dresses' ? ' Dress' : ''}
                       </b>
-                      <p className="mt-1 text-xs text-[var(--muted)]">
-                        {item.selectedColor} · {item.selectedSize}
+                      <p className="mt-1 text-xs uppercase text-[var(--mauve-muted)]">
+                        {[item.selectedColor, item.selectedSize, item.selectedShade]
+                          .filter(Boolean)
+                          .join(' / ')}
                       </p>
-                      <p className="text-xs text-[var(--muted)]">
+                      <p className="text-xs uppercase text-[var(--mauve-muted)]">
                         {item.quantity} {item.quantity === 1 ? 'piece' : 'pieces'}
                       </p>
                     </div>
@@ -369,7 +372,7 @@ export default function CheckoutPage() {
                       )
                     }
                   >
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--line)] text-[9px] text-[var(--muted)]">?</span>
+                    <MessageCircleQuestion size={16} strokeWidth={1.5} className="text-[var(--mauve-muted)]" />
                   </button>
                 </span>
                 <span>{formatPrice(shipping)}</span>

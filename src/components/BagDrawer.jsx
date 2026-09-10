@@ -8,13 +8,14 @@
   panel sliding in/out and the backdrop fading in/out.
 */
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, Heart, Minus, Plus, Trash2, X } from 'lucide-react';
+import { ChevronDown, Minus, Plus, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getProducts, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
+import ProductGrid from './ProductGrid';
 
 
 export default function BagDrawer({ open, onClose }) {
@@ -39,7 +40,7 @@ export default function BagDrawer({ open, onClose }) {
   useEffect(() => {
     if (open && recommendations.length === 0) {
       getProducts('all')
-        .then((data) => setRecommendations(data.map(normalizeProduct).slice(0, 3)))
+        .then((data) => setRecommendations(data.map(normalizeProduct).slice(0, 4)))
         .catch(() => setRecommendations([]));
     }
   }, [open, recommendations.length]);
@@ -78,7 +79,7 @@ export default function BagDrawer({ open, onClose }) {
                   id="bag-title"
                   className="font-bold text-sm tracking-wide"
                 >
-                  MY BAG ({cartCount})
+                  My Bag ({cartCount})
                 </h2>
                 <button aria-label="Close bag" onClick={onClose}>
                   <X size={21} />
@@ -118,70 +119,68 @@ export default function BagDrawer({ open, onClose }) {
                         className="h-28 w-20 bg-white object-contain"
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="flex justify-between gap-2">
-                          <div>
-                            <h3 className="text-sm uppercase tracking-wide">
-                              The {item.product.name}
-                              {item.product.category === 'dresses' ? ' Dress' : ''}
-                            </h3>
-                            <p className="mt-1 text-sm">
-                              {money(item.product.price)}
+                        <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+                          {item.product.categoryLabel || 'Product'}
+                        </p>
+                        <h3 className="text-sm uppercase tracking-wide">
+                          The {item.product.name}
+                          {item.product.category === 'dresses' ? ' Dress' : ''}
+                        </h3>
+                        <p className="mt-1 text-sm">
+                          {money(item.product.price)}
+                        </p>
+
+                        <div className="mt-2 flex items-start justify-between gap-2">
+                          <div className="text-xs text-[var(--muted)]">
+                            <p>
+                              Size{' '}
+                              <span className="font-bold text-[var(--ink)]">
+                                {[item.selectedSize, item.selectedShade].filter(Boolean).join('/')}
+                              </span>
                             </p>
-                          </div>
-                          <button
-                            aria-label={`Remove ${item.product.name}`}
-                            onClick={() => removeFromBag(item.id)}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-
-                        <p className="mt-2 text-xs text-[var(--muted)]">
-                          Size <span className="font-bold text-[var(--ink)]">{item.selectedSize}</span>
-                        </p>
-                        <p className="text-xs text-[var(--muted)]">
-                          Color <span className="font-bold text-[var(--ink)]">{item.selectedColor}</span>
-                        </p>
-
-                        <div className="mt-3 flex items-center justify-between">
-                          {/* Quantity selector */}
-                          <div className="flex items-center border border-[var(--line)]">
-                            <button
-                              className="p-1.5"
-                              aria-label="Decrease quantity"
-                              onClick={() =>
-                                updateQuantity(
-                                  item.id,
-                                  item.quantity - 1
-                                )
-                              }
-                            >
-                              <Minus size={13} />
-                            </button>
-                            <span className="w-7 text-center text-xs">
-                              {item.quantity}
-                            </span>
-                            <button
-                              className="p-1.5"
-                              aria-label="Increase quantity"
-                              onClick={() =>
-                                updateQuantity(
-                                  item.id,
-                                  item.quantity + 1
-                                )
-                              }
-                            >
-                              <Plus size={13} />
-                            </button>
+                            <p>
+                              Color <span className="font-bold text-[var(--ink)]">{item.selectedColor}</span>
+                            </p>
                           </div>
                           <button
                             onClick={() => {
                               toggleWishlist(item.product.id);
                               removeFromBag(item.id);
                             }}
-                            className="text-[10px] uppercase tracking-wider underline"
+                            className="shrink-0 text-[10px] uppercase tracking-wider underline"
                           >
-                            Move to Wishlist
+                            Move to wishlist
+                          </button>
+                        </div>
+
+                        {/* Quantity selector — full-width bar below, matching Figma */}
+                        <div className="mt-3 flex items-center justify-between border border-[var(--line)]">
+                          <button
+                            className="p-2.5"
+                            aria-label="Decrease quantity"
+                            onClick={() =>
+                              updateQuantity(
+                                item.id,
+                                item.quantity - 1
+                              )
+                            }
+                          >
+                            <Minus size={13} />
+                          </button>
+                          <span className="text-center text-xs">
+                            {item.quantity}
+                          </span>
+                          <button
+                            className="p-2.5"
+                            aria-label="Increase quantity"
+                            onClick={() =>
+                              updateQuantity(
+                                item.id,
+                                item.quantity + 1
+                              )
+                            }
+                          >
+                            <Plus size={13} />
                           </button>
                         </div>
                       </div>
@@ -217,34 +216,16 @@ export default function BagDrawer({ open, onClose }) {
               </div>
 
               {/* Lara Thinks You'd Love These Too */}
-              <section className="pt-7">
-                <h3 className="text-xs font-bold uppercase tracking-wide">
-                  Lara Thinks You'd Love These Too
-                </h3>
-                <div className="mt-4 flex gap-3 overflow-x-auto">
-                  {recommendations.map((product) => (
-                    <Link
-                      key={product.id}
-                      to={`/product/${product.id}`}
-                      onClick={onClose}
-                      className="relative w-28 shrink-0"
-                    >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="aspect-[3/4] w-full bg-white object-contain"
-                      />
-                      <Heart size={14} className="absolute right-2 top-2" />
-                      <p className="mt-2 text-[11px] uppercase">
-                        {product.name}
-                      </p>
-                      <p className="text-[11px] text-[var(--muted)]">
-                        {money(product.price)}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              </section>
+              {recommendations.length > 0 && (
+                <section className="pt-7">
+                  <h3 className="text-xs font-bold uppercase tracking-wide">
+                    Lara Thinks You'd Love These Too
+                  </h3>
+                  <div className="mt-4" onClick={onClose}>
+                    <ProductGrid products={recommendations} columns={2} cardVariant="recommendation" />
+                  </div>
+                </section>
+              )}
             </div>
 
             {/* ---- Sticky Footer with Checkout Button ---- */}

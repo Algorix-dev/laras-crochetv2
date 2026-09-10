@@ -53,6 +53,22 @@ export default function ShopPage() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [recommendations, setRecommendations] = useState([]);
+
+  // TIP: "Lara Thinks You'd Love These Too" — same recommendation
+  // strip pattern as My Bag and Wishlist. Fetches the full catalog
+  // once and shows a handful of pieces that aren't already visible
+  // in the current filtered grid, so it doesn't just repeat itself.
+  useEffect(() => {
+    getProducts('all')
+      .then((data) => setRecommendations(data.map(normalizeProduct)))
+      .catch(() => setRecommendations([]));
+  }, []);
+
+  const shopRecommended = useMemo(() => {
+    const visibleIds = new Set(products.map((p) => p.id));
+    return recommendations.filter((p) => !visibleIds.has(p.id)).slice(0, 4);
+  }, [recommendations, products]);
 
   // TIP: this effect re-runs every time activeCategory changes,
   // because activeCategory is in the dependency array below. Click
@@ -168,6 +184,16 @@ export default function ShopPage() {
         </>
       )}
     </section>
+
+    {shopRecommended.length > 0 && (
+      <section className="mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28 pb-16">
+        <h2 className="font-display text-2xl md:text-3xl mb-8">
+          Lara Thinks You'd Love These Too
+        </h2>
+        <ProductGrid products={shopRecommended} columns={4} cardVariant="recommendation" />
+      </section>
+    )}
+
     <Footer />
     </>
   );
