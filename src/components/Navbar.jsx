@@ -25,7 +25,7 @@ const LINKS = [
   { label: "Contact", to: "/contact" },
 ];
 
-export default function Navbar() {
+export default function Navbar({ hidden = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -83,7 +83,24 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-[#E5E5E5] bg-[#FAFAFA]">
+      <header
+        className={`
+          sticky
+          top-0
+          z-50
+          h-[66px]
+          border-b
+          border-[var(--line)]
+          bg-[#FAFAFA]
+          transition-opacity
+          duration-300
+          ${
+            hidden
+              ? "pointer-events-none opacity-0"
+              : "opacity-100"
+          }
+        `}
+      >
         <div className="flex h-[66px] items-center justify-between px-5 md:px-8 lg:px-[15.83%]">
           {/* Brand logo */}
           <Link to="/" aria-label="Lara's Crochet home">
