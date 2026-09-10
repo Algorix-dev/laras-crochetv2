@@ -283,7 +283,7 @@ export default function CheckoutPage() {
           {/* ================================================================
               RIGHT COLUMN — Order summary sidebar
               ================================================================ */}
-          <aside className="bg-[#f7f6f3] px-5 py-8 md:px-12">
+          <aside className="px-5 py-8 md:px-12">
 
             {/* TIP: Section header — "Order Summary" in bold. */}
             <h2 className="text-sm font-semibold">Order Summary</h2>

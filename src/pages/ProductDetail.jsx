@@ -140,7 +140,7 @@ function FitIndicator({ fit }) {
   const dotPosition = fit === 'small' ? 'top-0' : fit === 'large' ? 'bottom-0' : 'top-1/2 -translate-y-1/2';
 
   return (
-    <div className="flex h-full items-stretch gap-2">
+    <div className="flex h-full items-stretch gap-2 px-8 md:px-16 lg:px-24">
       {/* Vertical line with labels */}
       <div className="relative flex w-4 flex-col items-center justify-between py-1">
         <span className="text-[9px] leading-tight text-[var(--muted)]">Runs small</span>
@@ -164,7 +164,7 @@ function FitIndicator({ fit }) {
 // directly) so the aggregate case has a fixed height to sit in.
 function FitScaleAggregate({ position = 'true' }) {
   return (
-    <div className="mt-5 h-28 max-w-[160px]">
+    <div className="mt-5 h-28 max-w-[160px] px-8 md:px-16 lg:px-24">
       <FitIndicator fit={position === 'small' ? 'small' : position === 'large' ? 'large' : 'true'} />
     </div>
   );
@@ -180,11 +180,11 @@ function FitScaleAggregate({ position = 'true' }) {
 ----------------------------------------------------------- */
 function Reviews() {
   return (
-    <section className="mt-20">
+    <section className="mt-20 px-8 md:px-16 lg:px-24">
       <h2 className="font-display text-4xl">Reviews</h2>
 
       {/* Rating summary + UGC photo placeholders */}
-      <div className="mt-6 grid gap-8 md:grid-cols-2">
+      <div className="mt-6 grid gap-8 md:grid-cols-1">
         <div>
           <div className="flex items-center gap-3">
             <strong className="text-3xl">4.5</strong>
@@ -364,7 +364,7 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-7xl px-5 py-24 text-center text-sm text-[var(--muted)] md:px-8">
+      <main className="mx-auto max-w-7xl px-8 md:px-16 lg:px-24 text-center text-sm text-[var(--muted)] ">
         Loading product...
       </main>
     );
@@ -372,7 +372,7 @@ export default function ProductDetail() {
 
   if (error || !product) {
     return (
-      <main className="mx-auto max-w-7xl px-5 py-24 text-center md:px-8">
+      <main className="mx-auto max-w-7xl px-8 md:px-16 lg:px-24 text-center ">
         <p className="text-sm text-red-500">{error || 'Product not found.'}</p>
         <Link to="/shop" className="mt-4 inline-block text-xs uppercase tracking-wider text-[var(--maroon)]">
           ← Back to shop
@@ -383,7 +383,7 @@ export default function ProductDetail() {
 
   return (
     <>
-      <main className="mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-12">
+      <main className="mx-auto max-w-7xl px-8 md:px-16 lg:px-24 py-8 md:py-12">
         {/* ============================
             TWO-COLUMN MAIN SECTION
             ============================ */}
