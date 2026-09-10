@@ -26,7 +26,6 @@ import AddressesPage from "./pages/AddressesPage";
 import WishlistPage from "./pages/WishlistPage";
 import ComingSoon from "./pages/ComingSoon";
 
-
 function ScrollToTop() {
   const { pathname, search } = useLocation();
   useEffect(() => {
@@ -38,14 +37,10 @@ function ScrollToTop() {
 // TIP: sign-in has no navbar per its own spec — a standalone,
 // full-page experience. Every other route, including the now-public
 // landing page, gets the normal site nav.
-function ConditionalNavbar({ hidden = false }) {
-  const location = useLocation();
-
-  if (location.pathname === "/signin") {
-    return null;
-  }
-
-  return <Navbar hidden={hidden} />;
+function ConditionalNavbar() {
+  const { pathname } = useLocation();
+  if (pathname === "/signin") return null;
+  return <Navbar />;
 }
 
 // TIP: reusable guard for any route that shouldn't be reachable by a
@@ -64,13 +59,13 @@ function RequireAuth({ children }) {
       navigate(`/signin?redirect=${encodeURIComponent(location.pathname)}`, { replace: true });
     }
   }, [isSignedIn, navigate, location.pathname]);
-  
+
   if (!isSignedIn) return null;
   return children;
 }
 
 /* Home page is its own component so the route stays clean */
-function HomePage({ onLaraActiveChange }) {
+function HomePage() {
   const [liveProducts, setLiveProducts] = useState(products); // instant first paint, then swapped for live data
   const [loading, setLoading] = useState(true);
 
@@ -99,7 +94,7 @@ function HomePage({ onLaraActiveChange }) {
           before finally releasing and letting the page continue
           scrolling into the shop section below. See LaraShowcase.jsx
           for how the pin + scroll-scrub is built. */}
-      <LaraShowcase onActiveChange={setLaraSectionActive} />
+      <LaraShowcase />
 
       <div className="text-center pt-2 pb-10 md:pb-14">
         <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
@@ -147,7 +142,6 @@ export default function App() {
   // (rather than inside a single page) means any page can pop it
   // open via the isBagOpen/openBag/closeBag CartContext already
   // exposes, and it stays available no matter which route you're on.
-  const [laraSectionActive, setLaraSectionActive] = useState(false);
   const { isBagOpen, closeBag } = useCart();
 
   return (

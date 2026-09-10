@@ -8,46 +8,127 @@ import scatterTeal from "../assets/scatter-teal.png";
 import laraDecor from "../assets/decor/lara-decor-composite.png";
 
 /* ============================================================
-   DECORATION
+   EASY DECORATION CONTROL
    ============================================================ */
 
-const LARA_ARC_OPACITY = 1;
+const LARA_ARC_OPACITY = 1.0;
 const LARA_ARC_FILTER = "contrast(2.2) saturate(1.6)";
 
 /* ============================================================
-   SECTION SETTINGS
+   SCROLL-SCRUBBED SEQUENCE — HOW THIS FILE WORKS (v2)
+   ------------------------------------------------------------
+   The whole section is one tall "track" (TRACK_VH viewport-heights
+   tall). While scrolling through it, the content pins itself
+   directly under the navbar (position: fixed), and a single 0->1
+   "progress" value drives, in order:
+
+     1. PHOTOS  — the 3 reference photos fly in from off-screen and
+        scatter into place over the wordmark. They stay put for the
+        rest of the sequence (no exit — only the STORY SLOT below
+        swaps its contents).
+
+     2. STORY SLOT — a single fixed-size region directly under the
+        wordmark that TWO things take turns occupying:
+          a. the brand-story paragraphs: reveal word by word, hold,
+             then slide up + fade out as a whole block
+          b. the testimonials: reveal three at a time (row by row),
+             hold, then slide up + fade out as a whole block
+        Because both live in the same slot (absolutely positioned,
+        overlapping) rather than stacked one after another, "the
+        paragraphs leave, then the reviews take their place" reads
+        as a swap, not as one long scroll past two separate blocks.
+
+   Once progress reaches 1, content un-pins and normal scrolling
+   continues into "Shop Our Pieces" below.
+
+   v2 FIXES vs the previous version:
+   - The wordmark block no longer sits behind ~64-96px of top
+     padding, so it now actually sits flush against the navbar the
+     moment it pins (that padding was the "doesn't reach the bottom
+     of the navbar" gap).
+   - Paragraphs and testimonials each get their own enter -> hold ->
+     exit cycle (via computeSlide below) instead of just fading in
+     and staying — this is what makes them scroll up + fade away
+     in turn, the way a slide deck advances.
+   - The track is shorter (TRACK_VH) and the testimonials stage
+     starts proportionally earlier, so a normal (non-fast) scroll
+     actually reaches them — previously they sat so deep into an
+     unnecessarily long track that an ordinary scroll session
+     could end (and feel "finished") before ever reaching them.
+   - Pin-state transitions now force the displayed progress to
+     snap exactly to 0 or 1 the instant the section enters/leaves
+     the pinned state, instead of letting the smoothed value trail
+     behind — previously, a fast scroll could cause the section to
+     physically un-pin (because that's driven by real scroll
+     position) while the cosmetic progress was still lagging mid-
+     sequence, so the tail end of the story played out AFTER the
+     content had already scrolled out of view. This still keeps
+     the "smooth catch-up" feel for the fast-scroll case in general
+     (see SMOOTHING below) without ever leaving a stage stranded
+     off-screen.
+
+   Respects prefers-reduced-motion: skips the whole pin/scrub and
+   renders everything already revealed, in normal document flow.
    ============================================================ */
 
-/*
-  The section is deliberately tall so the user has enough
-  scroll distance to actually read the story and reviews.
+const NAVBAR_HEIGHT_PX = 66; // matches Navbar's h-[66px] sticky header
+const TRACK_VH = 340;        // total scroll-track height, in vh — tune to make the story feel longer/shorter
+const SMOOTHING = 0.14;      // 0-1: how fast displayed progress chases raw scroll progress each frame
 
-  The visible content itself remains one viewport tall.
-*/
-const TRACK_VH = 520;
-const NAVBAR_HEIGHT_PX = 66;
-
-/*
-  The sequence is divided into:
-
-  1. Photos enter
-  2. Story appears
-  3. Story fades away
-  4. Reviews appear slowly
-  5. Everything settles into the final Figma state
-*/
 const STAGE = {
-  photosStart: 0,
-  photosEnd: 0.2,
-
-  storyStart: 0.2,
-  storyEnd: 0.48,
-
-  reviewsStart: 0.52,
-  reviewsEnd: 0.94,
-
-  finish: 1,
+  photosStart: 0.0,
+  photosEnd: 0.16,
+  paraStart: 0.18,
+  paraEnd: 0.52,
+  testiStart: 0.54,
+  testiEnd: 0.92,
 };
+
+// How each STORY SLOT occupant divides its own local 0-1 window
+// between entering, holding still (fully visible), and exiting.
+const PARA_PHASES = { enterFrac: 0.5, holdFrac: 0.1, exitFrac: 0.4, travel: 140 };
+
+function clamp01(n) {
+  return Math.min(1, Math.max(0, n));
+}
+
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+// Maps an overall `progress` value, restricted to the [start, end]
+// window, through enter -> hold -> exit. Returns:
+//   opacity, translateY  — apply to the whole block's wrapper
+//   enterT                — 0->1 across ENTER ONLY, then pinned at 1
+//                            through hold/exit — feed this into any
+//                            per-word/per-row reveal-count logic so
+//                            it finishes entering and then just
+//                            holds fully-revealed while the block
+//                            itself fades/slides away as a unit.
+//   exitT                  — 0 until exit begins, then 0->1 across
+//                            EXIT ONLY — feed this into per-item
+//                            stagger logic (e.g. testimonial rows
+//                            leaving a beat apart instead of as one
+//                            block) the same way enterT staggers
+//                            entrances.
+function computeSlide(progress, start, end, { enterFrac, holdFrac, exitFrac, travel }) {
+  const span = end - start;
+  const local = clamp01((progress - start) / span);
+  const enterEnd = enterFrac;
+  const holdEnd = enterFrac + holdFrac;
+
+  if (local <= enterEnd) {
+    const enterT = enterFrac > 0 ? clamp01(local / enterFrac) : 1;
+    const eased = easeOutCubic(enterT);
+    return { opacity: eased, translateY: (1 - eased) * travel, enterT, exitT: 0 };
+  }
+  if (local <= holdEnd) {
+    return { opacity: 1, translateY: 0, enterT: 1, exitT: 0 };
+  }
+  const exitT = exitFrac > 0 ? clamp01((local - holdEnd) / exitFrac) : 1;
+  const eased = easeOutCubic(exitT);
+  return { opacity: 1 - eased, translateY: -eased * travel, enterT: 1, exitT };
+}
 
 /* ============================================================
    BRAND STORY
@@ -55,845 +136,408 @@ const STAGE = {
 
 const PARAGRAPHS = [
   "Welcome to Lara's Crochet! Here, every piece starts as a single strand of yarn and a pair of hands. No factories, no shortcuts. Made-to-order, one piece at a time, out of Lagos, Nigeria.",
-
   "We don't keep a stockroom.",
-
   "When you order, your piece is made for you, your size, your color, your fit. It takes time, because handmade always does, but it means what arrives at your door was never sitting on a shelf waiting for someone else.",
-
   "This isn't fast fashion. It's handmade, made with love.",
 ];
 
+let _wordCounter = 0;
+const WORD_TOKENS = PARAGRAPHS.flatMap((paragraph, paraIndex) =>
+  paragraph.split(" ").map((word) => ({
+    word,
+    paraIndex,
+    globalIndex: _wordCounter++,
+  }))
+);
+const TOTAL_WORDS = WORD_TOKENS.length;
+
 /* ============================================================
-   TESTIMONIALS
+   CUSTOMER TESTIMONIALS
    ============================================================ */
 
 const TESTIMONIALS = [
-  {
-    quote:
-      "I've never had a piece fit this well straight out of the box. Literally made to my measurements. No alterations needed.",
-    name: "Teniola Aladese",
-  },
-  {
-    quote:
-      "You can tell this isn't machine-made. The detail in the stitching is unreal.",
-    name: "Tolu Coker",
-  },
-  {
-    quote:
-      "The bikini set held up through an entire beach trip. No stretching, no losing shape. Genuinely impressed.",
-    name: "Halima Finny",
-  },
-  {
-    quote:
-      "The Reina dress is a whole moment. I get stopped every single time I wear it.",
-    name: "Chidinma K.",
-  },
-  {
-    quote:
-      "Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.",
-    name: "Precious Ehizoge",
-  },
-  {
-    quote:
-      "Customer service walked me through sizing so patiently. Made ordering online feel less scary.",
-    name: "Ejiro Okezie",
-  },
+  { quote: "I've never had a piece fit this well straight out of the box. Literally made to my measurements. No alterations needed.", name: "Teniola Aladese" },
+  { quote: "You can tell this isn't machine-made. The detail in the stitching is unreal.", name: "Tolu Coker" },
+  { quote: "The bikini set held up through an entire beach trip. No stretching, no losing shape. Genuinely impressed.", name: "Halima Finny" },
+  { quote: "The Reina dress is a whole moment. I get stopped every single time I wear it.", name: "Chidinma K." },
+  { quote: "Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.", name: "Precious Ehizoge" },
+  { quote: "Customer service walked me through sizing so patiently. Made ordering online feel less scary.", name: "Ejiro Okezie" },
+  { quote: "Placeholder quote - swap this for a real customer testimonial.", name: "Customer Name" },
+  { quote: "Placeholder quote - swap this for a real customer testimonial.", name: "Customer Name" },
+  { quote: "Placeholder quote - swap this for a real customer testimonial.", name: "Customer Name" },
 ];
 
 /* ============================================================
    SCATTER PHOTOS
+   ------------------------------------------------------------
+   `productSlug`: set this to a real product's id/slug once Lara
+   pairs each photo with an actual catalog item, and the photo
+   becomes clickable — routes straight to that product's page. Left
+   null for now (falls back to a plain, non-clickable image) since
+   these are generic reference photos, not necessarily the exact
+   garment shown in the seeded Shop products.
    ============================================================ */
 
 const SCATTER_PHOTOS = [
-  {
-    src: scatterBeach,
-    alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
-
-    /*
-      Final Figma-inspired position.
-    */
-    finalX: -13,
-    finalY: 8,
-    finalRotate: 0,
-
-    /*
-      Photos enter BIG from outside the composition.
-    */
-    fromX: -680,
-    fromY: -100,
-    fromRotate: -42,
-    fromScale: 1.65,
-
-    finalScale: 1,
-
-    start: 0.0,
-    end: 0.16,
-
-    zIndex: 3,
-  },
-
-  {
-    src: scatterStreet,
-    alt: "Street-style portrait",
-
-    finalX: 7,
-    finalY: -8,
-    finalRotate: 19.63,
-
-    fromX: 700,
-    fromY: 80,
-    fromRotate: 75,
-    fromScale: 1.7,
-
-    finalScale: 1,
-
-    start: 0.045,
-    end: 0.185,
-
-    zIndex: 2,
-  },
-
-  {
-    src: scatterTeal,
-    alt: "Lara's Crochet customer wearing a teal crochet dress",
-
-    finalX: 23,
-    finalY: 10,
-    finalRotate: -8.21,
-
-    fromX: 80,
-    fromY: 650,
-    fromRotate: -65,
-    fromScale: 1.65,
-
-    finalScale: 1,
-
-    start: 0.08,
-    end: 0.21,
-
-    zIndex: 1,
-  },
+  { src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 3, finalX: -13, finalY: 8, finalRotate: 0, fromX: -520, fromY: -60, fromRotate: -35, localStart: 0.0, localEnd: 0.11, productSlug: null },
+  { src: scatterStreet, alt: "Street-style portrait", zIndex: 2, finalX: 7, finalY: -8, finalRotate: 19.63, fromX: 540, fromY: 40, fromRotate: 70, localStart: 0.02, localEnd: 0.135, productSlug: null },
+  { src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 1, finalX: 23, finalY: 10, finalRotate: -8.21, fromX: 60, fromY: 480, fromRotate: -60, localStart: 0.045, localEnd: 0.16, productSlug: null },
 ];
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
-
-function clamp01(value) {
-  return Math.min(1, Math.max(0, value));
-}
-
-function easeOutCubic(value) {
-  return 1 - Math.pow(1 - value, 3);
-}
-
-function easeInOutCubic(value) {
-  return value < 0.5
-    ? 4 * value * value * value
-    : 1 - Math.pow(-2 * value + 2, 3) / 2;
-}
-
-/*
-  Converts a global scroll progress value into a local 0 -> 1
-  value for a particular stage.
-*/
-function stageProgress(progress, start, end) {
-  if (progress <= start) return 0;
-  if (progress >= end) return 1;
-
-  return clamp01((progress - start) / (end - start));
-}
-
-/* ============================================================
-   COMPONENT
-   ============================================================ */
-
-export default function LaraShowcase({ onActiveChange }) {
+export default function LaraShowcase() {
   const wrapperRef = useRef(null);
   const contentRef = useRef(null);
+  const paraSlideRef = useRef(null);
+  const testiSlideRef = useRef(null);
 
-  const progressRef = useRef(0);
-  const maxProgressRef = useRef(0);
-
+  const rawProgressRef = useRef(0);
+  const smoothedProgressRef = useRef(0);
+  const contentHeightRef = useRef(0);
+  const afterTopRef = useRef(0);
   const rafRef = useRef(null);
 
-  const [progress, setProgress] = useState(0);
-  const [pinState, setPinState] = useState("before");
+  const [displayProgress, setDisplayProgress] = useState(0);
+  const [pinState, setPinState] = useState("before"); // "before" | "pinned" | "after"
   const [reduceMotion, setReduceMotion] = useState(false);
-
-  /* ----------------------------------------------------------
-     REDUCED MOTION
-     ---------------------------------------------------------- */
+  const [slotHeight, setSlotHeight] = useState(null);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    );
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduceMotion(mq.matches);
+    const onChange = (e) => setReduceMotion(e.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
 
-    setReduceMotion(mediaQuery.matches);
-
-    const handleChange = (event) => {
-      setReduceMotion(event.matches);
+  // Measure the taller of paragraph/testimonial blocks so the shared
+  // STORY SLOT is sized to whichever one needs more room — neither
+  // block is clipped, and there's no dead space either.
+  useEffect(() => {
+    const paraHeightRef = { current: 0 };
+    const testiHeightRef = { current: 0 };
+    const recompute = () => {
+      const h = Math.max(paraHeightRef.current, testiHeightRef.current);
+      setSlotHeight((prev) => (prev == null || Math.abs(prev - h) > 1 ? h : prev));
     };
-
-    mediaQuery.addEventListener?.("change", handleChange);
-
+    const roPara = new ResizeObserver((entries) => {
+      paraHeightRef.current = entries[0].contentRect.height;
+      recompute();
+    });
+    const roTesti = new ResizeObserver((entries) => {
+      testiHeightRef.current = entries[0].contentRect.height;
+      recompute();
+    });
+    if (paraSlideRef.current) roPara.observe(paraSlideRef.current);
+    if (testiSlideRef.current) roTesti.observe(testiSlideRef.current);
     return () => {
-      mediaQuery.removeEventListener?.("change", handleChange);
+      roPara.disconnect();
+      roTesti.disconnect();
     };
   }, []);
 
-  /* ----------------------------------------------------------
-     SCROLL ENGINE
-     ---------------------------------------------------------- */
-
+  // The pin/scrub loop itself.
   useEffect(() => {
-    if (reduceMotion) {
-      setProgress(1);
-      onActiveChange?.(false);
-      return;
-    }
+    if (reduceMotion) return;
 
-    const update = () => {
+    const measure = () => {
+      if (contentRef.current) contentHeightRef.current = contentRef.current.offsetHeight;
+    };
+    measure();
+
+    const ro = new ResizeObserver(measure);
+    if (contentRef.current) ro.observe(contentRef.current);
+    window.addEventListener("resize", measure);
+
+    const tick = () => {
       const wrapper = wrapperRef.current;
+      if (wrapper) {
+        const rect = wrapper.getBoundingClientRect();
+        const contentHeight = contentHeightRef.current;
+        const pinnableRange = rect.height - contentHeight;
 
-      if (!wrapper) {
-        rafRef.current = requestAnimationFrame(update);
-        return;
-      }
+        let nextState;
+        let raw;
 
-      const rect = wrapper.getBoundingClientRect();
-
-      /*
-        The navbar normally occupies 66px.
-
-        Once the Lara section becomes active, App/Navbar can hide
-        the navbar visually. The section itself still uses the
-        same document geometry, which prevents layout jumping.
-      */
-      const pinTop = NAVBAR_HEIGHT_PX;
-
-      const contentHeight =
-        contentRef.current?.offsetHeight || window.innerHeight;
-
-      const availableRange = Math.max(
-        1,
-        rect.height - contentHeight
-      );
-
-      let rawProgress = 0;
-      let nextState = "before";
-
-      if (rect.top > pinTop) {
-        nextState = "before";
-        rawProgress = 0;
-      } else if (rect.bottom <= pinTop + contentHeight) {
-        nextState = "after";
-        rawProgress = 1;
-      } else {
-        nextState = "pinned";
-
-        rawProgress = clamp01(
-          (pinTop - rect.top) / availableRange
-        );
-      }
-
-      /*
-        IMPORTANT:
-
-        Progress is allowed to move forward only.
-
-        This means if the visitor scrolls back upward, the
-        animation does NOT replay backward.
-
-        Once the sequence reaches its final state, it stays there.
-      */
-      maxProgressRef.current = Math.max(
-        maxProgressRef.current,
-        rawProgress
-      );
-
-      const nextProgress = maxProgressRef.current;
-
-      progressRef.current = nextProgress;
-
-      setProgress(nextProgress);
-
-      setPinState((previous) => {
-        if (previous !== nextState) {
-          return nextState;
+        if (rect.top > NAVBAR_HEIGHT_PX) {
+          nextState = "before";
+          raw = 0;
+        } else if (rect.bottom <= NAVBAR_HEIGHT_PX + contentHeight) {
+          nextState = "after";
+          raw = 1;
+          afterTopRef.current = Math.max(0, rect.height - contentHeight);
+        } else {
+          nextState = "pinned";
+          raw = pinnableRange > 0 ? clamp01((NAVBAR_HEIGHT_PX - rect.top) / pinnableRange) : 1;
         }
 
-        return previous;
-      });
+        rawProgressRef.current = raw;
+        setPinState((prev) => (prev === nextState ? prev : nextState));
 
-      /*
-        Tell the parent that the immersive section is currently
-        occupying the viewport.
-      */
-      onActiveChange?.(nextState === "pinned");
+        // Snap instantly at the boundaries so a fast scroll can never
+        // leave a stage stranded mid-animation just out of view; only
+        // smooth (lerp) while actually pinned and mid-sequence.
+        if (nextState === "before" || nextState === "after") {
+          smoothedProgressRef.current = raw;
+        } else {
+          const diff = raw - smoothedProgressRef.current;
+          smoothedProgressRef.current += Math.abs(diff) < 0.0008 ? diff : diff * SMOOTHING;
+        }
+        setDisplayProgress(smoothedProgressRef.current);
+      }
 
-      rafRef.current = requestAnimationFrame(update);
+      rafRef.current = requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(update);
+    rafRef.current = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
-      onActiveChange?.(false);
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
     };
-  }, [reduceMotion, onActiveChange]);
+  }, [reduceMotion]);
 
-  /* ----------------------------------------------------------
-     DISPLAY PROGRESS
-     ---------------------------------------------------------- */
+  const progress = reduceMotion ? 1 : displayProgress;
 
-  const currentProgress = reduceMotion ? 1 : progress;
+  const paraSlide = computeSlide(progress, STAGE.paraStart, STAGE.paraEnd, PARA_PHASES);
+  const wordsRevealed = reduceMotion ? TOTAL_WORDS : Math.floor(paraSlide.enterT * TOTAL_WORDS);
 
-  /* ============================================================
-     PHOTO ANIMATION
-     ============================================================ */
-
-  const getPhotoStyle = (photo) => {
-    const local = stageProgress(
-      currentProgress,
-      photo.start,
-      photo.end
-    );
-
-    const eased = easeOutCubic(local);
-
-    const x =
-      photo.fromX +
-      (photo.finalX - photo.fromX) * eased;
-
-    const y =
-      photo.fromY +
-      (photo.finalY - photo.fromY) * eased;
-
-    const rotate =
-      photo.fromRotate +
-      (photo.finalRotate - photo.fromRotate) * eased;
-
-    const scale =
-      photo.fromScale +
-      (photo.finalScale - photo.fromScale) * eased;
-
-    /*
-      The image arrives large and then settles smaller.
-    */
-    const opacity =
-      local <= 0
-        ? 0
-        : easeOutCubic(
-            stageProgress(
-              currentProgress,
-              photo.start,
-              photo.start + (photo.end - photo.start) * 0.65
-            )
-          );
-
-    return {
-      position: "absolute",
-      inset: 0,
-
-      width: "100%",
-      height: "100%",
-
-      zIndex: photo.zIndex,
-
-      opacity,
-
-      transform: `
-        translate(${x}px, ${y}px)
-        rotate(${rotate}deg)
-        scale(${scale})
-      `,
-
-      transformOrigin: "center center",
-
-      willChange: "transform, opacity",
-
-      pointerEvents: opacity > 0.1 ? "auto" : "none",
-    };
-  };
-
-  /* ============================================================
-     STORY ANIMATION
-     ============================================================ */
-
-  const storyProgress = stageProgress(
-    currentProgress,
-    STAGE.storyStart,
-    STAGE.storyEnd
-  );
-
-  /*
-    Story enters normally, stays readable, then moves upward
-    and fades away.
-  */
-  let storyOpacity = 0;
-  let storyY = 70;
-
-  if (storyProgress <= 0.2) {
-    const enter = easeOutCubic(storyProgress / 0.2);
-
-    storyOpacity = enter;
-    storyY = 70 - 70 * enter;
-  } else if (storyProgress <= 0.72) {
-    storyOpacity = 1;
-    storyY = 0;
-  } else {
-    const exit = easeInOutCubic(
-      (storyProgress - 0.72) / 0.28
-    );
-
-    storyOpacity = 1 - exit;
-    storyY = -80 * exit;
-  }
-
-  /* ============================================================
-     REVIEWS
-     ============================================================ */
-
-  const reviewsProgress = stageProgress(
-    currentProgress,
-    STAGE.reviewsStart,
-    STAGE.reviewsEnd
-  );
-
-  /*
-    Six reviews are split into two groups of three.
-
-    Each group gets a long section of the scroll distance so the
-    visitor has enough time to actually read them.
-  */
-  const reviewGroupCount = 2;
-
-  const reviewGroupProgress =
-    reviewsProgress * reviewGroupCount;
-
-  const activeReviewGroup = Math.min(
-    reviewGroupCount - 1,
-    Math.floor(reviewGroupProgress)
-  );
-
-  const localReviewProgress = clamp01(
-    reviewGroupProgress - activeReviewGroup
-  );
-
-  /*
-    Keep the current group visible for most of its section.
-    The transition is intentionally slow.
-  */
-  let reviewOpacity = 0;
-  let reviewY = 60;
-
-  if (reviewsProgress > 0) {
-    if (localReviewProgress < 0.18) {
-      const enter = easeOutCubic(
-        localReviewProgress / 0.18
-      );
-
-      reviewOpacity = enter;
-      reviewY = 60 - 60 * enter;
-    } else if (localReviewProgress < 0.82) {
-      reviewOpacity = 1;
-      reviewY = 0;
-    } else {
-      const exit = easeInOutCubic(
-        (localReviewProgress - 0.82) / 0.18
-      );
-
-      reviewOpacity = 1 - exit;
-      reviewY = -60 * exit;
-    }
-  }
-
-  /*
-    Once the whole sequence is finished, keep the last review
-    group visible instead of allowing it to disappear.
-  */
-  const finished =
-    currentProgress >= STAGE.reviewsEnd;
-
-  const visibleReviewGroup = finished
-    ? reviewGroupCount - 1
-    : activeReviewGroup;
-
-  const visibleReviews = TESTIMONIALS.slice(
-    visibleReviewGroup * 3,
-    visibleReviewGroup * 3 + 3
-  );
-
-  /* ============================================================
-     SECTION POSITION
-     ============================================================ */
-
-  let contentStyle;
-
-  if (reduceMotion) {
-    contentStyle = {
-      position: "relative",
-    };
+  let containerStyle;
+  if (reduceMotion || pinState === "before") {
+    containerStyle = { position: "relative" };
   } else if (pinState === "pinned") {
-    contentStyle = {
-      position: "fixed",
-      top: `${NAVBAR_HEIGHT_PX}px`,
-      left: 0,
-      right: 0,
-    };
-  } else if (pinState === "after") {
-    contentStyle = {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0,
-    };
+    containerStyle = { position: "fixed", top: NAVBAR_HEIGHT_PX, left: 0, right: 0 };
   } else {
-    contentStyle = {
-      position: "relative",
-    };
+    containerStyle = { position: "absolute", top: afterTopRef.current, left: 0, right: 0 };
   }
-
-  /* ============================================================
-     RENDER
-     ============================================================ */
 
   return (
     <section
       ref={wrapperRef}
       className="relative w-full bg-[var(--cream)]"
-      style={{
-        height: reduceMotion
-          ? "auto"
-          : `${TRACK_VH}vh`,
-      }}
+      style={reduceMotion ? undefined : { height: `${TRACK_VH}vh` }}
     >
-      <div
-        ref={contentRef}
-        className="w-full overflow-hidden bg-[var(--cream)]"
-        style={contentStyle}
-      >
-        <div
-          className="
-            relative
-            flex
-            min-h-[calc(100svh-66px)]
-            w-full
-            flex-col
-            items-center
-            justify-start
-            overflow-hidden
-            px-5
-            pt-4
-            pb-8
-            md:min-h-[calc(100svh-66px)]
-            md:px-8
-            md:pt-5
-            md:pb-10
-          "
-        >
-          {/* ==================================================
-              WORDMARK + DECORATION + PHOTOS
-              ================================================== */}
-
-          <div
-            className="
-              relative
-              z-10
-              mx-auto
-              mt-0
-              flex
-              w-full
-              max-w-[900px]
-              shrink-0
-              items-center
-              justify-center
-            "
-          >
-            {/* Decorative Lara arc */}
-
+      <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
+        <div className="relative z-10 mx-auto max-w-4xl px-5 pt-4 pb-16 text-center md:pt-6 md:pb-24">
+          {/* WORDMARK + SCATTER PHOTOS */}
+          <div className="relative mx-auto mb-14 w-full max-w-[560px] md:mb-20 md:max-w-[720px]">
             <img
               src={laraDecor}
               alt=""
               aria-hidden="true"
-              className="
-                pointer-events-none
-                absolute
-                left-1/2
-                top-1/2
-                z-0
-                max-w-none
-                -translate-x-1/2
-                -translate-y-1/2
-                select-none
-              "
-              style={{
-                width: "min(110vw, 1200px)",
-                opacity: LARA_ARC_OPACITY,
-                filter: LARA_ARC_FILTER,
-              }}
+              className="pointer-events-none absolute top-1/2 left-1/2 z-0 max-w-none select-none -translate-x-1/2 -translate-y-1/2"
+              style={{ width: "100vw", opacity: LARA_ARC_OPACITY, filter: LARA_ARC_FILTER }}
             />
-
-            {/* Main Lara wordmark */}
-
             <img
               src={laraWordmark}
               alt="Lara's Crochet"
-              className="
-                relative
-                z-10
-                block
-                h-auto
-                w-[min(88vw,720px)]
-                select-none
-                pointer-events-none
-              "
+              className="relative z-10 block h-auto w-full select-none pointer-events-none"
             />
-
-            {/* ==================================================
-                SCATTER PHOTOS
-
-                The photos start large and fly into their final
-                positions.
-                ================================================== */}
-
             <div
-              className="
-                pointer-events-none
-                absolute
-                left-1/2
-                top-1/2
-                z-20
-                h-[clamp(125px,17vw,190px)]
-                w-[clamp(95px,13vw,145px)]
-                -translate-x-1/2
-                -translate-y-1/2
-              "
+              className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 overflow-visible"
+              style={{ width: "clamp(90px, 14vw, 160px)", height: "clamp(65px, 10vw, 115px)" }}
             >
-              {SCATTER_PHOTOS.map((photo) => (
-                <img
-                  key={photo.alt}
-                  src={photo.src}
-                  alt={photo.alt}
-                  className="
-                    rounded-[2px]
-                    object-cover
-                    shadow-md
-                    ring-1
-                    ring-[var(--cream)]
-                  "
-                  style={getPhotoStyle(photo)}
-                />
-              ))}
+              {SCATTER_PHOTOS.map((photo) => {
+                const localT = reduceMotion
+                  ? 1
+                  : clamp01((progress - photo.localStart) / (photo.localEnd - photo.localStart));
+                const eased = easeOutCubic(localT);
+                const x = photo.fromX + (photo.finalX - photo.fromX) * eased;
+                const y = photo.fromY + (photo.finalY - photo.fromY) * eased;
+                const rot = photo.fromRotate + (photo.finalRotate - photo.fromRotate) * eased;
+                const photoStyle = {
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  zIndex: photo.zIndex,
+                  opacity: eased,
+                  transform: `translate(${x}px, ${y}px) rotate(${rot}deg)`,
+                };
+
+                // Clickable straight through to the product once Lara
+                // pairs this photo with a real catalog item (see the
+                // productSlug note above SCATTER_PHOTOS) — otherwise
+                // it's just a plain, non-interactive image, same as
+                // before.
+                if (photo.productSlug) {
+                  return (
+                    <Link
+                      key={photo.alt}
+                      to={`/product/${photo.productSlug}`}
+                      aria-label={`Shop this look — ${photo.alt}`}
+                      style={{ ...photoStyle, display: "block", cursor: "pointer" }}
+                      className="rounded-[2px] shadow-md ring-1 ring-[var(--cream)] transition-transform duration-200 hover:scale-[1.04]"
+                    >
+                      <img
+                        src={photo.src}
+                        alt={photo.alt}
+                        className="h-full w-full rounded-[2px] object-cover"
+                      />
+                    </Link>
+                  );
+                }
+
+                return (
+                  <img
+                    key={photo.alt}
+                    src={photo.src}
+                    alt={photo.alt}
+                    style={photoStyle}
+                    className="rounded-[2px] object-cover shadow-md ring-1 ring-[var(--cream)]"
+                  />
+                );
+              })}
             </div>
           </div>
 
-          {/* ==================================================
-              STORY + REVIEWS AREA
-
-              This area occupies the SAME visual slot.
-              Nothing gets pushed underneath it.
-              ================================================== */}
-
-          <div
-            className="
-              relative
-              z-30
-              mx-auto
-              mt-5
-              flex
-              min-h-0
-              w-full
-              max-w-[760px]
-              flex-1
-              items-center
-              justify-center
-              overflow-hidden
-              md:mt-8
-            "
-          >
-            {/* ==================================================
-                BRAND STORY
-                ================================================== */}
-
+          {/* PROGRESS INDICATOR — subtle cue that there's more coming
+              after the paragraphs, so people don't stop scrolling
+              early thinking the sequence is done (which is exactly
+              what was happening before this was added). */}
+          {!reduceMotion && (
             <div
-              className="
-                absolute
-                left-0
-                right-0
-                top-1/2
-                mx-auto
-                w-full
-                max-w-[680px]
-                -translate-y-1/2
-                text-center
-              "
-              style={{
-                opacity:
-                  reduceMotion
-                    ? 1
-                    : storyOpacity,
-
-                transform:
-                  reduceMotion
-                    ? "translateY(-50%)"
-                    : `translateY(calc(-50% + ${storyY}px))`,
-
-                pointerEvents:
-                  storyOpacity > 0.1
-                    ? "auto"
-                    : "none",
-
-                willChange:
-                  "opacity, transform",
-              }}
+              className="mb-8 flex items-center justify-center gap-2"
+              aria-hidden="true"
             >
-              <div
-                className="
-                  space-y-4
-                  text-sm
-                  leading-[1.8]
-                  text-[var(--ink)]
-                  md:space-y-5
-                  md:text-base
-                "
-              >
-                {PARAGRAPHS.map((paragraph, index) => (
-                  <p
-                    key={`${paragraph}-${index}`}
-                    className={
-                      index === 1
-                        ? "text-base font-semibold md:text-lg"
-                        : ""
-                    }
-                  >
-                    {paragraph}
+              {[
+                { key: "photos", active: progress < STAGE.paraStart },
+                { key: "story", active: progress >= STAGE.paraStart && progress < STAGE.testiStart },
+                { key: "reviews", active: progress >= STAGE.testiStart },
+              ].map((stage) => (
+                <span
+                  key={stage.key}
+                  style={{
+                    width: stage.active ? 18 : 6,
+                    height: 6,
+                    borderRadius: 999,
+                    backgroundColor: "var(--maroon)",
+                    opacity: stage.active ? 1 : 0.25,
+                    transition: "width 0.3s ease, opacity 0.3s ease",
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* STORY SLOT — paragraphs and testimonials take turns
+              occupying this exact same region. Both render at all
+              times (so both can be measured for slotHeight and so
+              neither pops in without a transition), but only one is
+              ever meaningfully visible/opaque at a given progress. */}
+          <div
+            className="relative mx-auto"
+            style={{
+              height: slotHeight != null ? `${slotHeight}px` : "auto",
+              maxWidth: "42rem",
+              overflow: "hidden",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+              maskImage:
+                "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+            }}
+          >
+            {/* PARAGRAPHS */}
+            <div
+              ref={paraSlideRef}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                opacity: reduceMotion ? 1 : paraSlide.opacity,
+                transform: reduceMotion ? "none" : `translateY(${paraSlide.translateY}px)`,
+                transition: "opacity 0.4s ease, transform 0.4s ease",
+              }}
+              className="mx-auto max-w-lg space-y-5 text-sm leading-[1.8] text-[var(--ink)] md:text-base"
+            >
+              {PARAGRAPHS.map((paragraph, paraIndex) => {
+                const tokens = WORD_TOKENS.filter((t) => t.paraIndex === paraIndex);
+                return (
+                  <p key={paragraph}>
+                    {tokens.map((token, i) => {
+                      const visible = reduceMotion || token.globalIndex < wordsRevealed;
+                      return (
+                        <span
+                          key={token.globalIndex}
+                          style={{
+                            opacity: visible ? 1 : 0,
+                            transform: visible ? "translateY(0)" : "translateY(6px)",
+                            transition: "opacity 0.35s ease, transform 0.35s ease",
+                            display: "inline-block",
+                          }}
+                        >
+                          {token.word}
+                          {i < tokens.length - 1 ? "\u00A0" : ""}
+                        </span>
+                      );
+                    })}
                   </p>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
-            {/* ==================================================
-                REVIEWS
+            {/* TESTIMONIALS — split into 3 sequential groups of 3,
+                each getting its own dedicated slice of the REVIEWS
+                stage (no more inter-row overlap/stagger — simpler,
+                and it means only ONE group of 3 cards is EVER
+                actually in the DOM at a time (see the opacity<0.02
+                bail-out below), not all 9 sitting invisible in
+                layout. That was the real cause of the mobile
+                ballooning: with all 9 always mounted, a 1-column
+                mobile layout was secretly reserving vertical space
+                for all 9 stacked cards even though only 3 were ever
+                meant to be visible, which both wasted a lot of
+                blank space AND made the "only three" request not
+                actually true underneath. */}
+            <div ref={testiSlideRef} style={{ position: "absolute", top: 0, left: 0, right: 0 }}>
+              {[0, 1, 2].map((groupIndex) => {
+                const groupSpan = (STAGE.testiEnd - STAGE.testiStart) / 3;
+                const groupStart = STAGE.testiStart + groupIndex * groupSpan;
+                const groupEnd = groupStart + groupSpan;
+                const groupSlide = reduceMotion
+                  ? { opacity: 1, translateY: 0 }
+                  : computeSlide(progress, groupStart, groupEnd, {
+                      enterFrac: 0.4,
+                      holdFrac: 0.2,
+                      exitFrac: 0.4,
+                      travel: 110,
+                    });
 
-                Only THREE cards are displayed at once.
-                ================================================== */}
+                if (!reduceMotion && groupSlide.opacity < 0.02) return null;
 
-            <div
-              className="
-                absolute
-                left-0
-                right-0
-                top-1/2
-                mx-auto
-                w-full
-                max-w-[1050px]
-                -translate-y-1/2
-              "
-              style={{
-                opacity:
-                  reduceMotion
-                    ? 1
-                    : reviewOpacity,
+                const group = TESTIMONIALS.slice(groupIndex * 3, groupIndex * 3 + 3);
 
-                transform:
-                  reduceMotion
-                    ? "translateY(-50%)"
-                    : `translateY(calc(-50% + ${reviewY}px))`,
-
-                pointerEvents:
-                  reviewOpacity > 0.1
-                    ? "auto"
-                    : "none",
-
-                willChange:
-                  "opacity, transform",
-              }}
-            >
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  gap-4
-                  md:grid-cols-3
-                  md:gap-5
-                "
-              >
-                {visibleReviews.map(
-                  (testimonial, index) => (
-                    <div
-                      key={`${testimonial.name}-${visibleReviewGroup}-${index}`}
-                      className={`
-                        border
-                        border-[var(--line)]
-                        bg-[var(--cream)]
-                        p-5
-                        text-center
-                        md:p-6
-                        ${
-                          index === 1
-                            ? "md:-translate-y-5"
-                            : ""
-                        }
-                      `}
-                    >
-                      <p
-                        className="
-                          mb-5
-                          text-sm
-                          leading-[1.75]
-                          text-[var(--ink)]
-                        "
-                      >
-                        "{testimonial.quote}"
-                      </p>
-
-                      <p
-                        className="
-                          flex
-                          items-center
-                          justify-center
-                          gap-1.5
-                          text-xs
-                          font-bold
-                          text-[var(--ink)]
-                        "
-                      >
-                        {testimonial.name}
-
-                        <span
-                          aria-hidden="true"
-                          className="
-                            inline-flex
-                            h-3.5
-                            w-3.5
-                            items-center
-                            justify-center
-                            rounded-full
-                            bg-[var(--maroon)]
-                            text-[9px]
-                            text-white
-                          "
-                        >
-                          ✓
-                        </span>
-                      </p>
-
-                      <p
-                        className="
-                          mt-1
-                          text-[11px]
-                          text-[var(--muted)]
-                        "
-                      >
-                        Verified Customer
-                      </p>
-                    </div>
-                  )
-                )}
-              </div>
+                return (
+                  <div
+                    key={groupIndex}
+                    style={{
+                      opacity: groupSlide.opacity,
+                      transform: `translateY(${groupSlide.translateY}px)`,
+                      transition: "opacity 0.35s ease, transform 0.35s ease",
+                    }}
+                    className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3"
+                  >
+                    {group.map((testimonial, i) => (
+                      <div key={testimonial.name} className={i === 1 ? "md:-translate-y-6" : ""}>
+                        <div className="h-full border border-[var(--line)] bg-[var(--cream)] p-5 text-center">
+                          <p className="mb-4 text-sm leading-relaxed text-[var(--ink)]">"{testimonial.quote}"</p>
+                          <p className="flex items-center justify-center gap-1 text-xs font-bold text-[var(--ink)]">
+                            {testimonial.name}
+                            <span
+                              aria-hidden="true"
+                              className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
+                            >
+                              ✓
+                            </span>
+                          </p>
+                          <p className="mt-1 text-[11px] text-[var(--muted)]">Verified Customer</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
