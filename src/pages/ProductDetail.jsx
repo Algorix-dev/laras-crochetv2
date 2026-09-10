@@ -15,11 +15,14 @@ import { Link, useParams } from 'react-router-dom';
 import { getProduct, getProducts, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
+import ProductPlaceholder from '../components/ProductPlaceholder';
 import Footer from '../components/Footer';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
 import ShareButton from '../components/ShareButton';
 import SizeGuideModal from '../components/SizeGuideModal';
+import reviewRestaurantPhoto from '../assets/reviews/review-restaurant.png';
+import reviewBeachPhoto from '../assets/reviews/review-beach.png';
 
 /* -----------------------------------------------------------
    Static data kept outside the component so React doesn't
@@ -72,7 +75,7 @@ const reviews = [
     text: 'The fabric was amazing. It fit my body like a glove! Best purchase ever fr!!!',
     fit: 'true',
     rating: 4,
-    photo: undefined,
+    photo: reviewRestaurantPhoto,
     variant: 'Navy mix · Size M',
   },
   {
@@ -207,16 +210,18 @@ function Reviews() {
             <FitScaleAggregate position="true" />
           </div>
 
-        {/* TIP: These are placeholder boxes for real customer photos.
-            When Lara sends UGC (user-generated content) photos,
-            replace the divs below with <img> tags. */}
+        {/* Real customer style photos */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="aspect-square bg-[#d7d1ca] p-4 text-xs text-[var(--muted)]">
-            Customer style<br />photo
-          </div>
-          <div className="aspect-square bg-[#b7adb1] p-4 text-xs text-white">
-            Customer style<br />photo
-          </div>
+          <img
+            src={reviewRestaurantPhoto}
+            alt="Customer wearing The Reina Dress"
+            className="aspect-square w-full object-cover"
+          />
+          <img
+            src={reviewBeachPhoto}
+            alt="Customer wearing The Reina Dress"
+            className="aspect-square w-full object-cover"
+          />
         </div>
       </div>
 
@@ -401,23 +406,38 @@ export default function ProductDetail() {
             </div>
 
             {/* Thumbnail row — clicking switches the main image.
-                Only renders when there's more than one shot. */}
-            {gallery.length > 1 && (
+                TIP: Figma's frame always shows 4 thumbnail slots, even
+                when a product only has one real photo — the extra
+                slots are ghosted placeholders for angles Lara hasn't
+                photographed yet, not empty space. Once a product has
+                more real photos in its `images` array, they replace
+                the placeholders automatically. */}
+            {gallery.length > 0 && (
               <div className="mt-3 grid grid-cols-4 gap-3">
-                {gallery.map((src, index) => (
-                  <button
-                    key={src + index}
-                    aria-label={`View ${product.name} angle ${index + 1}`}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square bg-white ${
-                      index === selectedImage
-                        ? 'ring-1 ring-[var(--ink)] ring-offset-2'
-                        : ''
-                    }`}
-                  >
-                    <img src={src} alt="" className="h-full w-full object-contain" />
-                  </button>
-                ))}
+                {Array.from({ length: 4 }, (_, index) => {
+                  const src = gallery[index];
+                  if (!src) {
+                    return (
+                      <div key={`placeholder-${index}`} className="aspect-square opacity-40">
+                        <ProductPlaceholder className="h-full w-full" />
+                      </div>
+                    );
+                  }
+                  return (
+                    <button
+                      key={src + index}
+                      aria-label={`View ${product.name} angle ${index + 1}`}
+                      onClick={() => setSelectedImage(index)}
+                      className={`aspect-square bg-white ${
+                        index === selectedImage
+                          ? 'ring-1 ring-[var(--ink)] ring-offset-2'
+                          : ''
+                      }`}
+                    >
+                      <img src={src} alt="" className="h-full w-full object-contain" />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -453,7 +473,7 @@ export default function ProductDetail() {
                 actually has that attribute, since real DB products
                 (unlike the old hardcoded data) might not have colors
                 or shades set. */}
-            <div className="mt-8 space-y-7">
+            <div className="mt-6 space-y-5">
               {/* Color Mix */}
               {product.colors?.length > 0 && (
                 <div>
@@ -509,7 +529,7 @@ export default function ProductDetail() {
                         key={s}
                         aria-pressed={size === s}
                         onClick={() => setSize(s)}
-                        className={`flex-1 py-3 text-xs tracking-wide transition-colors ${
+                        className={`flex-1 py-2 text-xs tracking-wide transition-colors ${
                           size === s
                             ? 'bg-[var(--ink)] text-white'
                             : 'text-[var(--ink)] hover:bg-[#f4eeee]'
@@ -526,7 +546,7 @@ export default function ProductDetail() {
             {/* Add to Bag button */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 w-full bg-[var(--ink)] py-4 text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-6 w-full bg-[var(--ink)] py-3 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>

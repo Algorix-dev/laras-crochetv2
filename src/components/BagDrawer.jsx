@@ -15,7 +15,7 @@ import { getProducts, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
-import ProductGrid from './ProductGrid';
+import ProductCard from './ProductCard';
 
 
 export default function BagDrawer({ open, onClose }) {
@@ -221,8 +221,13 @@ export default function BagDrawer({ open, onClose }) {
                   <h3 className="text-xs font-bold uppercase tracking-wide">
                     Lara Thinks You'd Love These Too
                   </h3>
-                  <div className="mt-4" onClick={onClose}>
-                    <ProductGrid products={recommendations} columns={2} cardVariant="recommendation" />
+                  <div
+                    className="mt-4 grid grid-cols-2 gap-x-3 gap-y-6"
+                    onClick={onClose}
+                  >
+                    {recommendations.map((product) => (
+                      <ProductCard key={product.id} product={product} variant="recommendation" />
+                    ))}
                   </div>
                 </section>
               )}
