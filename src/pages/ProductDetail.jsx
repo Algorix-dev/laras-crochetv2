@@ -166,48 +166,60 @@ function ShadeSwatch({ option, active, onClick }) {
    can be tricky — it gives social proof from real buyers.
 ----------------------------------------------------------- */
 function FitIndicator({ fit }) {
-  /* TIP: The dot position maps to the three fit options.
-     "small" = top, "true" = middle, "large" = bottom. */
-  const dotPosition = fit === 'small' ? 'top-0' : fit === 'large' ? 'bottom-0' : 'top-1/2 -translate-y-1/2';
+  const dotPosition =
+    fit === 'small'
+      ? 'top-0'
+      : fit === 'large'
+        ? 'bottom-0'
+        : 'top-1/2 -translate-y-1/2';
 
   return (
-    <div className="flex h-full items-stretch gap-2">
-      {/* Vertical line with labels */}
-      <div className="relative flex w-4 flex-col items-center justify-between py-1">
-        <span className="text-[9px] leading-tight text-[var(--muted)]">Runs small</span>
-        <span className="text-[9px] leading-tight text-[var(--muted)]">True to size</span>
-        <span className="text-[9px] leading-tight text-[var(--muted)]">Runs large</span>
-      </div>
+    <div className="relative h-[392px] w-[190px] shrink-0">
+      {/* Figma-style vertical fit scale */}
+      <div className="absolute left-0 top-0 h-full w-[3px] bg-[#e7dede]" />
 
-      {/* The scale line with the dot marker */}
-      <div className="relative h-full w-px self-stretch bg-[var(--line)]">
-        <div
-          className={`absolute left-1/2 z-10 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-[var(--ink)] ${dotPosition}`}
-        />
+      <span className="absolute left-2 top-0 text-xs text-[var(--muted)]">
+        Runs small
+      </span>
+      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)]">
+        True to size
+      </span>
+      <span className="absolute bottom-0 left-2 text-xs text-[var(--muted)]">
+        Runs large
+      </span>
+
+      <span
+        className={`absolute left-[-1px] z-10 h-2 w-2 -translate-x-1/2 rounded-full bg-[var(--maroon)] ${dotPosition}`}
+      />
+
+      {/* Small chevron cue from the scale toward the customer photos */}
+      <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 text-[#d8c7c7]">
+        <span>›</span>
+        <span>›</span>
+        <span>›</span>
+        <span>›</span>
+        <span>›</span>
       </div>
     </div>
   );
 }
 
-// TIP: Figma reuses the exact same vertical scale here as the
-// per-review FitIndicator below — it's not a distinct horizontal
-// widget. Kept as a thin wrapper (rather than calling FitIndicator
-// directly) so the aggregate case has a fixed height to sit in.
 function FitScaleAggregate({ position = 'true' }) {
   return (
-    <div className="mt-5 h-28 max-w-[160px]">
-      <FitIndicator fit={position === 'small' ? 'small' : position === 'large' ? 'large' : 'true'} />
-    </div>
+    <FitIndicator
+      fit={
+        position === 'small'
+          ? 'small'
+          : position === 'large'
+            ? 'large'
+            : 'true'
+      }
+    />
   );
 }
 
 /* -----------------------------------------------------------
-   Reviews section — pulled out as its own component so the
-   main ProductDetail stays readable.
-
-   Layout matches the Figma: each review card is a three-column
-   row — reviewer info + fit scale on the left, review content
-   in the middle, timestamp on the right.
+   Reviews section — structured to mirror the Figma review area.
 ----------------------------------------------------------- */
 function Reviews() {
   const renderStars = (rating = 5, size = 14) => (
@@ -224,18 +236,25 @@ function Reviews() {
   );
 
   const HorizontalFitScale = ({ fit = 'true' }) => {
-    const position = fit === 'small' ? 'left-0' : fit === 'large' ? 'right-0' : 'left-1/2 -translate-x-1/2';
+    const position =
+      fit === 'small'
+        ? 'left-0'
+        : fit === 'large'
+          ? 'right-0'
+          : 'left-1/2 -translate-x-1/2';
 
     return (
-      <div className="w-full max-w-[360px]">
-        <div className="mb-2 flex items-center justify-between text-[9px] text-[var(--muted)]">
+      <div className="w-full">
+        <div className="mb-2 flex items-center justify-between text-[10px] text-[var(--muted)]">
           <span>Runs small</span>
           <span>True to size</span>
           <span>Runs large</span>
         </div>
         <div className="relative h-3">
           <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-[var(--line)]" />
-          <div className={`absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-[var(--ink)] ${position}`} />
+          <div
+            className={`absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-[var(--maroon)] ${position}`}
+          />
         </div>
       </div>
     );
@@ -245,105 +264,110 @@ function Reviews() {
     <section className="mt-16 md:mt-20">
       <h2 className="font-display text-3xl md:text-4xl">Reviews</h2>
 
-      {/* Rating */}
       <div className="mt-5 flex items-center gap-3">
         <strong className="text-base font-medium">4.5</strong>
         {renderStars(4, 14)}
-        <span className="text-[10px] text-[var(--muted)]">Based on 18 reviews</span>
+        <span className="text-[10px] text-[var(--muted)]">
+          Based on 18 reviews
+        </span>
       </div>
 
-      {/* Reviews summary */}
       <div className="mt-8">
-        <h3 className="text-xs font-semibold">Reviews Summary</h3>
-        <p className="mt-3 max-w-none text-xs leading-6 text-[var(--muted)] md:text-sm md:leading-7">
-          Customers say this piece offers exceptional comfort for all-day wear,
-          with many noting how they feel confident in the fit. Reviews mention
-          the smooth finish, thoughtful sizing, and the care taken in every detail.
-          We also note the card you&apos;ll see below has fit guidance based on
-          customer feedback, helping you choose with more confidence.
+        <h3 className="text-base font-bold">Reviews Summary</h3>
+        <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
+          Customers say this bra offers exceptional comfort for all-day wear,
+          with many noting they forget they&apos;re wearing it. Many reviews mention
+          the smooth fit under clothing and precise sizing when following the
+          measurement guide. While some note the band runs slightly tight, most
+          praise the secure fit without slipping straps. Frequent comments address
+          the versatile everyday wear and natural shaping. Reviews indicate
+          consistent satisfaction across different body types, with many becoming
+          repeat purchasers.
         </p>
       </div>
 
-      {/* Aggregate fit guide + customer photos */}
-      <div className="mt-8 grid gap-6 md:grid-cols-[150px_minmax(0,1fr)] md:items-end md:gap-8">
-        <div className="hidden md:block">
-          <FitScaleAggregate position="true" />
-        </div>
-        <div className="md:hidden">
-          <HorizontalFitScale fit="true" />
-        </div>
+      {/* Figma: tall fit scale + two 359 × 392 customer photos */}
+      <div className="mt-10 hidden md:grid md:grid-cols-[190px_minmax(0,1fr)] md:gap-8">
+        <FitScaleAggregate position="true" />
 
-        <div className="grid grid-cols-3 gap-2 md:grid-cols-2 md:gap-4">
+        <div className="grid grid-cols-2 gap-8">
           <img
             src={reviewRestaurantPhoto}
             alt="Customer wearing The Reina Dress at a restaurant"
-            className="aspect-square w-full object-cover"
+            className="h-[392px] w-full max-w-[359px] object-cover"
           />
           <img
             src={reviewBeachPhoto}
             alt="Customer wearing The Reina Dress at the beach"
-            className="aspect-square w-full object-cover"
-          />
-          <img
-            src={reviewBeachPhoto}
-            alt="Customer wearing The Reina Dress outdoors"
-            className="aspect-square w-full object-cover md:hidden"
+            className="h-[392px] w-full max-w-[359px] object-cover"
           />
         </div>
       </div>
 
-      {/* Individual reviews */}
-      <div className="mt-12">
+      {/* Mobile Figma layout */}
+      <div className="mt-8 md:hidden">
+        <HorizontalFitScale fit="true" />
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <img
+            src={reviewRestaurantPhoto}
+            alt="Customer wearing The Reina Dress at a restaurant"
+            className="aspect-[359/392] w-full object-cover"
+          />
+          <img
+            src={reviewBeachPhoto}
+            alt="Customer wearing The Reina Dress at the beach"
+            className="aspect-[359/392] w-full object-cover"
+          />
+        </div>
+      </div>
+
+      {/* Individual review */}
+      <div className="mt-16">
         {reviews.map((review) => (
           <article
             key={review.name}
-            className="grid gap-6 border-t border-[var(--line)] py-8 last:border-b md:grid-cols-[150px_minmax(0,1fr)_100px] md:gap-8"
+            className="grid border-t border-[var(--line)] py-10 md:grid-cols-[190px_minmax(0,359px)_1fr] md:gap-8"
           >
-            {/* Desktop fit indicator */}
-            <div className="hidden min-h-[150px] md:block">
+            <div className="hidden md:block">
               <FitIndicator fit={review.fit} />
             </div>
 
-            {/* Review content */}
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <p className="text-xs font-medium">{review.name}</p>
-                <span className="flex items-center gap-1 text-[9px] text-[var(--muted)]">
-                  <Check size={10} strokeWidth={2} />
+              <div className="flex items-center gap-3">
+                <p className="text-sm font-bold">{review.name}</p>
+                <span className="flex items-center gap-1 text-sm text-[var(--muted)]">
                   Verified Buyer
+                  <Check size={17} strokeWidth={3} />
                 </span>
               </div>
 
-              <div className="mt-3">{renderStars(review.rating, 13)}</div>
+              <div className="mt-5">{renderStars(review.rating, 24)}</div>
 
-              <h3 className="mt-4 text-sm font-semibold">{review.title}</h3>
+              <h3 className="mt-5 text-xl font-bold">{review.title}</h3>
 
               {review.photo && (
                 <img
                   src={review.photo}
                   alt={`Customer photo for ${review.title}`}
-                  className="mt-4 h-auto w-full max-w-[150px] object-cover md:max-w-[180px]"
+                  className="mt-6 h-[392px] w-full max-w-[359px] object-cover"
                 />
               )}
 
-              <p className="mt-4 max-w-[520px] text-xs leading-6 text-[var(--muted)] md:text-sm md:leading-7">
+              <p className="mt-6 text-sm leading-7 text-[var(--muted)]">
                 {review.text}
               </p>
-
-              <p className="mt-3 text-[9px] uppercase tracking-wide text-[var(--muted)]">
-                Purchased: {review.variant}
-              </p>
-
-              {/* Mobile fit indicator */}
-              <div className="mt-8 md:hidden">
-                <HorizontalFitScale fit={review.fit} />
-              </div>
             </div>
 
-            {/* Date */}
-            <time className="text-[10px] text-[var(--muted)] md:pt-1 md:text-right">
+            <time className="mt-2 hidden justify-self-end text-sm text-[var(--muted)] md:block">
               {review.date}
             </time>
+
+            <div className="mt-8 md:hidden">
+              <HorizontalFitScale fit={review.fit} />
+              <time className="mt-5 block text-xs text-[var(--muted)]">
+                {review.date}
+              </time>
+            </div>
           </article>
         ))}
       </div>
@@ -460,52 +484,50 @@ export default function ProductDetail() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-7">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
-            {/* Main image container — white per Figma */}
-            <div className="aspect-[4/5] bg-white">
-              {gallery[selectedImage] && (
-                <img
-                  src={gallery[selectedImage]}
-                  alt={product.name}
-                  className="h-full w-full object-contain"
-                />
+            {/* Figma treats the main image and four thumbnails as one gallery container. */}
+            <div className="bg-[#f5f4f4]">
+              <div className="h-[470px] md:h-[560px]">
+                {gallery[selectedImage] && (
+                  <img
+                    src={gallery[selectedImage]}
+                    alt={product.name}
+                    className="h-full w-full object-contain"
+                  />
+                )}
+              </div>
+
+              {/* The thumbnails sit directly inside the same surface, with no
+                  individual white/background cards around each image. */}
+              {gallery.length > 0 && (
+                <div className="grid grid-cols-4 gap-3 px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3">
+                  {Array.from({ length: 4 }, (_, index) => {
+                    const src = gallery[index];
+                    if (!src) {
+                      return (
+                        <div key={`placeholder-${index}`} className="aspect-square opacity-40">
+                          <ProductPlaceholder className="h-full w-full" />
+                        </div>
+                      );
+                    }
+                    return (
+                      <button
+                        key={src + index}
+                        type="button"
+                        aria-label={`View ${product.name} angle ${index + 1}`}
+                        onClick={() => setSelectedImage(index)}
+                        className={`aspect-square ${
+                          index === selectedImage
+                            ? 'ring-1 ring-[var(--ink)] ring-offset-2 ring-offset-[#f5f4f4]'
+                            : ''
+                        }`}
+                      >
+                        <img src={src} alt="" className="h-full w-full object-contain" />
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
-
-            {/* Thumbnail row — clicking switches the main image.
-                TIP: Figma's frame always shows 4 thumbnail slots, even
-                when a product only has one real photo — the extra
-                slots are ghosted placeholders for angles Lara hasn't
-                photographed yet, not empty space. Once a product has
-                more real photos in its `images` array, they replace
-                the placeholders automatically. */}
-            {gallery.length > 0 && (
-              <div className="mt-3 grid grid-cols-4 gap-3">
-                {Array.from({ length: 4 }, (_, index) => {
-                  const src = gallery[index];
-                  if (!src) {
-                    return (
-                      <div key={`placeholder-${index}`} className="aspect-square opacity-40">
-                        <ProductPlaceholder className="h-full w-full" />
-                      </div>
-                    );
-                  }
-                  return (
-                    <button
-                      key={src + index}
-                      aria-label={`View ${product.name} angle ${index + 1}`}
-                      onClick={() => setSelectedImage(index)}
-                      className={`aspect-square bg-white ${
-                        index === selectedImage
-                          ? 'ring-1 ring-[var(--ink)] ring-offset-2'
-                          : ''
-                      }`}
-                    >
-                      <img src={src} alt="" className="h-full w-full object-contain" />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </section>
 
           {/* ---- RIGHT: Product Info & Purchase ---- */}
@@ -646,7 +668,10 @@ export default function ProductDetail() {
             ============================ */}
         {related.length > 0 && (
           <section className="mt-20">
-            <h2 className="font-display text-3xl md:text-4xl">
+            <h2
+              className="text-[24px] font-bold leading-[30px] tracking-[-0.48px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]"
+              style={{ fontFamily: 'DM Sans, sans-serif' }}
+            >
               Lara Thinks You&apos;d Love These Too
             </h2>
             <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4">
