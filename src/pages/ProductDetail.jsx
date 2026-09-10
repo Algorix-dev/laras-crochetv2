@@ -30,6 +30,28 @@ import reviewBeachPhoto from '../assets/reviews/review-beach.png';
 ----------------------------------------------------------- */
 
 // TIP: add near the top, same mapping used across the site
+
+// Figma variant controls: keep the visual options stable even when the
+// backend product record has fewer/missing color and shade entries.
+const FIGMA_COLOR_MIXES = [
+  { label: 'Red', color: '#ff3438' },
+  { label: 'Yellow', color: '#eff51b' },
+  { label: 'Blue', color: '#4b38f4' },
+  { label: 'Green', color: '#25ee68' },
+  { label: 'Purple', color: '#c735eb' },
+  { label: 'Black / White', color: '#111111' },
+];
+
+const FIGMA_SHADES = [
+  { label: 'Ivory', color: '#efe7e7' },
+  { label: 'Espresso', color: '#4b3032' },
+  { label: 'Taupe', color: '#c9baba' },
+  { label: 'Mauve', color: '#c9baba' },
+  { label: 'Stone', color: '#c9baba' },
+];
+
+const FIGMA_SIZES = ['XS', 'S', 'L', 'M', 'XL', 'XXL'];
+
 const categoryLabel = (category) => {
   if (category === 'two-pieces') return 'Two-Piece';
   if (category === 'bikinis') return 'Bikini';
@@ -95,36 +117,42 @@ const reviews = [
    The `active` boolean adds an outline ring so the user
    knows which color is selected.
 ----------------------------------------------------------- */
-function ColorSwatch({ value, active, onClick, label }) {
+function ColorSwatch({ option, active, onClick }) {
+  const isSplit = option.label === 'Black / White';
+
   return (
     <button
-      aria-label={label}
+      type="button"
+      aria-label={`Select ${option.label} color mix`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-8 w-8 border-2 border-white outline outline-offset-2 ${
+      className={`relative h-[19px] w-[19px] shrink-0 overflow-hidden md:h-[37px] md:w-[46px] border-2 border-white outline outline-offset-1 transition-transform hover:scale-105 ${
         active ? 'outline-2 outline-[var(--ink)]' : 'outline-1 outline-[var(--line)]'
       }`}
-      style={{ backgroundColor: value }}
+      style={{
+        background: isSplit
+          ? 'linear-gradient(135deg, #111 0%, #111 50%, #fff 50%, #fff 100%)'
+          : `radial-gradient(ellipse at center, rgba(255,255,255,.72) 0 10%, rgba(255,255,255,.28) 11% 17%, rgba(15,15,15,.28) 18% 24%, rgba(255,255,255,.55) 25% 30%, rgba(20,20,20,.24) 31% 38%, rgba(255,255,255,.22) 39% 45%, ${option.color} 46% 100%)`,
+      }}
     />
   );
 }
 
-/* TIP: Shades use a wider, shorter rectangular chip — visually
-   distinct from the square Color Mix swatches above. Same active/
-   inactive outline logic, just a different shape. */
-function ShadeSwatch({ value, active, onClick, label }) {
+function ShadeSwatch({ option, active, onClick }) {
   return (
     <button
-      aria-label={label}
+      type="button"
+      aria-label={`Select ${option.label} shade`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-7 w-9 border-2 border-white outline outline-offset-2 ${
+      className={`h-[19px] w-[19px] shrink-0 border-2 md:h-[37px] md:w-[46px] border-white outline outline-offset-1 transition-transform hover:scale-105 ${
         active ? 'outline-2 outline-[var(--ink)]' : 'outline-1 outline-[var(--line)]'
       }`}
-      style={{ backgroundColor: value }}
+      style={{ backgroundColor: option.color }}
     />
   );
 }
+
 
 /* -----------------------------------------------------------
    Fit Indicator — a vertical scale showing how the garment
@@ -140,7 +168,7 @@ function FitIndicator({ fit }) {
   const dotPosition = fit === 'small' ? 'top-0' : fit === 'large' ? 'bottom-0' : 'top-1/2 -translate-y-1/2';
 
   return (
-    <div className="flex h-full items-stretch gap-2 px-8 md:px-16 lg:px-24">
+    <div className="flex h-full items-stretch gap-2">
       {/* Vertical line with labels */}
       <div className="relative flex w-4 flex-col items-center justify-between py-1">
         <span className="text-[9px] leading-tight text-[var(--muted)]">Runs small</span>
@@ -164,7 +192,7 @@ function FitIndicator({ fit }) {
 // directly) so the aggregate case has a fixed height to sit in.
 function FitScaleAggregate({ position = 'true' }) {
   return (
-    <div className="mt-5 h-28 max-w-[160px] px-8 md:px-16 lg:px-24">
+    <div className="mt-5 h-28 max-w-[160px]">
       <FitIndicator fit={position === 'small' ? 'small' : position === 'large' ? 'large' : 'true'} />
     </div>
   );
@@ -180,11 +208,11 @@ function FitScaleAggregate({ position = 'true' }) {
 ----------------------------------------------------------- */
 function Reviews() {
   return (
-    <section className="mt-20 px-8 md:px-16 lg:px-24">
+    <section className="mt-20">
       <h2 className="font-display text-4xl">Reviews</h2>
 
       {/* Rating summary + UGC photo placeholders */}
-      <div className="mt-6 grid gap-8 md:grid-cols-1">
+      <div className="mt-6 grid gap-8 md:grid-cols-2">
         <div>
           <div className="flex items-center gap-3">
             <strong className="text-3xl">4.5</strong>
@@ -364,7 +392,7 @@ export default function ProductDetail() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-7xl px-8 md:px-16 lg:px-24 text-center text-sm text-[var(--muted)] ">
+      <main className="mx-auto max-w-7xl px-5 py-24 text-center text-sm text-[var(--muted)] md:px-8">
         Loading product...
       </main>
     );
@@ -372,7 +400,7 @@ export default function ProductDetail() {
 
   if (error || !product) {
     return (
-      <main className="mx-auto max-w-7xl px-8 md:px-16 lg:px-24 text-center ">
+      <main className="mx-auto max-w-7xl px-5 py-24 text-center md:px-8">
         <p className="text-sm text-red-500">{error || 'Product not found.'}</p>
         <Link to="/shop" className="mt-4 inline-block text-xs uppercase tracking-wider text-[var(--maroon)]">
           ← Back to shop
@@ -383,7 +411,7 @@ export default function ProductDetail() {
 
   return (
     <>
-      <main className="mx-auto max-w-7xl px-8 md:px-16 lg:px-24 py-8 md:py-12">
+      <main className="mx-auto max-w-[960px] px-5 py-8 md:px-0 md:py-12">
         {/* ============================
             TWO-COLUMN MAIN SECTION
             ============================ */}
@@ -391,7 +419,7 @@ export default function ProductDetail() {
             dead evenly — 945px / 945px out of a 1920px frame (minus
             the 30px gap), i.e. a true 50/50 split, not the previous
             1.18/.82 (~59/41) ratio. */}
-        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-7">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
             {/* Main image container — white per Figma */}
@@ -443,7 +471,7 @@ export default function ProductDetail() {
           </section>
 
           {/* ---- RIGHT: Product Info & Purchase ---- */}
-          <section className="lg:pt-4">
+          <section className="lg:pt-7">
             <p className="text-xs uppercase tracking-widest text-[var(--muted)] underline">
               {categoryLabel(product.category)}
             </p>
@@ -473,80 +501,73 @@ export default function ProductDetail() {
                 actually has that attribute, since real DB products
                 (unlike the old hardcoded data) might not have colors
                 or shades set. */}
-            <div className="mt-6 space-y-5">
+            <div className="mt-7 space-y-6">
               {/* Color Mix */}
-              {product.colors?.length > 0 && (
-                <div>
-                  <p className="mb-3 text-sm font-medium">Color Mix</p>
-                  <div className="flex gap-3">
-                    {product.colors.map((c, i) => (
-                      <ColorSwatch
-                        key={c}
-                        value={c}
-                        active={color === c}
-                        onClick={() => setColor(c)}
-                        label={`Select color mix ${i + 1}`}
-                      />
-                    ))}
-                  </div>
+              <div>
+                <p className="mb-3 text-xs font-medium">Color Mix</p>
+                <div className="flex flex-wrap gap-3">
+                  {FIGMA_COLOR_MIXES.map((option) => (
+                    <ColorSwatch
+                      key={option.label}
+                      option={option}
+                      active={color === option.label}
+                      onClick={() => setColor(option.label)}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
 
               {/* Shades */}
-              {product.shades?.length > 0 && (
-                <div>
-                  <p className="mb-3 text-sm font-medium">Shades</p>
-                  <div className="flex gap-3">
-                    {product.shades.map((s, i) => (
-                      <ShadeSwatch
-                        key={`${s}-${i}`}
-                        value={s}
-                        active={shade === s}
-                        onClick={() => setShade(s)}
-                        label={`Select shade ${i + 1}`}
-                      />
-                    ))}
-                  </div>
+              <div>
+                <p className="mb-3 text-xs font-medium">Shades</p>
+                <div className="flex flex-wrap gap-3">
+                  {FIGMA_SHADES.map((option) => (
+                    <ShadeSwatch
+                      key={option.label}
+                      option={option}
+                      active={shade === option.label}
+                      onClick={() => setShade(option.label)}
+                    />
+                  ))}
                 </div>
-              )}
+              </div>
 
-              {/* Sizing */}
-              {product.sizes?.length > 0 && (
-                <div>
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-sm font-medium">Size</p>
-                    <button
-                      type="button"
-                      onClick={() => setSizeGuideOpen(true)}
-                      className="text-sm font-medium underline underline-offset-2 hover:text-[var(--maroon)]"
-                    >
-                      Size guide
-                    </button>
-                  </div>
-                  <div className="flex border-y border-[var(--line)]">
-                    {product.sizes.map((s) => (
-                      <button
-                        key={s}
-                        aria-pressed={size === s}
-                        onClick={() => setSize(s)}
-                        className={`flex-1 py-2 text-xs tracking-wide transition-colors ${
-                          size === s
-                            ? 'bg-[var(--ink)] text-white'
-                            : 'text-[var(--ink)] hover:bg-[#f4eeee]'
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
+              {/* Size */}
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-xs font-medium">Size</p>
+                  <button
+                    type="button"
+                    onClick={() => setSizeGuideOpen(true)}
+                    className="text-xs font-medium underline underline-offset-2 hover:text-[var(--maroon)]"
+                  >
+                    Size guide
+                  </button>
                 </div>
-              )}
+                <div className="grid grid-cols-6 border-y border-[var(--line)]">
+                  {FIGMA_SIZES.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      aria-pressed={size === s}
+                      onClick={() => setSize(s)}
+                      className={`py-2 text-[10px] tracking-wide transition-colors ${
+                        size === s
+                          ? 'bg-[var(--ink)] text-white'
+                          : 'text-[var(--ink)] hover:bg-[#f4eeee]'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Add to Bag button */}
             <button
               onClick={handleAddToBag}
-              className="mt-6 w-full bg-[var(--ink)] py-3 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-7 w-full bg-[var(--ink)] py-3.5 text-[10px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>
@@ -590,7 +611,7 @@ export default function ProductDetail() {
             <h2 className="font-display text-3xl md:text-4xl">
               Lara Thinks You&apos;d Love These Too
             </h2>
-            <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4">
               {related.map((p) => (
                 <ProductCard key={p.id} product={p} variant="recommendation" />
               ))}

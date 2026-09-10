@@ -66,7 +66,7 @@ export default function MyBagPage() {
     return (
       <>
         <main className="min-h-screen">
-          <section className="max-w-7xl mx-auto px-5 md:px-8 py-16 text-center">
+          <section className="mx-auto max-w-[984px] px-5 py-16 text-center md:px-0">
             <p className="mb-4 text-xs text-[var(--muted)]">
               <Link to="/" className="hover:underline">Home</Link> /{' '}
               <Link to="/shop" className="hover:underline">Shop</Link> / Bag
@@ -93,7 +93,7 @@ export default function MyBagPage() {
   return (
     <>
       <main className="min-h-screen">
-        <section className="max-w-7xl mx-auto px-5 md:px-8 pt-10 pb-16">
+        <section className="mx-auto max-w-[984px] px-5 pt-8 pb-16 md:px-0 md:pt-10">
           {/* Breadcrumb */}
           <p className="mb-4 text-xs text-[var(--muted)]">
             <Link to="/" className="hover:underline">Home</Link> /{' '}
@@ -111,7 +111,7 @@ export default function MyBagPage() {
           {/* ================================================================
               Two-column layout: items table (left) + order summary (right)
               ================================================================ */}
-          <div className="grid gap-10 lg:grid-cols-[1.2fr_.8fr]">
+          <div className="grid gap-8 lg:grid-cols-[2fr_1fr] lg:gap-6">
 
             {/* ---- LEFT: Cart Items Table ---- */}
             <div>
@@ -122,18 +122,18 @@ export default function MyBagPage() {
                   line up in the same columns, instead of the item
                   row just approximating the header's widths inside a
                   separate flex layout. */}
-              <div className="hidden md:grid md:grid-cols-[1fr_80px_100px_150px] gap-3 border-b border-[var(--line)] pb-2 text-[11px] uppercase tracking-wider text-[var(--muted)]">
+              <div className="hidden md:grid md:grid-cols-[1fr_68px_88px_120px] gap-3 border-b border-[var(--line)] pb-2 text-[11px] uppercase tracking-wider text-[var(--muted)]">
                 <span>Item</span>
                 <span>Size</span>
                 <span>Color</span>
                 <span>Qty</span>
               </div>
 
-              <div className="mt-4 space-y-6">
+              <div className="mt-5 space-y-0">
                 {cartItems.map((item) => (
                   <article
                     key={item.id}
-                    className="grid grid-cols-[6rem_1fr] gap-4 border-b border-[var(--line)] pb-6 md:grid-cols-[6rem_1fr_80px_100px_150px] md:items-center md:gap-3"
+                    className="grid grid-cols-[5.5rem_1fr] gap-4 border-b border-[var(--line)] py-5 first:pt-0 md:grid-cols-[6rem_1fr_68px_88px_120px] md:items-center md:gap-3"
                   >
                     {/* Product image */}
                     <Link
@@ -143,7 +143,7 @@ export default function MyBagPage() {
                       <img
                         src={item.product.image}
                         alt={item.product.name}
-                        className="h-32 w-24 bg-white object-contain"
+                        className="h-28 w-24 bg-white object-contain md:h-24"
                       />
                     </Link>
 
@@ -298,7 +298,7 @@ export default function MyBagPage() {
             </div>
 
             {/* ---- RIGHT: Order Summary ---- */}
-            <aside className="lg:sticky lg:top-20 lg:self-start">
+            <aside className="lg:sticky lg:top-20 lg:self-start lg:pl-0">
               {/* Promo code accordion */}
               <div className="border-b border-[var(--line)]">
                 <button
@@ -399,11 +399,17 @@ export default function MyBagPage() {
             Recommendations section
             ================================================================ */}
         {recommendations.length > 0 && (
-          <section className="max-w-7xl mx-auto px-5 md:px-8 pb-16">
-            <h2 className="font-display text-2xl md:text-3xl mb-8">
-              Lara Thinks You'd Love These Too
-            </h2>
-            <ProductGrid products={recommendations} columns={4} cardVariant="recommendation" />
+          <section className="bg-[#fafafa] py-12 md:py-14">
+            <div className="mx-auto max-w-[984px] px-5 md:px-0">
+              <h2 className="mb-6 font-display text-2xl leading-tight md:text-3xl">
+                Lara Thinks You'd Love These Too
+              </h2>
+              <ProductGrid
+                products={recommendations}
+                columns={4}
+                cardVariant="recommendation"
+              />
+            </div>
           </section>
         )}
       </main>
