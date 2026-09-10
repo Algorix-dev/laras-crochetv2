@@ -45,9 +45,9 @@ const FIGMA_COLOR_MIXES = [
 const FIGMA_SHADES = [
   { label: 'Ivory', color: '#efe7e7' },
   { label: 'Espresso', color: '#4b3032' },
-  { label: 'Taupe', color: '#c9baba' },
-  { label: 'Mauve', color: '#c9baba' },
-  { label: 'Stone', color: '#c9baba' },
+  { label: 'Taupe', color: '#c7b9ba' },
+  { label: 'Stone', color: '#cbbfc0' },
+  { label: 'Mauve', color: '#c6b8b9' },
 ];
 
 const FIGMA_SIZES = ['XS', 'S', 'L', 'M', 'XL', 'XXL'];
@@ -123,16 +123,18 @@ function ColorSwatch({ option, active, onClick }) {
   return (
     <button
       type="button"
-      aria-label={`Select ${option.label} color mix`}
+      aria-label={`Select ${option.label} color`}
       aria-pressed={active}
       onClick={onClick}
-      className={`relative h-[19px] w-[19px] shrink-0 overflow-hidden md:h-[37px] md:w-[46px] border-2 border-white outline outline-offset-1 transition-transform hover:scale-105 ${
-        active ? 'outline-2 outline-[var(--ink)]' : 'outline-1 outline-[var(--line)]'
+      className={`h-12 w-12 shrink-0 rounded-lg border-2 cursor-pointer transition-all md:h-12 md:w-12 ${
+        active
+          ? 'border-[var(--ink)] scale-110'
+          : 'border-[var(--line)] hover:scale-105'
       }`}
       style={{
         background: isSplit
-          ? 'linear-gradient(135deg, #111 0%, #111 50%, #fff 50%, #fff 100%)'
-          : `radial-gradient(ellipse at center, rgba(255,255,255,.72) 0 10%, rgba(255,255,255,.28) 11% 17%, rgba(15,15,15,.28) 18% 24%, rgba(255,255,255,.55) 25% 30%, rgba(20,20,20,.24) 31% 38%, rgba(255,255,255,.22) 39% 45%, ${option.color} 46% 100%)`,
+          ? 'radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95), #111 55%)'
+          : `radial-gradient(circle at 35% 30%, rgba(255,255,255,0.85), ${option.color} 55%)`,
       }}
     />
   );
@@ -145,14 +147,15 @@ function ShadeSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} shade`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[19px] w-[19px] shrink-0 border-2 md:h-[37px] md:w-[46px] border-white outline outline-offset-1 transition-transform hover:scale-105 ${
-        active ? 'outline-2 outline-[var(--ink)]' : 'outline-1 outline-[var(--line)]'
+      className={`h-12 w-12 shrink-0 border-2 cursor-pointer transition-all md:h-12 md:w-12 ${
+        active
+          ? 'border-[var(--ink)] scale-110'
+          : 'border-[var(--line)] hover:scale-105'
       }`}
       style={{ backgroundColor: option.color }}
     />
   );
 }
-
 
 /* -----------------------------------------------------------
    Fit Indicator — a vertical scale showing how the garment
@@ -207,105 +210,140 @@ function FitScaleAggregate({ position = 'true' }) {
    in the middle, timestamp on the right.
 ----------------------------------------------------------- */
 function Reviews() {
+  const renderStars = (rating = 5, size = 14) => (
+    <span className="flex items-center gap-1 text-[var(--maroon)]">
+      {Array.from({ length: 5 }, (_, i) => (
+        <Star
+          key={i}
+          size={size}
+          strokeWidth={1.8}
+          fill={i < rating ? 'currentColor' : 'none'}
+        />
+      ))}
+    </span>
+  );
+
+  const HorizontalFitScale = ({ fit = 'true' }) => {
+    const position = fit === 'small' ? 'left-0' : fit === 'large' ? 'right-0' : 'left-1/2 -translate-x-1/2';
+
+    return (
+      <div className="w-full max-w-[360px]">
+        <div className="mb-2 flex items-center justify-between text-[9px] text-[var(--muted)]">
+          <span>Runs small</span>
+          <span>True to size</span>
+          <span>Runs large</span>
+        </div>
+        <div className="relative h-3">
+          <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-[var(--line)]" />
+          <div className={`absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-[var(--ink)] ${position}`} />
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <section className="mt-20">
-      <h2 className="font-display text-4xl">Reviews</h2>
+    <section className="mt-16 md:mt-20">
+      <h2 className="font-display text-3xl md:text-4xl">Reviews</h2>
 
-      {/* Rating summary + UGC photo placeholders */}
-      <div className="mt-6 grid gap-8 md:grid-cols-2">
-        <div>
-          <div className="flex items-center gap-3">
-            <strong className="text-3xl">4.5</strong>
-            <span className="flex text-[var(--maroon)]">
-              {/* 4 full stars + 1 half-filled star = 4.5 rating */}
-              {Array.from({ length: 5 }, (_, i) => (
-                <Star
-                  key={i}
-                  size={16}
-                  fill={i < 4 ? 'currentColor' : 'none'}
-                />
-              ))}
-            </span>
-            <span className="text-xs text-[var(--muted)]">
-              Based on 18 reviews
-            </span>
-            </div>
-            <h3 className="mt-6 text-sm font-semibold">Reviews Summary</h3>
-            <p className="mt-2 max-w-md text-sm leading-7 text-[var(--muted)]">
-              Customers love the one-of-a-kind crochet work, thoughtful fit, and
-              the care that goes into every order.
-            </p>
-            <FitScaleAggregate position="true" />
-          </div>
+      {/* Rating */}
+      <div className="mt-5 flex items-center gap-3">
+        <strong className="text-base font-medium">4.5</strong>
+        {renderStars(4, 14)}
+        <span className="text-[10px] text-[var(--muted)]">Based on 18 reviews</span>
+      </div>
 
-        {/* Real customer style photos */}
-        <div className="grid grid-cols-2 gap-3">
+      {/* Reviews summary */}
+      <div className="mt-8">
+        <h3 className="text-xs font-semibold">Reviews Summary</h3>
+        <p className="mt-3 max-w-none text-xs leading-6 text-[var(--muted)] md:text-sm md:leading-7">
+          Customers say this piece offers exceptional comfort for all-day wear,
+          with many noting how they feel confident in the fit. Reviews mention
+          the smooth finish, thoughtful sizing, and the care taken in every detail.
+          We also note the card you&apos;ll see below has fit guidance based on
+          customer feedback, helping you choose with more confidence.
+        </p>
+      </div>
+
+      {/* Aggregate fit guide + customer photos */}
+      <div className="mt-8 grid gap-6 md:grid-cols-[150px_minmax(0,1fr)] md:items-end md:gap-8">
+        <div className="hidden md:block">
+          <FitScaleAggregate position="true" />
+        </div>
+        <div className="md:hidden">
+          <HorizontalFitScale fit="true" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-2 md:gap-4">
           <img
             src={reviewRestaurantPhoto}
-            alt="Customer wearing The Reina Dress"
+            alt="Customer wearing The Reina Dress at a restaurant"
             className="aspect-square w-full object-cover"
           />
           <img
             src={reviewBeachPhoto}
-            alt="Customer wearing The Reina Dress"
+            alt="Customer wearing The Reina Dress at the beach"
             className="aspect-square w-full object-cover"
+          />
+          <img
+            src={reviewBeachPhoto}
+            alt="Customer wearing The Reina Dress outdoors"
+            className="aspect-square w-full object-cover md:hidden"
           />
         </div>
       </div>
 
-      {/* Individual review cards — three-column layout matching Figma */}
-      <div className="mt-8 space-y-4">
+      {/* Individual reviews */}
+      <div className="mt-12">
         {reviews.map((review) => (
-          <article key={review.name} className="border-b border-[var(--line)] pb-6">
-            {/* Top row: reviewer name + badge, stars, and date all share one line */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <p className="text-sm font-medium">{review.name}</p>
-                <span className="flex items-center gap-1 text-[10px] uppercase text-[var(--muted)]">
-                  <Check size={11} /> Verified Buyer
+          <article
+            key={review.name}
+            className="grid gap-6 border-t border-[var(--line)] py-8 last:border-b md:grid-cols-[150px_minmax(0,1fr)_100px] md:gap-8"
+          >
+            {/* Desktop fit indicator */}
+            <div className="hidden min-h-[150px] md:block">
+              <FitIndicator fit={review.fit} />
+            </div>
+
+            {/* Review content */}
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="text-xs font-medium">{review.name}</p>
+                <span className="flex items-center gap-1 text-[9px] text-[var(--muted)]">
+                  <Check size={10} strokeWidth={2} />
+                  Verified Buyer
                 </span>
               </div>
-              <div className="flex text-[var(--maroon)]">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Star
-                    key={i}
-                    size={13}
-                    fill={i < (review.rating || 5) ? 'currentColor' : 'none'}
-                  />
-                ))}
-              </div>
-              <time className="shrink-0 text-xs text-[var(--muted)]">
-                {review.date}
-              </time>
-            </div>
 
-            {/* Second row: fit scale on the left, title/photo/text on the right */}
-            <div className="mt-4 flex gap-6">
-              <div className="w-24 shrink-0">
-                <FitIndicator fit={review.fit} />
-              </div>
+              <div className="mt-3">{renderStars(review.rating, 13)}</div>
 
-              <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-semibold">{review.title}</h3>
+              <h3 className="mt-4 text-sm font-semibold">{review.title}</h3>
 
-                {/* TIP: Customer photo — show only if the review has one */}
-                {review.photo && (
-                  <img
-                    src={review.photo}
-                    alt={`Customer photo for ${review.title}`}
-                    className="mt-3 h-40 w-32 rounded object-cover"
-                  />
-                )}
+              {review.photo && (
+                <img
+                  src={review.photo}
+                  alt={`Customer photo for ${review.title}`}
+                  className="mt-4 h-auto w-full max-w-[150px] object-cover md:max-w-[180px]"
+                />
+              )}
 
-                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                  {review.text}
-                </p>
+              <p className="mt-4 max-w-[520px] text-xs leading-6 text-[var(--muted)] md:text-sm md:leading-7">
+                {review.text}
+              </p>
 
-                <p className="mt-3 text-[11px] uppercase tracking-wide text-[var(--muted)]">
-                  Purchased: {review.variant}
-                </p>
+              <p className="mt-3 text-[9px] uppercase tracking-wide text-[var(--muted)]">
+                Purchased: {review.variant}
+              </p>
+
+              {/* Mobile fit indicator */}
+              <div className="mt-8 md:hidden">
+                <HorizontalFitScale fit={review.fit} />
               </div>
             </div>
+
+            {/* Date */}
+            <time className="text-[10px] text-[var(--muted)] md:pt-1 md:text-right">
+              {review.date}
+            </time>
           </article>
         ))}
       </div>
@@ -376,9 +414,9 @@ export default function ProductDetail() {
   useEffect(() => {
     if (!product) return;
     setSelectedImage(0);
-    setColor(product.colors?.[0] ?? null);
-    setShade(product.shades?.[0] ?? null);
-    setSize(product.sizes?.[0] ?? null);
+    setColor(FIGMA_COLOR_MIXES[0]?.label ?? null);
+    setShade(FIGMA_SHADES[0]?.label ?? null);
+    setSize(FIGMA_SIZES[0] ?? null);
   }, [product]);
 
   const { addToBag, openBag } = useCart();
@@ -501,10 +539,10 @@ export default function ProductDetail() {
                 actually has that attribute, since real DB products
                 (unlike the old hardcoded data) might not have colors
                 or shades set. */}
-            <div className="mt-7 space-y-6">
+            <div className="mt-8 space-y-7">
               {/* Color Mix */}
               <div>
-                <p className="mb-3 text-xs font-medium">Color Mix</p>
+                <p className="mb-3 text-sm font-semibold">Color Mix</p>
                 <div className="flex flex-wrap gap-3">
                   {FIGMA_COLOR_MIXES.map((option) => (
                     <ColorSwatch
@@ -519,7 +557,7 @@ export default function ProductDetail() {
 
               {/* Shades */}
               <div>
-                <p className="mb-3 text-xs font-medium">Shades</p>
+                <p className="mb-3 text-sm font-semibold">Shades</p>
                 <div className="flex flex-wrap gap-3">
                   {FIGMA_SHADES.map((option) => (
                     <ShadeSwatch
@@ -535,7 +573,7 @@ export default function ProductDetail() {
               {/* Size */}
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-xs font-medium">Size</p>
+                  <p className="text-sm font-semibold">Size</p>
                   <button
                     type="button"
                     onClick={() => setSizeGuideOpen(true)}
@@ -567,7 +605,7 @@ export default function ProductDetail() {
             {/* Add to Bag button */}
             <button
               onClick={handleAddToBag}
-              className="mt-7 w-full bg-[var(--ink)] py-3.5 text-[10px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-8 w-full bg-[var(--ink)] py-4 text-[10px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>

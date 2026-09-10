@@ -9,11 +9,11 @@
 */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Minus, Plus, Trash2, Heart } from 'lucide-react';
+import { ChevronDown, Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
-import ProductGrid from '../components/ProductGrid';
+import ProductCard from '../components/ProductCard';
 import Footer from '../components/Footer';
 import { getProducts, normalizeProduct } from '../api';
 
@@ -60,7 +60,7 @@ export default function MyBagPage() {
       })
       .catch(() => setRecommendations([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cartItems.length]);
+  }, [cartItems]);
 
   if (!cartItems.length) {
     return (
@@ -235,7 +235,7 @@ export default function MyBagPage() {
                         >
                           <Minus size={12} />
                         </button>
-                        <span className="w-7 text-center text-xs">
+                        <span className="flex-1 text-center text-xs">
                           {item.quantity}
                         </span>
                         <button
@@ -251,7 +251,7 @@ export default function MyBagPage() {
                       </div>
 
                       {/* Desktop stepper — Trash / qty / Plus */}
-                      <div className="hidden items-center border border-[var(--line)] md:flex">
+                      <div className="hidden w-full items-center justify-between border border-[var(--line)] md:flex">
                         <button
                           className="p-2 text-[var(--muted)] hover:text-[var(--ink)]"
                           aria-label={`Remove ${item.product.name}`}
@@ -259,7 +259,7 @@ export default function MyBagPage() {
                         >
                           <Trash2 size={12} />
                         </button>
-                        <span className="w-7 text-center text-xs">
+                        <span className="flex-1 text-center text-xs">
                           {item.quantity}
                         </span>
                         <button
@@ -337,7 +337,7 @@ export default function MyBagPage() {
               {/* Checkout button */}
               <Link
                 to="/checkout"
-                className="mt-4 block w-full bg-[var(--ink)] py-4 text-center text-xs font-bold tracking-widest text-white hover:bg-[var(--maroon)] transition-colors"
+                className="block w-full bg-[var(--ink)] py-4 text-center text-xs font-bold tracking-widest text-white hover:bg-[var(--maroon)] transition-colors"
               >
                 CHECKOUT
               </Link>
@@ -399,16 +399,21 @@ export default function MyBagPage() {
             Recommendations section
             ================================================================ */}
         {recommendations.length > 0 && (
-          <section className="bg-[#fafafa] py-12 md:py-14">
-            <div className="mx-auto max-w-[984px] px-5 md:px-0">
-              <h2 className="mb-6 font-display text-2xl leading-tight md:text-3xl">
+          <section className="border-t border-[var(--line)] bg-[#fafafa] py-14 md:py-16">
+            <div className="mx-auto w-full max-w-[984px] px-5 md:px-0">
+              <h2 className="font-display text-2xl leading-tight md:text-3xl">
                 Lara Thinks You'd Love These Too
               </h2>
-              <ProductGrid
-                products={recommendations}
-                columns={4}
-                cardVariant="recommendation"
-              />
+
+              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4 md:gap-x-3 md:gap-y-10">
+                {recommendations.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    variant="recommendation"
+                  />
+                ))}
+              </div>
             </div>
           </section>
         )}
