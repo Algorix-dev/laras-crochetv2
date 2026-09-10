@@ -401,7 +401,9 @@ export default function MyBagPage() {
         {recommendations.length > 0 && (
           <section className="border-t border-[var(--line)] bg-[#fafafa] py-14 md:py-16">
             <div className="mx-auto w-full max-w-[984px] px-5 md:px-0">
-              <h2 className="font-display text-2xl leading-tight md:text-3xl">
+              <h2 className="text-[24px] font-bold leading-[30px] tracking-[-0.48px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]"
+              style={{ fontFamily: 'DM Sans, sans-serif' }}
+              >
                 Lara Thinks You'd Love These Too
               </h2>
 
