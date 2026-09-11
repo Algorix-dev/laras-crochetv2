@@ -58,7 +58,7 @@ const NAVBAR_HEIGHT_PX = 66;
   content directly below it — so this can stay focused and this
   number controls exactly how slow the pinned sequence feels.
 */
-const TRACK_VH = 620;
+const TRACK_VH = 1200;
 
 
 /* ============================================================
@@ -675,6 +675,28 @@ export default function LaraShowcase() {
         className="relative w-full bg-[var(--cream)]"
         style={{ height: `${TRACK_VH}vh` }}
       >
+        {/* TEMP DEBUG — remove once Lara is confirmed showing correctly */}
+        <div
+          style={{
+            position: "fixed",
+            top: 80,
+            right: 10,
+            zIndex: 999,
+            background: "black",
+            color: "lime",
+            padding: "8px 12px",
+            fontSize: 12,
+            fontFamily: "monospace",
+          }}
+        >
+          pinState: {pinState}
+          <br />
+          progress: {progress.toFixed(3)}
+          <br />
+          p: {p.toFixed(3)}
+          <br />
+          scene: {scene.toFixed(3)}
+        </div>
         <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
           <div className="relative h-full w-full">
             {/* ======================= LARA + PHOTOS ======================= */}
