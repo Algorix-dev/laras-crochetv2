@@ -343,28 +343,7 @@ export default function LaraShowcase() {
               className="relative mx-auto w-full max-w-[860px] md:max-w-[1080px]"
               style={{ opacity: wordmarkFadeT }}
             >
-              {/* Glow — soft breathing pulse behind the decor/wordmark,
-                  same "alive/selected" language as the Hero podium
-                  glow, as a pulse instead of a spin since nothing here
-                  rotates. */}
-              <motion.div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 rounded-full"
-                style={{
-                  width: "min(60vw, 820px)",
-                  aspectRatio: "1 / 1",
-                  background:
-                    "radial-gradient(circle, rgba(76,5,25,0.35), rgba(76,5,25,0.08) 55%, transparent 75%)",
-                  filter: "blur(30px)",
-                }}
-                animate={
-                  reduceMotion
-                    ? undefined
-                    : { opacity: [0.5, 0.85, 0.5], scale: [0.94, 1.02, 0.94] }
-                }
-                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-              />
-
+              
               <img
                 src={laraDecor}
                 alt=""
