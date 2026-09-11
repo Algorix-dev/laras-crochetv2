@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
@@ -11,43 +10,28 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
    LARA SHOWCASE
    ============================================================
 
-   Two distinct behaviors, on purpose:
+   ONE CONTINUOUS PINNED SEQUENCE:
 
-   1) PINNED SCRUB (wordmark + 3 scattered photos + paragraph)
-      - progress is derived directly from scroll position
-      - every visual value (opacity/scale/x/y/rotate/word-reveal)
-        is a pure function of that progress, so it can never
-        desync from the scrollbar like a wall-clock animation can
-      - photos enter ONE AT A TIME, big → small, very slowly
-      - once photos are done, Lara fades out and the paragraph
-        fades in and reveals word-by-word, then holds
+   1. Lara wordmark appears
+   2. Photos enter one at a time, slowly
+   3. Lara + photos hold
+   4. Lara + photos fade away
+   5. Paragraph fades in
+   6. Paragraph reveals word-by-word
+   7. Paragraph holds
+   8. Reviews fade/slide in, 3 columns x 3 rows
+   9. Reviews hold
+   10. ONLY THEN does the pinned section release
 
-   2) NORMAL-FLOW REVIEWS (after the pin releases)
-      - NOT pinned/fixed — this is why they can be taller than
-        one screen and still be scrolled through properly
-      - each card fades up once via whileInView (viewport once)
-      - directly followed by whatever App.jsx renders next
-        (the "Go to Shop" CTA / Shop section), no extra gap
+   The important difference from the previous version:
 
-   ONE-TIME-ONLY BEHAVIOR:
-   - a module-level flag remembers that the pin animation
-     finished for this page visit
-   - once the reveal completes LIVE during a mount, the whole
-     component permanently swaps to the lightweight static
-     markup (see `liveCompleted`) — no more pin, no more fixed
-     positioning, no more scroll tracking for this section at all
-   - a full page refresh does reset it (module reloads, flag resets)
+   REVIEWS ARE INSIDE THE PINNED TRACK.
 
-   SCROLL-POSITION FIX ON LIVE COMPLETION:
-   - the instant `liveCompleted` flips true, the tall TRACK_VH
-     wrapper collapses into short static markup. That's a huge,
-     sudden drop in total document height, and the browser will
-     silently clamp scrollY to fit — which used to throw you
-     straight past the compact Lara section.
-   - to prevent that, `pendingScrollFixRef` captures scrollY and
-     document height right as completion is detected inside
-     tick(), and a useLayoutEffect (fires before paint) corrects
-     scrollY by the exact height delta right after the swap.
+   The page therefore cannot fall into normal document flow
+   immediately after the paragraph finishes.
+
+   SHOP OUR PIECES / the next App.jsx section only begins after
+   the entire Lara + paragraph + reviews sequence has completed.
    ============================================================ */
 
 
@@ -58,49 +42,112 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
 const NAVBAR_HEIGHT_PX = 66;
 
 /*
-  Scroll track for the PIN ONLY (wordmark + photos + paragraph).
-  Reviews are no longer inside this track — they're normal page
-  content directly below it — so this can stay focused and this
-  number controls exactly how slow the pinned sequence feels.
+  This is the amount of page scroll available to scrub through
+  the complete Lara → paragraph → reviews sequence.
+
+  The old 1200vh was already giving the Lara animation a long
+  feel. Reviews are now included, so we give the complete
+  sequence a little more room.
 */
-const TRACK_VH = 1200;
+const TRACK_VH = 1500;
 
 
 /* ============================================================
-   PROGRESS MAP (fractions of the pin's 0 → 1 scroll progress)
+   COMPLETE PROGRESS MAP
    ============================================================
 
-   0.00                                                    1.00
-   |--fade in--|--photo 1--|--photo 2--|--photo 3--|--hold--|--exit--|-----paragraph words-----|--hold--|
-   0        0.03        0.21        0.39        0.57     0.66     0.72                       0.94      1.0
+   0.00
+      ↓
+      Lara fades in
+   0.03
+
+      ↓
+      Photo 1
+   0.18
+
+      ↓
+      Photo 2
+   0.35
+
+      ↓
+      Photo 3
+   0.52
+
+      ↓
+      Lara + photos hold
+   0.64
+
+      ↓
+      Lara + photos exit
+   0.70
+
+      ↓
+      Paragraph fades in
+   0.73
+
+      ↓
+      Paragraph word reveal
+   0.86
+
+      ↓
+      Paragraph holds
+   0.89
+
+      ↓
+      Reviews enter
+   0.94
+
+      ↓
+      Review rows animate
+   0.985
+
+      ↓
+      Reviews hold
+   0.999
+
+      ↓
+      RELEASE
+   1.00
+
+   Only after 1.00 does the pinned section release.
 */
+
 
 const WORDMARK_FADE_IN_END = 0.03;
 
 const PHOTO_RANGES = [
-  { start: 0.03, end: 0.21 }, // back   (comes from bottom)
-  { start: 0.21, end: 0.39 }, // middle (comes from left)
-  { start: 0.39, end: 0.57 }, // front  (comes from right)
+  { start: 0.03, end: 0.18 },
+  { start: 0.18, end: 0.35 },
+  { start: 0.35, end: 0.52 },
 ];
 
-const LARA_HOLD_END = 0.66; // finished photo stack stays visible
-const LARA_EXIT_END = 0.72; // Lara + photos fade out together
+const LARA_HOLD_END = 0.64;
+const LARA_EXIT_END = 0.70;
 
-const PARAGRAPH_CONTAINER_FADE_START = 0.7;
+const PARAGRAPH_CONTAINER_FADE_START = 0.69;
 const PARAGRAPH_CONTAINER_FADE_END = 0.73;
 
-const PARAGRAPH_WORDS_START = 0.74;
-const PARAGRAPH_WORDS_END = 0.94;
-// 0.94 → 1.0 is the paragraph's "hold" — words stay fully
-// visible while the pin keeps absorbing scroll, which is what
-// gives the "waits even while scrolling" feeling.
+const PARAGRAPH_WORDS_START = 0.73;
+const PARAGRAPH_WORDS_END = 0.86;
 
-// TIP: this is a "close enough to 1" threshold, not exactly 1.
-// Floating point scroll math (fast scrolls / trackpad inertia)
-// can jump past 1 between frames, so checking >= RELEASE_AT
-// with a small margin below 1 makes sure we reliably catch the
-// "reveal is done" moment instead of risking a skipped frame.
-const RELEASE_AT = 0.995;
+const PARAGRAPH_HOLD_END = 0.89;
+
+/*
+  Reviews begin AFTER the paragraph has finished revealing.
+
+  They are still inside the pinned scene.
+*/
+const REVIEWS_FADE_START = 0.87;
+const REVIEWS_FADE_END = 0.92;
+
+const REVIEWS_ANIMATION_START = 0.89;
+const REVIEWS_ANIMATION_END = 0.985;
+
+/*
+  Do not release the pin until essentially the entire review
+  sequence has completed.
+*/
+const RELEASE_AT = 0.999;
 
 
 /* ============================================================
@@ -124,39 +171,31 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-function easeOutCubic(t) {
-  return 1 - Math.pow(1 - t, 3);
-}
-
-/*
-  Slow-in, slow-out. Used for the photos instead of easeOutCubic:
-  easeOutCubic moves FASTEST right at the start and barely moves
-  near the end — applied to "big shrinking to normal size" that
-  meant it looked like it had basically already arrived seconds
-  in, then just sat there. easeInOutCubic lingers large at the
-  start (so it's clearly visible big), moves through the middle,
-  then settles into place smoothly instead of snapping.
-*/
 function easeInOutCubic(t) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-/*
-  Lara wordmark + photo-stack opacity as a pure function of
-  overall pin progress. Handles the initial fade-in, the long
-  hold while photos animate + settle, and the fade-out right
-  before the paragraph takes over.
-*/
+
+/* ============================================================
+   LARA / PHOTO OPACITY
+   ============================================================ */
+
 function sceneOpacity(progress) {
   if (progress <= WORDMARK_FADE_IN_END) {
     return clamp01(progress / WORDMARK_FADE_IN_END);
   }
 
-  if (progress >= LARA_HOLD_END && progress <= LARA_EXIT_END) {
+  if (
+    progress >= LARA_HOLD_END &&
+    progress <= LARA_EXIT_END
+  ) {
     return (
       1 -
       clamp01(
-        (progress - LARA_HOLD_END) / (LARA_EXIT_END - LARA_HOLD_END)
+        (progress - LARA_HOLD_END) /
+          (LARA_EXIT_END - LARA_HOLD_END)
       )
     );
   }
@@ -168,58 +207,95 @@ function sceneOpacity(progress) {
   return 1;
 }
 
+
+/* ============================================================
+   PARAGRAPH OPACITY
+   ============================================================ */
+
 function paragraphContainerOpacity(progress) {
-  if (progress < PARAGRAPH_CONTAINER_FADE_START) return 0;
+  if (progress < PARAGRAPH_CONTAINER_FADE_START) {
+    return 0;
+  }
 
   if (progress < PARAGRAPH_CONTAINER_FADE_END) {
     return clamp01(
       (progress - PARAGRAPH_CONTAINER_FADE_START) /
-        (PARAGRAPH_CONTAINER_FADE_END - PARAGRAPH_CONTAINER_FADE_START)
+        (PARAGRAPH_CONTAINER_FADE_END -
+          PARAGRAPH_CONTAINER_FADE_START)
     );
   }
 
   return 1;
 }
 
-/*
-  Returns the fully resolved visual state for ONE scattered
-  photo at the current pin progress. Pure function — no timers,
-  no framer-motion `duration`, so it can never fall out of sync
-  with the scrollbar.
-*/
+
+/* ============================================================
+   PHOTO STATE
+   ============================================================ */
+
 function getPhotoState(photo, range, progress) {
-  const localT = clamp01((progress - range.start) / (range.end - range.start));
+  const localT = clamp01(
+    (progress - range.start) /
+      (range.end - range.start)
+  );
+
   const eased = easeInOutCubic(localT);
 
-  // Quick fade-in right at the photo's own start so it doesn't
-  // hard-pop into existence; stays at 1 for the rest of its life
-  // (including after it has finished, so it remains visible while
-  // the NEXT photo animates in).
   const hasAppeared = progress >= range.start;
-  const fadeIn = clamp01((progress - range.start) / 0.02);
+
+  const fadeIn = clamp01(
+    (progress - range.start) / 0.025
+  );
+
   const opacity = hasAppeared ? fadeIn : 0;
 
   let startX = 0;
   let startY = 0;
 
-  if (photo.enterDirection === "left") startX = -PHOTO_ENTER_SIDE_DISTANCE;
-  if (photo.enterDirection === "right") startX = PHOTO_ENTER_SIDE_DISTANCE;
-  if (photo.enterDirection === "bottom") startY = PHOTO_ENTER_SIDE_DISTANCE;
+  if (photo.enterDirection === "left") {
+    startX = -PHOTO_ENTER_SIDE_DISTANCE;
+  }
+
+  if (photo.enterDirection === "right") {
+    startX = PHOTO_ENTER_SIDE_DISTANCE;
+  }
+
+  if (photo.enterDirection === "bottom") {
+    startY = PHOTO_ENTER_SIDE_DISTANCE;
+  }
 
   const x = lerp(startX, photo.finalX, eased);
   const y = lerp(startY, photo.finalY, eased);
-  const scale = lerp(PHOTO_ENTER_START_SCALE, 1, eased);
+
+  const scale = lerp(
+    PHOTO_ENTER_START_SCALE,
+    1,
+    eased
+  );
 
   const spinOffset =
     photo.enterDirection === "left"
       ? -PHOTO_ENTER_SPIN_OFFSET
       : PHOTO_ENTER_SPIN_OFFSET;
 
-  const finalRotate = -photo.figmaAngle; // Figma CCW+ → CSS CW+
-  const startRotate = finalRotate + spinOffset;
-  const rotate = lerp(startRotate, finalRotate, eased);
+  const finalRotate = -photo.figmaAngle;
 
-  return { opacity, x, y, scale, rotate };
+  const startRotate =
+    finalRotate + spinOffset;
+
+  const rotate = lerp(
+    startRotate,
+    finalRotate,
+    eased
+  );
+
+  return {
+    opacity,
+    x,
+    y,
+    scale,
+    rotate,
+  };
 }
 
 
@@ -229,8 +305,11 @@ function getPhotoState(photo, range, progress) {
 
 const PARAGRAPHS = [
   "Welcome to Lara's Crochet! Here, every piece starts as a single strand of yarn and a pair of hands. No factories, no shortcuts. Made-to-order, one piece at a time, out of Lagos, Nigeria.",
+
   "We don't keep a stockroom.",
+
   "When you order, your piece is made for you, your size, your color, your fit. It takes time, because handmade always does, but it means what arrives at your door was never sitting on a shelf waiting for someone else.",
+
   "This isn't fast fashion. It's handmade, made with love.",
 ];
 
@@ -244,7 +323,10 @@ function buildWordParagraphs(paragraphs) {
     }))
   );
 
-  return { result, totalWords: globalIndex };
+  return {
+    result,
+    totalWords: globalIndex,
+  };
 }
 
 
@@ -289,7 +371,8 @@ const TESTIMONIALS = [
     name: "Amaka O.",
   },
   {
-    quote: "The fit was beautiful and the finishing was even better in person.",
+    quote:
+      "The fit was beautiful and the finishing was even better in person.",
     name: "Nora E.",
   },
   {
@@ -301,7 +384,7 @@ const TESTIMONIALS = [
 
 
 /* ============================================================
-   FIGMA PHOTO POSITIONS (unchanged from your spec)
+   FIGMA PHOTO POSITIONS
    ============================================================ */
 
 const SCATTER_PHOTOS = [
@@ -317,6 +400,7 @@ const SCATTER_PHOTOS = [
     finalX: 0,
     finalY: -25,
   },
+
   {
     id: "middle",
     src: scatterBeach,
@@ -329,6 +413,7 @@ const SCATTER_PHOTOS = [
     finalX: -7,
     finalY: 0,
   },
+
   {
     id: "front",
     src: scatterTeal,
@@ -345,23 +430,16 @@ const SCATTER_PHOTOS = [
 
 
 /* ============================================================
-   WORDMARK / LAYOUT
+   LAYOUT
    ============================================================ */
 
-const WORDMARK_CONTAINER_WIDTH = "clamp(760px, 56vw, 1080px)";
+const WORDMARK_CONTAINER_WIDTH =
+  "clamp(760px, 56vw, 1080px)";
+
 const PHOTO_WIDTH_PX = 175.6;
-const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
 
-
-/* ============================================================
-   ONE-TIME PAGE VISIT STATE
-   ============================================================
-
-   Module-level, on purpose: this resets on a real page refresh
-   (module reloads) but is NOT affected by scrolling up/down or
-   navigating around the site within the same tab.
-*/
-let showcaseCompletedThisPageVisit = false;
+const PAGE_CONTAINER_PADDING =
+  "px-5 md:px-8 lg:px-[15.83%]";
 
 
 /* ============================================================
@@ -372,99 +450,64 @@ export default function LaraShowcase() {
   const wrapperRef = useRef(null);
   const contentRef = useRef(null);
   const contentHeightRef = useRef(0);
-  const afterTopRef = useRef(0);
   const rafRef = useRef(null);
-  const pendingScrollFixRef = useRef(null);
 
-  /*
-    IMPORTANT DISTINCTION:
-
-    - renderCompactFromStart: true only if the flag was ALREADY
-      set when this component mounted (e.g. you finished the
-      animation earlier, then navigated back to this page). In
-      that case we skip straight to the lightweight static
-      markup — no tall scroll track needed at all.
-
-    - liveCompleted: becomes true once scrolling REACHES the end
-      of the animation during THIS mount. The moment this flips,
-      the component permanently swaps to the same lightweight
-      static markup — no more pin, no more scroll tracking for
-      this section, ever again during this mount. Scrolling back
-      up afterward hits plain, non-animated static content.
-  */
-  const [renderCompactFromStart] = useState(
-    () => showcaseCompletedThisPageVisit
-  );
-
-  const [progress, setProgress] = useState(renderCompactFromStart ? 1 : 0);
-
-  const [pinState, setPinState] = useState(
-    renderCompactFromStart ? "after" : "before"
-  );
-
-  const [liveCompleted, setLiveCompleted] = useState(false);
-
+  const [progress, setProgress] = useState(0);
+  const [pinState, setPinState] = useState("before");
   const [reduceMotion, setReduceMotion] = useState(false);
 
-  const { result: wordParagraphs, totalWords } = useMemo(
+  const {
+    result: wordParagraphs,
+    totalWords,
+  } = useMemo(
     () => buildWordParagraphs(PARAGRAPHS),
     []
   );
 
-  /* -------------------- reduced motion -------------------- */
+
+  /* ==========================================================
+     REDUCED MOTION
+     ========================================================== */
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mq = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
     setReduceMotion(mq.matches);
 
-    const onChange = (event) => setReduceMotion(event.matches);
+    const onChange = (event) => {
+      setReduceMotion(event.matches);
+    };
+
     mq.addEventListener?.("change", onChange);
 
-    return () => mq.removeEventListener?.("change", onChange);
+    return () => {
+      mq.removeEventListener?.("change", onChange);
+    };
   }, []);
 
-  /* -------------------- scroll-position fix on live completion -------------------- */
 
-  useLayoutEffect(() => {
-    if (!liveCompleted || renderCompactFromStart) return;
-
-    const pending = pendingScrollFixRef.current;
-    if (!pending) return;
-
-    // The tall wrapper just collapsed into the compact static markup.
-    // Subtract exactly how much shorter the document got from the
-    // scroll position we had right before the swap, so the viewport
-    // never jumps/clamps past this section.
-    const newScrollHeight = document.documentElement.scrollHeight;
-    const delta = pending.scrollHeight - newScrollHeight;
-
-    if (delta !== 0) {
-      window.scrollTo(0, pending.scrollY - delta);
-    }
-
-    pendingScrollFixRef.current = null;
-  }, [liveCompleted, renderCompactFromStart]);
-
-  /* -------------------- measure + scroll track -------------------- */
+  /* ==========================================================
+     MEASURE + SCROLL TRACK
+     ========================================================== */
 
   useEffect(() => {
-    // Once the reveal has completed live, this section becomes
-    // permanent static content — no more pin, no more tracking.
-    // Only a real page reload resets liveCompleted (and the
-    // module-level flag), which starts a fresh mount with this
-    // effect running again from scratch.
-    if (renderCompactFromStart || reduceMotion || liveCompleted) return;
-
     const measure = () => {
       if (contentRef.current) {
-        contentHeightRef.current = contentRef.current.offsetHeight;
+        contentHeightRef.current =
+          contentRef.current.offsetHeight;
       }
     };
 
     measure();
 
-    const ro = new ResizeObserver(measure);
-    if (contentRef.current) ro.observe(contentRef.current);
+    const resizeObserver =
+      new ResizeObserver(measure);
+
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current);
+    }
 
     window.addEventListener("resize", measure);
     window.addEventListener("load", measure);
@@ -473,199 +516,210 @@ export default function LaraShowcase() {
       const wrapper = wrapperRef.current;
 
       if (wrapper) {
-        const rect = wrapper.getBoundingClientRect();
-        const contentHeight = contentHeightRef.current;
-        const pinnableRange = rect.height - contentHeight;
+        const rect =
+          wrapper.getBoundingClientRect();
+
+        const contentHeight =
+          contentHeightRef.current;
+
+        /*
+          How much scrolling exists inside the tall
+          wrapper while the visual content remains pinned.
+        */
+        const pinnableRange = Math.max(
+          1,
+          rect.height - contentHeight
+        );
 
         let nextState;
-        let next;
+        let nextProgress;
 
+        /*
+          BEFORE
+
+          The wrapper has not reached the navbar yet.
+          We give Lara a small soft pre-roll so there is
+          no sudden blank transition after Hero.
+        */
         if (rect.top > NAVBAR_HEIGHT_PX) {
           nextState = "before";
 
-          // Soft pre-roll: instead of snapping straight from 0%
-          // opacity to pinned, start easing Lara in during the
-          // last stretch of normal scroll before the section
-          // reaches the navbar — removes the blank-screen gap
-          // between the Hero section and Lara appearing.
-          const approachWindow = window.innerHeight * 0.8;
-          const distanceToEngage = rect.top - NAVBAR_HEIGHT_PX;
-          const approachT = clamp01(1 - distanceToEngage / approachWindow);
-          next = approachT * WORDMARK_FADE_IN_END;
-        } else if (rect.bottom <= NAVBAR_HEIGHT_PX + contentHeight) {
+          const approachWindow =
+            window.innerHeight * 0.8;
+
+          const distanceToEngage =
+            rect.top - NAVBAR_HEIGHT_PX;
+
+          const approachT = clamp01(
+            1 -
+              distanceToEngage /
+                approachWindow
+          );
+
+          nextProgress =
+            approachT *
+            WORDMARK_FADE_IN_END;
+        }
+
+        /*
+          AFTER
+
+          The entire 1500vh track has been consumed.
+          At this point the browser can naturally continue
+          into Shop Our Pieces.
+
+          IMPORTANT:
+          We do NOT collapse the wrapper or replace it
+          with static markup here.
+        */
+        else if (
+          rect.bottom <=
+          NAVBAR_HEIGHT_PX + contentHeight
+        ) {
           nextState = "after";
-          next = 1;
-          afterTopRef.current = Math.max(0, rect.height - contentHeight);
-        } else {
+          nextProgress = 1;
+        }
+
+        /*
+          PINNED
+
+          Everything from Lara through the reviews is
+          controlled by this same progress value.
+        */
+        else {
           nextState = "pinned";
-          next =
+
+          nextProgress =
             pinnableRange > 0
-              ? clamp01((NAVBAR_HEIGHT_PX - rect.top) / pinnableRange)
+              ? clamp01(
+                  (NAVBAR_HEIGHT_PX -
+                    rect.top) /
+                    pinnableRange
+                )
               : 1;
         }
 
-        setPinState((previous) => (previous === nextState ? previous : nextState));
-        setProgress(next);
+        setPinState((previous) =>
+          previous === nextState
+            ? previous
+            : nextState
+        );
 
-        if (next >= RELEASE_AT && !showcaseCompletedThisPageVisit) {
-          pendingScrollFixRef.current = {
-            scrollY: window.scrollY,
-            scrollHeight: document.documentElement.scrollHeight,
-          };
-          showcaseCompletedThisPageVisit = true;
-          setLiveCompleted(true);
-        }
+        setProgress(nextProgress);
       }
 
-      rafRef.current = requestAnimationFrame(tick);
+      rafRef.current =
+        requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    rafRef.current =
+      requestAnimationFrame(tick);
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("load", measure);
-    };
-  }, [renderCompactFromStart, reduceMotion, liveCompleted]);
+      cancelAnimationFrame(
+        rafRef.current
+      );
 
-  const p = reduceMotion || renderCompactFromStart || liveCompleted ? 1 : progress;
+      resizeObserver.disconnect();
+
+      window.removeEventListener(
+        "resize",
+        measure
+      );
+
+      window.removeEventListener(
+        "load",
+        measure
+      );
+    };
+  }, []);
+
+
+  /* ==========================================================
+     MASTER PROGRESS
+     ========================================================== */
+
+  const p = reduceMotion ? 1 : progress;
 
   const scene = sceneOpacity(p);
-  const paragraphContainer = paragraphContainerOpacity(p);
+
+  const paragraphContainer =
+    paragraphContainerOpacity(p);
 
   const paragraphWordsT = clamp01(
-    (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
+    (p - PARAGRAPH_WORDS_START) /
+      (PARAGRAPH_WORDS_END -
+        PARAGRAPH_WORDS_START)
   );
 
-  /* ============================================================
-     NORMAL FLOW — pin already finished
-     ============================================================ */
 
-  const laraAndParagraphStatic = (
-    <div className={`w-full ${PAGE_CONTAINER_PADDING}`}>
-      <div className="mx-auto w-full max-w-[1080px]">
-        <div className="relative flex items-center justify-center pb-10 pt-8 md:pb-14">
-          <div className="relative w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
-            <img
-              src={laraDecor}
-              alt=""
-              aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
-              style={{ width: "100vw" }}
-            />
+  /* ==========================================================
+     REVIEWS MASTER OPACITY
+     ========================================================== */
 
-            <img
-              src={laraWordmark}
-              alt="Lara's Crochet"
-              className="relative z-10 block h-auto w-full select-none"
-            />
+  const reviewsOpacity =
+    p < REVIEWS_FADE_START
+      ? 0
+      : p < REVIEWS_FADE_END
+      ? clamp01(
+          (p - REVIEWS_FADE_START) /
+            (REVIEWS_FADE_END -
+              REVIEWS_FADE_START)
+        )
+      : 1;
 
-            <div
-              className="pointer-events-none absolute left-1/2 top-1/2 z-20"
-              style={{
-                width: `${PHOTO_WIDTH_PX}px`,
-                height: "103.72863006591797px",
-                transform: "translate(-50%, -50%)",
-              }}
-            >
-              {SCATTER_PHOTOS.map((photo) => (
-                <img
-                  key={photo.id}
-                  src={photo.src}
-                  alt={photo.alt}
-                  className="absolute block select-none"
-                  style={{
-                    left: `${photo.finalX}px`,
-                    top: `${photo.finalY}px`,
-                    width: `${photo.width}px`,
-                    height: `${photo.height}px`,
-                    transform: `rotate(${-photo.figmaAngle}deg)`,
-                    transformOrigin: "50% 50%",
-                    zIndex: photo.zIndex,
-                    objectFit: "cover",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-center pb-16 pt-10 md:pb-20 md:pt-16">
-          <div className="mx-auto max-w-2xl text-center text-[16px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
-            {PARAGRAPHS.map((paragraph, index) => (
-              <p key={index} className={index === PARAGRAPHS.length - 1 ? "mt-8" : "mb-6"}>
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+
+  /* ==========================================================
+     REVIEW ANIMATION
+     ========================================================== */
+
+  const reviewAnimationT = clamp01(
+    (p - REVIEWS_ANIMATION_START) /
+      (REVIEWS_ANIMATION_END -
+        REVIEWS_ANIMATION_START)
   );
 
-  /* ============================================================
-     REVIEWS — always normal flow, never pinned
-     ============================================================ */
+  /*
+    Three rows.
 
-  const reviewsSection = (
-    <section className={`w-full bg-[var(--cream)] pb-2 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
-      <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-18 sm:grid-cols-2 lg:grid-cols-3">
-        {TESTIMONIALS.map((testimonial, index) => (
-          <motion.div
-            key={`${testimonial.name}-${index}`}
-            initial={reduceMotion ? false : { opacity: 0, y: 25 }}
-            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.25 }}
-            transition={{ duration: 0.9, delay: (index % 3) * 0.12, ease: [0.16, 1, 0.3, 1] }}
-            className={`min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center ${
-              index % 3 === 1 ? "lg:-translate-y-5" : ""
-            }`}
-          >
-            <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
-              "{testimonial.quote}"
-            </p>
+    Row 1 enters first.
+    Row 2 follows.
+    Row 3 follows.
 
-            <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
-              {testimonial.name}
-              <span
-                aria-hidden="true"
-                className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
-              >
-                ✓
-              </span>
-            </p>
+    This gives you the "three three" review layout while
+    keeping the entire review block inside the pinned scene.
+  */
 
-            <p className="mt-1 text-xs text-[var(--muted)]">Verified Customer</p>
-          </motion.div>
-        ))}
-      </div>
-    </section>
-  );
+  const getReviewState = (index) => {
+    const row = Math.floor(index / 3);
 
-  /* ============================================================
-     STATIC MARKUP — used both when already completed on mount
-     AND the moment the reveal finishes live mid-scroll (and every
-     scroll up/down after that during this mount).
-     ============================================================ */
+    const rowStart = row * 0.28;
 
-  if (renderCompactFromStart || reduceMotion || liveCompleted) {
-    return (
-      <>
-        <section className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
-        {reviewsSection}
-      </>
+    const localT = clamp01(
+      (reviewAnimationT - rowStart) /
+        0.45
     );
-  }
 
-  /* ============================================================
-     ANIMATED PIN MODE — only runs before first completion
-     ============================================================ */
+    const eased = easeInOutCubic(localT);
+
+    return {
+      opacity: eased,
+      y: lerp(35, 0, eased),
+    };
+  };
+
+
+  /* ==========================================================
+     PINNED CONTENT POSITION
+     ========================================================== */
 
   let containerStyle;
 
   if (pinState === "before") {
-    containerStyle = { position: "relative", height: "100vh" };
+    containerStyle = {
+      position: "relative",
+      height: "100vh",
+    };
   } else if (pinState === "pinned") {
     containerStyle = {
       position: "fixed",
@@ -676,120 +730,294 @@ export default function LaraShowcase() {
       zIndex: 10,
     };
   } else {
+    /*
+      Once the track has genuinely finished, the visual
+      content sits at the bottom of its original track and
+      the document continues normally.
+
+      We intentionally do NOT collapse the 1500vh wrapper.
+    */
     containerStyle = {
       position: "absolute",
-      top: afterTopRef.current,
+      top: `${Math.max(
+        0,
+        (contentHeightRef.current || 0)
+      )}px`,
       left: 0,
       right: 0,
       height: "100vh",
     };
   }
 
-  const layerBaseStyle = { position: "absolute", inset: 0 };
+  const layerBaseStyle = {
+    position: "absolute",
+    inset: 0,
+  };
 
-  return (
-    <>
-      <section
-        ref={wrapperRef}
-        className="relative w-full bg-[var(--cream)]"
-        style={{ height: `${TRACK_VH}vh` }}
+
+  /* ==========================================================
+     LARA + PHOTOS
+     ========================================================== */
+
+  const laraScene = (
+    <div
+      className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
+      style={{
+        ...layerBaseStyle,
+        opacity: scene,
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        className="relative mx-auto w-full"
+        style={{
+          maxWidth:
+            WORDMARK_CONTAINER_WIDTH,
+        }}
       >
-        <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
-          <div className="relative h-full w-full">
-            {/* ======================= LARA + PHOTOS ======================= */}
-            <div
-              className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
-              style={{
-                ...layerBaseStyle,
-                opacity: scene,
-                pointerEvents: "none",
-              }}
-            >
-              <div className="relative mx-auto w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
-                <img
-                  src={laraDecor}
-                  alt=""
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
-                  style={{ width: "100vw" }}
-                />
+        <img
+          src={laraDecor}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
+          style={{
+            width: "100vw",
+          }}
+        />
 
-                <img
-                  src={laraWordmark}
-                  alt="Lara's Crochet"
-                  className="relative z-10 block h-auto w-full select-none pointer-events-none"
-                />
+        <img
+          src={laraWordmark}
+          alt="Lara's Crochet"
+          className="relative z-10 block h-auto w-full select-none pointer-events-none"
+        />
 
-                <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible"
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible"
+          style={{
+            width: `${PHOTO_WIDTH_PX}px`,
+            height:
+              "103.72863006591797px",
+            transform:
+              "translate(-50%, -50%)",
+          }}
+        >
+          {SCATTER_PHOTOS.map(
+            (photo, index) => {
+              const state =
+                getPhotoState(
+                  photo,
+                  PHOTO_RANGES[index],
+                  p
+                );
+
+              return (
+                <img
+                  key={photo.id}
+                  src={photo.src}
+                  alt={photo.alt}
+                  className="absolute block select-none"
                   style={{
-                    width: `${PHOTO_WIDTH_PX}px`,
-                    height: "103.72863006591797px",
-                    transform: "translate(-50%, -50%)",
+                    left: `${photo.finalX}px`,
+                    top: `${photo.finalY}px`,
+                    width: `${photo.width}px`,
+                    height: `${photo.height}px`,
+                    zIndex: photo.zIndex,
+                    transformOrigin:
+                      "50% 50%",
+                    objectFit: "cover",
+                    opacity:
+                      state.opacity *
+                      scene,
+                    transform:
+                      `translate(${state.x}px, ${state.y}px) ` +
+                      `scale(${state.scale}) ` +
+                      `rotate(${state.rotate}deg)`,
+                  }}
+                />
+              );
+            }
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+
+  /* ==========================================================
+     PARAGRAPH
+     ========================================================== */
+
+  const paragraphScene = (
+    <div
+      className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
+      style={{
+        ...layerBaseStyle,
+        opacity:
+          paragraphContainer,
+        pointerEvents: "none",
+      }}
+    >
+      <div className="mx-auto max-w-2xl text-center text-[16px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
+        {wordParagraphs.map(
+          (words, paragraphIndex) => (
+            <p
+              key={paragraphIndex}
+              className={
+                paragraphIndex ===
+                wordParagraphs.length - 1
+                  ? "mt-8"
+                  : "mb-6"
+              }
+            >
+              {words.map(
+                ({ word, index }) => {
+                  const wordT =
+                    clamp01(
+                      (paragraphWordsT -
+                        index /
+                          totalWords) /
+                        (1 /
+                          totalWords)
+                    );
+
+                  return (
+                    <span
+                      key={index}
+                      style={{
+                        opacity: wordT,
+                      }}
+                    >
+                      {word}{" "}
+                    </span>
+                  );
+                }
+              )}
+            </p>
+          )
+        )}
+      </div>
+    </div>
+  );
+
+
+  /* ==========================================================
+     REVIEWS
+     ========================================================== */
+
+  const reviewsScene = (
+    <div
+      className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
+      style={{
+        ...layerBaseStyle,
+        opacity: reviewsOpacity,
+        pointerEvents: "none",
+      }}
+    >
+      <div className="mx-auto flex w-full max-w-5xl flex-col justify-center">
+        {/* Optional section label / spacing area */}
+        <div className="mb-8 text-center">
+          <p className="text-[14px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+            What our customers say
+          </p>
+        </div>
+
+        {/* 3 x 3 REVIEW GRID */}
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {TESTIMONIALS.map(
+            (testimonial, index) => {
+              const state =
+                getReviewState(index);
+
+              return (
+                <div
+                  key={`${testimonial.name}-${index}`}
+                  className={`border border-[var(--line)] bg-[var(--cream)] p-5 text-center ${
+                    index % 3 === 1
+                      ? "lg:-translate-y-3"
+                      : ""
+                  }`}
+                  style={{
+                    opacity:
+                      state.opacity,
+                    transform:
+                      `translateY(${state.y}px)`,
                   }}
                 >
-                  {SCATTER_PHOTOS.map((photo, index) => {
-                    const state = getPhotoState(photo, PHOTO_RANGES[index], p);
-
-                    return (
-                      <img
-                        key={photo.id}
-                        src={photo.src}
-                        alt={photo.alt}
-                        className="absolute block select-none"
-                        style={{
-                          left: `${photo.finalX}px`,
-                          top: `${photo.finalY}px`,
-                          width: `${photo.width}px`,
-                          height: `${photo.height}px`,
-                          zIndex: photo.zIndex,
-                          transformOrigin: "50% 50%",
-                          objectFit: "cover",
-                          opacity: state.opacity * scene,
-                          transform: `translate(${state.x}px, ${state.y}px) scale(${state.scale}) rotate(${state.rotate}deg)`,
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* ======================= PARAGRAPH ======================= */}
-            <div
-              className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
-              style={{
-                ...layerBaseStyle,
-                opacity: paragraphContainer,
-                pointerEvents: "none",
-              }}
-            >
-              <div className="mx-auto max-w-2xl text-center text-[16px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
-                {wordParagraphs.map((words, paragraphIndex) => (
-                  <p
-                    key={paragraphIndex}
-                    className={paragraphIndex === wordParagraphs.length - 1 ? "mt-8" : "mb-6"}
-                  >
-                    {words.map(({ word, index }) => {
-                      const wordT = clamp01(
-                        (paragraphWordsT - index / totalWords) / (1 / totalWords)
-                      );
-
-                      return (
-                        <span key={index} style={{ opacity: wordT }}>
-                          {word}{" "}
-                        </span>
-                      );
-                    })}
+                  <p className="mb-4 text-[14px] leading-[1.55] text-[var(--ink)]">
+                    "{testimonial.quote}"
                   </p>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {reviewsSection}
-    </>
+                  <p className="flex items-center justify-center gap-1 text-[14px] font-bold text-[var(--ink)]">
+                    {testimonial.name}
+
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
+                    >
+                      ✓
+                    </span>
+                  </p>
+
+                  <p className="mt-1 text-[11px] text-[var(--muted)]">
+                    Verified Customer
+                  </p>
+                </div>
+              );
+            }
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+
+  /* ==========================================================
+     FINAL RENDER
+     ========================================================== */
+
+  return (
+    <section
+      ref={wrapperRef}
+      className="relative w-full bg-[var(--cream)]"
+      style={{
+        height: `${TRACK_VH}vh`,
+      }}
+    >
+      <div
+        ref={contentRef}
+        className="w-full bg-[var(--cream)]"
+        style={containerStyle}
+      >
+        <div className="relative h-full w-full overflow-hidden">
+          {/* ================================================
+              1. LARA + PHOTOS
+              ================================================ */}
+
+          {laraScene}
+
+
+          {/* ================================================
+              2. PARAGRAPH
+
+              This is still the exact same pinned viewport.
+              It simply becomes visible after Lara exits.
+              ================================================ */}
+
+          {paragraphScene}
+
+
+          {/* ================================================
+              3. REVIEWS
+
+              IMPORTANT:
+              Reviews are INSIDE the pinned scene.
+
+              They do not exist outside the track anymore.
+              ================================================ */}
+
+          {reviewsScene}
+        </div>
+      </div>
+    </section>
   );
 }
