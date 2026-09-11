@@ -253,7 +253,7 @@ export default function Hero() {
         md:pt-12
         lg:pt-14
         pb-24
-        md:pb-28
+        md:pb-15
         text-center
       "
       style={{
