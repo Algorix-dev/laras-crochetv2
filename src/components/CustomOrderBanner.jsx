@@ -76,7 +76,7 @@ export default function CustomOrderBanner() {
         min-h-[1098px]
         w-full
         overflow-hidden
-        bg-[#FAFAFA]
+        bg-[#FAFAFA] mt-4
       "
     >
       {/* ========================================================
