@@ -56,13 +56,10 @@ const SLIDE_PHASES = { enterFrac: 0.55, holdFrac: 0.15, exitFrac: 0.3, travel: 7
 // How long a triggered photo's entrance takes to play, in real time
 // (ms) — independent of scroll speed once it starts. Raised from 1.2s
 // so each photo's slide+shrink is actually visible.
-const PHOTO_ENTER_DURATION_S = 1.8;
-const PHOTO_ENTER_START_SCALE = 1.55; // "big" starting size
-const PHOTO_ENTER_SPIN_OFFSET = 26;   // extra degrees added on top of final rotate, settles off as it enters
-// Each photo also slides in from off the side of the page (not just
-// scaling down in place), then settles into its stacked spot. This is
-// a px distance added to/subtracted from the photo's final x.
-const PHOTO_ENTER_SIDE_DISTANCE = 480;
+const PHOTO_ENTER_DURATION_S = 1.65;
+const PHOTO_ENTER_START_SCALE = 1.7;
+const PHOTO_ENTER_SPIN_OFFSET = 28;
+const PHOTO_ENTER_SIDE_DISTANCE = 520;
 
 function clamp01(n) {
   return Math.min(1, Math.max(0, n));
@@ -134,14 +131,39 @@ const TESTIMONIALS = [
 // actual relative offsets from your top/left coordinates (middle/beach
 // as the (0,0) anchor), instead of the old placeholder-ish numbers.
 const SCATTER_PHOTOS = [
-  { id: "teal", src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 5, finalX: 7, finalY: -4, rotate: -8.21, enterStart: 0.76, enterSide: "left" },
-  { id: "beach", src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 4, finalX: 0, finalY: 0, rotate: 0, enterStart: 0.6, enterSide: "right" },
-  { id: "street", src: scatterStreet, alt: "Street-style portrait", zIndex: 3, finalX: 7, finalY: -27, rotate: 19.63, enterStart: 0.44, enterSide: "left" },
-  // PLACEHOLDER — swap src/alt for two more real reference photos before
-  // shipping; no Figma position given yet for these two, so they're
-  // placed further back in the pile as an estimate.
-  { id: "placeholder-4", src: scatterBeach, alt: "PLACEHOLDER — replace with a 4th reference photo", zIndex: 2, finalX: -16, finalY: 10, rotate: 12, enterStart: 0.28, enterSide: "right" },
-  { id: "placeholder-5", src: scatterTeal, alt: "PLACEHOLDER — replace with a 5th reference photo", zIndex: 1, finalX: 18, finalY: 14, rotate: -14, enterStart: 0.12, enterSide: "left" },
+  {
+    id: "teal",
+    src: scatterTeal,
+    alt: "Lara's Crochet customer wearing a teal crochet dress",
+    zIndex: 5,
+    finalX: 7,
+    finalY: -4,
+    rotate: -8.21,
+    enterStart: 0.20,
+    enterSide: "left",
+  },
+  {
+    id: "beach",
+    src: scatterBeach,
+    alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
+    zIndex: 4,
+    finalX: 0,
+    finalY: 0,
+    rotate: 0,
+    enterStart: 0.38,
+    enterSide: "right",
+  },
+  {
+    id: "street",
+    src: scatterStreet,
+    alt: "Street-style portrait",
+    zIndex: 3,
+    finalX: 7,
+    finalY: -27,
+    rotate: 19.63,
+    enterStart: 0.56,
+    enterSide: "left",
+  },
 ];
 // Photo box aspect ratio and reference size, taken directly from your
 // Figma dev-mode measurements (175.6 x 103.7, ~9.15% of a 1920 frame).
@@ -249,22 +271,28 @@ export default function LaraShowcase() {
   const wordmarkScale = reduceMotion ? 1 : 1.5 - 0.5 * wordmarkFadeT;
 
   // Trigger photo entrances (one-way, reset on scroll-back).
+  // Trigger the three photos progressively as the user scrolls.
+  // Each photo has its own enterStart threshold, so they enter
+  // one after another rather than all appearing together.
   useEffect(() => {
     if (reduceMotion) return;
+
     if (wordmarkSlide.enterT <= 0.02) {
-      // Scrolled back above the stage — clear so it replays.
       setEnteredPhotos({});
       return;
     }
+
     setEnteredPhotos((prev) => {
       let changed = false;
       const next = { ...prev };
+
       SCATTER_PHOTOS.forEach((photo) => {
         if (!next[photo.id] && wordmarkSlide.enterT >= photo.enterStart) {
           next[photo.id] = true;
           changed = true;
         }
       });
+
       return changed ? next : prev;
     });
   }, [wordmarkSlide.enterT, reduceMotion]);
@@ -357,10 +385,12 @@ export default function LaraShowcase() {
               >
                 {SCATTER_PHOTOS.map((photo) => {
                   const entered = reduceMotion || !!enteredPhotos[photo.id];
+
                   const sideOffset =
                     photo.enterSide === "left"
                       ? -PHOTO_ENTER_SIDE_DISTANCE
                       : PHOTO_ENTER_SIDE_DISTANCE;
+
                   return (
                     <motion.img
                       key={photo.id}
@@ -369,7 +399,13 @@ export default function LaraShowcase() {
                       initial={false}
                       animate={
                         entered
-                          ? { opacity: 1, scale: 1, x: photo.finalX, y: photo.finalY, rotate: photo.rotate }
+                          ? {
+                              opacity: 1,
+                              scale: 1,
+                              x: photo.finalX,
+                              y: photo.finalY,
+                              rotate: photo.rotate,
+                            }
                           : {
                               opacity: 0,
                               scale: PHOTO_ENTER_START_SCALE,
@@ -378,13 +414,17 @@ export default function LaraShowcase() {
                               rotate: photo.rotate + PHOTO_ENTER_SPIN_OFFSET,
                             }
                       }
-                      transition={{ duration: PHOTO_ENTER_DURATION_S, ease: [0.16, 1, 0.3, 1] }}
+                      transition={{
+                        duration: PHOTO_ENTER_DURATION_S,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
                       style={{
                         position: "absolute",
                         inset: 0,
                         width: "100%",
                         height: "100%",
                         zIndex: photo.zIndex,
+                        transformOrigin: "50% 50%",
                       }}
                       className="rounded-[4px] object-cover shadow-lg ring-2 ring-[var(--cream)]"
                     />
