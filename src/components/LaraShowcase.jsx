@@ -32,8 +32,17 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
    ONE-TIME-ONLY BEHAVIOR:
    - a module-level flag remembers that the pin animation
      finished for this page visit
-   - scrolling back up does NOT restart it
-   - a full page refresh does (module reloads, flag resets)
+   - scrolling back up does NOT restart the word-by-word reveal
+     (progress stays clamped to 1 once the flag is set)
+   - a full page refresh does reset it (module reloads, flag resets)
+
+   IMPORTANT: the scroll-tracking loop (tick()) NEVER stops once
+   started (other than reduced-motion / already-completed-on-mount
+   cases). It keeps recomputing pinState ("before"/"pinned"/"after")
+   forever, in both scroll directions. Only the visual progress `p`
+   gets clamped to 1 once the reveal has completed — that's what
+   stops the word-by-word animation from replaying, WITHOUT also
+   freezing pinState and breaking scroll-up.
    ============================================================ */
 
 
@@ -81,6 +90,11 @@ const PARAGRAPH_WORDS_END = 0.94;
 // visible while the pin keeps absorbing scroll, which is what
 // gives the "waits even while scrolling" feeling.
 
+// TIP: this is a "close enough to 1" threshold, not exactly 1.
+// Floating point scroll math (fast scrolls / trackpad inertia)
+// can jump past 1 between frames, so checking >= RELEASE_AT
+// with a small margin below 1 makes sure we reliably catch the
+// "reveal is done" moment instead of risking a skipped frame.
 const RELEASE_AT = 0.995;
 
 
@@ -365,16 +379,15 @@ export default function LaraShowcase() {
       that case we skip straight to the lightweight static
       markup — no tall scroll track needed at all.
 
-    - liveCompleted: becomes true when scrolling REACHES the end
-      of the animation during THIS mount. This does NOT swap the
-      DOM structure or change the page's total height — it just
-      freezes progress at 1 and stops the measuring loop. Doing
-      a DOM/height swap mid-scroll was the bug: the page's total
-      scrollable height would shrink out from under you while
-      you were still scrolling through it, so the browser would
-      clamp your scroll position and yank you somewhere else —
-      which is exactly why the paragraph looked like it cut off
-      and the reviews never showed up.
+    - liveCompleted: becomes true once scrolling REACHES the end
+      of the animation during THIS mount. This does NOT stop the
+      scroll-tracking loop and does NOT swap the DOM structure —
+      it only clamps `p` (the value passed into every opacity /
+      transform calculation) to 1, so the word-by-word reveal and
+      photo entrances can't replay. pinState keeps being
+      recalculated for as long as the component is mounted, in
+      both scroll directions, which is what lets Lara/the
+      paragraph correctly reappear when you scroll back up.
   */
   const [renderCompactFromStart] = useState(
     () => showcaseCompletedThisPageVisit
@@ -410,7 +423,10 @@ export default function LaraShowcase() {
   /* -------------------- measure + scroll track -------------------- */
 
   useEffect(() => {
-    if (renderCompactFromStart || liveCompleted || reduceMotion) return;
+    // TIP: liveCompleted is intentionally NOT in this condition.
+    // We still want to keep tracking scroll position forever after
+    // the reveal completes — see the liveCompleted note above for why.
+    if (renderCompactFromStart || reduceMotion) return;
 
     const measure = () => {
       if (contentRef.current) {
@@ -461,23 +477,19 @@ export default function LaraShowcase() {
               : 1;
         }
 
-        // TIP: don't just setLiveCompleted and let the loop die here.
-        // The natural "after" transition only fires when rect.bottom
-        // crosses the threshold, which happens at progress === 1 —
-        // but RELEASE_AT is 0.995, so we stop ticking a hair BEFORE
-        // that ever happens. Whatever pinState was on THIS tick
-        // (almost always "pinned") is what it freezes at forever.
-        // So on the freeze tick, force it to "after" ourselves.
-        if (next >= RELEASE_AT) {
-          showcaseCompletedThisPageVisit = true;
-          afterTopRef.current = Math.max(0, rect.height - contentHeight);
-          setPinState("after");
-          setLiveCompleted(true);
-        } else {
-          setPinState((previous) => (previous === nextState ? previous : nextState));
-        }
-
+        // TIP: this ALWAYS runs, every frame, regardless of RELEASE_AT.
+        // pinState must keep tracking real scroll position forever so
+        // scrolling back up correctly re-pins Lara/the paragraph.
+        setPinState((previous) => (previous === nextState ? previous : nextState));
         setProgress(next);
+
+        // This only ever flips false → true, once, and does NOT stop
+        // the loop above. It just tells the render below to clamp `p`
+        // to 1 so the reveal doesn't replay.
+        if (next >= RELEASE_AT && !showcaseCompletedThisPageVisit) {
+          showcaseCompletedThisPageVisit = true;
+          setLiveCompleted(true);
+        }
       }
 
       rafRef.current = requestAnimationFrame(tick);
@@ -491,7 +503,7 @@ export default function LaraShowcase() {
       window.removeEventListener("resize", measure);
       window.removeEventListener("load", measure);
     };
-  }, [renderCompactFromStart, liveCompleted, reduceMotion]);
+  }, [renderCompactFromStart, reduceMotion]);
 
   const p = reduceMotion || renderCompactFromStart || liveCompleted ? 1 : progress;
 
@@ -624,9 +636,11 @@ export default function LaraShowcase() {
   }
 
   /* ============================================================
-     ANIMATED PIN MODE (also covers the moment it finishes live —
-     the tall wrapper and DOM structure stay exactly the same,
-     only the pin releases into its "after" resting position)
+     ANIMATED PIN MODE (also covers the moment it finishes live,
+     AND every scroll-up/scroll-down after that — the tall wrapper
+     and DOM structure stay exactly the same, pinState just keeps
+     flipping between "before" / "pinned" / "after" based on real
+     scroll position, forever)
      ============================================================ */
 
   let containerStyle;
