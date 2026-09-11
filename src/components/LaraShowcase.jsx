@@ -5,34 +5,71 @@ import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
-import laraDecor from "../assets/decor/lara-decor-composite.png";
 
 /* ============================================================
-   CONFIGURATION
+   LARA'S CROCHET — SHOWCASE
+
+   WORDMARK + 3 PHOTO ENTRANCE
+
+   - 3 photos only
+   - Photos use the Figma 1920px coordinate system
+   - Exact final Figma dimensions:
+       175.599px × 103.729px
+   - Exact Figma angles:
+       Front  +8.21°
+       Middle  0°
+       Back   -19.63°
+
+   IMPORTANT:
+   Figma's positive rotation is anti-clockwise.
+   CSS's positive rotation is clockwise.
+
+   Therefore:
+       +8.21 Figma  -> -8.21 CSS
+        0 Figma     ->  0 CSS
+       -19.63 Figma -> +19.63 CSS
+
+   Animation:
+   - One photo enters at a time
+   - Starts oversized
+   - Comes from the side
+   - Shrinks into its exact final dimensions
+   - Settles into the center of Lara
+   - Slower entrance so each photo is clearly visible
    ============================================================ */
 
 const NAVBAR_HEIGHT_PX = 66;
 
 /*
-  Long enough scroll distance for:
-  - wordmark
-  - photo 1
-  - photo 2
-  - photo 3
-  - paragraph
-  - testimonials
+  More scroll distance gives the three photos enough room
+  to enter one after another before the next section appears.
 */
 const TRACK_VH = 620;
 
 /* ============================================================
-   STAGE TIMELINE
+   SECTION TIMING
    ============================================================ */
 
 const STAGE = {
-  wordmark: { start: 0.0, end: 0.42 },
-  paragraph: { start: 0.47, end: 0.72 },
-  testimonials: { start: 0.77, end: 1.0 },
+  wordmark: {
+    start: 0.0,
+    end: 0.46,
+  },
+
+  paragraph: {
+    start: 0.52,
+    end: 0.75,
+  },
+
+  testimonials: {
+    start: 0.80,
+    end: 1.0,
+  },
 };
+
+/* ============================================================
+   GENERAL SLIDE SETTINGS
+   ============================================================ */
 
 const SLIDE_PHASES = {
   enterFrac: 0.55,
@@ -42,35 +79,152 @@ const SLIDE_PHASES = {
 };
 
 /* ============================================================
-   PHOTO ENTRANCE ANIMATION
+   PHOTO ENTRANCE SETTINGS
    ============================================================ */
 
 /*
-  Each photo gets a full entrance animation.
+  This is deliberately slower than before.
 
-  The important thing here is that the trigger points are
-  separated enough so the three photos don't appear together.
-
-  Sequence:
-
-    1. BACK
-    2. MIDDLE
-    3. FRONT
-
-  Each one starts:
-    - 1.75x larger
-    - off to the side
-    - slightly more rotated
-
-  Then it:
-    - moves into position
-    - shrinks to 1x
-    - settles into its final rotation
+  The important part is that once a photo is triggered,
+  Framer Motion gets a fixed 2.8 second animation to complete.
 */
 const PHOTO_ENTER_DURATION_S = 2.8;
-const PHOTO_ENTER_START_SCALE = 1.75;
-const PHOTO_ENTER_SIDE_DISTANCE = 520;
-const PHOTO_ENTER_SPIN_OFFSET = 18;
+
+/*
+  Start significantly larger than the final Figma size.
+*/
+const PHOTO_ENTER_START_SCALE = 2.15;
+
+/*
+  How far outside the composition the photo starts.
+*/
+const PHOTO_ENTER_SIDE_DISTANCE = 650;
+
+/*
+  Extra rotation while entering.
+  It settles into the exact Figma angle.
+*/
+const PHOTO_ENTER_SPIN_OFFSET = 14;
+
+/* ============================================================
+   FIGMA DESIGN REFERENCE
+   ============================================================ */
+
+const FIGMA_WIDTH = 1920;
+const FIGMA_HEIGHT = 1176;
+
+/*
+  Exact Figma photo dimensions.
+*/
+const PHOTO_WIDTH = 175.59957556823136;
+const PHOTO_HEIGHT = 103.72862812295645;
+
+/*
+  Exact Figma positions.
+
+  These are NOT percentages of the wordmark container.
+
+  They are positions in the 1920 × 1176 design frame.
+*/
+const SCATTER_PHOTOS = [
+  {
+    id: "front",
+
+    src: scatterTeal,
+
+    alt: "Lara's Crochet customer wearing a teal crochet dress",
+
+    width: 175.59957556823136,
+    height: 103.72862812295645,
+
+    left: 866.92,
+    top: 114.87,
+
+    /*
+      Figma +8.21° = anti-clockwise
+      CSS = -8.21°
+    */
+    figmaAngle: 8.21,
+
+    zIndex: 3,
+
+    /*
+      First image comes from the left.
+    */
+    enterSide: "left",
+
+    /*
+      Starts first.
+    */
+    enterStart: 0.08,
+  },
+
+  {
+    id: "middle",
+
+    src: scatterBeach,
+
+    alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
+
+    width: 175.59957885742188,
+    height: 103.72863006591797,
+
+    left: 860.18,
+    top: 119.27,
+
+    /*
+      Figma 0°
+    */
+    figmaAngle: 0,
+
+    zIndex: 2,
+
+    /*
+      Second image comes from the right.
+    */
+    enterSide: "right",
+
+    /*
+      IMPORTANT:
+      This is far enough after the first that the first
+      gets time to finish before this begins.
+    */
+    enterStart: 0.39,
+  },
+
+  {
+    id: "back",
+
+    src: scatterStreet,
+
+    alt: "Street-style portrait",
+
+    width: 175.59958036211256,
+    height: 103.72863095475553,
+
+    left: 866.81,
+    top: 92.77,
+
+    /*
+      Figma -19.63° = clockwise
+      CSS = +19.63°
+    */
+    figmaAngle: -19.63,
+
+    zIndex: 1,
+
+    /*
+      Third image comes from the left.
+    */
+    enterSide: "left",
+
+    /*
+      Third starts only after the middle has had
+      time to settle.
+    */
+    enterStart: 0.70,
+  },
+];
 
 /* ============================================================
    WORDMARK
@@ -79,17 +233,9 @@ const PHOTO_ENTER_SPIN_OFFSET = 18;
 const WORDMARK_FADE_ENTER_END = 0.22;
 
 /*
-  This controls how much the Lara wordmark is allowed to grow
-  during its own entrance.
+  Your existing page padding.
 */
-const WORDMARK_START_SCALE = 1.5;
-
-/* ============================================================
-   PAGE WIDTH
-   ============================================================ */
-
-const PAGE_CONTAINER_PADDING =
-  "px-5 md:px-8 lg:px-[15.83%]";
+const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
 
 /* ============================================================
    HELPERS
@@ -118,6 +264,7 @@ function computeSlide(
   const enterEnd = enterFrac;
   const holdEnd = enterFrac + holdFrac;
 
+  /* ENTER */
   if (local <= enterEnd) {
     const enterT =
       enterFrac > 0
@@ -133,6 +280,7 @@ function computeSlide(
     };
   }
 
+  /* HOLD */
   if (local <= holdEnd) {
     return {
       opacity: 1,
@@ -141,6 +289,7 @@ function computeSlide(
     };
   }
 
+  /* EXIT */
   const exitT =
     exitFrac > 0
       ? clamp01(
@@ -158,7 +307,7 @@ function computeSlide(
 }
 
 /* ============================================================
-   WORD PARAGRAPHS
+   PARAGRAPHS
    ============================================================ */
 
 const PARAGRAPHS = [
@@ -172,9 +321,8 @@ const PARAGRAPHS = [
 ];
 
 /*
-  Flatten all paragraph words into one continuous sequence so
-  the text reveals progressively rather than paragraph-by-
-  paragraph.
+  Convert paragraphs into individual words so the paragraph
+  can reveal word-by-word.
 */
 function buildWordParagraphs(paragraphs) {
   let globalIndex = 0;
@@ -255,119 +403,7 @@ const TESTIMONIALS = [
 ];
 
 /* ============================================================
-   WORDMARK PHOTOS — EXACT FIGMA MEASUREMENTS
-   ============================================================ */
-
-/*
-  Figma frame:
-    1920 × 1176
-
-  IMPORTANT:
-  These are the three photos only.
-
-  We keep the exact:
-    width
-    height
-    left
-    top
-    angle
-
-  from your Figma design.
-*/
-
-const PHOTO_ASPECT_RATIO =
-  "175.59957556823136 / 103.72862812295645";
-
-const SCATTER_PHOTOS = [
-  {
-    id: "back",
-
-    src: scatterStreet,
-
-    alt: "Street-style portrait",
-
-    width: 175.59958036211256,
-    height: 103.72863095475553,
-
-    left: 866.81,
-    top: 92.77,
-
-    /*
-      Figma:
-        -19.63° = clockwise
-    */
-    figmaAngle: -19.63,
-
-    zIndex: 1,
-
-    /*
-      First photo.
-    */
-    enterSide: "left",
-    enterStart: 0.08,
-  },
-
-  {
-    id: "middle",
-
-    src: scatterBeach,
-
-    alt:
-      "Lara's Crochet customer wearing a turquoise two-piece on the beach",
-
-    width: 175.59957885742188,
-    height: 103.72863006591797,
-
-    left: 860.18,
-    top: 119.27,
-
-    /*
-      Figma:
-        0° = straight
-    */
-    figmaAngle: 0,
-
-    zIndex: 2,
-
-    /*
-      Second photo.
-    */
-    enterSide: "right",
-    enterStart: 0.36,
-  },
-
-  {
-    id: "front",
-
-    src: scatterTeal,
-
-    alt:
-      "Lara's Crochet customer wearing a teal crochet dress",
-
-    width: 175.59957556823136,
-    height: 103.72862812295645,
-
-    left: 866.92,
-    top: 114.87,
-
-    /*
-      Figma:
-        +8.21° = anti-clockwise
-    */
-    figmaAngle: 8.21,
-
-    zIndex: 3,
-
-    /*
-      Third photo.
-    */
-    enterSide: "left",
-    enterStart: 0.64,
-  },
-];
-
-/* ============================================================
-   MAIN COMPONENT
+   COMPONENT
    ============================================================ */
 
 export default function LaraShowcase() {
@@ -380,17 +416,13 @@ export default function LaraShowcase() {
 
   const [progress, setProgress] = useState(0);
   const [pinState, setPinState] = useState("before");
-  const [reduceMotion, setReduceMotion] =
-    useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   /*
-    Tracks which photos have already been triggered.
-
-    Once a photo enters, it is allowed to finish its
-    complete animation even if the user scrolls quickly.
+    Keeps track of which of the 3 photos have already
+    been triggered.
   */
-  const [enteredPhotos, setEnteredPhotos] =
-    useState({});
+  const [enteredPhotos, setEnteredPhotos] = useState({});
 
   const {
     result: wordParagraphs,
@@ -415,10 +447,7 @@ export default function LaraShowcase() {
       setReduceMotion(e.matches);
     };
 
-    mq.addEventListener?.(
-      "change",
-      onChange
-    );
+    mq.addEventListener?.("change", onChange);
 
     return () => {
       mq.removeEventListener?.(
@@ -429,7 +458,7 @@ export default function LaraShowcase() {
   }, []);
 
   /* ==========================================================
-     SCROLL / PINNING
+     MEASURE + SCROLL PROGRESS
      ========================================================== */
 
   useEffect(() => {
@@ -450,15 +479,8 @@ export default function LaraShowcase() {
       ro.observe(contentRef.current);
     }
 
-    window.addEventListener(
-      "resize",
-      measure
-    );
-
-    window.addEventListener(
-      "load",
-      measure
-    );
+    window.addEventListener("resize", measure);
+    window.addEventListener("load", measure);
 
     const tick = () => {
       const wrapper = wrapperRef.current;
@@ -476,13 +498,17 @@ export default function LaraShowcase() {
         let nextState;
         let next;
 
+        /* Before section */
         if (
           rect.top >
           NAVBAR_HEIGHT_PX
         ) {
           nextState = "before";
           next = 0;
-        } else if (
+        }
+
+        /* After section */
+        else if (
           rect.bottom <=
           NAVBAR_HEIGHT_PX +
             contentHeight
@@ -496,7 +522,10 @@ export default function LaraShowcase() {
               rect.height -
                 contentHeight
             );
-        } else {
+        }
+
+        /* Pinned */
+        else {
           nextState = "pinned";
 
           next =
@@ -545,7 +574,7 @@ export default function LaraShowcase() {
   }, [reduceMotion]);
 
   /* ==========================================================
-     CURRENT PROGRESS
+     SECTION PROGRESS
      ========================================================== */
 
   const p = reduceMotion
@@ -590,13 +619,12 @@ export default function LaraShowcase() {
       );
 
   /*
-    Lara starts large and settles to normal size.
+    The Lara wordmark itself starts larger and settles down.
   */
   const wordmarkScale = reduceMotion
     ? 1
-    : WORDMARK_START_SCALE -
-      (WORDMARK_START_SCALE - 1) *
-        wordmarkFadeT;
+    : 1.5 -
+      0.5 * wordmarkFadeT;
 
   /* ==========================================================
      PHOTO TRIGGERS
@@ -606,8 +634,8 @@ export default function LaraShowcase() {
     if (reduceMotion) return;
 
     /*
-      If the user goes back above the wordmark stage,
-      reset the photos so the sequence can replay.
+      When we go back above the wordmark section,
+      reset the photos so the animation can replay.
     */
     if (
       wordmarkSlide.enterT <= 0.02
@@ -681,12 +709,13 @@ export default function LaraShowcase() {
   }
 
   /* ==========================================================
-     BASE LAYER STYLE
+     BASE LAYER
      ========================================================== */
 
   const layerBaseStyle = {
     position: "absolute",
     inset: 0,
+
     transition:
       "opacity 0.4s ease, transform 0.4s ease",
   };
@@ -714,9 +743,9 @@ export default function LaraShowcase() {
       >
         <div className="relative h-full w-full">
 
-          {/* ======================================================
-              STAGE A — WORDMARK + THREE PHOTOS
-              ====================================================== */}
+          {/* ==================================================
+              STAGE A — WORDMARK + 3 PHOTOS
+              ================================================== */}
 
           <div
             className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
@@ -737,35 +766,32 @@ export default function LaraShowcase() {
                   : "none",
             }}
           >
+
+            {/*
+              IMPORTANT CHANGE:
+
+              The wordmark remains inside its normal
+              responsive container.
+
+              The photos are positioned separately
+              using the full viewport/design frame.
+            */}
             <div
-              className="relative mx-auto w-full max-w-[860px] md:max-w-[1080px]"
+              className="relative w-full max-w-[1080px]"
               style={{
-                opacity: wordmarkFadeT,
+                opacity:
+                  wordmarkFadeT,
               }}
             >
 
-              {/* ==================================================
-                  LARA DECOR
-                  ================================================== */}
-
-              <img
-                src={laraDecor}
-                alt=""
-                aria-hidden="true"
-                className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
-                style={{
-                  width: "100vw",
-                }}
-              />
-
-              {/* ==================================================
+              {/* ============================================
                   LARA WORDMARK
-                  ================================================== */}
+                  ============================================ */}
 
               <img
                 src={laraWordmark}
                 alt="Lara's Crochet"
-                className="relative z-10 block h-auto w-full select-none pointer-events-none"
+                className="relative z-10 mx-auto block h-auto w-full select-none pointer-events-none"
                 style={{
                   transform: `scale(${wordmarkScale})`,
                   transformOrigin:
@@ -773,34 +799,62 @@ export default function LaraShowcase() {
                 }}
               />
 
-              {/* ==================================================
-                  THREE STACKED PHOTOS
-                  ================================================== */}
+              {/* ============================================
+                  PHOTO LAYER
+
+                  Full viewport coordinate system.
+
+                  This fixes the previous problem where:
+
+                    175.6 / 1920 × 1080
+
+                  made the images approximately 99px wide.
+
+                  They now actually render at approximately
+                  175.6px at the 1920px design width.
+                  ============================================ */}
 
               <div
-                className="absolute inset-0 z-20 overflow-visible pointer-events-none"
+                className="pointer-events-none absolute inset-0 z-20"
+                style={{
+                  /*
+                    Allow the photo layer to escape the
+                    1080px wordmark container.
+
+                    The width is tied to the viewport,
+                    while the center stays aligned with
+                    the Lara wordmark.
+                  */
+                  left: "50%",
+                  top: "50%",
+
+                  width: "100vw",
+                  height: "100vh",
+
+                  transform:
+                    "translate(-50%, -50%)",
+
+                  overflow: "visible",
+                }}
               >
+
                 {SCATTER_PHOTOS.map(
                   (photo) => {
+                    const entered =
+                      reduceMotion ||
+                      !!enteredPhotos[
+                        photo.id
+                      ];
+
                     /*
-                      Convert Figma angle to CSS angle.
-
-                      Figma:
-                        +8.21 = anti-clockwise
-                        0     = straight
-                        -19.63 = clockwise
-
-                      CSS:
-                        positive = clockwise
-
-                      Therefore:
-                        CSS = Figma × -1
+                      Convert Figma angle
+                      to CSS angle.
                     */
                     const cssFinalRotation =
                       -photo.figmaAngle;
 
                     /*
-                      Entrance direction.
+                      Entry direction.
                     */
                     const sideOffset =
                       photo.enterSide ===
@@ -809,63 +863,24 @@ export default function LaraShowcase() {
                         : PHOTO_ENTER_SIDE_DISTANCE;
 
                     /*
-                      ------------------------------------------------
-                      EXACT FIGMA POSITIONING
-                      ------------------------------------------------
+                      Exact final Figma position,
+                      converted relative to the
+                      viewport.
 
-                      Your Figma canvas is:
+                      Instead of placing the image
+                      inside the 1080px wordmark
+                      container, we anchor its
+                      position to the viewport.
 
-                        1920 × 1176
-
-                      The three images are positioned relative to
-                      the center of that canvas.
-
-                      Center X = 960px.
-
-                      This prevents the photos from drifting away
-                      from the center of the Lara wordmark.
-                    */
-
-                    const photoCenterX =
-                      photo.left +
-                      photo.width / 2;
-
-                    const centerOffsetX =
-                      photoCenterX - 960;
-
-                    /*
-                      Convert the Figma X offset to responsive
-                      viewport units.
-
-                      At 1920px:
-
-                        1vw = 19.2px
-
-                      So the exact Figma relationship is retained.
+                      This keeps the center of the
+                      photo stack aligned with the
+                      Figma composition.
                     */
                     const finalLeft =
-                      `calc(50% + ${centerOffsetX / 19.2}vw)`;
+                      `calc((${photo.left} / ${FIGMA_WIDTH}) * 100vw)`;
 
-                    /*
-                      Figma Y position.
-
-                      Using vw keeps the composition proportional
-                      to the 1920px reference.
-                    */
                     const finalTop =
-                      `${(photo.top / 19.2)}vw`;
-
-                    /*
-                      Exact Figma width.
-                    */
-                    const finalWidth =
-                      `${(photo.width / 19.2)}vw`;
-
-                    const entered =
-                      reduceMotion ||
-                      !!enteredPhotos[
-                        photo.id
-                      ];
+                      `calc((${photo.top} / ${FIGMA_HEIGHT}) * 100vh)`;
 
                     return (
                       <motion.img
@@ -878,29 +893,56 @@ export default function LaraShowcase() {
                           entered
                             ? {
                                 /*
-                                  FINAL STATE
+                                  Final opacity.
                                 */
                                 opacity: 1,
+
+                                /*
+                                  EXACT final scale.
+                                */
                                 scale: 1,
+
+                                /*
+                                  Final position.
+                                */
                                 x: 0,
                                 y: 0,
+
+                                /*
+                                  EXACT final
+                                  Figma rotation.
+                                */
                                 rotate:
                                   cssFinalRotation,
                               }
                             : {
                                 /*
-                                  START STATE
-
-                                  Large
-                                  Off-screen
-                                  Rotated
-                                  Invisible
+                                  Hidden before
+                                  its turn.
                                 */
                                 opacity: 0,
+
+                                /*
+                                  BIG starting image.
+                                */
                                 scale:
                                   PHOTO_ENTER_START_SCALE,
+
+                                /*
+                                  Comes from its
+                                  assigned side.
+                                */
                                 x: sideOffset,
+
+                                /*
+                                  No vertical drift.
+                                */
                                 y: 0,
+
+                                /*
+                                  Extra rotation while
+                                  entering, then settles.
+                                */
                                 rotate:
                                   cssFinalRotation +
                                   (photo.enterSide ===
@@ -911,12 +953,15 @@ export default function LaraShowcase() {
                         }
 
                         transition={{
+                          /*
+                            Slower animation.
+                          */
                           duration:
                             PHOTO_ENTER_DURATION_S,
 
                           /*
-                            Smooth deceleration as the photo
-                            approaches its final Figma position.
+                            Smooth but still
+                            energetic entrance.
                           */
                           ease: [
                             0.16,
@@ -931,8 +976,9 @@ export default function LaraShowcase() {
                             "absolute",
 
                           /*
-                            Exact Figma position,
-                            centered against the 1920px design.
+                            Use the exact Figma
+                            position in the
+                            1920px viewport.
                           */
                           left:
                             finalLeft,
@@ -941,65 +987,69 @@ export default function LaraShowcase() {
                             finalTop,
 
                           /*
-                            Exact Figma width.
+                            Exact Figma dimensions.
+                            Responsive down on
+                            smaller screens.
                           */
                           width:
-                            finalWidth,
+                            `clamp(96px, ${(
+                              photo.width /
+                              FIGMA_WIDTH
+                            ) * 100}vw, ${photo.width}px)`,
 
-                          /*
-                            Preserve natural image ratio.
-                          */
                           height:
                             "auto",
 
                           aspectRatio:
-                            PHOTO_ASPECT_RATIO,
+                            `${photo.width} / ${photo.height}`,
+
+                          objectFit:
+                            "cover",
 
                           /*
-                            IMPORTANT:
-                            No white borders.
-                            No rounded corners.
-                            No shadow.
+                            Absolutely NO white
+                            border around photos.
                           */
-                          border:
-                            "none",
+                          border: "0",
+                          outline: "none",
 
+                          /*
+                            No rounded corners.
+                          */
                           borderRadius: 0,
 
-                          boxShadow:
-                            "none",
+                          /*
+                            No shadow/ring.
+                          */
+                          boxShadow: "none",
 
                           /*
-                            Keep the transform centered.
+                            Keeps the photo scaling
+                            from changing its anchor.
                           */
                           transformOrigin:
                             "50% 50%",
 
-                          /*
-                            Layer order:
-                              back → middle → front
-                          */
                           zIndex:
                             photo.zIndex,
 
                           /*
-                            Don't crop the exported Figma image.
+                            Prevents image dragging.
                           */
-                          objectFit:
-                            "contain",
-
-                          display:
-                            "block",
+                          userSelect:
+                            "none",
 
                           /*
-                            Prevent the browser from adding
-                            inline-image spacing.
+                            Avoids browser
+                            interpolation artifacts.
                           */
-                          verticalAlign:
-                            "top",
+                          backfaceVisibility:
+                            "hidden",
                         }}
 
-                        className="select-none pointer-events-none"
+                        draggable={false}
+
+                        className="block select-none"
                       />
                     );
                   }
@@ -1008,9 +1058,9 @@ export default function LaraShowcase() {
             </div>
           </div>
 
-          {/* ======================================================
+          {/* ==================================================
               STAGE B — PARAGRAPH
-              ====================================================== */}
+              ================================================== */}
 
           <div
             className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
@@ -1031,9 +1081,8 @@ export default function LaraShowcase() {
                   : "none",
             }}
           >
-            <div
-              className="mx-auto max-w-3xl space-y-6 text-center text-xl leading-relaxed text-[var(--ink)] md:text-3xl md:leading-[1.5]"
-            >
+            <div className="mx-auto max-w-3xl space-y-6 text-center text-xl leading-relaxed text-[var(--ink)] md:text-3xl md:leading-[1.5]">
+
               {wordParagraphs.map(
                 (words, pIndex) => (
                   <p key={pIndex}>
@@ -1059,9 +1108,7 @@ export default function LaraShowcase() {
                           <span
                             key={index}
                             style={{
-                              opacity:
-                                wordT,
-
+                              opacity: wordT,
                               transition:
                                 "opacity 0.15s linear",
                             }}
@@ -1074,12 +1121,13 @@ export default function LaraShowcase() {
                   </p>
                 )
               )}
+
             </div>
           </div>
 
-          {/* ======================================================
+          {/* ==================================================
               STAGE C — TESTIMONIALS
-              ====================================================== */}
+              ================================================== */}
 
           <div
             className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
@@ -1100,9 +1148,9 @@ export default function LaraShowcase() {
                   : "none",
             }}
           >
-            <div
-              className="grid w-full max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3"
-            >
+
+            <div className="grid w-full max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+
               {TESTIMONIALS.map(
                 (
                   testimonial,
@@ -1118,11 +1166,17 @@ export default function LaraShowcase() {
                         : ""
                     }`}
                   >
+
                     <p className="mb-4 text-base leading-relaxed text-[var(--ink)]">
-                      "{testimonial.quote}"
+                      "
+                      {
+                        testimonial.quote
+                      }
+                      "
                     </p>
 
                     <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
+
                       {
                         testimonial.name
                       }
@@ -1133,14 +1187,17 @@ export default function LaraShowcase() {
                       >
                         ✓
                       </span>
+
                     </p>
 
                     <p className="mt-1 text-xs text-[var(--muted)]">
                       Verified Customer
                     </p>
+
                   </div>
                 )
               )}
+
             </div>
           </div>
 
