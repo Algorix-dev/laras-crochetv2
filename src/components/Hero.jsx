@@ -136,7 +136,7 @@ export default function Hero() {
       style={{ perspective: "1800px" }}
     >
       <div className={`relative mx-auto ${PAGE_CONTAINER_PADDING}`}>
-        <div className="flex items-end justify-between w-full">
+        <div className="grid w-full grid-cols-5 items-end">
           {order.map((id, index) => {
             const model = modelsById[id];
             const isSelected = index === CENTER_INDEX;
@@ -157,7 +157,8 @@ export default function Hero() {
                   marginRight: NEGATIVE_OVERLAP,
                 }}
                 className={`
-                  relative shrink-0 border-0 bg-transparent p-0
+                  relative w-full border-0 bg-transparent p-0
+                  flex items-end justify-center
                   ${isSelected ? "cursor-default" : "cursor-pointer"}
                 `}
               >
@@ -294,7 +295,10 @@ export default function Hero() {
                     rotateY: SELECT_SPRING,
                     opacity: SELECT_SPRING,
                   }}
-                  style={{ transformOrigin: "50% 100%", maxWidth: "none" }}
+                  style={{
+                    transformOrigin: "50% 100%",
+                    maxWidth: "100%",
+                  }}
                   className={`
                     relative z-10 w-auto shrink-0
                     ${isSelected ? IMAGE_HEIGHT_SELECTED : IMAGE_HEIGHT_UNSELECTED}
