@@ -108,7 +108,7 @@ function HomePage() {
                   ProductGrid/Footer, so this heading row's left edge
                   lines up with the product grid directly below it. */}
               <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
+                <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                   Shop Our Pieces
                 </h2>
                 <Link to="/shop" className="pr-3 text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
