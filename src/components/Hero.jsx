@@ -38,7 +38,7 @@ const MODEL_OVERLAP = "1.2rem";
   Keep the hero from becoming too wide on very large screens.
 */
 const PAGE_CONTAINER_PADDING =
-  "px-5 md:px-8 lg:px-[15.83%]";
+  "px-5 md:px-8 lg:px-[10%]";
 
 /* ============================================================
    ANIMATION
