@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
 import { motion } from "framer-motion";
 
 import laraWordmark from "../assets/lara-wordmark-solid.png";
@@ -96,6 +96,7 @@ const PARAGRAPH_WORDS_END = 0.94;
 // with a small margin below 1 makes sure we reliably catch the
 // "reveal is done" moment instead of risking a skipped frame.
 const RELEASE_AT = 0.995;
+const pendingScrollFixRef = useRef(null);
 
 
 /* ============================================================
@@ -408,6 +409,25 @@ export default function LaraShowcase() {
     []
   );
 
+  useLayoutEffect(() => {
+    if (!liveCompleted || renderCompactFromStart) return;
+
+    const pending = pendingScrollFixRef.current;
+    if (!pending) return;
+
+    // The tall wrapper just collapsed into the compact static markup.
+    // Subtract exactly how much shorter the document got from the
+    // scroll position we had right before the swap, so the viewport
+    // never jumps/clamps past this section.
+    const newScrollHeight = document.documentElement.scrollHeight;
+    const delta = pending.scrollHeight - newScrollHeight;
+
+    if (delta !== 0) {
+      window.scrollTo(0, pending.scrollY - delta);
+    }
+
+    pendingScrollFixRef.current = null;
+  }, [liveCompleted, renderCompactFromStart]);
   /* -------------------- reduced motion -------------------- */
 
   useEffect(() => {
@@ -495,6 +515,10 @@ export default function LaraShowcase() {
         // the loop above. It just tells the render below to clamp `p`
         // to 1 so the reveal doesn't replay.
         if (next >= RELEASE_AT && !showcaseCompletedThisPageVisit) {
+          pendingScrollFixRef.current = {
+            scrollY: window.scrollY,
+            scrollHeight: document.documentElement.scrollHeight,
+          };
           showcaseCompletedThisPageVisit = true;
           setLiveCompleted(true);
         }
@@ -529,7 +553,7 @@ export default function LaraShowcase() {
   const laraAndParagraphStatic = (
     <div className={`w-full ${PAGE_CONTAINER_PADDING}`}>
       <div className="mx-auto w-full max-w-[1080px]">
-        <div className="relative flex items-center justify-center pb-10 pt-16 md:pb-14">
+        <div className="relative flex items-center justify-center pb-10 pt-8 md:pb-14">
           <div className="relative w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
             <img
               src={laraDecor}
