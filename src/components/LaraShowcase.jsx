@@ -1686,16 +1686,6 @@ export default function LaraShowcase() {
           >
 
             <div className="w-full max-w-5xl">
-
-              <div className="mb-10 text-center">
-
-                <h2 className="font-['Raleway'] text-[clamp(2rem,3vw,3.25rem)] font-bold tracking-[-0.05em] text-[var(--maroon-dark)]">
-                  WHAT THEY SAY
-                </h2>
-
-              </div>
-
-
               <div
                 className="
                   grid
