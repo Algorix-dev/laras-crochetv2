@@ -115,16 +115,7 @@ function ProductCard({ image }) {
         <img
           src={image}
           alt="Reina"
-          className="
-            absolute
-            left-1/2
-            top-[31px]
-            h-[667.57px]
-            w-[506.26px]
-            max-w-none
-            -translate-x-1/2
-            object-cover
-          "
+          className="absolute left-1/2 top-[4.24%] h-[91.32%] w-[79.1%] max-w-none -translate-x-1/2 object-cover"
         />
       </div>
 

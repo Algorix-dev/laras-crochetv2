@@ -27,7 +27,7 @@ const SUPPORT_SCALE_Y = 1.0;
 const SELECTED_SCALE_X = 1.0;
 const SELECTED_SCALE_Y = 1.0;
 
-const SIDE_MODEL_OPACITY = 0.55;
+const SIDE_MODEL_OPACITY = 0.45;
 
 /*
   Increase/decrease this to control how close the five models are.
