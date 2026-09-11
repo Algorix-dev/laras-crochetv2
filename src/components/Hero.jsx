@@ -38,7 +38,7 @@ import heroCenter from "../assets/reina-front.png";
 const SPIN_DURATION_SECONDS = 6;
 const SIDE_TILT_DEGREES = 28;
 const PRICE_TOP_OFFSET = "2.25rem";
-const SIDE_MODEL_OPACITY = 0.78; // was 0.55 — raised per feedback that side models read too faint; retune here if it's not right yet
+const SIDE_MODEL_OPACITY = 0.55;
 
 // NEW — how much each image overlaps into the gap on either side.
 // Negative margin in rem, scales like everything else. Start around
