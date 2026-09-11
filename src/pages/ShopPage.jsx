@@ -82,7 +82,7 @@ export default function ShopPage() {
   return (
     <>
     <section className="pt-10">
-      <div className="mx-auto max-w-[1500px] px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28">
+      <div className="mx-auto max-w-[1550px] px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28">
         {/* Header row: title/subtitle on the left, search on the right */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
