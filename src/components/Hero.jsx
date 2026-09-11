@@ -136,7 +136,7 @@ export default function Hero() {
       style={{ perspective: "1800px" }}
     >
       <div className={`relative mx-auto ${PAGE_CONTAINER_PADDING}`}>
-        <div className="flex items-end justify-center gap-[clamp(1.5rem,6.667vw,8rem)]">
+        <div className="flex items-end justify-between w-full">
           {order.map((id, index) => {
             const model = modelsById[id];
             const isSelected = index === CENTER_INDEX;
@@ -158,7 +158,6 @@ export default function Hero() {
                 }}
                 className={`
                   relative shrink-0 border-0 bg-transparent p-0
-                  ${isOuter ? "hidden md:block" : ""}
                   ${isSelected ? "cursor-default" : "cursor-pointer"}
                 `}
               >
