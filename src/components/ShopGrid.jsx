@@ -1,18 +1,25 @@
 /*
-  STATIC REBUILD of Figma's "SHOP OUR PIECES" section (Frame 291 +
-  its "Large Product cards"). No click handlers, no wishlist/cart
-  state, no data fetching — just the layout, per "make it static
-  like the figma, we'll do interactions later." Figma's own mockup
-  hardcodes the same "REINA" / "TWO-PIECE" / "70,000" text on every
-  card (it's a wireframe, not real data), so this does the same —
-  swap DEMO_ITEMS for real data once that's wired up.
+  SHOP OUR PIECES
+  Figma desktop layout:
 
-  Card structure follows Figma's actual layers:
-    Frame 33  — white photo box, heart-favorite circle top-left
-    Frame 23  — category (small, gray) + name (bold) on the left,
-                price + bag icon on the right, below the photo
-  Grid is 2 columns at desktop width (Figma: two 640px cards fit
-  the 1312px content area), 1 column below that.
+  Section:
+  - 1920px frame
+  - 304px left/right content padding
+  - #FAFAFA background
+
+  Product grid:
+  - 2 columns
+  - 640px card width
+  - 5.25px horizontal gap
+  - 100px row gap
+
+  Product card:
+  - 640px wide
+  - 818.11px total height
+  - image frame: 640px × 731px
+  - image: 506.26px × 667.57px
+  - image top: 31px
+  - information row: 640px × 69.25px
 */
 
 import lagoonFront from "../assets/model-images/lagoon-front.png";
@@ -20,11 +27,22 @@ import sunsetFront from "../assets/model-images/sunset-front.png";
 import rosewoodFront from "../assets/model-images/rosewood-front.png";
 import palmFront from "../assets/model-images/palm-front.png";
 
-const DEMO_ITEMS = [lagoonFront, sunsetFront, rosewoodFront, palmFront];
+const DEMO_ITEMS = [
+  lagoonFront,
+  sunsetFront,
+  rosewoodFront,
+  palmFront,
+];
 
 function HeartIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M7 12.3s-5.25-3.2-5.25-7.05A3.05 3.05 0 0 1 7 3.3a3.05 3.05 0 0 1 5.25 1.95C12.25 9.1 7 12.3 7 12.3Z"
         stroke="var(--maroon-dark)"
@@ -36,39 +54,162 @@ function HeartIcon() {
 
 function BagIcon() {
   return (
-    <svg width="19" height="19" viewBox="0 0 19 19" fill="none">
-      <rect x="2.5" y="6.5" width="14" height="10.5" rx="0.5" stroke="black" strokeWidth="1.18" />
-      <path d="M6.5 6.5v-1a3 3 0 0 1 6 0v1" stroke="black" strokeWidth="1.18" />
+    <svg
+      width="19"
+      height="19"
+      viewBox="0 0 19 19"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect
+        x="2.5"
+        y="6.5"
+        width="14"
+        height="10.5"
+        rx="0.5"
+        stroke="black"
+        strokeWidth="1.18"
+      />
+      <path
+        d="M6.5 6.5v-1a3 3 0 0 1 6 0v1"
+        stroke="black"
+        strokeWidth="1.18"
+      />
     </svg>
   );
 }
 
 function ProductCard({ image }) {
   return (
-    <div>
-      {/* Frame 33 — photo box */}
-      <div className="relative bg-white aspect-[640/731]">
+    <div className="w-full lg:w-[640px] flex-none">
+      {/* Frame 33 — exact Figma image area */}
+      <div
+        className="relative w-full bg-white overflow-hidden"
+        style={{
+          aspectRatio: "640 / 731",
+        }}
+      >
+        {/* Favorites */}
         <button
+          type="button"
           aria-label="Toggle wishlist"
-          className="absolute left-[1.56vw] top-[1.56vw] max-w-[30px] max-h-[30px] min-w-[20px] min-h-[20px] w-[3vw] h-[3vw] rounded-full bg-white shadow-sm flex items-center justify-center"
+          className="
+            absolute
+            left-5
+            top-5
+            z-10
+            flex
+            h-7
+            w-7
+            items-center
+            justify-center
+            rounded-full
+            bg-[#EFE7E7]
+            p-0
+          "
         >
           <HeartIcon />
         </button>
+
+        {/* Product image */}
         <img
           src={image}
           alt="Reina"
-          className="absolute left-1/2 -translate-x-1/2 top-[4.3vw] max-w-none h-[90%] w-auto object-contain"
+          className="
+            absolute
+            left-1/2
+            top-[31px]
+            h-[667.57px]
+            w-[506.26px]
+            max-w-none
+            -translate-x-1/2
+            object-cover
+          "
         />
       </div>
 
-      {/* Frame 23 — category/name left, price/bag right */}
-      <div className="flex items-start justify-between px-3 mt-4">
-        <div>
-          <p className="text-xs uppercase text-[var(--neutral-400,#737373)]">Two-Piece</p>
-          <p className="text-base font-bold text-[var(--ink,#404040)]">Reina</p>
+      {/* Frame 23 — exact Figma information row */}
+      <div
+        className="
+          flex
+          h-[69.25px]
+          w-full
+          items-start
+          justify-between
+          px-3
+          pt-0
+        "
+        style={{
+          marginTop: "17.86px",
+        }}
+      >
+        {/* Frame 22 */}
+        <div
+          className="
+            flex
+            h-[69.25px]
+            min-w-0
+            flex-1
+            flex-col
+            items-start
+          "
+          style={{
+            gap: "5.25px",
+          }}
+        >
+          {/* Frame 181 */}
+          <div className="flex h-10 flex-col items-start">
+            <p
+              className="
+                m-0
+                text-xs
+                font-normal
+                uppercase
+                leading-[18px]
+                text-[#737373]
+              "
+            >
+              TWO-PIECE
+            </p>
+
+            <p
+              className="
+                m-0
+                text-base
+                font-bold
+                uppercase
+                leading-6
+                text-[#404040]
+              "
+            >
+              REINA
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-3 pt-1">
-          <span className="text-base text-[var(--ink,#404040)]">70,000</span>
+
+        {/* Price + bag */}
+        <div
+          className="
+            flex
+            shrink-0
+            items-center
+            justify-end
+          "
+          style={{
+            gap: "12px",
+          }}
+        >
+          <span
+            className="
+              text-base
+              font-normal
+              leading-6
+              text-[#404040]
+            "
+          >
+            70,000
+          </span>
+
           <BagIcon />
         </div>
       </div>
@@ -78,30 +219,115 @@ function ProductCard({ image }) {
 
 export default function ShopGrid() {
   return (
-    <section className="px-[clamp(1rem,15.83vw,19rem)] py-16">
-      {/* Header row — title + "Go to shop", matching the section
-          right above Frame 291 in the CSS. */}
-      <div className="flex items-end justify-between mb-14">
-        <h2 className="font-['Raleway'] font-bold text-2xl text-[var(--neutral-600,#404040)]">
-          SHOP OUR PIECES
-        </h2>
-        <a href="/shop" className="text-base underline text-[var(--neutral-600,#404040)]">
-          Go to shop
-        </a>
+    <section className="w-full bg-[#FAFAFA]">
+      {/* Frame 182 / section heading area */}
+      <div
+        className="
+          flex
+          w-full
+          flex-col
+          items-center
+          justify-center
+          gap-[10px]
+          px-5
+          pb-[140px]
+          pt-10
+        "
+      >
+        <div
+          className="
+            flex
+            w-full
+            max-w-none
+            items-end
+            justify-between
+          "
+          style={{
+            paddingLeft: "0",
+            paddingRight: "0",
+          }}
+        >
+          <h2
+            className="
+              m-0
+              font-['Raleway']
+              text-[32px]
+              font-bold
+              leading-[38px]
+              text-[#404040]
+            "
+          >
+            SHOP OUR PIECES
+          </h2>
+
+          <a
+            href="/shop"
+            className="
+              text-base
+              font-normal
+              leading-6
+              text-[#404040]
+              underline
+            "
+          >
+            Go to shop
+          </a>
+        </div>
       </div>
 
-      {/* Frame 291 — 2 columns at desktop, matching Figma's two
-          640px cards fitting the 1312px content width. */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 md:gap-y-24">
+      {/* Frame 291 */}
+      <div
+        className="
+          grid
+          w-full
+          grid-cols-1
+          lg:grid-cols-2
+        "
+        style={{
+          paddingLeft: "304px",
+          paddingRight: "304px",
+          paddingBottom: "77px",
+          columnGap: "5.25px",
+          rowGap: "100px",
+        }}
+      >
         {DEMO_ITEMS.map((image, i) => (
           <ProductCard key={i} image={image} />
         ))}
       </div>
 
-      {/* Frame 182 — centered button below the grid */}
-      <div className="flex justify-center mt-20">
-        <button className="bg-[var(--gray-700,#412B2D)] text-[var(--gray-25,#FFFCFC)] text-sm font-bold uppercase tracking-wide px-10 py-3">
-          Add to Bag
+      {/* Frame 182 — Add to Bag */}
+      <div
+        className="
+          flex
+          w-full
+          items-center
+          justify-center
+          bg-[#FAFAFA]
+        "
+        style={{
+          paddingTop: "40px",
+          paddingBottom: "140px",
+        }}
+      >
+        <button
+          type="button"
+          className="
+            flex
+            h-[46px]
+            w-[178px]
+            items-center
+            justify-center
+            bg-[#412B2D]
+            px-10
+            text-base
+            font-bold
+            uppercase
+            leading-6
+            text-[#FFFCFC]
+          "
+        >
+          ADD TO BAG
         </button>
       </div>
     </section>
