@@ -20,7 +20,7 @@ export default function AboutPage() {
         </div>
 
         {/* Right content */}
-        <section className="flex w-full items-center justify-center px-6 py-16 text-center sm:px-10 md:w-1/2 md:px-8 lg:px-12 xl:px-16">
+        <section className="flex w-full items-center justify-center px-6 py-12 text-center sm:px-10 md:w-1/2 md:px-8 lg:px-12 xl:px-16">
           <div className="flex w-full max-w-[560px] flex-col items-center">
             {/* Heading */}
             <img
