@@ -60,7 +60,7 @@ const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
 // WORDMARK_TOP_PERCENT is the one number to nudge if you want it
 // sitting higher/lower relative to the heads — same idea as
 // Hero's `bottom-[87.9%]` for the model name.
-const WORDMARK_TOP_PERCENT = "-2%";
+const WORDMARK_TOP_PERCENT = "-5%";
 const WORDMARK_WIDTH_PX = 547;
 
 /* ============================================================
