@@ -402,17 +402,24 @@ let showcaseCompletedThisPageVisit = false;
   `progress`, `pinState`, or completion state.
 */
 
+/* ============================================================
+   REVIEWS COMPONENT
+   ============================================================ */
+
+/*
+  Reviews are completely independent from the Lara animation.
+
+  IMPORTANT:
+  - No Lara progress is used here.
+  - No liveCompleted state is used here.
+  - Framer Motion handles viewport detection directly.
+  - The section fades/slides in when it enters the viewport.
+  - Each review card animates with a stagger.
+*/
+
 function ReviewsSection({ reduceMotion }) {
-  const reviewsRef = useRef(null);
-
-  const reviewsInView = useInView(reviewsRef, {
-    once: true,
-    amount: 0.12,
-  });
-
   return (
     <motion.section
-      ref={reviewsRef}
       className={`w-full bg-[var(--cream)] pb-2 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}
       initial={
         reduceMotion
@@ -422,17 +429,18 @@ function ReviewsSection({ reduceMotion }) {
               y: 45,
             }
       }
-      animate={
-        reduceMotion || reviewsInView
-          ? {
+      whileInView={
+        reduceMotion
+          ? undefined
+          : {
               opacity: 1,
               y: 0,
             }
-          : {
-              opacity: 0,
-              y: 45,
-            }
       }
+      viewport={{
+        once: true,
+        amount: 0.05,
+      }}
       transition={
         reduceMotion
           ? undefined
@@ -443,74 +451,72 @@ function ReviewsSection({ reduceMotion }) {
       }
     >
       <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-18 sm:grid-cols-2 lg:grid-cols-3">
-        {TESTIMONIALS.map(
-          (testimonial, index) => (
-            <motion.div
-              key={`${testimonial.name}-${index}`}
-              initial={
-                reduceMotion
-                  ? false
-                  : {
-                      opacity: 0,
-                      y: 35,
-                      scale: 0.97,
-                    }
-              }
-              animate={
-                reduceMotion || reviewsInView
-                  ? {
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                    }
-                  : {
-                      opacity: 0,
-                      y: 35,
-                      scale: 0.97,
-                    }
-              }
-              transition={
-                reduceMotion
-                  ? undefined
-                  : {
-                      duration: 0.75,
-                      delay:
-                        0.12 +
-                        (index % 3) * 0.12,
-                      ease: [0.16, 1, 0.3, 1],
-                    }
-              }
-              className={`min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center ${
-                index % 3 === 1
-                  ? "lg:-translate-y-5"
-                  : ""
-              }`}
-            >
-              {/* Review quote */}
-              <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
-                "{testimonial.quote}"
-              </p>
+        {TESTIMONIALS.map((testimonial, index) => (
+          <motion.div
+            key={`${testimonial.name}-${index}`}
+            initial={
+              reduceMotion
+                ? false
+                : {
+                    opacity: 0,
+                    y: 35,
+                    scale: 0.97,
+                  }
+            }
+            whileInView={
+              reduceMotion
+                ? undefined
+                : {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                  }
+            }
+            viewport={{
+              once: true,
+              amount: 0.05,
+            }}
+            transition={
+              reduceMotion
+                ? undefined
+                : {
+                    duration: 0.75,
+                    delay:
+                      0.1 +
+                      (index % 3) * 0.12,
+                    ease: [0.16, 1, 0.3, 1],
+                  }
+            }
+            className={`min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center ${
+              index % 3 === 1
+                ? "lg:-translate-y-5"
+                : ""
+            }`}
+          >
+            {/* Review quote */}
+            <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
+              "{testimonial.quote}"
+            </p>
 
-              {/* Customer name */}
-              <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
-                {testimonial.name}
+            {/* Customer name */}
+            <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
+              {testimonial.name}
 
-                {/* Verified badge */}
-                <span
-                  aria-hidden="true"
-                  className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
-                >
-                  ✓
-                </span>
-              </p>
+              {/* Verified badge */}
+              <span
+                aria-hidden="true"
+                className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
+              >
+                ✓
+              </span>
+            </p>
 
-              {/* Verification label */}
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                Verified Customer
-              </p>
-            </motion.div>
-          )
-        )}
+            {/* Verification label */}
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              Verified Customer
+            </p>
+          </motion.div>
+        ))}
       </div>
     </motion.section>
   );
