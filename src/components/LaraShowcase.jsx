@@ -423,11 +423,19 @@ export default function LaraShowcase() {
   /* -------------------- measure + scroll track -------------------- */
 
   useEffect(() => {
-    // TIP: liveCompleted is intentionally NOT in this condition.
-    // We still want to keep tracking scroll position forever after
-    // the reveal completes — see the liveCompleted note above for why.
-    if (renderCompactFromStart || reduceMotion) return;
-
+    // Once the reveal has completed live, this section becomes
+    // permanent static content — no more pin, no more tracking.
+    // Only a real page reload resets liveCompleted (and the
+    // module-level flag), which starts a fresh mount with this
+    // effect running again from scratch.
+      if (renderCompactFromStart || reduceMotion || liveCompleted) {
+        return (
+          <>
+            <section className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
+            {reviewsSection}
+          </>
+        );
+      }
     const measure = () => {
       if (contentRef.current) {
         contentHeightRef.current = contentRef.current.offsetHeight;
@@ -503,7 +511,7 @@ export default function LaraShowcase() {
       window.removeEventListener("resize", measure);
       window.removeEventListener("load", measure);
     };
-  }, [renderCompactFromStart, reduceMotion]);
+  }, [renderCompactFromStart, reduceMotion, liveCompleted]);
 
   const p = reduceMotion || renderCompactFromStart || liveCompleted ? 1 : progress;
 
