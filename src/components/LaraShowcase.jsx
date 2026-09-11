@@ -609,8 +609,8 @@ export default function LaraShowcase() {
      ============================================================ */
 
   const reviewsSection = (
-    <section className={`w-full bg-[var(--cream)] pb-0 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
-      <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-3">
+    <section className={`w-full bg-[var(--cream)] pb-2 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
+      <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-18 sm:grid-cols-2 lg:grid-cols-3">
         {TESTIMONIALS.map((testimonial, index) => (
           <motion.div
             key={`${testimonial.name}-${index}`}
