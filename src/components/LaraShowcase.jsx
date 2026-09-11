@@ -43,21 +43,27 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
    ============================================================ */
 
 const NAVBAR_HEIGHT_PX = 66;
-const TRACK_VH = 420; // was 260 — too little scroll distance made the whole sequence (wordmark, paragraph, reviews) fly by too fast; raised so each stage gets more scroll to breathe. Tune further if still too fast/slow.
+const TRACK_VH = 620; // was 420, before that 260 — still reading as fast because the wordmark stage's own window was too narrow for 5 staggered photo entrances to be distinguishable; raised again and gave that stage a bigger share below.
 
 const STAGE = {
-  wordmark: { start: 0.0, end: 0.3 },
-  paragraph: { start: 0.35, end: 0.63 },
-  testimonials: { start: 0.68, end: 1.0 },
+  wordmark: { start: 0.0, end: 0.42 },
+  paragraph: { start: 0.47, end: 0.72 },
+  testimonials: { start: 0.77, end: 1.0 },
 };
 
 const SLIDE_PHASES = { enterFrac: 0.55, holdFrac: 0.15, exitFrac: 0.3, travel: 70 };
 
 // How long a triggered photo's entrance takes to play, in real time
-// (ms) — independent of scroll speed once it starts.
-const PHOTO_ENTER_DURATION_S = 1.2;
+// (ms) — independent of scroll speed once it starts. Raised from 1.2s
+// so each photo's slide+shrink is actually visible rather than a blink.
+const PHOTO_ENTER_DURATION_S = 1.8;
 const PHOTO_ENTER_START_SCALE = 1.55; // "big" starting size
 const PHOTO_ENTER_SPIN_OFFSET = 26;   // extra degrees added on top of final rotate, settles off as it enters
+// NEW — each photo now also slides in from off the side of the page
+// (not just scaling down in place), then settles into its stacked
+// spot. Distance is in px, added to/subtracted from the photo's
+// final x depending on which side it enters from.
+const PHOTO_ENTER_SIDE_DISTANCE = 480;
 
 function clamp01(n) {
   return Math.min(1, Math.max(0, n));
@@ -117,9 +123,15 @@ const TESTIMONIALS = [
 ];
 
 const SCATTER_PHOTOS = [
-  { id: "beach", src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 3, finalX: -18, finalY: 26, rotate: 0, enterStart: 0.2, enterEnd: 0.55 },
-  { id: "street", src: scatterStreet, alt: "Street-style portrait", zIndex: 2, finalX: 10, finalY: -14, rotate: 19.63, enterStart: 0.4, enterEnd: 0.75 },
-  { id: "teal", src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 1, finalX: 30, finalY: 34, rotate: -8.21, enterStart: 0.6, enterEnd: 1.0 },
+  { id: "beach", src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 5, finalX: -18, finalY: 26, rotate: 0, enterStart: 0.12, enterEnd: 0.4, enterSide: "left" },
+  { id: "street", src: scatterStreet, alt: "Street-style portrait", zIndex: 4, finalX: 10, finalY: -14, rotate: 19.63, enterStart: 0.28, enterEnd: 0.55, enterSide: "right" },
+  { id: "teal", src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 3, finalX: 30, finalY: 34, rotate: -8.21, enterStart: 0.44, enterEnd: 0.7, enterSide: "right" },
+  // PLACEHOLDER — swap src/alt for two more real reference photos before
+  // shipping (currently reusing existing assets as stand-ins so the
+  // 5-photo sequence/positions/timing are ready to go once the real
+  // photos are dropped in).
+  { id: "placeholder-4", src: scatterBeach, alt: "PLACEHOLDER — replace with a 4th reference photo", zIndex: 2, finalX: -34, finalY: -6, rotate: 12, enterStart: 0.6, enterEnd: 0.85, enterSide: "left" },
+  { id: "placeholder-5", src: scatterTeal, alt: "PLACEHOLDER — replace with a 5th reference photo", zIndex: 1, finalX: 44, finalY: 8, rotate: -14, enterStart: 0.76, enterEnd: 1.0, enterSide: "right" },
 ];
 
 const WORDMARK_FADE_ENTER_END = 0.22;
@@ -326,11 +338,25 @@ export default function LaraShowcase() {
               />
 
               <div
-                className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 overflow-visible"
-                style={{ width: "clamp(200px, 30vw, 360px)", height: "clamp(145px, 22vw, 260px)" }}
+                className="absolute top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 overflow-visible"
+                style={{
+                  // Was dead-center (left-1/2) at clamp(260px,42vw,480px) —
+                  // that's what let the photos balloon up to nearly the
+                  // wordmark's full size. Figma shows a small photo
+                  // accent sitting over the R/A, not centered on the
+                  // whole word — 62% is an estimate from your
+                  // screenshot comparison, nudge left/left if it's off.
+                  left: "62%",
+                  width: "clamp(150px, 26vw, 300px)",
+                  height: "clamp(108px, 19vw, 218px)",
+                }}
               >
                 {SCATTER_PHOTOS.map((photo) => {
                   const entered = reduceMotion || !!enteredPhotos[photo.id];
+                  const sideOffset =
+                    photo.enterSide === "left"
+                      ? -PHOTO_ENTER_SIDE_DISTANCE
+                      : PHOTO_ENTER_SIDE_DISTANCE;
                   return (
                     <motion.img
                       key={photo.id}
@@ -343,7 +369,7 @@ export default function LaraShowcase() {
                           : {
                               opacity: 0,
                               scale: PHOTO_ENTER_START_SCALE,
-                              x: photo.finalX,
+                              x: photo.finalX + sideOffset,
                               y: photo.finalY,
                               rotate: photo.rotate + PHOTO_ENTER_SPIN_OFFSET,
                             }
