@@ -56,10 +56,14 @@ const SLIDE_PHASES = { enterFrac: 0.55, holdFrac: 0.15, exitFrac: 0.3, travel: 7
 // How long a triggered photo's entrance takes to play, in real time
 // (ms) — independent of scroll speed once it starts. Raised from 1.2s
 // so each photo's slide+shrink is actually visible.
-const PHOTO_ENTER_DURATION_S = 1.65;
-const PHOTO_ENTER_START_SCALE = 1.7;
-const PHOTO_ENTER_SPIN_OFFSET = 28;
+/* ============================================================
+   PHOTO ENTRANCE ANIMATION
+   ============================================================ */
+
+const PHOTO_ENTER_DURATION_S = 2.4;
+const PHOTO_ENTER_START_SCALE = 1.75;
 const PHOTO_ENTER_SIDE_DISTANCE = 520;
+const PHOTO_ENTER_SPIN_OFFSET = 18;
 
 function clamp01(n) {
   return Math.min(1, Math.max(0, n));
@@ -130,44 +134,84 @@ const TESTIMONIALS = [
 // your Figma stacking. Fixed below, and finalX/finalY are now the
 // actual relative offsets from your top/left coordinates (middle/beach
 // as the (0,0) anchor), instead of the old placeholder-ish numbers.
+/* ============================================================
+   WORDMARK PHOTO POSITIONS — FIGMA
+   ============================================================ */
+
+const PHOTO_ASPECT_RATIO = "175.59957556823136 / 103.72862812295645";
+
+/*
+  Figma frame: 1920 × 1176
+
+  The positions below are the actual Figma measurements.
+  Percentages are calculated from that frame so the composition
+  remains responsive instead of scattering on different screens.
+*/
+
 const SCATTER_PHOTOS = [
   {
-    id: "teal",
+    id: "front",
     src: scatterTeal,
     alt: "Lara's Crochet customer wearing a teal crochet dress",
-    zIndex: 5,
-    finalX: 7,
-    finalY: -4,
-    rotate: -8.21,
-    enterStart: 0.20,
+
+    // Figma
+    width: 175.59957556823136,
+    height: 103.72862812295645,
+    left: 866.92,
+    top: 114.87,
+
+    // Figma: +8.21° = anti-clockwise
+    figmaAngle: 8.21,
+
+    zIndex: 3,
+
+    // Enters from the left
     enterSide: "left",
+    enterStart: 0.20,
   },
+
   {
-    id: "beach",
+    id: "middle",
     src: scatterBeach,
     alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
-    zIndex: 4,
-    finalX: 0,
-    finalY: 0,
-    rotate: 0,
-    enterStart: 0.38,
+
+    // Figma
+    width: 175.59957885742188,
+    height: 103.72863006591797,
+    left: 860.18,
+    top: 119.27,
+
+    // Figma: 0°
+    figmaAngle: 0,
+
+    zIndex: 2,
+
+    // Enters from the right
     enterSide: "right",
+    enterStart: 0.42,
   },
+
   {
-    id: "street",
+    id: "back",
     src: scatterStreet,
     alt: "Street-style portrait",
-    zIndex: 3,
-    finalX: 7,
-    finalY: -27,
-    rotate: 19.63,
-    enterStart: 0.56,
+
+    // Figma
+    width: 175.59958036211256,
+    height: 103.72863095475553,
+    left: 866.81,
+    top: 92.77,
+
+    // Figma: -19.63° = clockwise
+    figmaAngle: -19.63,
+
+    zIndex: 1,
+
+    // Enters from the left
     enterSide: "left",
+    enterStart: 0.64,
   },
 ];
-// Photo box aspect ratio and reference size, taken directly from your
-// Figma dev-mode measurements (175.6 x 103.7, ~9.15% of a 1920 frame).
-const PHOTO_ASPECT_RATIO = "175.6 / 103.73";
 const PHOTO_BOX_WIDTH = "clamp(100px, 9.15vw, 176px)";
 
 const WORDMARK_FADE_ENTER_END = 0.22;
@@ -359,16 +403,34 @@ export default function LaraShowcase() {
               />
 
               <div
-                className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 overflow-visible"
-                style={{ width: PHOTO_BOX_WIDTH, aspectRatio: PHOTO_ASPECT_RATIO }}
+                className="absolute inset-0 z-20 overflow-visible pointer-events-none"
               >
                 {SCATTER_PHOTOS.map((photo) => {
                   const entered = reduceMotion || !!enteredPhotos[photo.id];
+
+                  /*
+                    CSS rotate() uses the opposite visual convention from the
+                    Figma angle convention being used here:
+
+                      Figma +8.21°  → CSS -8.21°
+                      Figma  0°     → CSS  0°
+                      Figma -19.63° → CSS +19.63°
+
+                    This preserves the exact Figma visual direction.
+                  */
+                  const cssFinalRotation = -photo.figmaAngle;
 
                   const sideOffset =
                     photo.enterSide === "left"
                       ? -PHOTO_ENTER_SIDE_DISTANCE
                       : PHOTO_ENTER_SIDE_DISTANCE;
+
+                  /*
+                    Convert the exact 1920px Figma coordinates into responsive
+                    viewport percentages.
+                  */
+                  const finalLeft = `${(photo.left / 1920) * 100}%`;
+                  const finalTop = `${(photo.top / 1176) * 100}%`;
 
                   return (
                     <motion.img
@@ -381,16 +443,18 @@ export default function LaraShowcase() {
                           ? {
                               opacity: 1,
                               scale: 1,
-                              x: photo.finalX,
-                              y: photo.finalY,
-                              rotate: photo.rotate,
+                              x: 0,
+                              y: 0,
+                              rotate: cssFinalRotation,
                             }
                           : {
                               opacity: 0,
                               scale: PHOTO_ENTER_START_SCALE,
-                              x: photo.finalX + sideOffset,
-                              y: photo.finalY,
-                              rotate: photo.rotate + PHOTO_ENTER_SPIN_OFFSET,
+                              x: sideOffset,
+                              y: 0,
+                              rotate: cssFinalRotation + (
+                                photo.enterSide === "left" ? -PHOTO_ENTER_SPIN_OFFSET : PHOTO_ENTER_SPIN_OFFSET
+                              ),
                             }
                       }
                       transition={{
@@ -399,13 +463,21 @@ export default function LaraShowcase() {
                       }}
                       style={{
                         position: "absolute",
-                        inset: 0,
-                        width: "100%",
-                        height: "100%",
+                        left: finalLeft,
+                        top: finalTop,
+                        width: `${(photo.width / 1920) * 100}%`,
+                        height: "auto",
+                        aspectRatio: PHOTO_ASPECT_RATIO,
                         zIndex: photo.zIndex,
+
+                        // Important: no white border, no forced rounded corners.
+                        border: "none",
+                        borderRadius: 0,
+                        boxShadow: "none",
+
                         transformOrigin: "50% 50%",
                       }}
-                      className="rounded-[4px] object-cover shadow-lg ring-2 ring-[var(--cream)]"
+                      className="block select-none object-cover"
                     />
                   );
                 })}
