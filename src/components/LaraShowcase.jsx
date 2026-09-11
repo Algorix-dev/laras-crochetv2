@@ -43,7 +43,7 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
    ============================================================ */
 
 const NAVBAR_HEIGHT_PX = 66;
-const TRACK_VH = 620; // was 420, before that 260 — still reading as fast because the wordmark stage's own window was too narrow for 5 staggered photo entrances to be distinguishable; raised again and gave that stage a bigger share below.
+const TRACK_VH = 620; // was 260 — too little scroll distance made the whole sequence fly by; raised so 5 staggered photo entrances, the paragraph, and reviews all get real scroll room.
 
 const STAGE = {
   wordmark: { start: 0.0, end: 0.42 },
@@ -55,14 +55,13 @@ const SLIDE_PHASES = { enterFrac: 0.55, holdFrac: 0.15, exitFrac: 0.3, travel: 7
 
 // How long a triggered photo's entrance takes to play, in real time
 // (ms) — independent of scroll speed once it starts. Raised from 1.2s
-// so each photo's slide+shrink is actually visible rather than a blink.
+// so each photo's slide+shrink is actually visible.
 const PHOTO_ENTER_DURATION_S = 1.8;
 const PHOTO_ENTER_START_SCALE = 1.55; // "big" starting size
 const PHOTO_ENTER_SPIN_OFFSET = 26;   // extra degrees added on top of final rotate, settles off as it enters
-// NEW — each photo now also slides in from off the side of the page
-// (not just scaling down in place), then settles into its stacked
-// spot. Distance is in px, added to/subtracted from the photo's
-// final x depending on which side it enters from.
+// Each photo also slides in from off the side of the page (not just
+// scaling down in place), then settles into its stacked spot. This is
+// a px distance added to/subtracted from the photo's final x.
 const PHOTO_ENTER_SIDE_DISTANCE = 480;
 
 function clamp01(n) {
@@ -122,17 +121,32 @@ const TESTIMONIALS = [
   { quote: "[Placeholder review — swap for a real quote from Lara]", name: "Placeholder Name 3" },
 ];
 
+// Rotations converted from your Figma angles (your convention: plus =
+// anticlockwise, minus = clockwise) to CSS rotate() (plus = clockwise),
+// i.e. cssDeg = -figmaDeg:
+//   top (frontmost):  figma +8.21  -> css -8.21
+//   middle:            figma  0     -> css  0
+//   back (rearmost):  figma -19.63 -> css +19.63
+// These already matched what was in the code for teal/beach/street
+// respectively — the rotation numbers were right. What was wrong was
+// zIndex: it had beach on top and teal at the back, the reverse of
+// your Figma stacking. Fixed below, and finalX/finalY are now the
+// actual relative offsets from your top/left coordinates (middle/beach
+// as the (0,0) anchor), instead of the old placeholder-ish numbers.
 const SCATTER_PHOTOS = [
-  { id: "beach", src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 5, finalX: -18, finalY: 26, rotate: 0, enterStart: 0.12, enterEnd: 0.4, enterSide: "left" },
-  { id: "street", src: scatterStreet, alt: "Street-style portrait", zIndex: 4, finalX: 10, finalY: -14, rotate: 19.63, enterStart: 0.28, enterEnd: 0.55, enterSide: "right" },
-  { id: "teal", src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 3, finalX: 30, finalY: 34, rotate: -8.21, enterStart: 0.44, enterEnd: 0.7, enterSide: "right" },
+  { id: "teal", src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 5, finalX: 7, finalY: -4, rotate: -8.21, enterStart: 0.76, enterSide: "left" },
+  { id: "beach", src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 4, finalX: 0, finalY: 0, rotate: 0, enterStart: 0.6, enterSide: "right" },
+  { id: "street", src: scatterStreet, alt: "Street-style portrait", zIndex: 3, finalX: 7, finalY: -27, rotate: 19.63, enterStart: 0.44, enterSide: "left" },
   // PLACEHOLDER — swap src/alt for two more real reference photos before
-  // shipping (currently reusing existing assets as stand-ins so the
-  // 5-photo sequence/positions/timing are ready to go once the real
-  // photos are dropped in).
-  { id: "placeholder-4", src: scatterBeach, alt: "PLACEHOLDER — replace with a 4th reference photo", zIndex: 2, finalX: -34, finalY: -6, rotate: 12, enterStart: 0.6, enterEnd: 0.85, enterSide: "left" },
-  { id: "placeholder-5", src: scatterTeal, alt: "PLACEHOLDER — replace with a 5th reference photo", zIndex: 1, finalX: 44, finalY: 8, rotate: -14, enterStart: 0.76, enterEnd: 1.0, enterSide: "right" },
+  // shipping; no Figma position given yet for these two, so they're
+  // placed further back in the pile as an estimate.
+  { id: "placeholder-4", src: scatterBeach, alt: "PLACEHOLDER — replace with a 4th reference photo", zIndex: 2, finalX: -16, finalY: 10, rotate: 12, enterStart: 0.28, enterSide: "right" },
+  { id: "placeholder-5", src: scatterTeal, alt: "PLACEHOLDER — replace with a 5th reference photo", zIndex: 1, finalX: 18, finalY: 14, rotate: -14, enterStart: 0.12, enterSide: "left" },
 ];
+// Photo box aspect ratio and reference size, taken directly from your
+// Figma dev-mode measurements (175.6 x 103.7, ~9.15% of a 1920 frame).
+const PHOTO_ASPECT_RATIO = "175.6 / 103.73";
+const PHOTO_BOX_WIDTH = "clamp(100px, 9.15vw, 176px)";
 
 const WORDMARK_FADE_ENTER_END = 0.22;
 const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
@@ -298,7 +312,7 @@ export default function LaraShowcase() {
             }}
           >
             <div
-              className="relative mx-auto w-full max-w-[720px] md:max-w-[920px]"
+              className="relative mx-auto w-full max-w-[860px] md:max-w-[1080px]"
               style={{ opacity: wordmarkFadeT }}
             >
               {/* Glow — soft breathing pulse behind the decor/wordmark,
@@ -338,18 +352,8 @@ export default function LaraShowcase() {
               />
 
               <div
-                className="absolute top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 overflow-visible"
-                style={{
-                  // Was dead-center (left-1/2) at clamp(260px,42vw,480px) —
-                  // that's what let the photos balloon up to nearly the
-                  // wordmark's full size. Figma shows a small photo
-                  // accent sitting over the R/A, not centered on the
-                  // whole word — 62% is an estimate from your
-                  // screenshot comparison, nudge left/left if it's off.
-                  left: "62%",
-                  width: "clamp(150px, 26vw, 300px)",
-                  height: "clamp(108px, 19vw, 218px)",
-                }}
+                className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 overflow-visible"
+                style={{ width: PHOTO_BOX_WIDTH, aspectRatio: PHOTO_ASPECT_RATIO }}
               >
                 {SCATTER_PHOTOS.map((photo) => {
                   const entered = reduceMotion || !!enteredPhotos[photo.id];
