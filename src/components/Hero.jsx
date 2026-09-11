@@ -107,8 +107,8 @@ const MODELS = [
   { id: "model2", name: "Coral", price: 70000, image: model2 },
   { id: "model6", name: "Amber", price: 70000, image: model6 },
   { id: "reina", name: "Reina", price: 70000, image: heroCenter },
-  { id: "model5", name: "Sienna", price: 70000, image: model5 },
   { id: "model3", name: "Marina", price: 70000, image: model3 },
+  { id: "model5", name: "Sienna", price: 70000, image: model5 },
 ];
 
 const DEFAULT_SELECTED_INDEX = 2; // "Reina" — matches the original static layout
