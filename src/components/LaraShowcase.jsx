@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.png";
@@ -7,73 +8,64 @@ import scatterTeal from "../assets/scatter-teal.png";
 import laraDecor from "../assets/decor/lara-decor-composite.png";
 
 /* ============================================================
-   SIMPLIFIED SCROLL SEQUENCE — HOW THIS FILE WORKS (v3)
-   ------------------------------------------------------------
-   Previous version did a LOT at once: photos flying in from off
-   screen at custom angles, word-by-word paragraph reveals, 3
-   staggered testimonial groups, and a smoothed/lerped progress
-   value. Per feedback: strip that down to one simple idea repeated
-   3 times — "a big slide fades in, holds, fades out," like a
-   slideshow tied to scroll position — instead of a bunch of
-   individual micro-animations:
+   v4 CHANGES
 
-     STAGE A — wordmark + decor fade in (centered), then the 3
-               reference photos drop into place BIG, one after
-               another (not all at once).
-     STAGE B — the brand-story paragraph fades in, large, filling
-               the screen.
-     STAGE C — the testimonials fade in together, filling the
-               screen.
+   1. WORDMARK ZOOM-OUT: "Lara" now starts noticeably larger and
+      shrinks down to its normal size as it settles in, instead of
+      just fading in at one fixed size. Tied to the same
+      wordmarkFadeT timeline the opacity already used.
 
-   Each stage is a full-screen (position: absolute, inset: 0) layer
-   stacked on the others; only one is ever meaningfully opaque at a
-   time, so it reads as "this leaves, then that arrives," never two
-   things overlapping. Once STAGE C finishes, the section un-pins
-   and the page just continues scrolling normally into
-   "Shop Our Pieces" below — no special exit animation, it simply
-   becomes a normal part of the page from that point on.
+   2. YARN GLOW: a soft pulsing glow sits behind the decor/wordmark
+      art — same "alive, futuristic" language as the Hero podium's
+      glow, done as an infinite breathing loop rather than a spin
+      (nothing here rotates, so a spin didn't make sense — a pulse
+      does the same "this is special" signaling).
 
-   The section pins itself (position: fixed, directly under the
-   navbar) while its track is being scrolled through, and un-pins
-   the instant you scroll past it — that's the only "trick" left
-   here. No smoothing/lerp — progress tracks real scroll position
-   directly, so nothing can lag behind the scrollbar.
+   3. PHOTOS — BIG → SMALL, WITH SPIN, TIME-BASED: previously each
+      photo's opacity/position was directly scrubbed from raw
+      scroll position, which meant a fast scroll (or a jump to the
+      bottom) could skip most of the animation. Now, once a photo's
+      scroll-trigger point is crossed, it flips a one-way `entered`
+      flag and animates via a fixed-duration transition instead —
+      so once triggered, it always plays out in full over real time,
+      no matter how the person continues to scroll. Also now starts
+      oversized and rotated further from its final angle, easing
+      down to size with a "settling" spin.
 
-   Respects prefers-reduced-motion: skips the whole pin/scrub and
-   renders everything already revealed, in normal document flow.
+   4. PARAGRAPH — WORD BY WORD: replaced the single-block paragraph
+      fade with a per-word reveal, each word getting its own small
+      slice of the stage's enter timeline — reads like the words are
+      "counting in" one after another rather than the whole
+      paragraph fading together.
+
+   5. REVIEWS: 6 → 9. The last 3 are placeholders (flagged below) —
+      swap for real quotes before shipping.
    ============================================================ */
 
-const NAVBAR_HEIGHT_PX = 66; // matches Navbar's h-[66px] sticky header
-const TRACK_VH = 260;        // total scroll-track height, in vh — tune to make it feel longer/shorter
+const NAVBAR_HEIGHT_PX = 66;
+const TRACK_VH = 260; // tune down if the section still feels too long/empty
 
-// Each stage's slice of the overall 0->1 scroll progress. Gaps
-// between them (0.30->0.35, 0.63->0.68) are deliberate — a brief
-// beat of empty cream while one stage finishes leaving before the
-// next arrives, so they never visually overlap.
 const STAGE = {
   wordmark: { start: 0.0, end: 0.3 },
   paragraph: { start: 0.35, end: 0.63 },
   testimonials: { start: 0.68, end: 1.0 },
 };
 
-// How a stage divides its own local 0-1 window between entering,
-// holding fully visible, and exiting.
 const SLIDE_PHASES = { enterFrac: 0.55, holdFrac: 0.15, exitFrac: 0.3, travel: 70 };
+
+// How long a triggered photo's entrance takes to play, in real time
+// (ms) — independent of scroll speed once it starts.
+const PHOTO_ENTER_DURATION_S = 1.2;
+const PHOTO_ENTER_START_SCALE = 1.55; // "big" starting size
+const PHOTO_ENTER_SPIN_OFFSET = 26;   // extra degrees added on top of final rotate, settles off as it enters
 
 function clamp01(n) {
   return Math.min(1, Math.max(0, n));
 }
-
 function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
 }
 
-// Maps `progress` restricted to [start, end] through enter -> hold
-// -> exit and returns the numbers a whole block needs to fade in,
-// sit still, then fade out. `enterT` (0->1 across ENTER ONLY, then
-// held at 1) is exposed too, so things inside the block — like the
-// 3 photos entering one by one — can stagger off the SAME timeline
-// instead of running their own separate clock.
 function computeSlide(progress, start, end, { enterFrac, holdFrac, exitFrac, travel }) {
   const span = end - start;
   const local = clamp01((progress - start) / span);
@@ -93,10 +85,6 @@ function computeSlide(progress, start, end, { enterFrac, holdFrac, exitFrac, tra
   return { opacity: 1 - eased, translateY: -eased * travel, enterT: 1 };
 }
 
-/* ============================================================
-   BRAND STORY (one block — no more word-by-word reveal)
-   ============================================================ */
-
 const PARAGRAPHS = [
   "Welcome to Lara's Crochet! Here, every piece starts as a single strand of yarn and a pair of hands. No factories, no shortcuts. Made-to-order, one piece at a time, out of Lagos, Nigeria.",
   "We don't keep a stockroom.",
@@ -104,10 +92,16 @@ const PARAGRAPHS = [
   "This isn't fast fashion. It's handmade, made with love.",
 ];
 
-/* ============================================================
-   CUSTOMER TESTIMONIALS — all fade in together as one grid now,
-   instead of 3 sequential groups of 3.
-   ============================================================ */
+// Flattened word list with a global index, so reveal timing is
+// continuous across all 4 paragraphs rather than resetting per
+// paragraph.
+function buildWordParagraphs(paragraphs) {
+  let globalIndex = 0;
+  const result = paragraphs.map((paragraph) =>
+    paragraph.split(" ").map((word) => ({ word, index: globalIndex++ }))
+  );
+  return { result, totalWords: globalIndex };
+}
 
 const TESTIMONIALS = [
   { quote: "I've never had a piece fit this well straight out of the box. Literally made to my measurements. No alterations needed.", name: "Teniola Aladese" },
@@ -116,76 +110,41 @@ const TESTIMONIALS = [
   { quote: "The Reina dress is a whole moment. I get stopped every single time I wear it.", name: "Chidinma K." },
   { quote: "Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.", name: "Precious Ehizoge" },
   { quote: "Customer service walked me through sizing so patiently. Made ordering online feel less scary.", name: "Ejiro Okezie" },
+  // PLACEHOLDER — replace with 3 real testimonials from Lara before shipping
+  { quote: "[Placeholder review — swap for a real quote from Lara]", name: "Placeholder Name 1" },
+  { quote: "[Placeholder review — swap for a real quote from Lara]", name: "Placeholder Name 2" },
+  { quote: "[Placeholder review — swap for a real quote from Lara]", name: "Placeholder Name 3" },
 ];
-
-/* ============================================================
-   SCATTER PHOTOS
-   ------------------------------------------------------------
-   TIP — POSITIONING vs FIGMA: the Figma export (Rectangle 51/52/53,
-   inside the "L A R A" lockup group) has all 3 photos clustered very
-   close to dead-center horizontally (offsets of roughly -1% to
-   -0.5% of the lockup's width) and stacked slightly below center
-   vertically, a bit further apart (roughly 12%-24% of the lockup's
-   height), at rotations of 0deg / 19.63deg / -8.21deg. The translate
-   values below are set to match that clustering (small, centered,
-   gently stacked) rather than the old wide scatter — the px numbers
-   are tuned against PHOTO_BOX's current size, so if you resize that,
-   scale these roughly with it.
-   ============================================================ */
 
 const SCATTER_PHOTOS = [
-  {
-    src: scatterBeach,
-    alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
-    zIndex: 3,
-    finalX: -18,
-    finalY: 26,
-    rotate: 0,
-    enterStart: 0.2, // enters first
-    enterEnd: 0.55,
-  },
-  {
-    src: scatterStreet,
-    alt: "Street-style portrait",
-    zIndex: 2,
-    finalX: 10,
-    finalY: -14,
-    rotate: 19.63,
-    enterStart: 0.4, // enters second, slightly overlapping the first
-    enterEnd: 0.75,
-  },
-  {
-    src: scatterTeal,
-    alt: "Lara's Crochet customer wearing a teal crochet dress",
-    zIndex: 1,
-    finalX: 30,
-    finalY: 34,
-    rotate: -8.21,
-    enterStart: 0.6, // enters last
-    enterEnd: 1.0,
-  },
+  { id: "beach", src: scatterBeach, alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach", zIndex: 3, finalX: -18, finalY: 26, rotate: 0, enterStart: 0.2, enterEnd: 0.55 },
+  { id: "street", src: scatterStreet, alt: "Street-style portrait", zIndex: 2, finalX: 10, finalY: -14, rotate: 19.63, enterStart: 0.4, enterEnd: 0.75 },
+  { id: "teal", src: scatterTeal, alt: "Lara's Crochet customer wearing a teal crochet dress", zIndex: 1, finalX: 30, finalY: 34, rotate: -8.21, enterStart: 0.6, enterEnd: 1.0 },
 ];
 
-// The wordmark + decor fade in first, quickly, right at the start of
-// STAGE A's enter phase — before any photo starts moving.
 const WORDMARK_FADE_ENTER_END = 0.22;
-
-// TIP — SHARED 304px MARGIN: same px-5 md:px-8 lg:px-[15.83%] class
-// used in Navbar/Hero/ProductGrid/Footer, so this section's content
-// lines up with everything above/below it.
 const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
 
 export default function LaraShowcase() {
   const wrapperRef = useRef(null);
   const contentRef = useRef(null);
-
   const contentHeightRef = useRef(0);
   const afterTopRef = useRef(0);
   const rafRef = useRef(null);
 
   const [progress, setProgress] = useState(0);
-  const [pinState, setPinState] = useState("before"); // "before" | "pinned" | "after"
+  const [pinState, setPinState] = useState("before");
   const [reduceMotion, setReduceMotion] = useState(false);
+
+  // Which photos have been triggered to enter (one-way per pass —
+  // cleared when scrolled back above the stage so re-entering
+  // replays it).
+  const [enteredPhotos, setEnteredPhotos] = useState({});
+
+  const { result: wordParagraphs, totalWords } = useMemo(
+    () => buildWordParagraphs(PARAGRAPHS),
+    []
+  );
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -195,10 +154,6 @@ export default function LaraShowcase() {
     return () => mq.removeEventListener?.("change", onChange);
   }, []);
 
-  // The pin/scrub loop — no smoothing/lerp anymore, progress just
-  // tracks real scroll position directly each frame. Simpler, and
-  // it means a stage can never "lag" behind where the scrollbar
-  // actually is.
   useEffect(() => {
     if (reduceMotion) return;
 
@@ -210,6 +165,9 @@ export default function LaraShowcase() {
     const ro = new ResizeObserver(measure);
     if (contentRef.current) ro.observe(contentRef.current);
     window.addEventListener("resize", measure);
+    // Re-measure once images/fonts have actually loaded, in case
+    // that shifts contentRef's natural size.
+    window.addEventListener("load", measure);
 
     const tick = () => {
       const wrapper = wrapperRef.current;
@@ -246,6 +204,7 @@ export default function LaraShowcase() {
       cancelAnimationFrame(rafRef.current);
       ro.disconnect();
       window.removeEventListener("resize", measure);
+      window.removeEventListener("load", measure);
     };
   }, [reduceMotion]);
 
@@ -255,11 +214,34 @@ export default function LaraShowcase() {
   const paragraphSlide = computeSlide(p, STAGE.paragraph.start, STAGE.paragraph.end, SLIDE_PHASES);
   const testimonialsSlide = computeSlide(p, STAGE.testimonials.start, STAGE.testimonials.end, SLIDE_PHASES);
 
-  // Simple fade for the wordmark/decor lockup itself — finishes
-  // well before the photos start entering.
   const wordmarkFadeT = reduceMotion
     ? 1
     : easeOutCubic(clamp01(wordmarkSlide.enterT / WORDMARK_FADE_ENTER_END));
+
+  // Zoom-out scale for the wordmark: starts at 1.5x, eases to 1x
+  // as wordmarkFadeT goes 0 -> 1.
+  const wordmarkScale = reduceMotion ? 1 : 1.5 - 0.5 * wordmarkFadeT;
+
+  // Trigger photo entrances (one-way, reset on scroll-back).
+  useEffect(() => {
+    if (reduceMotion) return;
+    if (wordmarkSlide.enterT <= 0.02) {
+      // Scrolled back above the stage — clear so it replays.
+      setEnteredPhotos({});
+      return;
+    }
+    setEnteredPhotos((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      SCATTER_PHOTOS.forEach((photo) => {
+        if (!next[photo.id] && wordmarkSlide.enterT >= photo.enterStart) {
+          next[photo.id] = true;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [wordmarkSlide.enterT, reduceMotion]);
 
   let containerStyle;
   if (reduceMotion || pinState === "before") {
@@ -271,12 +253,12 @@ export default function LaraShowcase() {
       left: 0,
       right: 0,
       height: `calc(100vh - ${NAVBAR_HEIGHT_PX}px)`,
+      zIndex: 10,
     };
   } else {
     containerStyle = { position: "absolute", top: afterTopRef.current, left: 0, right: 0, height: "100vh" };
   }
 
-  // Shared props for the 3 full-screen stage layers.
   const layerBaseStyle = {
     position: "absolute",
     inset: 0,
@@ -307,6 +289,28 @@ export default function LaraShowcase() {
               className="relative mx-auto w-full max-w-[720px] md:max-w-[920px]"
               style={{ opacity: wordmarkFadeT }}
             >
+              {/* Glow — soft breathing pulse behind the decor/wordmark,
+                  same "alive/selected" language as the Hero podium
+                  glow, as a pulse instead of a spin since nothing here
+                  rotates. */}
+              <motion.div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  width: "min(60vw, 820px)",
+                  aspectRatio: "1 / 1",
+                  background:
+                    "radial-gradient(circle, rgba(76,5,25,0.35), rgba(76,5,25,0.08) 55%, transparent 75%)",
+                  filter: "blur(30px)",
+                }}
+                animate={
+                  reduceMotion
+                    ? undefined
+                    : { opacity: [0.5, 0.85, 0.5], scale: [0.94, 1.02, 0.94] }
+                }
+                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+              />
+
               <img
                 src={laraDecor}
                 alt=""
@@ -318,38 +322,40 @@ export default function LaraShowcase() {
                 src={laraWordmark}
                 alt="Lara's Crochet"
                 className="relative z-10 block h-auto w-full select-none pointer-events-none"
+                style={{ transform: `scale(${wordmarkScale})`, transformOrigin: "50% 50%" }}
               />
 
-              {/* Photos — BIG, entering one at a time. Each photo's own
-                  enterStart/enterEnd is a slice of wordmarkSlide.enterT
-                  (the stage's own enter timeline), so "one by one"
-                  falls naturally out of the numbers rather than a
-                  separate animation system. */}
               <div
                 className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 overflow-visible"
                 style={{ width: "clamp(200px, 30vw, 360px)", height: "clamp(145px, 22vw, 260px)" }}
               >
                 {SCATTER_PHOTOS.map((photo) => {
-                  const localT = reduceMotion
-                    ? 1
-                    : clamp01((wordmarkSlide.enterT - photo.enterStart) / (photo.enterEnd - photo.enterStart));
-                  const eased = easeOutCubic(localT);
-                  const dropFrom = -60; // drops down a short distance into place — big and simple, no fly-in from off-screen
-                  const style = {
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    zIndex: photo.zIndex,
-                    opacity: eased,
-                    transform: `translate(${photo.finalX}px, ${photo.finalY + (1 - eased) * dropFrom}px) rotate(${photo.rotate}deg)`,
-                  };
+                  const entered = reduceMotion || !!enteredPhotos[photo.id];
                   return (
-                    <img
-                      key={photo.alt}
+                    <motion.img
+                      key={photo.id}
                       src={photo.src}
                       alt={photo.alt}
-                      style={style}
+                      initial={false}
+                      animate={
+                        entered
+                          ? { opacity: 1, scale: 1, x: photo.finalX, y: photo.finalY, rotate: photo.rotate }
+                          : {
+                              opacity: 0,
+                              scale: PHOTO_ENTER_START_SCALE,
+                              x: photo.finalX,
+                              y: photo.finalY,
+                              rotate: photo.rotate + PHOTO_ENTER_SPIN_OFFSET,
+                            }
+                      }
+                      transition={{ duration: PHOTO_ENTER_DURATION_S, ease: [0.16, 1, 0.3, 1] }}
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        zIndex: photo.zIndex,
+                      }}
                       className="rounded-[4px] object-cover shadow-lg ring-2 ring-[var(--cream)]"
                     />
                   );
@@ -359,7 +365,7 @@ export default function LaraShowcase() {
           </div>
 
           {/* ============================================================
-              STAGE B — PARAGRAPH — big, fills the screen, one block
+              STAGE B — PARAGRAPH — word by word
               ============================================================ */}
           <div
             className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
@@ -371,15 +377,33 @@ export default function LaraShowcase() {
             }}
           >
             <div className="mx-auto max-w-3xl space-y-6 text-xl leading-relaxed text-[var(--ink)] md:text-3xl md:leading-[1.5]">
-              {PARAGRAPHS.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+              {wordParagraphs.map((words, pIndex) => (
+                <p key={pIndex}>
+                  {words.map(({ word, index }) => {
+                    const wordT = reduceMotion
+                      ? 1
+                      : clamp01(
+                          (paragraphSlide.enterT - index / totalWords) / (1 / totalWords)
+                        );
+                    return (
+                      <span
+                        key={index}
+                        style={{
+                          opacity: wordT,
+                          transition: "opacity 0.15s linear",
+                        }}
+                      >
+                        {word}{" "}
+                      </span>
+                    );
+                  })}
+                </p>
               ))}
             </div>
           </div>
 
           {/* ============================================================
-              STAGE C — TESTIMONIALS — all fade in together, fills the
-              screen, then the section un-pins into normal scroll.
+              STAGE C — TESTIMONIALS
               ============================================================ */}
           <div
             className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
