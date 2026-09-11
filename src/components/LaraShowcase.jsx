@@ -461,13 +461,23 @@ export default function LaraShowcase() {
               : 1;
         }
 
-        setPinState((previous) => (previous === nextState ? previous : nextState));
-        setProgress(next);
-
+        // TIP: don't just setLiveCompleted and let the loop die here.
+        // The natural "after" transition only fires when rect.bottom
+        // crosses the threshold, which happens at progress === 1 —
+        // but RELEASE_AT is 0.995, so we stop ticking a hair BEFORE
+        // that ever happens. Whatever pinState was on THIS tick
+        // (almost always "pinned") is what it freezes at forever.
+        // So on the freeze tick, force it to "after" ourselves.
         if (next >= RELEASE_AT) {
           showcaseCompletedThisPageVisit = true;
+          afterTopRef.current = Math.max(0, rect.height - contentHeight);
+          setPinState("after");
           setLiveCompleted(true);
+        } else {
+          setPinState((previous) => (previous === nextState ? previous : nextState));
         }
+
+        setProgress(next);
       }
 
       rafRef.current = requestAnimationFrame(tick);
