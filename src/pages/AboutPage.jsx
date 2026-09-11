@@ -69,16 +69,12 @@ export default function AboutPage() {
             </div>
 
             {/* Story */}
-            <p className="mt-9 max-w-[520px] text-sm leading-8 text-[var(--muted)]">
-              At Lara&apos;s Crochet, every piece starts as a single strand of
-              yarn and a pair of hands. No factories, no shortcuts — just
-              crochet made with love, one piece at a time, out of Lagos,
-              Nigeria. We believe in slow fashion that tells a story, and
-              we&apos;d love for you to be part of ours.
+            <p className="mt-9 max-w-[520px] text-[16px] leading-6 text-[var(--muted)]">
+             Lara's Crochet started with a hook, a ball of yarn, and a refusal to settle for basic. Founded by Lara, it's grown into a brand built on precision — every dress, bikini, and two-piece crocheted by hand, made to order, and shaped to fit exactly how you want it. No two customers are styled the same way, because no two bodies are. This is slow fashion done properly: considered, made-to-measure, and built to last far longer than anything off a rack.
             </p>
 
             {/* Instagram */}
-            <div className="mt-8 flex justify-center text-sm underline underline-offset-4">
+            <div className="mt-8 flex justify-center text-[16px] underline underline-offset-4">
               <a
                 href="https://www.instagram.com/_larascrochet/"
                 target="_blank"

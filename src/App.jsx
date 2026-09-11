@@ -116,7 +116,7 @@ function HomePage() {
                 </Link>
               </div>
               {loading ? (
-                <p className="text-sm text-[var(--muted)] px-5">Loading products...</p>
+                <p className="text-[16px] text-[var(--muted)] px-5">Loading products...</p>
               ) : (
                 <ProductGrid products={liveProducts.slice(0, 4)} />
               )}
