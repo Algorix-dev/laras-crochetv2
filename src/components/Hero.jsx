@@ -1,15 +1,3 @@
-/*
-  Hero section
-
-  - Five models are always visible on desktop.
-  - Reina starts in the center.
-  - Clicking a supporting model swaps it into the center position.
-  - Model PNGs preserve their natural aspect ratios.
-  - Each model has its own visual height to match the Figma composition.
-  - Desktop content is constrained to the same ~304px side margins
-    as the 1920px Figma frame.
-*/
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -26,40 +14,46 @@ import heroCenter from "../assets/reina-front.png";
 const SPIN_DURATION_SECONDS = 6;
 const SIDE_TILT_DEGREES = 28;
 
-const PRICE_TOP_OFFSET = "2.25rem";
 const SIDE_MODEL_OPACITY = 0.55;
+const PRICE_TOP_OFFSET = "2.25rem";
 
 /*
-  Your Figma content starts around 304px from the left
-  and ends around 304px from the right on a 1920px frame.
+  Desktop Figma content area.
+
+  1920px viewport
+  ~304px left margin
+  ~304px right margin
+
+  1920 - 304 - 304 = 1312px content width
 */
 const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
 
 /*
-  Small visual overlap between neighboring models.
-
-  IMPORTANT:
-  We are no longer using this to compensate for distorted
-  image widths. The PNGs themselves retain their proportions.
+  Amount of visual overlap between the image slots.
 */
-const NEGATIVE_OVERLAP = "1rem";
+const NEGATIVE_OVERLAP = "0.5rem";
 
-const SELECT_SPRING = {
-  type: "spring",
-  stiffness: 240,
-  damping: 28,
-};
+/* ============================================================
+   MODEL SIZES
+   ============================================================
 
-const MOVE_TRANSITION = {
-  layout: {
-    duration: 0.55,
-    ease: [0.4, 0, 0.2, 1],
-  },
-  opacity: {
-    duration: 0.55,
-    ease: [0.4, 0, 0.2, 1],
-  },
-};
+   IMPORTANT:
+
+   Every model uses HEIGHT + width:auto.
+
+   This means the PNG keeps its natural aspect ratio.
+
+   The supporting models are intentionally much larger than
+   the previous version.
+
+   The selected model is larger.
+*/
+
+const SIDE_MODEL_HEIGHT =
+  "clamp(19rem, 28vw, 33.5rem)";
+
+const SELECTED_MODEL_HEIGHT =
+  "clamp(24rem, 35vw, 42rem)";
 
 /* ============================================================
    MODEL DATA
@@ -98,49 +92,7 @@ const MODELS = [
   },
 ];
 
-/*
-  Reina starts at index 2:
-
-  0 = Coral
-  1 = Amber
-  2 = Reina
-  3 = Sienna
-  4 = Marina
-*/
 const CENTER_INDEX = 2;
-
-/* ============================================================
-   MODEL SIZES
-   ============================================================
-
-   These control HEIGHT only.
-
-   Width remains AUTO so each PNG keeps its original aspect ratio.
-
-   This is important because the exported Figma images don't all
-   have identical canvas proportions.
-*/
-
-const MODEL_HEIGHTS = {
-  model2: "clamp(13rem, 21vw, 25rem)", // Coral
-  model6: "clamp(14rem, 22vw, 26.5rem)", // Amber
-  reina: "clamp(20rem, 31.40625vw, 37.6875rem)", // Reina
-  model5: "clamp(14rem, 22vw, 26.5rem)", // Sienna
-  model3: "clamp(13rem, 21vw, 25rem)", // Marina
-};
-
-/*
-  How far each model sits across the desktop Figma composition.
-
-  The center is exactly 50%.
-*/
-const MODEL_POSITIONS = {
-  model2: "2%",
-  model6: "25%",
-  reina: "50%",
-  model5: "75%",
-  model3: "98%",
-};
 
 /* ============================================================
    PODIUM
@@ -207,10 +159,6 @@ const COMET_STOPS = [
   },
 ];
 
-/* ============================================================
-   PODIUM ANIMATION
-   ============================================================ */
-
 const PODIUM_SPIN_START =
   typeof performance !== "undefined"
     ? performance.now()
@@ -231,10 +179,6 @@ function getPodiumAnimationDelay() {
   return `-${phase.toFixed(3)}s`;
 }
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
-
 function formatNaira(amount) {
   return `₦${amount.toLocaleString("en-NG")}`;
 }
@@ -245,32 +189,42 @@ function formatNaira(amount) {
 
 export default function Hero() {
   /*
-    The array determines the visual left → right order.
+    THIS IS THE IMPORTANT PART.
 
-    Initially:
+    order controls ONLY which model occupies each position.
 
-    Coral | Amber | Reina | Sienna | Marina
+    Example:
+
+    Initial:
+    [Coral, Amber, Reina, Sienna, Marina]
+
+    Click Marina:
+
+    [Coral, Amber, Marina, Sienna, Reina]
+
+    Nothing else gets moved around.
+
+    The center slot remains index 2.
   */
   const [order, setOrder] = useState(
     MODELS.map((model) => model.id)
   );
 
   const modelsById = Object.fromEntries(
-    MODELS.map((model) => [model.id, model])
+    MODELS.map((model) => [
+      model.id,
+      model,
+    ])
   );
 
-  /*
-    When a supporting model is clicked:
-
-    clicked model ↔ current center model
-
-    Nothing else moves.
-  */
   function handleSelect(id) {
     setOrder((previousOrder) => {
       const centerId =
         previousOrder[CENTER_INDEX];
 
+      /*
+        Already selected.
+      */
       if (id === centerId) {
         return previousOrder;
       }
@@ -278,9 +232,19 @@ export default function Hero() {
       const clickedIndex =
         previousOrder.indexOf(id);
 
-      const nextOrder = [...previousOrder];
+      /*
+        Make a copy.
+      */
+      const nextOrder = [
+        ...previousOrder,
+      ];
 
+      /*
+        Swap ONLY the clicked model and
+        the current center model.
+      */
       nextOrder[CENTER_INDEX] = id;
+
       nextOrder[clickedIndex] = centerId;
 
       return nextOrder;
@@ -300,10 +264,6 @@ export default function Hero() {
         perspective: "1800px",
       }}
     >
-      {/* ======================================================
-          FIGMA CONTENT WIDTH
-          ====================================================== */}
-
       <div
         className={`
           relative
@@ -311,20 +271,19 @@ export default function Hero() {
           ${PAGE_CONTAINER_PADDING}
         `}
       >
-        {/* ====================================================
-            MODEL STAGE
-
-            This is intentionally NOT a grid.
-
-            Each model gets an absolute X position so we can
-            reproduce the Figma composition precisely.
-            ==================================================== */}
+        {/* ==================================================
+            HERO STAGE
+            ================================================== */}
 
         <div
           className="
             relative
             w-full
-            h-[clamp(25rem,38vw,46rem)]
+
+            h-[560px]
+            md:h-[600px]
+            lg:h-[650px]
+            xl:h-[690px]
           "
         >
           {order.map((id, index) => {
@@ -334,67 +293,131 @@ export default function Hero() {
               index === CENTER_INDEX;
 
             const side =
-              index < CENTER_INDEX ? -1 : 1;
+              index < CENTER_INDEX
+                ? -1
+                : 1;
+
+            /*
+              FIVE FIXED SLOTS.
+
+              These are percentages of the 1312px-ish
+              desktop content area.
+
+              They correspond to:
+
+              0%     = far left
+              25%    = left supporting
+              50%    = center
+              75%    = right supporting
+              100%   = far right
+            */
+            const slotPosition =
+              `${index * 25}%`;
 
             return (
               <motion.button
                 key={model.id}
                 layout
-                transition={SELECT_SPRING}
+                transition={{
+                  layout: {
+                    type: "spring",
+                    stiffness: 240,
+                    damping: 28,
+                  },
+                }}
                 type="button"
-                onClick={() => handleSelect(model.id)}
+                onClick={() =>
+                  handleSelect(model.id)
+                }
                 aria-label={`Show ${model.name}`}
                 aria-pressed={isSelected}
-                style={{
-                  position: "absolute",
-                  left: MODEL_POSITIONS[model.id],
-                  bottom: 0,
-                  transform: "translateX(-50%)",
-                  marginLeft: NEGATIVE_OVERLAP,
-                  marginRight: NEGATIVE_OVERLAP,
-                }}
                 className={`
-                  border-0
-                  bg-transparent
-                  p-0
-                  m-0
+                  absolute
+                  bottom-0
+
                   flex
                   items-end
                   justify-center
-                  cursor-pointer
-                  focus:outline-none
+
+                  border-0
+                  bg-transparent
+                  p-0
+
+                  ${isSelected
+                    ? "cursor-default"
+                    : "cursor-pointer"
+                  }
                 `}
+                style={{
+                  left: slotPosition,
+
+                  /*
+                    The button itself is centered
+                    on its slot.
+                  */
+                  transform:
+                    "translateX(-50%)",
+
+                  /*
+                    Prevent the button from becoming
+                    a huge full-width element.
+                  */
+                  width: "auto",
+
+                  minWidth: "0",
+
+                  marginLeft:
+                    NEGATIVE_OVERLAP,
+                  marginRight:
+                    NEGATIVE_OVERLAP,
+                }}
               >
                 {/* =================================================
-                    MODEL NAME
-
-                    Only selected model gets the large REINA title.
+                    SELECTED MODEL TITLE
                     ================================================= */}
 
                 {isSelected && (
                   <motion.h1
                     layoutId="hero-name"
-                    transition={MOVE_TRANSITION}
+                    transition={{
+                      layout: {
+                        duration: 0.55,
+                        ease: [
+                          0.4,
+                          0,
+                          0.2,
+                          1,
+                        ],
+                      },
+                    }}
                     className="
                       absolute
+
                       left-1/2
                       -translate-x-1/2
-                      bottom-[87.9%]
+
                       z-0
 
                       font-['Raleway']
                       font-bold
+
                       tracking-[-0.07em]
 
-                      text-[clamp(2.5rem,5vw,6rem)]
+                      text-[clamp(3rem,5vw,6rem)]
+
                       leading-[1.18]
 
                       text-[var(--maroon-dark)]
 
                       select-none
                       whitespace-nowrap
+
                       pointer-events-none
                     "
+                    style={{
+                      bottom:
+                        "calc(100% - 1rem)",
+                    }}
                   >
                     {model.name.toUpperCase()}
                   </motion.h1>
@@ -402,27 +425,48 @@ export default function Hero() {
 
                 {/* =================================================
                     PODIUM
+
+                    IMPORTANT:
+                    Podium belongs to the CENTER SLOT.
+                    It does NOT travel independently to a
+                    clicked model.
                     ================================================= */}
 
                 {isSelected && (
                   <motion.div
                     layoutId="hero-podium"
-                    transition={MOVE_TRANSITION}
+                    transition={{
+                      layout: {
+                        duration: 0.55,
+                        ease: [
+                          0.4,
+                          0,
+                          0.2,
+                          1,
+                        ],
+                      },
+                    }}
                     aria-hidden="true"
                     className="
                       absolute
+
                       left-1/2
                       -translate-x-1/2
-                      bottom-[-7.2%]
+
                       z-0
 
-                      w-[clamp(6rem,12.7vw,15.24rem)]
+                      w-[clamp(10rem,14vw,15.24rem)]
+
                       aspect-[243.81/116.05]
 
                       pointer-events-none
                     "
+                    style={{
+                      bottom:
+                        "-7.5%",
+                    }}
                   >
-                    {/* Soft floor glow */}
+                    {/* Spotlight */}
                     <div
                       className="
                         absolute
@@ -431,29 +475,40 @@ export default function Hero() {
                       "
                       style={{
                         background:
-                          "radial-gradient(ellipse 70% 65% at 50% 45%, rgba(76,5,25,0.35), rgba(76,5,25,0.08) 60%, transparent 80%)",
-                        filter: "blur(6px)",
+                          "radial-gradient(ellipse 70% 65% at 50% 45%, rgba(76,5,25,0.28), rgba(76,5,25,0.06) 60%, transparent 80%)",
+
+                        filter:
+                          "blur(6px)",
                       }}
                     />
 
-                    {/* Base rings */}
+                    {/* Base podium */}
                     <svg
-                      viewBox={PODIUM_VIEWBOX}
+                      viewBox={
+                        PODIUM_VIEWBOX
+                      }
                       className="
                         absolute
                         inset-0
+
                         h-full
                         w-full
                       "
                       style={{
-                        opacity: BASE_RING_OPACITY,
+                        opacity:
+                          BASE_RING_OPACITY,
                       }}
                       fill="none"
                     >
                       {PODIUM_RINGS.map(
-                        (ring, ringIndex) => (
+                        (
+                          ring,
+                          ringIndex
+                        ) => (
                           <ellipse
-                            key={ringIndex}
+                            key={
+                              ringIndex
+                            }
                             cx={ring.cx}
                             cy={ring.cy}
                             rx={ring.rx}
@@ -471,14 +526,18 @@ export default function Hero() {
                       )}
                     </svg>
 
-                    {/* Animated comet */}
+                    {/* Animated ring */}
                     <svg
-                      viewBox={PODIUM_VIEWBOX}
+                      viewBox={
+                        PODIUM_VIEWBOX
+                      }
                       className="
                         absolute
                         inset-0
+
                         h-full
                         w-full
+
                         overflow-visible
                       "
                       fill="none"
@@ -488,25 +547,40 @@ export default function Hero() {
                           id="podium-comet"
                           gradientUnits="userSpaceOnUse"
                           x1={
-                            PODIUM_RINGS[0].cx -
-                            PODIUM_RINGS[0].rx * 1.4
+                            PODIUM_RINGS[0]
+                              .cx -
+                            PODIUM_RINGS[0]
+                              .rx *
+                              1.4
                           }
                           y1={
-                            PODIUM_RINGS[0].cy
+                            PODIUM_RINGS[0]
+                              .cy
                           }
                           x2={
-                            PODIUM_RINGS[0].cx +
-                            PODIUM_RINGS[0].rx * 1.4
+                            PODIUM_RINGS[0]
+                              .cx +
+                            PODIUM_RINGS[0]
+                              .rx *
+                              1.4
                           }
                           y2={
-                            PODIUM_RINGS[0].cy
+                            PODIUM_RINGS[0]
+                              .cy
                           }
                         >
                           {COMET_STOPS.map(
-                            (stop, stopIndex) => (
+                            (
+                              stop,
+                              stopIndex
+                            ) => (
                               <stop
-                                key={stopIndex}
-                                offset={stop.offset}
+                                key={
+                                  stopIndex
+                                }
+                                offset={
+                                  stop.offset
+                                }
                                 stopColor="var(--maroon-dark)"
                                 stopOpacity={
                                   stop.opacity
@@ -534,7 +608,6 @@ export default function Hero() {
                           />
                         </linearGradient>
 
-                        {/* Glow */}
                         <filter
                           id="podium-glow"
                           x="-50%"
@@ -550,16 +623,26 @@ export default function Hero() {
                           />
 
                           <feMerge>
-                            <feMergeNode in="blur" />
-                            <feMergeNode in="SourceGraphic" />
+                            <feMergeNode
+                              in="blur"
+                            />
+
+                            <feMergeNode
+                              in="SourceGraphic"
+                            />
                           </feMerge>
                         </filter>
                       </defs>
 
                       {PODIUM_RINGS.map(
-                        (ring, ringIndex) => (
+                        (
+                          ring,
+                          ringIndex
+                        ) => (
                           <ellipse
-                            key={ringIndex}
+                            key={
+                              ringIndex
+                            }
                             cx={ring.cx}
                             cy={ring.cy}
                             rx={ring.rx}
@@ -583,15 +666,19 @@ export default function Hero() {
                 {/* =================================================
                     MODEL IMAGE
 
-                    IMPORTANT:
-                    - height is controlled per model
-                    - width is AUTO
-                    - object-contain
-                    - NO fixed width
-                    - NO object-cover
+                    THIS IS THE IMPORTANT FIX.
 
-                    This preserves the actual proportions of your
-                    exported Figma PNGs.
+                    Supporting models:
+                    same height
+
+                    Selected model:
+                    larger height
+
+                    Width:
+                    ALWAYS AUTO
+
+                    Therefore:
+                    NO STRETCHING.
                     ================================================= */}
 
                 <motion.img
@@ -605,60 +692,112 @@ export default function Hero() {
                   animate={{
                     rotateY: isSelected
                       ? 0
-                      : side * SIDE_TILT_DEGREES,
+                      : side *
+                        SIDE_TILT_DEGREES,
 
                     opacity: isSelected
                       ? 1
                       : SIDE_MODEL_OPACITY,
+
+                    scale: isSelected
+                      ? 1
+                      : 1,
                   }}
                   transition={{
-                    layout: SELECT_SPRING,
-                    rotateY: SELECT_SPRING,
-                    opacity: SELECT_SPRING,
+                    layout: {
+                      type: "spring",
+                      stiffness: 240,
+                      damping: 28,
+                    },
+
+                    rotateY: {
+                      type: "spring",
+                      stiffness: 240,
+                      damping: 28,
+                    },
+
+                    opacity: {
+                      type: "spring",
+                      stiffness: 240,
+                      damping: 28,
+                    },
                   }}
                   style={{
-                    height:
-                      MODEL_HEIGHTS[model.id],
+                    /*
+                      SELECTED = larger
+                      SUPPORTING = same size
+                    */
+                    height: isSelected
+                      ? SELECTED_MODEL_HEIGHT
+                      : SIDE_MODEL_HEIGHT,
 
+                    /*
+                      CRITICAL:
+                      Never force width.
+                    */
                     width: "auto",
 
                     /*
-                      Let the image retain its original
-                      proportions.
+                      Never crop the PNG.
                     */
-                    maxWidth: "none",
+                    objectFit:
+                      "contain",
 
-                    objectFit: "contain",
+                    /*
+                      Never let the image stretch.
+                    */
+                    objectPosition:
+                      "center bottom",
 
+                    /*
+                      The model should pivot
+                      naturally from the feet.
+                    */
                     transformOrigin:
                       "50% 100%",
+
+                    maxWidth:
+                      "none",
+
+                    display: "block",
                   }}
                   className="
                     relative
                     z-10
-                    block
                     shrink-0
                   "
                 />
 
                 {/* =================================================
-                    SELECTED MODEL NAME + PRICE
+                    CENTER PRODUCT INFO
+
+                    This stays underneath whichever model is
+                    currently occupying the center slot.
                     ================================================= */}
 
                 {isSelected && (
                   <motion.div
                     layoutId="hero-price"
-                    transition={MOVE_TRANSITION}
-                    style={{
-                      marginTop:
-                        PRICE_TOP_OFFSET,
+                    transition={{
+                      layout: {
+                        duration: 0.55,
+                        ease: [
+                          0.4,
+                          0,
+                          0.2,
+                          1,
+                        ],
+                      },
                     }}
                     className="
                       absolute
+
                       left-1/2
                       -translate-x-1/2
+
                       top-full
-                      z-10
+
+                      z-20
 
                       w-[clamp(11rem,18.75vw,22.5rem)]
 
@@ -668,8 +807,17 @@ export default function Hero() {
 
                       text-xl
                     "
+                    style={{
+                      marginTop:
+                        PRICE_TOP_OFFSET,
+                    }}
                   >
-                    <span className="uppercase tracking-wide">
+                    <span
+                      className="
+                        uppercase
+                        tracking-wide
+                      "
+                    >
                       {model.name}
                     </span>
 
@@ -679,7 +827,9 @@ export default function Hero() {
                         tracking-[-0.04em]
                       "
                     >
-                      {formatNaira(model.price)}
+                      {formatNaira(
+                        model.price
+                      )}
                     </span>
                   </motion.div>
                 )}
