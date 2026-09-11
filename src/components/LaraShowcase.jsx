@@ -49,7 +49,7 @@ const NAVBAR_HEIGHT_PX = 66;
   content directly below it — so this can stay focused and this
   number controls exactly how slow the pinned sequence feels.
 */
-const TRACK_VH = 480;
+const TRACK_VH = 620;
 
 
 /* ============================================================
@@ -88,7 +88,7 @@ const RELEASE_AT = 0.995;
    PHOTO ENTRANCE TUNING
    ============================================================ */
 
-const PHOTO_ENTER_START_SCALE = 2.45;
+const PHOTO_ENTER_START_SCALE = 3.6;
 const PHOTO_ENTER_SIDE_DISTANCE = 850;
 const PHOTO_ENTER_SPIN_OFFSET = 12;
 
@@ -107,6 +107,19 @@ function lerp(a, b, t) {
 
 function easeOutCubic(t) {
   return 1 - Math.pow(1 - t, 3);
+}
+
+/*
+  Slow-in, slow-out. Used for the photos instead of easeOutCubic:
+  easeOutCubic moves FASTEST right at the start and barely moves
+  near the end — applied to "big shrinking to normal size" that
+  meant it looked like it had basically already arrived seconds
+  in, then just sat there. easeInOutCubic lingers large at the
+  start (so it's clearly visible big), moves through the middle,
+  then settles into place smoothly instead of snapping.
+*/
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
 /*
@@ -157,7 +170,7 @@ function paragraphContainerOpacity(progress) {
 */
 function getPhotoState(photo, range, progress) {
   const localT = clamp01((progress - range.start) / (range.end - range.start));
-  const eased = easeOutCubic(localT);
+  const eased = easeInOutCubic(localT);
 
   // Quick fade-in right at the photo's own start so it doesn't
   // hard-pop into existence; stays at 1 for the rest of its life
@@ -343,17 +356,37 @@ export default function LaraShowcase() {
   const afterTopRef = useRef(0);
   const rafRef = useRef(null);
 
-  const [progress, setProgress] = useState(
-    showcaseCompletedThisPageVisit ? 1 : 0
+  /*
+    IMPORTANT DISTINCTION:
+
+    - renderCompactFromStart: true only if the flag was ALREADY
+      set when this component mounted (e.g. you finished the
+      animation earlier, then navigated back to this page). In
+      that case we skip straight to the lightweight static
+      markup — no tall scroll track needed at all.
+
+    - liveCompleted: becomes true when scrolling REACHES the end
+      of the animation during THIS mount. This does NOT swap the
+      DOM structure or change the page's total height — it just
+      freezes progress at 1 and stops the measuring loop. Doing
+      a DOM/height swap mid-scroll was the bug: the page's total
+      scrollable height would shrink out from under you while
+      you were still scrolling through it, so the browser would
+      clamp your scroll position and yank you somewhere else —
+      which is exactly why the paragraph looked like it cut off
+      and the reviews never showed up.
+  */
+  const [renderCompactFromStart] = useState(
+    () => showcaseCompletedThisPageVisit
   );
+
+  const [progress, setProgress] = useState(renderCompactFromStart ? 1 : 0);
 
   const [pinState, setPinState] = useState(
-    showcaseCompletedThisPageVisit ? "completed" : "before"
+    renderCompactFromStart ? "after" : "before"
   );
 
-  const [hasCompleted, setHasCompleted] = useState(
-    showcaseCompletedThisPageVisit
-  );
+  const [liveCompleted, setLiveCompleted] = useState(false);
 
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -377,7 +410,7 @@ export default function LaraShowcase() {
   /* -------------------- measure + scroll track -------------------- */
 
   useEffect(() => {
-    if (hasCompleted || reduceMotion) return;
+    if (renderCompactFromStart || liveCompleted || reduceMotion) return;
 
     const measure = () => {
       if (contentRef.current) {
@@ -406,7 +439,16 @@ export default function LaraShowcase() {
 
         if (rect.top > NAVBAR_HEIGHT_PX) {
           nextState = "before";
-          next = 0;
+
+          // Soft pre-roll: instead of snapping straight from 0%
+          // opacity to pinned, start easing Lara in during the
+          // last stretch of normal scroll before the section
+          // reaches the navbar — removes the blank-screen gap
+          // between the Hero section and Lara appearing.
+          const approachWindow = window.innerHeight * 0.8;
+          const distanceToEngage = rect.top - NAVBAR_HEIGHT_PX;
+          const approachT = clamp01(1 - distanceToEngage / approachWindow);
+          next = approachT * WORDMARK_FADE_IN_END;
         } else if (rect.bottom <= NAVBAR_HEIGHT_PX + contentHeight) {
           nextState = "after";
           next = 1;
@@ -424,7 +466,7 @@ export default function LaraShowcase() {
 
         if (next >= RELEASE_AT) {
           showcaseCompletedThisPageVisit = true;
-          setHasCompleted(true);
+          setLiveCompleted(true);
         }
       }
 
@@ -439,9 +481,9 @@ export default function LaraShowcase() {
       window.removeEventListener("resize", measure);
       window.removeEventListener("load", measure);
     };
-  }, [hasCompleted, reduceMotion]);
+  }, [renderCompactFromStart, liveCompleted, reduceMotion]);
 
-  const p = reduceMotion || hasCompleted ? 1 : progress;
+  const p = reduceMotion || renderCompactFromStart || liveCompleted ? 1 : progress;
 
   const scene = sceneOpacity(p);
   const paragraphContainer = paragraphContainerOpacity(p);
@@ -457,7 +499,7 @@ export default function LaraShowcase() {
   const laraAndParagraphStatic = (
     <div className={`w-full ${PAGE_CONTAINER_PADDING}`}>
       <div className="mx-auto w-full max-w-[1080px]">
-        <div className="relative flex min-h-screen items-center justify-center py-16">
+        <div className="relative flex items-center justify-center pb-10 pt-16 md:pb-14">
           <div className="relative w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
             <img
               src={laraDecor}
@@ -503,7 +545,7 @@ export default function LaraShowcase() {
           </div>
         </div>
 
-        <div className="flex min-h-screen items-center justify-center py-24">
+        <div className="flex items-center justify-center pb-16 pt-6 md:pb-20">
           <div className="mx-auto max-w-2xl text-center text-[16px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
             {PARAGRAPHS.map((paragraph, index) => (
               <p key={index} className={index === PARAGRAPHS.length - 1 ? "mt-8" : "mb-6"}>
@@ -522,12 +564,6 @@ export default function LaraShowcase() {
 
   const reviewsSection = (
     <section className={`w-full bg-[var(--cream)] pb-0 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
-      <div className="mx-auto mb-16 max-w-2xl text-center">
-        <h2 className="font-['Raleway'] text-[clamp(2rem,3vw,3.5rem)] font-bold tracking-[-0.05em] text-[var(--maroon-dark)]">
-          WHAT THEY SAY
-        </h2>
-      </div>
-
       <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-3">
         {TESTIMONIALS.map((testimonial, index) => (
           <motion.div
@@ -562,10 +598,13 @@ export default function LaraShowcase() {
   );
 
   /* ============================================================
-     FULLY COMPLETED — pin over, static Lara/paragraph + normal reviews
+     ALREADY COMPLETED ON MOUNT — lightweight static markup, no
+     tall scroll track needed since there's nothing left to scrub.
+     (This is NOT used when completion happens live mid-scroll —
+     see the liveCompleted note above.)
      ============================================================ */
 
-  if (hasCompleted) {
+  if (renderCompactFromStart || reduceMotion) {
     return (
       <>
         <section className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
@@ -575,12 +614,14 @@ export default function LaraShowcase() {
   }
 
   /* ============================================================
-     ANIMATED PIN MODE
+     ANIMATED PIN MODE (also covers the moment it finishes live —
+     the tall wrapper and DOM structure stay exactly the same,
+     only the pin releases into its "after" resting position)
      ============================================================ */
 
   let containerStyle;
 
-  if (reduceMotion || pinState === "before") {
+  if (pinState === "before") {
     containerStyle = { position: "relative", height: "100vh" };
   } else if (pinState === "pinned") {
     containerStyle = {
