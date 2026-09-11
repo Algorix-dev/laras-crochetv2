@@ -1,5 +1,6 @@
 /*
   SHOP OUR PIECES
+
   Figma desktop layout:
 
   Section:
@@ -70,6 +71,7 @@ function BagIcon() {
         stroke="black"
         strokeWidth="1.18"
       />
+
       <path
         d="M6.5 6.5v-1a3 3 0 0 1 6 0v1"
         stroke="black"
@@ -282,9 +284,14 @@ export default function ShopGrid() {
           rowGap: "100px",
         }}
       >
-        {DEMO_ITEMS.map((image, i) => (
-          <ProductCard key={i} image={image} />
-        ))}
+        {DEMO_ITEMS.map(
+          (image, i) => (
+            <ProductCard
+              key={i}
+              image={image}
+            />
+          )
+        )}
       </div>
 
       {/* Frame 182 — Add to Bag */}
