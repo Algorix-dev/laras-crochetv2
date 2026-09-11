@@ -126,7 +126,7 @@ function ColorSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} color`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-12 w-12 shrink-0 rounded-lg border-2 cursor-pointer transition-all md:h-12 md:w-12 ${
+      className={`h-12 w-12 shrink-0 rounded border-2 cursor-pointer transition-all md:h-12 md:w-12 ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
