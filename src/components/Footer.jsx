@@ -55,7 +55,14 @@ export default function Footer() {
           equal-width columns. Newsletter also appears on every page's
           footer in the export (Shop, Addresses, etc.), not just
           account pages, so it's no longer conditional. */}
-      <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-x-16 gap-y-10 px-8 md:px-16 lg:px-24">
+      {/* TIP — 304px SHARED MARGIN: px-5 md:px-8 lg:px-[15.83%] is
+          the same class used in Navbar/Hero/ProductGrid, so the
+          footer's link columns line up with everything above them
+          instead of using their own lg:px-24 (96px) scale. Dropped
+          max-w-7xl for the same reason as ProductGrid — it was
+          capping this section's width independently of the rest of
+          the page. */}
+      <div className="flex flex-wrap justify-between gap-x-16 gap-y-10 px-5 md:px-8 lg:px-[15.83%]">
         <div className="flex flex-wrap gap-x-16 gap-y-8">
           {columns.map((col) => (
             <div key={col.title}>

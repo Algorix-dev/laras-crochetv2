@@ -32,6 +32,14 @@ const CUSTOM_ARC_OPACITY = 1.0;
 const CUSTOM_THREAD_OPACITY = 1.0;
 const CUSTOM_ELLIPSE_OPACITY = 0.35;
 
+// TIP — SHARED 304px MARGIN: same px-5 md:px-8 lg:px-[15.83%]
+// class used in Navbar/Hero/LaraShowcase/ProductGrid/Footer, so
+// this section's content edges line up with the rest of the page
+// instead of the old max-w-[1200px] + px-5, which put the content
+// edge somewhere different from every other section at most
+// screen widths.
+const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
+
 /* ============================================================
    CUSTOM ORDER BANNER
    ============================================================ */
@@ -148,17 +156,18 @@ export default function CustomOrderBanner() {
 
       {/* ========================================================
           CONTENT LAYER
+
+          TIP: dropped `mx-auto max-w-[1200px]` in favor of the
+          shared PAGE_CONTAINER_PADDING class — max-w-[1200px] was
+          capping this section's content width independently of
+          every other section, so its left/right edges landed in a
+          different place than Hero/ProductGrid/Footer at most
+          viewport widths. Now it uses the same 304px-at-1920px
+          scale as the rest of the page.
           ======================================================== */}
 
       <div
-        className="
-          relative
-          z-10
-          mx-auto
-          w-full
-          max-w-[1200px]
-          px-5
-        "
+        className={`relative z-10 mx-auto w-full ${PAGE_CONTAINER_PADDING}`}
       >
         {/* ======================================================
             CUSTOM WORDMARK + ORDERS

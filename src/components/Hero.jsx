@@ -37,20 +37,40 @@
      so this stays a rotateY tilt + opacity fade (your call,
      confirmed earlier: simple tilt illusion, no back view).
 
+  TIP — WHY THE SIDE MODELS LOOKED STRETCHED BEFORE:
+  The <img> itself was never doing the stretching (it's `w-auto`
+  next to a fixed height, so it always respects whatever aspect
+  ratio the source file has) — the OLD source PNGs
+  (model2-swuvvw.png etc.) were themselves distorted/elongated
+  renders. Swapped in the 4 correctly-proportioned photos (native
+  ~848x1253, a normal body-photo ratio) — see MODELS below. Drop the
+  new files at src/assets/model-images/model-coral.png,
+  model-amber.png, model-sienna.png, model-marina.png (same folder
+  as before). I matched upload order to slot order left-to-right
+  (Coral, Amber, [center] Reina, Sienna, Marina) — flag it if any
+  name/photo pairing is wrong and I'll swap the mapping, not the
+  images.
+
+  TIP — SIDE MODEL OPACITY:
+  Was hardcoded to 0.3 (matches the Figma spec's `opacity: 0.3` for
+  the dimmed side models exactly), but that read as too faint once
+  rendered. Pulled into SIDE_MODEL_OPACITY below so it's a one-line
+  tweak — bumped to 0.55. Nudge this constant up/down to taste.
+
   PLACEHOLDER PRODUCT DATA
   ------------------------------------------------------------
-  Only "Reina" had a real name + price before. The rest (Model 2,
-  Model 6, etc. at ₦70,000) are placeholders — swap in the real
+  Only "Reina" had a real name + price before. The rest (Coral,
+  Amber, etc. at ₦70,000) are placeholders — swap in the real
   product name + price per model before this ships.
 */
 
 import { useState } from "react";
 import { motion } from "framer-motion";
 
-import model2 from "../assets/model-images/model2-swuvvw.png";
-import model3 from "../assets/model-images/model3-kj37u6.png";
-import model5 from "../assets/model-images/model5-yyuymy.png";
-import model6 from "../assets/model-images/model6-3lo3ls.png";
+import model2 from "../assets/model-images/model-coral.png";
+import model3 from "../assets/model-images/model-marina.png";
+import model5 from "../assets/model-images/model-sienna.png";
+import model6 from "../assets/model-images/model-amber.png";
 import heroCenter from "../assets/reina-front.png";
 
 /* ============================================================
@@ -59,6 +79,13 @@ import heroCenter from "../assets/reina-front.png";
 const SPIN_DURATION_SECONDS = 6;    // time for the podium ring to complete one spin
 const SIDE_TILT_DEGREES = 28;       // how far unselected models rotateY away
 const PRICE_TOP_OFFSET = "2.25rem"; // was 1.5rem (mt-6) — a bit lower now
+const SIDE_MODEL_OPACITY = 0.55;    // was 0.3 (exact Figma value) — bumped up, see TIP above
+
+// TIP — SHARED PAGE MARGIN: 304px at a 1920px frame = 15.83%. Every
+// homepage section should use this exact class so all their content
+// edges land on the same vertical line down the page. Keep this in
+// sync with Navbar.jsx / ProductGrid.jsx / LaraShowcase.jsx / Footer.jsx.
+const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
 
 const SELECT_SPRING = { type: "spring", stiffness: 240, damping: 28 };
 
@@ -151,7 +178,7 @@ export default function Hero() {
           take a negative `begin` directly for the same "no restart
           glitch" trick the CSS version used with animationDelay. */}
 
-      <div className="relative mx-auto px-[clamp(1rem,15.83vw,19rem)]">
+      <div className={`relative mx-auto ${PAGE_CONTAINER_PADDING}`}>
         <div className="flex items-end justify-center gap-[clamp(1.5rem,6.667vw,8rem)]">
           {MODELS.map((model, index) => {
             const isSelected = model.id === selectedId;
@@ -282,14 +309,18 @@ export default function Hero() {
                     the two height classes — no value tweening, so
                     this can't silently fail the way a CSS-transition
                     or string-interpolated height could. rotateY/
-                    opacity are plain numbers, animated as before. */}
+                    opacity are plain numbers, animated as before.
+                    Aspect ratio always comes from the source file
+                    (w-auto) — never forced/stretched — so once a
+                    correctly-proportioned image is dropped in, it
+                    just renders correctly. */}
                 <motion.img
                   layout
                   src={model.image}
                   alt={isSelected ? model.name : ""}
                   animate={{
                     rotateY: isSelected ? 0 : side * SIDE_TILT_DEGREES,
-                    opacity: isSelected ? 1 : 0.3,
+                    opacity: isSelected ? 1 : SIDE_MODEL_OPACITY,
                   }}
                   transition={{
                     layout: SELECT_SPRING,

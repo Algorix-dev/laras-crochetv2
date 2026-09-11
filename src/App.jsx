@@ -104,7 +104,10 @@ function HomePage() {
 
             {/* Shop Our Pieces — a curated 4-item taste of the catalog, not the full grid */}
             <section className="py-10 md:py-16">
-              <div className="mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28 flex items-end justify-between mb-8">
+              {/* TIP — 304px shared margin, matching Navbar/Hero/
+                  ProductGrid/Footer, so this heading row's left edge
+                  lines up with the product grid directly below it. */}
+              <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-8">
                 <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
                   Shop Our Pieces
                 </h2>

@@ -22,16 +22,20 @@ export default function ProductGrid({ products, columns = 2, cardVariant = 'defa
     640px wide, 2x640 + gap ≈ the 1312px left after the 304px side
     padding).
 
-    304/1920 = 15.83vw side padding — that ratio is right for a
-    1920px desktop frame, but applied at a 390px phone width it eats
-    ~62px per side and crushes each card down to ~105px wide, which
-    is what was causing the category-label/bag-icon to collide. So
-    side padding tapers with normal breakpoints instead (matching
-    what the rest of the site's sections already do) and only
-    approaches the Figma ratio at larger desktop widths.
+    304/1920 = 15.83% side padding. Using the SAME
+    `px-5 md:px-8 lg:px-[15.83%]` class as Navbar/Hero/Footer now
+    (instead of a separate xl:px-28 taper that topped out at 112px
+    and never actually reached 304px) — that class only switches to
+    the 15.83% figure at the lg breakpoint (1024px+), well above
+    phone widths, so there's no card-crushing risk at the sizes
+    where it applies; it's what keeps this section's edges lined up
+    with every other section on the page. Also dropped max-w-7xl —
+    it was capping this section's own width independently of the
+    rest of the page, which is exactly the kind of per-section
+    override that broke the "one shared margin" look.
   */
   return (
-    <section className="mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28 pb-16 md:pb-24">
+    <section className="px-5 md:px-8 lg:px-[15.83%] pb-16 md:pb-24">
       <div
         className={`grid ${GRID_COLS[columns] || GRID_COLS[2]}`}
         style={{
