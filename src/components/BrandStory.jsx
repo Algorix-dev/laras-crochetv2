@@ -6,6 +6,16 @@ import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.png";
 import arcSwirl from "../assets/decor/arc-swirl.png";
 
+// SAME 304px SHARED MARGIN as Navbar/Hero/CustomOrderBanner/ProductGrid/
+// Footer (px-5 md:px-8 lg:px-[15.83%]). BrandStory previously used its
+// own `mx-auto max-w-4xl px-5` wrapper, which centered a narrower column
+// independently of every other section instead of sharing their left/
+// right edges — that's why testimonials/paragraphs didn't line up with
+// Shop Our Pieces, the Hero, etc. Inner elements (wordmark, paragraph
+// column) keep their own max-widths and stay centered inside this wider
+// shared container.
+const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
+
 /* ============================================================
    BRAND STORY
    ============================================================ */
@@ -170,13 +180,7 @@ export default function BrandStory() {
           ======================================================== */}
 
       <div
-        className="
-          relative
-          z-10
-          mx-auto
-          max-w-4xl
-          px-5
-        "
+        className={`relative z-10 mx-auto w-full ${PAGE_CONTAINER_PADDING}`}
       >
         {/* ======================================================
             LARA WORDMARK + PHOTOS
