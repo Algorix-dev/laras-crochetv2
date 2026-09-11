@@ -32,17 +32,22 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
    ONE-TIME-ONLY BEHAVIOR:
    - a module-level flag remembers that the pin animation
      finished for this page visit
-   - scrolling back up does NOT restart the word-by-word reveal
-     (progress stays clamped to 1 once the flag is set)
+   - once the reveal completes LIVE during a mount, the whole
+     component permanently swaps to the lightweight static
+     markup (see `liveCompleted`) — no more pin, no more fixed
+     positioning, no more scroll tracking for this section at all
    - a full page refresh does reset it (module reloads, flag resets)
 
-   IMPORTANT: the scroll-tracking loop (tick()) NEVER stops once
-   started (other than reduced-motion / already-completed-on-mount
-   cases). It keeps recomputing pinState ("before"/"pinned"/"after")
-   forever, in both scroll directions. Only the visual progress `p`
-   gets clamped to 1 once the reveal has completed — that's what
-   stops the word-by-word animation from replaying, WITHOUT also
-   freezing pinState and breaking scroll-up.
+   SCROLL-POSITION FIX ON LIVE COMPLETION:
+   - the instant `liveCompleted` flips true, the tall TRACK_VH
+     wrapper collapses into short static markup. That's a huge,
+     sudden drop in total document height, and the browser will
+     silently clamp scrollY to fit — which used to throw you
+     straight past the compact Lara section.
+   - to prevent that, `pendingScrollFixRef` captures scrollY and
+     document height right as completion is detected inside
+     tick(), and a useLayoutEffect (fires before paint) corrects
+     scrollY by the exact height delta right after the swap.
    ============================================================ */
 
 
@@ -96,7 +101,6 @@ const PARAGRAPH_WORDS_END = 0.94;
 // with a small margin below 1 makes sure we reliably catch the
 // "reveal is done" moment instead of risking a skipped frame.
 const RELEASE_AT = 0.995;
-const pendingScrollFixRef = useRef(null);
 
 
 /* ============================================================
@@ -370,6 +374,7 @@ export default function LaraShowcase() {
   const contentHeightRef = useRef(0);
   const afterTopRef = useRef(0);
   const rafRef = useRef(null);
+  const pendingScrollFixRef = useRef(null);
 
   /*
     IMPORTANT DISTINCTION:
@@ -381,14 +386,11 @@ export default function LaraShowcase() {
       markup — no tall scroll track needed at all.
 
     - liveCompleted: becomes true once scrolling REACHES the end
-      of the animation during THIS mount. This does NOT stop the
-      scroll-tracking loop and does NOT swap the DOM structure —
-      it only clamps `p` (the value passed into every opacity /
-      transform calculation) to 1, so the word-by-word reveal and
-      photo entrances can't replay. pinState keeps being
-      recalculated for as long as the component is mounted, in
-      both scroll directions, which is what lets Lara/the
-      paragraph correctly reappear when you scroll back up.
+      of the animation during THIS mount. The moment this flips,
+      the component permanently swaps to the same lightweight
+      static markup — no more pin, no more scroll tracking for
+      this section, ever again during this mount. Scrolling back
+      up afterward hits plain, non-animated static content.
   */
   const [renderCompactFromStart] = useState(
     () => showcaseCompletedThisPageVisit
@@ -409,6 +411,20 @@ export default function LaraShowcase() {
     []
   );
 
+  /* -------------------- reduced motion -------------------- */
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduceMotion(mq.matches);
+
+    const onChange = (event) => setReduceMotion(event.matches);
+    mq.addEventListener?.("change", onChange);
+
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+
+  /* -------------------- scroll-position fix on live completion -------------------- */
+
   useLayoutEffect(() => {
     if (!liveCompleted || renderCompactFromStart) return;
 
@@ -428,17 +444,6 @@ export default function LaraShowcase() {
 
     pendingScrollFixRef.current = null;
   }, [liveCompleted, renderCompactFromStart]);
-  /* -------------------- reduced motion -------------------- */
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduceMotion(mq.matches);
-
-    const onChange = (event) => setReduceMotion(event.matches);
-    mq.addEventListener?.("change", onChange);
-
-    return () => mq.removeEventListener?.("change", onChange);
-  }, []);
 
   /* -------------------- measure + scroll track -------------------- */
 
@@ -448,14 +453,8 @@ export default function LaraShowcase() {
     // Only a real page reload resets liveCompleted (and the
     // module-level flag), which starts a fresh mount with this
     // effect running again from scratch.
-      if (renderCompactFromStart || reduceMotion || liveCompleted) {
-        return (
-          <>
-            <section className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
-            {reviewsSection}
-          </>
-        );
-      }
+    if (renderCompactFromStart || reduceMotion || liveCompleted) return;
+
     const measure = () => {
       if (contentRef.current) {
         contentHeightRef.current = contentRef.current.offsetHeight;
@@ -505,15 +504,9 @@ export default function LaraShowcase() {
               : 1;
         }
 
-        // TIP: this ALWAYS runs, every frame, regardless of RELEASE_AT.
-        // pinState must keep tracking real scroll position forever so
-        // scrolling back up correctly re-pins Lara/the paragraph.
         setPinState((previous) => (previous === nextState ? previous : nextState));
         setProgress(next);
 
-        // This only ever flips false → true, once, and does NOT stop
-        // the loop above. It just tells the render below to clamp `p`
-        // to 1 so the reveal doesn't replay.
         if (next >= RELEASE_AT && !showcaseCompletedThisPageVisit) {
           pendingScrollFixRef.current = {
             scrollY: window.scrollY,
@@ -652,13 +645,12 @@ export default function LaraShowcase() {
   );
 
   /* ============================================================
-     ALREADY COMPLETED ON MOUNT — lightweight static markup, no
-     tall scroll track needed since there's nothing left to scrub.
-     (This is NOT used when completion happens live mid-scroll —
-     see the liveCompleted note above.)
+     STATIC MARKUP — used both when already completed on mount
+     AND the moment the reveal finishes live mid-scroll (and every
+     scroll up/down after that during this mount).
      ============================================================ */
 
-  if (renderCompactFromStart || reduceMotion) {
+  if (renderCompactFromStart || reduceMotion || liveCompleted) {
     return (
       <>
         <section className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
@@ -668,11 +660,7 @@ export default function LaraShowcase() {
   }
 
   /* ============================================================
-     ANIMATED PIN MODE (also covers the moment it finishes live,
-     AND every scroll-up/scroll-down after that — the tall wrapper
-     and DOM structure stay exactly the same, pinState just keeps
-     flipping between "before" / "pinned" / "after" based on real
-     scroll position, forever)
+     ANIMATED PIN MODE — only runs before first completion
      ============================================================ */
 
   let containerStyle;
