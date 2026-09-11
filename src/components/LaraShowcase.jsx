@@ -43,7 +43,7 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
    ============================================================ */
 
 const NAVBAR_HEIGHT_PX = 66;
-const TRACK_VH = 260; // tune down if the section still feels too long/empty
+const TRACK_VH = 420; // was 260 — too little scroll distance made the whole sequence (wordmark, paragraph, reviews) fly by too fast; raised so each stage gets more scroll to breathe. Tune further if still too fast/slow.
 
 const STAGE = {
   wordmark: { start: 0.0, end: 0.3 },
@@ -376,7 +376,7 @@ export default function LaraShowcase() {
               pointerEvents: paragraphSlide.opacity > 0.5 ? "auto" : "none",
             }}
           >
-            <div className="mx-auto max-w-3xl space-y-6 text-xl leading-relaxed text-[var(--ink)] md:text-3xl md:leading-[1.5]">
+            <div className="mx-auto max-w-3xl space-y-6 text-center text-xl leading-relaxed text-[var(--ink)] md:text-3xl md:leading-[1.5]">
               {wordParagraphs.map((words, pIndex) => (
                 <p key={pIndex}>
                   {words.map(({ word, index }) => {
