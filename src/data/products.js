@@ -22,15 +22,15 @@
   particular should look right in the mirrored flanking slots.
 */
 
-import saharaFront from "../assets/model-images/sahara-front.png";
-import wisteriaFront from "../assets/model-images/wisteria-front.png";
-import rosewoodFront from "../assets/model-images/rosewood-front.png";
-import palmFront from "../assets/model-images/palm-front.png";
-import palmAngle from "../assets/model-images/palm-angle.png";
-import lagoonFront from "../assets/model-images/lagoon-front.png";
-import sunsetFront from "../assets/model-images/sunset-front.png";
-import sunsetAngle from "../assets/model-images/sunset-angle.png";
-import terraFront from "../assets/model-images/terra-front.png";
+import saharaFront from "../assets/model-images/sahara-front.webp";
+import wisteriaFront from "../assets/model-images/wisteria-front.webp";
+import rosewoodFront from "../assets/model-images/rosewood-front.webp";
+import palmFront from "../assets/model-images/palm-front.webp";
+import palmAngle from "../assets/model-images/palm-angle.webp";
+import lagoonFront from "../assets/model-images/lagoon-front.webp";
+import sunsetFront from "../assets/model-images/sunset-front.webp";
+import sunsetAngle from "../assets/model-images/sunset-angle.webp";
+import terraFront from "../assets/model-images/terra-front.webp";
 
 // ShopPage.jsx sends each of these slugs straight to your API as
 // `getProducts(activeCategory)`, so these must match the `category`

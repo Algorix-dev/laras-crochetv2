@@ -82,7 +82,7 @@ export default function ShopPage() {
   return (
     <>
     <section className="pt-10">
-      <div className="mx-auto max-w-[1550px] px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28">
         {/* Header row: title/subtitle on the left, search on the right */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
@@ -143,23 +143,7 @@ export default function ShopPage() {
             understands what's happening — loading, error, genuinely-
             empty, and no-search-results are each a different message
             rather than one blank grid. */}
-        {/* TIP: was a single line of plain text ("Loading products...")
-            here — the only page on the site using that pattern.
-            AddressesPage and OrderHistoryPage both use a pulsing
-            skeleton instead; swapped this to match so there's one
-            loading treatment site-wide, not three (this text, the
-            skeleton, and SignInPage's spinner). */}
-        {loading && (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 pb-24 lg:grid-cols-3" aria-busy="true" aria-label="Loading products">
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="animate-pulse space-y-3">
-                <div className="w-full bg-[var(--line)]" style={{ aspectRatio: "640 / 731" }} />
-                <div className="h-3 w-1/2 rounded bg-[var(--line)]" />
-                <div className="h-3.5 w-1/3 rounded bg-[var(--line)]" />
-              </div>
-            ))}
-          </div>
-        )}
+        {loading && <p className="pb-24 text-sm text-[var(--muted)]">Loading products...</p>}
         {!loading && error && <p className="pb-24 text-sm text-red-500">{error}</p>}
         {!loading && !error && visibleProducts.length === 0 && (
           <p className="pb-24 text-sm text-[var(--muted)]">

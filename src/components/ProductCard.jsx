@@ -54,7 +54,7 @@ export default function ProductCard({ product, variant = 'default' }) {
           <img
             src={product.image}
             alt={product.name}
-            className="absolute left-1/2 top-[10%] h-[78%] w-[79.1%] max-w-none -translate-x-1/2 object-contain transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <ProductPlaceholder className="h-full w-full" />
@@ -73,8 +73,7 @@ export default function ProductCard({ product, variant = 'default' }) {
             <Heart
               size={14}
               strokeWidth={1.5}
-              fill={inWishlist ? 'currentColor' : 'var(--maroon-dark)'}
-              fillOpacity={inWishlist ? 1 : 0.12}
+              fill={inWishlist ? 'currentColor' : 'none'}
             />
           </button>
         )}

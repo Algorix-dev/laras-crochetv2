@@ -1,5 +1,5 @@
-import laraPortrait from "../assets/lara-portrait.jpg";
-import laraSunglasses from "../assets/lara-sunglasses.jpg";
+import laraPortrait from "../assets/lara-portrait.webp";
+import laraSunglasses from "../assets/lara-sunglasses.webp";
 import aboutHeadingLockup from "../assets/about-heading-lockup.png";
 import Footer from "../components/Footer";
 

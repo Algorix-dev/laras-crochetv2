@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 
-import model2 from "../assets/model-images/model-coral.png";
-import model3 from "../assets/model-images/model-marina.png";
-import model5 from "../assets/model-images/model-sienna.png";
-import model6 from "../assets/model-images/model-amber.png";
-import heroCenter from "../assets/reina-front.png";
+import model2 from "../assets/model-images/model-coral.webp";
+import model3 from "../assets/model-images/model-marina.webp";
+import model5 from "../assets/model-images/model-sienna.webp";
+import model6 from "../assets/model-images/model-amber.webp";
+import heroCenter from "../assets/reina-front.webp";
 
 /* ============================================================
    HERO TUNING
@@ -27,7 +27,7 @@ const SUPPORT_SCALE_Y = 1.0;
 const SELECTED_SCALE_X = 1.0;
 const SELECTED_SCALE_Y = 1.0;
 
-const SIDE_MODEL_OPACITY = 0.45;
+const SIDE_MODEL_OPACITY = 0.55;
 
 /*
   Increase/decrease this to control how close the five models are.
@@ -253,7 +253,7 @@ export default function Hero() {
         md:pt-12
         lg:pt-14
         pb-24
-        md:pb-20
+        md:pb-32
         text-center
       "
       style={{

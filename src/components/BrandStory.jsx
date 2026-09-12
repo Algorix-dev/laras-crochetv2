@@ -1,9 +1,9 @@
 import Reveal from "./Reveal";
 
 import laraWordmark from "../assets/lara-wordmark-solid.png";
-import scatterBeach from "../assets/scatter-beach.png";
+import scatterBeach from "../assets/scatter-beach.webp";
 import scatterStreet from "../assets/scatter-street.jpg";
-import scatterTeal from "../assets/scatter-teal.png";
+import scatterTeal from "../assets/scatter-teal.webp";
 import arcSwirl from "../assets/decor/arc-swirl.png";
 
 // SAME 304px SHARED MARGIN as Navbar/Hero/CustomOrderBanner/ProductGrid/

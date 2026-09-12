@@ -30,6 +30,14 @@ body {
   font-family: "DM Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* TIP: fix list item #10 — Figma spec is -2% letter-spacing
+     site-wide. -0.02em = -2% of the element's own font-size,
+     which is what "2%" means for type (unlike px, it scales with
+     text size automatically). Setting it on body means every
+     element inherits it by default; anywhere already setting its
+     own explicit tracking-[...] class (e.g. the Hero price at -4%)
+     overrides this inherited value, so nothing else breaks. */
+  letter-spacing: -0.02em;
 }
 .font-ui {
   font-family: "DM Sans", sans-serif;
