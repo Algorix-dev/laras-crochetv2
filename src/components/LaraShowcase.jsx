@@ -48,10 +48,19 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
      sudden drop in total document height, and the browser will
      silently clamp scrollY to fit — which used to throw you
      straight past the compact Lara section.
-   - to prevent that, `pendingScrollFixRef` captures scrollY and
-     document height right as completion is detected inside
-     tick(), and a useLayoutEffect (fires before paint) corrects
-     scrollY by the exact height delta right after the swap.
+   - `pendingScrollFixRef` captures where the section ITSELF sits
+     in the document (window.scrollY + the wrapper's top, right as
+     completion is detected inside tick()) — not the user's
+     scrollY at that instant. A useLayoutEffect (fires before
+     paint) then scrolls to just below that anchor once the swap
+     has committed.
+   - anchoring to the section's own position, instead of trying to
+     preserve the user's exact scroll fraction via a height-delta
+     calc, is what makes this robust to a fast/fling scroll: it
+     doesn't matter how far past the release point the fling
+     carried them, they land in the same sane spot (right at the
+     top of the compact section) instead of occasionally overshooting
+     clean past Shop and into the footer.
    ============================================================ */
 
 
@@ -107,27 +116,35 @@ const PARAGRAPH_WORDS_START = 0.444;
 const PARAGRAPH_WORDS_END = 0.564;
 
 // Paragraph stays fully visible until this point, then cross-
-// fades into the first review batch over REVIEW_BATCH_RANGES[0]'s
-// fade-in window (same start, so paragraph-out and batch1-in
-// happen in the same window instead of leaving a gap).
+// fades into the reviews grid over REVIEWS_CONTAINER_FADE_START →
+// REVIEWS_CONTAINER_FADE_END (same start as this, so paragraph-out
+// and reviews-in happen in the same window instead of a gap).
 const PARAGRAPH_HOLD_END = 0.594;
 
-/*
-  One entry per batch of 3 reviews. Each batch fades in (staggered
-  per-card, see getReviewCardState), holds fully visible, then
-  fades out. A batch's fadeOutEnd always equals the next batch's
-  fadeInEnd (and its holdEnd equals the next batch's fadeInStart),
-  so consecutive batches cross-fade cleanly with no dead air.
-*/
-const REVIEW_BATCH_RANGES = [
-  { fadeInStart: 0.594, fadeInEnd: 0.614, holdEnd: 0.714, fadeOutEnd: 0.734 },
-  { fadeInStart: 0.714, fadeInEnd: 0.734, holdEnd: 0.834, fadeOutEnd: 0.854 },
-  { fadeInStart: 0.834, fadeInEnd: 0.854, holdEnd: 0.954, fadeOutEnd: 0.979 },
-];
+const REVIEWS_CONTAINER_FADE_START = 0.594;
+const REVIEWS_CONTAINER_FADE_END = 0.614;
 
-// 0.979 → 1.0 is a brief hold on the empty stage after the last
-// review batch has fully faded out, right before the pin
-// releases into normal scroll flow.
+// Reviews reveal 3 at a time (one grid row per step) — same
+// "word by word" technique as the paragraph, just with a row of
+// 3 cards standing in for a word. Once a row appears it STAYS
+// visible (unlike the old batch version), so by REVEAL_END all 9
+// are on screen together.
+const REVIEWS_REVEAL_START = 0.62;
+const REVIEWS_REVEAL_END = 0.72;
+
+// All 9 reviews hold fully visible here — plenty of time to read
+// them before anything moves again.
+const REVIEWS_HOLD_END = 0.87;
+
+// The whole grid (all 9, together — not card by card) fades out
+// here. This is the "soft exit" before the pin releases: instead
+// of the pin just cutting to normal scroll, everything gently
+// disappears first, so the handoff to whatever comes next (Shop)
+// feels deliberate instead of abrupt.
+const REVIEWS_FADE_OUT_END = 0.92;
+
+// 0.92 → 1.0 is a short hold on the empty stage after the fade,
+// right before the pin releases into normal scroll flow.
 
 // TIP: this is a "close enough to 1" threshold, not exactly 1.
 // Floating point scroll math (fast scrolls / trackpad inertia)
@@ -214,15 +231,13 @@ function paragraphContainerOpacity(progress) {
 
   if (progress < PARAGRAPH_HOLD_END) return 1;
 
-  // Cross-fades out exactly as review batch 1 fades in — see
-  // REVIEW_BATCH_RANGES[0], which starts at PARAGRAPH_HOLD_END.
-  const firstBatch = REVIEW_BATCH_RANGES[0];
-  if (progress < firstBatch.fadeInEnd) {
+  // Cross-fades out exactly as the reviews grid fades in.
+  if (progress < REVIEWS_CONTAINER_FADE_END) {
     return (
       1 -
       clamp01(
-        (progress - firstBatch.fadeInStart) /
-          (firstBatch.fadeInEnd - firstBatch.fadeInStart)
+        (progress - REVIEWS_CONTAINER_FADE_START) /
+          (REVIEWS_CONTAINER_FADE_END - REVIEWS_CONTAINER_FADE_START)
       )
     );
   }
@@ -231,50 +246,54 @@ function paragraphContainerOpacity(progress) {
 }
 
 /*
-  Reveal state for ONE review card within its batch. Same pure-
-  function-of-progress approach as the photos and paragraph words:
-  cards in a batch fade + rise in with a slight per-card stagger,
-  hold fully visible with the rest of the batch, then fade out
-  (no rise on exit — just a clean fade) as the next batch takes over.
+  Opacity for the reviews grid AS A WHOLE — fades in, holds while
+  all 9 cards are visible and being individually revealed (see
+  getReviewCardReveal below), then fades OUT as a single group.
+  Deliberately one fade for all 9 together (not per-card) — this
+  is the "soft exit" right before the pin releases.
 */
-const REVIEW_CARD_STAGGER = 0.006;
-const REVIEW_CARD_RISE_PX = 28;
+function reviewsContainerOpacity(progress) {
+  if (progress < REVIEWS_CONTAINER_FADE_START) return 0;
 
-function getReviewCardState(range, cardIndexInBatch, progress) {
-  const stagger = REVIEW_CARD_STAGGER * cardIndexInBatch;
-  const fadeSpan = range.fadeInEnd - range.fadeInStart;
-  const fadeStart = range.fadeInStart + stagger;
-  const fadeEnd = fadeStart + fadeSpan;
-
-  let opacity;
-  if (progress < fadeStart) {
-    opacity = 0;
-  } else if (progress < fadeEnd) {
-    opacity = clamp01((progress - fadeStart) / (fadeEnd - fadeStart));
-  } else if (progress < range.holdEnd) {
-    opacity = 1;
-  } else if (progress < range.fadeOutEnd) {
-    opacity =
-      1 - clamp01((progress - range.holdEnd) / (range.fadeOutEnd - range.holdEnd));
-  } else {
-    opacity = 0;
+  if (progress < REVIEWS_CONTAINER_FADE_END) {
+    return clamp01(
+      (progress - REVIEWS_CONTAINER_FADE_START) /
+        (REVIEWS_CONTAINER_FADE_END - REVIEWS_CONTAINER_FADE_START)
+    );
   }
 
-  const enterT = clamp01((progress - fadeStart) / (fadeEnd - fadeStart));
-  const y = lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(enterT));
+  if (progress < REVIEWS_HOLD_END) return 1;
 
-  return { opacity, y };
+  if (progress < REVIEWS_FADE_OUT_END) {
+    return (
+      1 -
+      clamp01((progress - REVIEWS_HOLD_END) / (REVIEWS_FADE_OUT_END - REVIEWS_HOLD_END))
+    );
+  }
+
+  return 0;
 }
 
+const REVIEW_ROWS_COUNT = 3;
+const REVIEW_CARD_RISE_PX = 28;
+
 /*
-  Whether the reviews layer should be doing anything at all — lets
-  the render just skip past it (opacity 0, no pointer events) when
-  the pin is anywhere before the first batch or after the last.
+  Reveal state for one ROW of 3 review cards (all 3 in the row
+  share the same value — they appear together, "three by three").
+  Same technique as the paragraph's word-by-word reveal: divide
+  the reveal window into REVIEW_ROWS_COUNT equal steps and
+  threshold against this row's own step. Once a row has appeared
+  it stays at opacity 1 — rows never fade back out individually,
+  only the whole grid does (via reviewsContainerOpacity).
 */
-function reviewsSceneOpacity(progress) {
-  const first = REVIEW_BATCH_RANGES[0];
-  const last = REVIEW_BATCH_RANGES[REVIEW_BATCH_RANGES.length - 1];
-  return progress >= first.fadeInStart && progress <= last.fadeOutEnd ? 1 : 0;
+function getReviewRowReveal(rowIndex, progress) {
+  const revealT = clamp01(
+    (progress - REVIEWS_REVEAL_START) / (REVIEWS_REVEAL_END - REVIEWS_REVEAL_START)
+  );
+  const rowT = clamp01((revealT - rowIndex / REVIEW_ROWS_COUNT) / (1 / REVIEW_ROWS_COUNT));
+  const y = lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(rowT));
+
+  return { opacity: rowT, y };
 }
 
 /*
@@ -395,9 +414,9 @@ const TESTIMONIALS = [
   },
 ];
 
-// 9 testimonials → 3 batches of 3, one batch shown at a time
-// inside the pin (see REVIEW_BATCH_RANGES).
-const REVIEW_BATCHES = [
+// 9 testimonials → 3 rows of 3, all 3 in a row revealed together
+// (see getReviewRowReveal) and all 9 ending up on screen at once.
+const REVIEW_ROWS = [
   TESTIMONIALS.slice(0, 3),
   TESTIMONIALS.slice(3, 6),
   TESTIMONIALS.slice(6, 9),
@@ -535,16 +554,14 @@ export default function LaraShowcase() {
     const pending = pendingScrollFixRef.current;
     if (!pending) return;
 
-    // The tall wrapper just collapsed into the compact static markup.
-    // Subtract exactly how much shorter the document got from the
-    // scroll position we had right before the swap, so the viewport
-    // never jumps/clamps past this section.
-    const newScrollHeight = document.documentElement.scrollHeight;
-    const delta = pending.scrollHeight - newScrollHeight;
-
-    if (delta !== 0) {
-      window.scrollTo(0, pending.scrollY - delta);
-    }
+    // Land right at the top of the now-compact section (just below
+    // the navbar) — regardless of how deep into the tall pin track
+    // a fast/fling scroll had carried the user before this fired.
+    // Anchoring to the section's own document position (captured
+    // in tick(), below) rather than trying to preserve an exact
+    // scroll fraction via a height-delta calc is what keeps a fast
+    // scroll from skipping clean past Shop straight to the footer.
+    window.scrollTo(0, Math.max(0, pending.wrapperTop - NAVBAR_HEIGHT_PX));
 
     pendingScrollFixRef.current = null;
   }, [liveCompleted, renderCompactFromStart]);
@@ -613,11 +630,12 @@ export default function LaraShowcase() {
 
         if (next >= RELEASE_AT && !showcaseCompletedThisPageVisit) {
           pendingScrollFixRef.current = {
-            scrollY: window.scrollY,
-            scrollHeight: document.documentElement.scrollHeight,
+            wrapperTop: window.scrollY + rect.top,
           };
           showcaseCompletedThisPageVisit = true;
           setLiveCompleted(true);
+          return; // stop here — the layout effect above takes over
+                  // positioning once the compact markup commits
         }
       }
 
@@ -638,7 +656,7 @@ export default function LaraShowcase() {
 
   const scene = sceneOpacity(p);
   const paragraphContainer = paragraphContainerOpacity(p);
-  const reviewsScene = reviewsSceneOpacity(p);
+  const reviewsContainer = reviewsContainerOpacity(p);
 
   const paragraphWordsT = clamp01(
     (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
@@ -714,7 +732,7 @@ export default function LaraShowcase() {
      REVIEWS — STATIC fallback only (compact/completed/reduced-
      motion path). While the pin is actually animating, reviews
      render inside the pinned track instead — see the "REVIEWS"
-     layer further down, which uses getReviewCardState the exact
+     layer further down, which uses getReviewRowReveal the exact
      same way this component uses opacity/word-reveal elsewhere.
      ============================================================ */
 
@@ -897,52 +915,41 @@ export default function LaraShowcase() {
               className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
               style={{
                 ...layerBaseStyle,
-                opacity: reviewsScene,
+                opacity: reviewsContainer,
                 pointerEvents: "none",
               }}
             >
-              <div className="relative mx-auto w-full max-w-5xl">
-                {REVIEW_BATCHES.map((batch, batchIndex) => (
-                  <div
-                    key={batchIndex}
-                    className="absolute inset-0 grid grid-cols-1 items-center gap-5 sm:grid-cols-3"
-                  >
-                    {batch.map((testimonial, cardIndex) => {
-                      const { opacity, y } = getReviewCardState(
-                        REVIEW_BATCH_RANGES[batchIndex],
-                        cardIndex,
-                        p
-                      );
+              <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 sm:grid-cols-3">
+                {REVIEW_ROWS.map((row, rowIndex) => {
+                  const { opacity, y } = getReviewRowReveal(rowIndex, p);
 
-                      return (
-                        <div
-                          key={testimonial.name}
-                          className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
-                          style={{
-                            opacity,
-                            transform: `translateY(${y}px)`,
-                          }}
+                  return row.map((testimonial, colIndex) => (
+                    <div
+                      key={testimonial.name}
+                      className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
+                      style={{
+                        opacity,
+                        transform: `translateY(${y}px)`,
+                      }}
+                    >
+                      <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
+                        "{testimonial.quote}"
+                      </p>
+
+                      <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
+                        {testimonial.name}
+                        <span
+                          aria-hidden="true"
+                          className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
                         >
-                          <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
-                            "{testimonial.quote}"
-                          </p>
+                          ✓
+                        </span>
+                      </p>
 
-                          <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
-                            {testimonial.name}
-                            <span
-                              aria-hidden="true"
-                              className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
-                            >
-                              ✓
-                            </span>
-                          </p>
-
-                          <p className="mt-1 text-xs text-[var(--muted)]">Verified Customer</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+                      <p className="mt-1 text-xs text-[var(--muted)]">Verified Customer</p>
+                    </div>
+                  ));
+                })}
               </div>
             </div>
           </div>
