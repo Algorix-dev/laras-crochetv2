@@ -59,55 +59,102 @@ const PIN_TOP_PX = 0;
 const PIN_Z_INDEX = 100;
 
 /*
-  Scroll track for the PIN ONLY.
+  Scroll track for the PIN.
 
-  Reviews are NOT inside this track.
+  Reviews now live INSIDE this track, right after the paragraph —
+  see PROGRESS MAP below. TRACK_VH grew from 1200 to fit a full
+  reviews sequence (fade in -> 3 groups of 3 -> hold -> fade out)
+  without compressing the photo/paragraph pacing that already
+  existed. Breakpoints are defined in vh first (VH below) so the
+  actual scroll distance for each beat is easy to read directly,
+  then converted to 0..1 fractions (F) for the progress math.
 */
-const TRACK_VH = 1200;
+
+const VH = {
+  wordmarkEnd: 40,
+  photo1End: 260,
+  photo2End: 480,
+  photo3End: 700,
+  holdEnd: 820,
+  exitEnd: 900,
+  paraContainerStart: 870,
+  paraContainerEnd: 910,
+  paraWordsStart: 930,
+  paraWordsEnd: 1200,
+  paraHoldEnd: 1290,
+  paraFadeOutEnd: 1360,
+  reviewsFadeInEnd: 1420,
+  reviewsGroup1End: 1600,
+  reviewsGroup2End: 1780,
+  reviewsGroup3End: 1960,
+  reviewsHoldEnd: 2040,
+  finalFadeEnd: 2110,
+};
+
+const TRACK_VH = VH.finalFadeEnd;
+
+const F = Object.fromEntries(
+  Object.entries(VH).map(([key, value]) => [key, value / TRACK_VH])
+);
 
 /* ============================================================
-   PROGRESS MAP
+   PROGRESS MAP (as fractions of TRACK_VH)
+
+   wordmark fades in ............ 0            -> F.wordmarkEnd
+   photo 1 ....................... F.wordmarkEnd -> F.photo1End
+   photo 2 ....................... F.photo1End   -> F.photo2End
+   photo 3 ....................... F.photo2End   -> F.photo3End
+   hold .......................... F.photo3End   -> F.holdEnd
+   Lara + photos exit ............ F.holdEnd     -> F.exitEnd
+   paragraph container enters .... F.paraContainerStart -> F.paraContainerEnd
+   paragraph words reveal ........ F.paraWordsStart -> F.paraWordsEnd
+   paragraph holds ............... F.paraWordsEnd -> F.paraHoldEnd
+   paragraph fades out ........... F.paraHoldEnd -> F.paraFadeOutEnd
+   reviews fade in ................ F.paraFadeOutEnd -> F.reviewsFadeInEnd
+   reviews group 1 (cards 1-3) .... F.reviewsFadeInEnd -> F.reviewsGroup1End
+   reviews group 2 (cards 4-6) .... F.reviewsGroup1End -> F.reviewsGroup2End
+   reviews group 3 (cards 7-9) .... F.reviewsGroup2End -> F.reviewsGroup3End
+   reviews hold ................... F.reviewsGroup3End -> F.reviewsHoldEnd
+   everything fades out ........... F.reviewsHoldEnd -> F.finalFadeEnd
    ============================================================ */
 
-/*
-  0.00 → 0.03   wordmark fades in
-  0.03 → 0.21   photo 1
-  0.21 → 0.39   photo 2
-  0.39 → 0.57   photo 3
-  0.57 → 0.66   hold
-  0.66 → 0.72   Lara + photos exit
-  0.72 → 0.74   paragraph container enters
-  0.74 → 0.94   paragraph words reveal
-  0.94 → 1.00   paragraph holds
-*/
-
-const WORDMARK_FADE_IN_END = 0.03;
+const WORDMARK_FADE_IN_END = F.wordmarkEnd;
 
 const PHOTO_RANGES = [
-  {
-    start: 0.03,
-    end: 0.21,
-  },
-  {
-    start: 0.21,
-    end: 0.39,
-  },
-  {
-    start: 0.39,
-    end: 0.57,
-  },
+  { start: F.wordmarkEnd, end: F.photo1End },
+  { start: F.photo1End, end: F.photo2End },
+  { start: F.photo2End, end: F.photo3End },
 ];
 
-const LARA_HOLD_END = 0.66;
-const LARA_EXIT_END = 0.72;
+const LARA_HOLD_END = F.holdEnd;
+const LARA_EXIT_END = F.exitEnd;
 
-const PARAGRAPH_CONTAINER_FADE_START = 0.7;
-const PARAGRAPH_CONTAINER_FADE_END = 0.73;
+const PARAGRAPH_CONTAINER_FADE_START = F.paraContainerStart;
+const PARAGRAPH_CONTAINER_FADE_END = F.paraContainerEnd;
 
-const PARAGRAPH_WORDS_START = 0.74;
-const PARAGRAPH_WORDS_END = 0.94;
+const PARAGRAPH_WORDS_START = F.paraWordsStart;
+const PARAGRAPH_WORDS_END = F.paraWordsEnd;
 
-const RELEASE_AT = 0.995;
+const PARAGRAPH_FADE_OUT_START = F.paraHoldEnd;
+const PARAGRAPH_FADE_OUT_END = F.paraFadeOutEnd;
+
+const REVIEWS_FADE_IN_START = F.paraFadeOutEnd;
+const REVIEWS_FADE_IN_END = F.reviewsFadeInEnd;
+
+const REVIEW_GROUP_RANGES = [
+  { start: F.reviewsFadeInEnd, end: F.reviewsGroup1End },
+  { start: F.reviewsGroup1End, end: F.reviewsGroup2End },
+  { start: F.reviewsGroup2End, end: F.reviewsGroup3End },
+];
+
+const FINAL_FADE_START = F.reviewsHoldEnd;
+const FINAL_FADE_END = F.finalFadeEnd;
+
+// Nudged right up to the end of the final fade-out, so the pinned
+// layer is already fully transparent by the time it hard-swaps to
+// the static/normal-flow version — that swap is what used to be the
+// obvious snap.
+const RELEASE_AT = 0.999;
 
 /* ============================================================
    PHOTO ENTRANCE TUNING
