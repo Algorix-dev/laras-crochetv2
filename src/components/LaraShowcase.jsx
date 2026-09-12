@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
-import { motion } from "framer-motion";
 
 import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.webp";
@@ -11,23 +10,28 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
    LARA SHOWCASE
    ============================================================
 
-   Two distinct behaviors, on purpose:
+   ONE continuous pinned scroll-scrub, in order:
 
-   1) PINNED SCRUB (wordmark + 3 scattered photos + paragraph)
-      - progress is derived directly from scroll position
-      - every visual value (opacity/scale/x/y/rotate/word-reveal)
-        is a pure function of that progress, so it can never
-        desync from the scrollbar like a wall-clock animation can
-      - photos enter ONE AT A TIME, big → small, very slowly
-      - once photos are done, Lara fades out and the paragraph
-        fades in and reveals word-by-word, then holds
+     wordmark → 3 scattered photos → paragraph (word-by-word)
+     → reviews, shown 3 at a time → pin releases
 
-   2) NORMAL-FLOW REVIEWS (after the pin releases)
-      - NOT pinned/fixed — this is why they can be taller than
-        one screen and still be scrolled through properly
-      - each card fades up once via whileInView (viewport once)
-      - directly followed by whatever App.jsx renders next
-        (the "Go to Shop" CTA / Shop section), no extra gap
+   - progress is derived directly from scroll position
+   - every visual value (opacity/scale/x/y/rotate/word-reveal/
+     review-card-reveal) is a pure function of that progress, so
+     it can never desync from the scrollbar like a wall-clock
+     animation can
+   - photos enter ONE AT A TIME, big → small, very slowly
+   - once photos are done, Lara fades out and the paragraph
+     fades in and reveals word-by-word, then holds
+   - the paragraph then cross-fades into the first batch of 3
+     reviews (same slow, scroll-scrubbed technique — no
+     whileInView, no wall-clock duration); each batch holds,
+     then cross-fades into the next batch of 3, all the way
+     through every review
+   - only once the last batch has faded out does the pin
+     release, handing off to normal scroll flow — whatever
+     App.jsx renders next (the "Go to Shop" CTA / Shop section)
+     picks up immediately, no extra gap
 
    ONE-TIME-ONLY BEHAVIOR:
    - a module-level flag remembers that the pin animation
@@ -58,42 +62,72 @@ import laraDecor from "../assets/decor/lara-decor-composite.png";
 const NAVBAR_HEIGHT_PX = 66;
 
 /*
-  Scroll track for the PIN ONLY (wordmark + photos + paragraph).
-  Reviews are no longer inside this track — they're normal page
-  content directly below it — so this can stay focused and this
-  number controls exactly how slow the pinned sequence feels.
+  Scroll track for the WHOLE pinned sequence — wordmark, photos,
+  paragraph, AND now the reviews (shown 3 at a time). Everything
+  from Lara fading in to the last review batch fading out lives
+  inside this one track. This number controls exactly how slow
+  the whole pinned experience feels; bigger = slower.
 */
-const TRACK_VH = 1200;
+const TRACK_VH = 2000;
 
 
 /* ============================================================
    PROGRESS MAP (fractions of the pin's 0 → 1 scroll progress)
    ============================================================
 
-   0.00                                                    1.00
-   |--fade in--|--photo 1--|--photo 2--|--photo 3--|--hold--|--exit--|-----paragraph words-----|--hold--|
-   0        0.03        0.21        0.39        0.57     0.66     0.72                       0.94      1.0
+   All the wordmark/photo/paragraph breakpoints below are the
+   exact same ABSOLUTE scroll distance as before (they're just
+   expressed as smaller fractions now that TRACK_VH is bigger),
+   so that part of the sequence still feels exactly as slow as
+   it always did. Everything from 0.594 onward is new: the
+   paragraph cross-fades into review batch 1, batch 1 holds then
+   cross-fades into batch 2, batch 2 holds then cross-fades into
+   batch 3, batch 3 holds then fades out — THEN the pin releases.
+
+   0.00                                                                                          1.00
+   |fade in|-photo1-|-photo2-|-photo3-|hold|exit|-----words-----|hold|--batch1--|--batch2--|--batch3--|
+   0     0.018    0.126    0.234    0.342 .396 .432  .444     .564 .594      .714       .834      .954  .979 1.0
 */
 
-const WORDMARK_FADE_IN_END = 0.03;
+const WORDMARK_FADE_IN_END = 0.018;
 
 const PHOTO_RANGES = [
-  { start: 0.03, end: 0.21 }, // back   (comes from bottom)
-  { start: 0.21, end: 0.39 }, // middle (comes from left)
-  { start: 0.39, end: 0.57 }, // front  (comes from right)
+  { start: 0.018, end: 0.126 }, // back   (comes from bottom)
+  { start: 0.126, end: 0.234 }, // middle (comes from left)
+  { start: 0.234, end: 0.342 }, // front  (comes from right)
 ];
 
-const LARA_HOLD_END = 0.66; // finished photo stack stays visible
-const LARA_EXIT_END = 0.72; // Lara + photos fade out together
+const LARA_HOLD_END = 0.396; // finished photo stack stays visible
+const LARA_EXIT_END = 0.432; // Lara + photos fade out together
 
-const PARAGRAPH_CONTAINER_FADE_START = 0.7;
-const PARAGRAPH_CONTAINER_FADE_END = 0.73;
+const PARAGRAPH_CONTAINER_FADE_START = 0.42;
+const PARAGRAPH_CONTAINER_FADE_END = 0.438;
 
-const PARAGRAPH_WORDS_START = 0.74;
-const PARAGRAPH_WORDS_END = 0.94;
-// 0.94 → 1.0 is the paragraph's "hold" — words stay fully
-// visible while the pin keeps absorbing scroll, which is what
-// gives the "waits even while scrolling" feeling.
+const PARAGRAPH_WORDS_START = 0.444;
+const PARAGRAPH_WORDS_END = 0.564;
+
+// Paragraph stays fully visible until this point, then cross-
+// fades into the first review batch over REVIEW_BATCH_RANGES[0]'s
+// fade-in window (same start, so paragraph-out and batch1-in
+// happen in the same window instead of leaving a gap).
+const PARAGRAPH_HOLD_END = 0.594;
+
+/*
+  One entry per batch of 3 reviews. Each batch fades in (staggered
+  per-card, see getReviewCardState), holds fully visible, then
+  fades out. A batch's fadeOutEnd always equals the next batch's
+  fadeInEnd (and its holdEnd equals the next batch's fadeInStart),
+  so consecutive batches cross-fade cleanly with no dead air.
+*/
+const REVIEW_BATCH_RANGES = [
+  { fadeInStart: 0.594, fadeInEnd: 0.614, holdEnd: 0.714, fadeOutEnd: 0.734 },
+  { fadeInStart: 0.714, fadeInEnd: 0.734, holdEnd: 0.834, fadeOutEnd: 0.854 },
+  { fadeInStart: 0.834, fadeInEnd: 0.854, holdEnd: 0.954, fadeOutEnd: 0.979 },
+];
+
+// 0.979 → 1.0 is a brief hold on the empty stage after the last
+// review batch has fully faded out, right before the pin
+// releases into normal scroll flow.
 
 // TIP: this is a "close enough to 1" threshold, not exactly 1.
 // Floating point scroll math (fast scrolls / trackpad inertia)
@@ -178,7 +212,69 @@ function paragraphContainerOpacity(progress) {
     );
   }
 
-  return 1;
+  if (progress < PARAGRAPH_HOLD_END) return 1;
+
+  // Cross-fades out exactly as review batch 1 fades in — see
+  // REVIEW_BATCH_RANGES[0], which starts at PARAGRAPH_HOLD_END.
+  const firstBatch = REVIEW_BATCH_RANGES[0];
+  if (progress < firstBatch.fadeInEnd) {
+    return (
+      1 -
+      clamp01(
+        (progress - firstBatch.fadeInStart) /
+          (firstBatch.fadeInEnd - firstBatch.fadeInStart)
+      )
+    );
+  }
+
+  return 0;
+}
+
+/*
+  Reveal state for ONE review card within its batch. Same pure-
+  function-of-progress approach as the photos and paragraph words:
+  cards in a batch fade + rise in with a slight per-card stagger,
+  hold fully visible with the rest of the batch, then fade out
+  (no rise on exit — just a clean fade) as the next batch takes over.
+*/
+const REVIEW_CARD_STAGGER = 0.006;
+const REVIEW_CARD_RISE_PX = 28;
+
+function getReviewCardState(range, cardIndexInBatch, progress) {
+  const stagger = REVIEW_CARD_STAGGER * cardIndexInBatch;
+  const fadeSpan = range.fadeInEnd - range.fadeInStart;
+  const fadeStart = range.fadeInStart + stagger;
+  const fadeEnd = fadeStart + fadeSpan;
+
+  let opacity;
+  if (progress < fadeStart) {
+    opacity = 0;
+  } else if (progress < fadeEnd) {
+    opacity = clamp01((progress - fadeStart) / (fadeEnd - fadeStart));
+  } else if (progress < range.holdEnd) {
+    opacity = 1;
+  } else if (progress < range.fadeOutEnd) {
+    opacity =
+      1 - clamp01((progress - range.holdEnd) / (range.fadeOutEnd - range.holdEnd));
+  } else {
+    opacity = 0;
+  }
+
+  const enterT = clamp01((progress - fadeStart) / (fadeEnd - fadeStart));
+  const y = lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(enterT));
+
+  return { opacity, y };
+}
+
+/*
+  Whether the reviews layer should be doing anything at all — lets
+  the render just skip past it (opacity 0, no pointer events) when
+  the pin is anywhere before the first batch or after the last.
+*/
+function reviewsSceneOpacity(progress) {
+  const first = REVIEW_BATCH_RANGES[0];
+  const last = REVIEW_BATCH_RANGES[REVIEW_BATCH_RANGES.length - 1];
+  return progress >= first.fadeInStart && progress <= last.fadeOutEnd ? 1 : 0;
 }
 
 /*
@@ -297,6 +393,14 @@ const TESTIMONIALS = [
       "I loved being able to choose the colour and get something made specifically for me.",
     name: "Zainab A.",
   },
+];
+
+// 9 testimonials → 3 batches of 3, one batch shown at a time
+// inside the pin (see REVIEW_BATCH_RANGES).
+const REVIEW_BATCHES = [
+  TESTIMONIALS.slice(0, 3),
+  TESTIMONIALS.slice(3, 6),
+  TESTIMONIALS.slice(6, 9),
 ];
 
 
@@ -534,6 +638,7 @@ export default function LaraShowcase() {
 
   const scene = sceneOpacity(p);
   const paragraphContainer = paragraphContainerOpacity(p);
+  const reviewsScene = reviewsSceneOpacity(p);
 
   const paragraphWordsT = clamp01(
     (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
@@ -606,19 +711,19 @@ export default function LaraShowcase() {
   );
 
   /* ============================================================
-     REVIEWS — always normal flow, never pinned
+     REVIEWS — STATIC fallback only (compact/completed/reduced-
+     motion path). While the pin is actually animating, reviews
+     render inside the pinned track instead — see the "REVIEWS"
+     layer further down, which uses getReviewCardState the exact
+     same way this component uses opacity/word-reveal elsewhere.
      ============================================================ */
 
-  const reviewsSection = (
+  const reviewsStatic = (
     <section className={`w-full bg-[var(--cream)] pb-0 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
       <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-3">
         {TESTIMONIALS.map((testimonial, index) => (
-          <motion.div
+          <div
             key={`${testimonial.name}-${index}`}
-            initial={reduceMotion ? false : { opacity: 0, y: 25 }}
-            whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.25 }}
-            transition={{ duration: 0.9, delay: (index % 3) * 0.12, ease: [0.16, 1, 0.3, 1] }}
             className={`min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center ${
               index % 3 === 1 ? "lg:-translate-y-5" : ""
             }`}
@@ -638,7 +743,7 @@ export default function LaraShowcase() {
             </p>
 
             <p className="mt-1 text-xs text-[var(--muted)]">Verified Customer</p>
-          </motion.div>
+          </div>
         ))}
       </div>
     </section>
@@ -654,7 +759,7 @@ export default function LaraShowcase() {
     return (
       <>
         <section className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
-        {reviewsSection}
+        {reviewsStatic}
       </>
     );
   }
@@ -786,11 +891,63 @@ export default function LaraShowcase() {
                 ))}
               </div>
             </div>
+
+            {/* ======================= REVIEWS ======================= */}
+            <div
+              className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
+              style={{
+                ...layerBaseStyle,
+                opacity: reviewsScene,
+                pointerEvents: "none",
+              }}
+            >
+              <div className="relative mx-auto w-full max-w-5xl">
+                {REVIEW_BATCHES.map((batch, batchIndex) => (
+                  <div
+                    key={batchIndex}
+                    className="absolute inset-0 grid grid-cols-1 items-center gap-5 sm:grid-cols-3"
+                  >
+                    {batch.map((testimonial, cardIndex) => {
+                      const { opacity, y } = getReviewCardState(
+                        REVIEW_BATCH_RANGES[batchIndex],
+                        cardIndex,
+                        p
+                      );
+
+                      return (
+                        <div
+                          key={testimonial.name}
+                          className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
+                          style={{
+                            opacity,
+                            transform: `translateY(${y}px)`,
+                          }}
+                        >
+                          <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
+                            "{testimonial.quote}"
+                          </p>
+
+                          <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
+                            {testimonial.name}
+                            <span
+                              aria-hidden="true"
+                              className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
+                            >
+                              ✓
+                            </span>
+                          </p>
+
+                          <p className="mt-1 text-xs text-[var(--muted)]">Verified Customer</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
-
-      {reviewsSection}
     </>
   );
 }
