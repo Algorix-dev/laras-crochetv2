@@ -1,6 +1,5 @@
 /*
   SHOP OUR PIECES
-
   Figma desktop layout:
 
   Section:
@@ -48,6 +47,8 @@ function HeartIcon() {
         d="M7 12.3s-5.25-3.2-5.25-7.05A3.05 3.05 0 0 1 7 3.3a3.05 3.05 0 0 1 5.25 1.95C12.25 9.1 7 12.3 7 12.3Z"
         stroke="var(--maroon-dark)"
         strokeWidth="0.875"
+        fill="var(--maroon-dark)"
+        fillOpacity="0.12"
       />
     </svg>
   );
@@ -71,7 +72,6 @@ function BagIcon() {
         stroke="black"
         strokeWidth="1.18"
       />
-
       <path
         d="M6.5 6.5v-1a3 3 0 0 1 6 0v1"
         stroke="black"
@@ -113,11 +113,26 @@ function ProductCard({ image }) {
           <HeartIcon />
         </button>
 
-        {/* Product image */}
+        {/* Product image
+            NOTE: was object-cover at 91.32% height / 4.24% top, matching
+            the Figma "Rectangle 37" box exactly. That box assumed a
+            source photo already cropped to the box's own ratio — the
+            real photos (lagoon-front.png etc.) are tall, narrow
+            full-body shots with ZERO margin above the head in the raw
+            file itself (checked: hair starts ~1.9% down, basically
+            touching row 0). object-cover on a wider box was scaling
+            those up and cropping in, which is what pushed heads to the
+            top edge. Switched to object-contain (shows the whole photo,
+            no crop) and pulled the height in to 78% with more top
+            offset, so there's real white space above the head. This is
+            a code-side stopgap — since the source images have no
+            headroom to begin with, the cleaner long-term fix is
+            re-exporting the photos with headroom above the head, which
+            you mentioned you're already doing. */}
         <img
           src={image}
           alt="Reina"
-          className="absolute left-1/2 top-[4.24%] h-[91.32%] w-[79.1%] max-w-none -translate-x-1/2 object-cover"
+          className="absolute left-1/2 top-[10%] h-[78%] w-[79.1%] max-w-none -translate-x-1/2 object-contain"
         />
       </div>
 
@@ -284,14 +299,9 @@ export default function ShopGrid() {
           rowGap: "100px",
         }}
       >
-        {DEMO_ITEMS.map(
-          (image, i) => (
-            <ProductCard
-              key={i}
-              image={image}
-            />
-          )
-        )}
+        {DEMO_ITEMS.map((image, i) => (
+          <ProductCard key={i} image={image} />
+        ))}
       </div>
 
       {/* Frame 182 — Add to Bag */}
