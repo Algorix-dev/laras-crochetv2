@@ -18,6 +18,16 @@
     pixel-by-pixel — these aren't a simplified placeholder, the
     recommendation strips consistently drop the category line and
     swap the icon everywhere they appear.
+
+  TIP: the image sits inside a `p-3` inset on its container (not
+  flush edge-to-edge with the white card) so there's visible
+  breathing room between the photo and the card boundary on all
+  four sides. The `aspectRatio: 640/731` still governs the OUTER
+  box (so every card in a grid stays the same size) — the padding
+  just eats into that box, so `object-cover` still fills the
+  (now-smaller) inner area with no gaps or letterboxing. If Lara
+  wants a specific measurement off Figma instead of this p-3
+  default, swap that one class.
 */
 import { Heart, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -47,7 +57,7 @@ export default function ProductCard({ product, variant = 'default' }) {
     <div className="group">
       <Link
         to={`/product/${product.id}`}
-        className="relative block overflow-hidden bg-white"
+        className="relative block overflow-hidden bg-white p-3"
         style={{ aspectRatio: "640 / 731" }}
       >
         {product.image ? (

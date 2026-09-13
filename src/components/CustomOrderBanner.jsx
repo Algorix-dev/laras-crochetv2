@@ -243,11 +243,28 @@ export default function CustomOrderBanner() {
             padding), so 98% down puts the glow right under their
             feet at ANY screen size, because it's now anchored to
             the image, not the page.
+
+            TIP — EXPLICIT STACKING: this wrapper now carries its
+            own `relative z-20` (it didn't before — only the <img>
+            deep inside it did). The old setup was technically
+            correct (z-index values on a positioned descendant
+            still "win" against a sibling even through two
+            in-between wrappers that don't set their own z-index),
+            but that correctness depended on nobody ever adding a
+            z-index, transform, opacity, or filter to either of
+            those in-between wrappers — any of those would
+            silently create a new stacking context and trap the
+            image's z-20 inside it, right back behind the wordmark.
+            Putting z-20 on the outer wrapper itself makes "this
+            whole block sits above the wordmark" true on its own
+            terms, not dependent on the wrappers below staying
+            exactly as plain as they are today.
             ====================================================== */}
 
         <div
           className="
             relative
+            z-20
             mx-auto
             mt-[-15px]
             flex
