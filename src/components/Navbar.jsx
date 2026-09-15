@@ -42,7 +42,7 @@ import { useAuth } from "../context/AuthContext";
 import CountrySelectorModal from "./CountrySelectorModal";
 import SearchOverlay from "./SearchOverlay";
 import laraCrochetLogo from "../assets/lara-crochet-logo.png";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef} from "react";
 import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
 
 // Tweak these two numbers to taste — nothing else needs to change.
