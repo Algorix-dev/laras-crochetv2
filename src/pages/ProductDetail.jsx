@@ -409,18 +409,15 @@ export default function ProductDetail() {
      way ShopPage does. */
   const { id } = useParams();
   const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [related, setRelated] = useState([]);
 
   useEffect(() => {
-    setLoading(true);
     setError(null);
     setProduct(null);
     getProduct(id)
       .then((data) => setProduct(normalizeProduct(data)))
       .catch(() => setError('This product could not be found.'))
-      .finally(() => setLoading(false));
   }, [id]);
 
   // TIP: once we know the product's category, fetch a few more from
@@ -474,15 +471,7 @@ export default function ProductDetail() {
     addToBag(product, color, shade, size);
     openBag();
   };
-
-  if (loading) {
-    return (
-      <main className="mx-auto max-w-7xl px-5 py-24 text-center text-sm text-[var(--muted)] md:px-8">
-        Loading product...
-      </main>
-    );
-  }
-
+  
   if (error || !product) {
     return (
       <main className="mx-auto max-w-7xl px-5 py-24 text-center md:px-8">

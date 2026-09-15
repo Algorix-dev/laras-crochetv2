@@ -61,7 +61,6 @@ const PAGE_SIZE = 9;
 export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -71,13 +70,11 @@ export default function ShopPage() {
   // a different tab → state changes → effect re-fires → new fetch
   // with the new category in the query string.
   useEffect(() => {
-    setLoading(true);
     setError(null);
     setVisibleCount(PAGE_SIZE);
     getProducts(activeCategory)
       .then((data) => setProducts(data.map(normalizeProduct)))
       .catch(() => setError('Could not load products — check your connection and try again.'))
-      .finally(() => setLoading(false));
   }, [activeCategory]);
 
   // TIP: search filters the already-fetched category list client-side
@@ -151,22 +148,9 @@ export default function ShopPage() {
           ))}
         </div>
 
-        {/* TIP: distinct states so the person browsing always
-            understands what's happening — loading, error, genuinely-
-            empty, and no-search-results are each a different message
-            rather than one blank grid. */}
-        {loading && <p className="pb-24 text-sm text-[var(--muted)]">Loading products...</p>}
-        {!loading && error && <p className="pb-24 text-sm text-red-500">{error}</p>}
-        {!loading && !error && visibleProducts.length === 0 && (
-          <p className="pb-24 text-sm text-[var(--muted)]">
-            {search ? `No products match "${search}".` : 'No products in this category yet — check back soon.'}
-          </p>
-        )}
+        
       </div>
-
-      {!loading && !error && visibleProducts.length > 0 && (
-        <>
-          <ProductGrid products={visibleProducts} columns={3} />
+      <ProductGrid products={visibleProducts} columns={3} />
           {hasMore && (
             <div className="flex justify-center py-14">
               <button
@@ -177,8 +161,6 @@ export default function ShopPage() {
               </button>
             </div>
           )}
-        </>
-      )}
     </section>
     <Footer />
     </>
