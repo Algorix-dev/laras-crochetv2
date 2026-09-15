@@ -8,7 +8,26 @@
   useParams(), looks it up in our products array, and renders everything.
   When you add more products to products.js, they automatically get
   their own detail page at /product/{id}.
-*/
+
+  ---------------------------------------------------------------
+  CHANGES IN THIS PASS (matched against the Figma dev-mode CSS
+  export for the top gallery/purchase section):
+    1. Thumbnails: square crop -> real 52.96:139 ratio, ring
+       highlight -> opacity-based selection (matches spec exactly).
+    2. Heading: 48-60px font-display -> 36px/44px DM Sans, per spec.
+    3. Description: max-w-lg (512px) -> max-w-[412px], per spec.
+    4. Swatches: 48x48 rounded squares -> 61x49 sharp rectangles,
+       gap-3 (12px) -> gap-[9px], per spec.
+    5. Size selector: full-width 6-col grid -> compact auto-width
+       bordered boxes in a ~339px row, per spec.
+    6. Add to Bag: 10px tracked-out label -> 20px bold, -0.04em
+       tracking, #564345 background, per spec.
+    7. (Bonus, same spec) Category label ("DRESS"): tiny muted caps
+       -> 16px regular #564345, per spec.
+  Every change below has its own TIP explaining the "why" and how
+  to adjust or revert it if you want something different from the
+  literal spec value.
+----------------------------------------------------------- */
 import { Check, Star, Heart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -113,9 +132,13 @@ const reviews = [
 ];
 
 /* -----------------------------------------------------------
-   Helper: renders a square color swatch button.
-   The `active` boolean adds an outline ring so the user
-   knows which color is selected.
+   Helper: renders a swatch button.
+
+   TIP: Figma's dev-mode export measures these at 61×49px with no
+   border-radius (sharp corners) — not the 48×48 rounded squares
+   this used to be. If you decide you like the rounded look better
+   than the literal spec, just add `rounded-lg` back into the
+   className below; nothing else depends on the shape.
 ----------------------------------------------------------- */
 function ColorSwatch({ option, active, onClick }) {
   const isSplit = option.label === 'Black / White';
@@ -126,7 +149,7 @@ function ColorSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} color`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-12 w-12 shrink-0 rounded-lg border-2 cursor-pointer transition-all md:h-12 md:w-12 ${
+      className={`h-[49px] w-[61px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -147,7 +170,7 @@ function ShadeSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} shade`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-12 w-12 shrink-0 border-2 cursor-pointer transition-all md:h-12 md:w-12 ${
+      className={`h-[49px] w-[61px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -496,15 +519,26 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              {/* The thumbnails sit directly inside the same surface, with no
-                  individual white/background cards around each image. */}
+              {/* TIP: Figma's dev-mode export ("Frame 67") measures
+                  these thumbnails at 52.96 × 139px (~1:2.62 — a tall
+                  portrait crop matching the main photo, not a square)
+                  laid out as a centered flex row with a 39px gap. It
+                  also marks the *unselected* thumbnails at opacity 0.3
+                  rather than ringing the selected one — so the active
+                  state below is now an opacity toggle instead of a
+                  ring/outline. If you want the ring style back, swap
+                  the opacity-30/opacity-100 pair for the old
+                  ring-1 ring-offset-2 classes. */}
               {gallery.length > 0 && (
-                <div className="grid grid-cols-4 gap-3 px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3">
+                <div className="flex items-center justify-center gap-[39px] px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3">
                   {Array.from({ length: 4 }, (_, index) => {
                     const src = gallery[index];
                     if (!src) {
                       return (
-                        <div key={`placeholder-${index}`} className="aspect-square opacity-30">
+                        <div
+                          key={`placeholder-${index}`}
+                          className="aspect-[53/139] w-[52.96px] opacity-30"
+                        >
                           <ProductPlaceholder className="h-full w-full" />
                         </div>
                       );
@@ -515,13 +549,11 @@ export default function ProductDetail() {
                         type="button"
                         aria-label={`View ${product.name} angle ${index + 1}`}
                         onClick={() => setSelectedImage(index)}
-                        className={`aspect-square ${
-                          index === selectedImage
-                            ? 'ring-1 ring-[var(--ink)] ring-offset-2 ring-offset-[#f5f4f4]'
-                            : ''
+                        className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${
+                          index === selectedImage ? 'opacity-100' : 'opacity-30'
                         }`}
                       >
-                        <img src={src} alt="" className="h-full w-full object-contain" />
+                        <img src={src} alt="" className="h-full w-full object-cover" />
                       </button>
                     );
                   })}
@@ -532,10 +564,28 @@ export default function ProductDetail() {
 
           {/* ---- RIGHT: Product Info & Purchase ---- */}
           <section className="lg:pt-7">
-            <p className="text-xs uppercase tracking-widest text-[var(--muted)] underline">
+            {/* TIP (bonus, same spec sheet as everything else on this
+                pass): the category label ("DRESS") is 16px regular,
+                color #564345 (Gray/600) in Figma — not a tiny muted
+                uppercase caption. Dropped the `uppercase` class since
+                categoryLabel() already returns properly-cased text. */}
+            <p className="text-base text-[#564345] underline">
               {categoryLabel(product.category)}
             </p>
-            <h1 className="mt-3 font-display text-5xl font-bold leading-none md:text-6xl">
+            {/* TIP: spec measures this heading at 36px/44px line-height,
+                Bold, letter-spacing -0.02em, color #404040, explicitly
+                in DM Sans. That's noticeably smaller than the old
+                text-5xl/text-6xl font-display treatment. I set the
+                font-family to DM Sans directly — if `font-display` in
+                your Tailwind config already resolves to DM Sans, this
+                is purely a size fix and you can drop the inline style.
+                If font-display is a different (e.g. script) font used
+                elsewhere on the site, keep this override so the PDP
+                heading doesn't pick that font up by accident. */}
+            <h1
+              className="mt-3 text-[36px] font-bold leading-[44px] tracking-[-0.02em] text-[#404040]"
+              style={{ fontFamily: 'DM Sans, sans-serif' }}
+            >
               The {product.name}
               {product.category === 'dresses' ? ' Dress' : ''}
             </h1>
@@ -553,7 +603,13 @@ export default function ProductDetail() {
               <ShareButton product={product} />
             </div>
 
-            <p className="mt-7 max-w-lg text-sm leading-7 text-[var(--muted)]">
+            {/* TIP: spec constrains this paragraph to exactly 412px
+                wide (max-w-lg was 512px — close, but not a match) and
+                colors it #404040 directly. Swap back to
+                text-[var(--muted)] if that CSS variable already
+                resolves to #404040 in your theme and you'd rather use
+                the token instead of a hardcoded hex. */}
+            <p className="mt-7 max-w-[412px] text-sm leading-7 text-[#404040]">
               {productDescription(product)}
             </p>
 
@@ -565,7 +621,10 @@ export default function ProductDetail() {
               {/* Color Mix */}
               <div>
                 <p className="mb-3 text-sm font-semibold">Color Mix</p>
-                <div className="flex flex-wrap gap-3">
+                {/* TIP: spec gap between swatches is 9px, not the old
+                    gap-3 (12px). Small, but it's what makes the row
+                    width match Figma's measurements. */}
+                <div className="flex flex-wrap gap-[9px]">
                   {FIGMA_COLOR_MIXES.map((option) => (
                     <ColorSwatch
                       key={option.label}
@@ -580,7 +639,7 @@ export default function ProductDetail() {
               {/* Shades */}
               <div>
                 <p className="mb-3 text-sm font-semibold">Shades</p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-[9px]">
                   {FIGMA_SHADES.map((option) => (
                     <ShadeSwatch
                       key={option.label}
@@ -594,7 +653,7 @@ export default function ProductDetail() {
 
               {/* Size */}
               <div>
-                <div className="mb-3 flex items-center justify-between">
+                <div className="mb-3 flex max-w-[339px] items-center justify-between">
                   <p className="text-sm font-semibold">Size</p>
                   <button
                     type="button"
@@ -604,14 +663,22 @@ export default function ProductDetail() {
                     Size guide
                   </button>
                 </div>
-                <div className="grid grid-cols-6 border-y border-[var(--line)]">
+                {/* TIP: spec ("Frame 79") shows each size as its own
+                    auto-width box with a full border on every side,
+                    sitting in a narrow ~339px row — not the old
+                    full-width 6-column grid with only a top/bottom
+                    border. Switching grid -> flex lets each button
+                    size itself to its own label (XS vs XXL end up
+                    different widths, same as Figma) instead of
+                    stretching everything to fill the card. */}
+                <div className="flex max-w-[339px] flex-wrap">
                   {FIGMA_SIZES.map((s) => (
                     <button
                       key={s}
                       type="button"
                       aria-pressed={size === s}
                       onClick={() => setSize(s)}
-                      className={`py-2 text-[10px] tracking-wide transition-colors ${
+                      className={`border border-[var(--line)] px-5 py-1 text-sm transition-colors ${
                         size === s
                           ? 'bg-[var(--ink)] text-white'
                           : 'text-[var(--ink)] hover:bg-[#f4eeee]'
@@ -624,10 +691,19 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Add to Bag button */}
+            {/* TIP: spec sets this label at 20px Bold, letter-spacing
+                -0.04em, on a #564345 background — a big jump up from
+                the old 10px tracked-out label. I kept `w-full` since
+                that's a sensible default for a PDP call-to-action, but
+                the dev-mode export literally measures this button at a
+                fixed 322px wide — worth a quick check with Teniayo or
+                the client on which is actually intended. If it should
+                be fixed-width, swap `w-full` for `w-[322px]` (you may
+                also want to center the button in that case, e.g. wrap
+                it or add `mx-auto`). */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 w-full bg-[var(--ink)] py-4 text-[10px] font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-8 w-full bg-[#564345] py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>
