@@ -60,7 +60,7 @@ import SearchOverlay from "./SearchOverlay";
 import laraCrochetLogo from "../assets/lara-crochet-logo.png";
 
 // Tweak these two to taste — nothing else needs to change.
-const NAVBAR_IDLE_OPACITY = 0.75; // resting/dimmed state (try between 0.65–0.8)
+const NAVBAR_IDLE_OPACITY = 1; // resting/dimmed state (try between 0.65–0.8)
 const NAVBAR_HOVER_HOLD_MS = 2500; // stays fully visible this long after you stop hovering
 
 const LINKS = [
@@ -162,10 +162,6 @@ export default function Navbar() {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className="fixed inset-x-0 top-0 z-50 border-b border-[#E5E5E5] bg-[#FAFAFA] transition-opacity duration-300"
-        style={{
-          opacity: hidden ? 0 : isFocused ? 1 : NAVBAR_IDLE_OPACITY,
-          pointerEvents: hidden ? "none" : "auto",
-        }}
       >
         {/*
           Mobile (below md): 3 cols, middle is a flexible spacer
