@@ -62,6 +62,15 @@ import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
      carried them, they land in the same sane spot (right at the
      top of the compact section) instead of occasionally overshooting
      clean past Shop and into the footer.
+
+   NAVBAR VISIBILITY:
+   - while this section is actively pinned and scrubbing
+     (pinState === "pinned"), the shared NavbarVisibilityContext
+     is told to hide the navbar entirely. Before the section is
+     reached, after the pin releases, or once the sequence has
+     already completed once (liveCompleted / renderCompactFromStart
+     / reduceMotion), the navbar is shown again — see the effect
+     below, and Navbar.jsx for how it reacts to this.
    ============================================================ */
 
 
@@ -425,7 +434,22 @@ const REVIEW_ROWS = [
 
 
 /* ============================================================
-   FIGMA PHOTO POSITIONS (unchanged from your spec)
+   FIGMA PHOTO POSITIONS
+   ============================================================
+
+   Matched against the Figma CSS export's Rectangle 51/52/53:
+
+     Rectangle 51 (back,   scatterStreet): rotate: none        → figmaAngle 0
+     Rectangle 52 (middle, scatterBeach) : rotate: 19.63deg     → figmaAngle -19.63
+     Rectangle 53 (front,  scatterTeal)  : rotate: -8.21deg     → figmaAngle 8.21
+
+   (getPhotoState negates figmaAngle: finalRotate = -figmaAngle,
+   since Figma's rotate() is already the CSS-space value, so
+   figmaAngle needs to be the negation of the raw deg it shows.)
+
+   finalX/finalY are each rectangle's `left`/`top` converted into
+   an offset from the middle photo's own position (the code's
+   existing 0,0 baseline), using Figma's left/top px values.
    ============================================================ */
 
 const SCATTER_PHOTOS = [
@@ -435,11 +459,11 @@ const SCATTER_PHOTOS = [
     alt: "Street-style portrait",
     width: 175.59958036211256,
     height: 103.72863095475553,
-    figmaAngle: 0,          // was -19.63
+    figmaAngle: 0,
     enterDirection: "bottom",
     zIndex: 1,
-    finalX: -6.63,           // was 0
-    finalY: 26.5,            // was -25
+    finalX: -6.63,
+    finalY: 26.5,
   },
   {
     id: "middle",
@@ -447,7 +471,7 @@ const SCATTER_PHOTOS = [
     alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
     width: 175.59957885742188,
     height: 103.72863006591797,
-    figmaAngle: -19.63,      // was 0
+    figmaAngle: -19.63,
     enterDirection: "left",
     zIndex: 2,
     finalX: 0,
@@ -459,13 +483,14 @@ const SCATTER_PHOTOS = [
     alt: "Lara's Crochet customer wearing a teal crochet dress",
     width: 175.59957556823136,
     height: 103.72862812295645,
-    figmaAngle: 8.21,        // unchanged, this one was already right
+    figmaAngle: 8.21,
     enterDirection: "right",
     zIndex: 3,
-    finalX: 0.11,            // was 0, negligible but included for accuracy
-    finalY: 22.1,            // was 4
+    finalX: 0.11,
+    finalY: 22.1,
   },
 ];
+
 
 /* ============================================================
    WORDMARK / LAYOUT
@@ -498,7 +523,7 @@ export default function LaraShowcase() {
   const afterTopRef = useRef(0);
   const rafRef = useRef(null);
   const pendingScrollFixRef = useRef(null);
-  
+
   /*
     IMPORTANT DISTINCTION:
 
@@ -534,26 +559,31 @@ export default function LaraShowcase() {
     []
   );
 
+  /* -------------------- navbar hide-during-pin -------------------- */
+
   const { setHidden } = useNavbarVisibility();
-  
-  // Hide the navbar ONLY while the pin is actively scrubbing (pinState
-  // === "pinned"). Before the section is reached, after it releases,
-  // or in any of the "already done" paths (renderCompactFromStart,
-  // reduceMotion, liveCompleted), the navbar stays visible.
+
+  // Hide the navbar ONLY while the pin is actively scrubbing
+  // (pinState === "pinned"). Before the section is reached, after
+  // it releases, or in any of the "already done" paths
+  // (renderCompactFromStart, reduceMotion, liveCompleted), the
+  // navbar stays visible — Navbar.jsx reacts to this via the same
+  // context.
   useEffect(() => {
     const shouldHide =
       !renderCompactFromStart && !reduceMotion && !liveCompleted && pinState === "pinned";
     setHidden(shouldHide);
   }, [pinState, renderCompactFromStart, reduceMotion, liveCompleted, setHidden]);
 
-  // Safety net: if this unmounts mid-animation (fast client-side nav
-  // away from "/"), don't leave the navbar permanently hidden.
+  // Safety net: if this unmounts mid-animation (e.g. a fast
+  // client-side nav away from "/"), don't leave the navbar
+  // permanently hidden.
   useEffect(() => {
     return () => setHidden(false);
   }, [setHidden]);
-  
+
   /* -------------------- reduced motion -------------------- */
-  
+
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduceMotion(mq.matches);

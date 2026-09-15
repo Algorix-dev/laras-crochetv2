@@ -32,16 +32,36 @@
   content edges land on the same vertical line — like a single
   margin drawn down the page — instead of each section inventing
   its own padding scale.
+
+  TIP — DIMMED IDLE / HOVER-TO-FULL-OPACITY / HIDE-DURING-PIN:
+  The navbar now has three opacity states instead of always being
+  100% visible:
+    1. Hidden (opacity 0, pointer-events none) — only while
+       LaraShowcase is actively pinned/scrubbing. Driven by the
+       shared NavbarVisibilityContext (see setHidden there) so any
+       future pinned/full-screen section can reuse the same
+       mechanism without touching this file again.
+    2. Dimmed (NAVBAR_IDLE_OPACITY) — the normal resting state on
+       every page, all the time, once the navbar is visible at all.
+    3. Full opacity — while hovered, AND for NAVBAR_HOVER_HOLD_MS
+       after the mouse leaves (a grace period so an accidental
+       mouse-off while moving toward a click doesn't dim on you
+       mid-intent).
 */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Heart, Search, ShoppingBag, User, Menu, X } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
+import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
 import CountrySelectorModal from "./CountrySelectorModal";
 import SearchOverlay from "./SearchOverlay";
 import laraCrochetLogo from "../assets/lara-crochet-logo.png";
+
+// Tweak these two to taste — nothing else needs to change.
+const NAVBAR_IDLE_OPACITY = 0.75; // resting/dimmed state (try between 0.65–0.8)
+const NAVBAR_HOVER_HOLD_MS = 2500; // stays fully visible this long after you stop hovering
 
 const LINKS = [
   { label: "Shop", to: "/shop" },
@@ -59,6 +79,36 @@ export default function Navbar() {
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  /* -------------------- visibility + dim/hover state -------------------- */
+
+  const { hidden } = useNavbarVisibility();
+  const [isFocused, setIsFocused] = useState(false);
+  const dimTimeoutRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    if (dimTimeoutRef.current) {
+      clearTimeout(dimTimeoutRef.current);
+      dimTimeoutRef.current = null;
+    }
+    setIsFocused(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Don't dim immediately — hold at full opacity for a grace
+    // window in case this was an accidental mouse-off, or they're
+    // about to move back in to click something.
+    dimTimeoutRef.current = setTimeout(() => {
+      setIsFocused(false);
+      dimTimeoutRef.current = null;
+    }, NAVBAR_HOVER_HOLD_MS);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (dimTimeoutRef.current) clearTimeout(dimTimeoutRef.current);
+    };
+  }, []);
 
   const isActive = (to) => {
     if (to === "/") {
@@ -108,7 +158,15 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed inset-x-0 -top-0.5 z-50 border-b border-[#E5E5E5] bg-[#FAFAFA]">
+      <header
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className="fixed inset-x-0 top-0 z-50 border-b border-[#E5E5E5] bg-[#FAFAFA] transition-opacity duration-300"
+        style={{
+          opacity: hidden ? 0 : isFocused ? 1 : NAVBAR_IDLE_OPACITY,
+          pointerEvents: hidden ? "none" : "auto",
+        }}
+      >
         {/*
           Mobile (below md): 3 cols, middle is a flexible spacer
           (nav links are hidden anyway), so it behaves like the old
