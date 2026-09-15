@@ -473,7 +473,7 @@ export default function ProductDetail() {
 
   return (
     <>
-      <main className="mx-auto max-w-[960px] px-5 py-8 md:px-0 md:py-12">
+      <main className="mx-auto px-5 py-8 md:px-0 md:py-12">
         {/* ============================
             TWO-COLUMN MAIN SECTION
             ============================ */}
@@ -481,7 +481,7 @@ export default function ProductDetail() {
             dead evenly — 945px / 945px out of a 1920px frame (minus
             the 30px gap), i.e. a true 50/50 split, not the previous
             1.18/.82 (~59/41) ratio. */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-7">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-7.5">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
             {/* Figma treats the main image and four thumbnails as one gallery container. */}
@@ -491,7 +491,7 @@ export default function ProductDetail() {
                   <img
                     src={gallery[selectedImage]}
                     alt={product.name}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-cover"
                   />
                 )}
               </div>
@@ -499,12 +499,12 @@ export default function ProductDetail() {
               {/* The thumbnails sit directly inside the same surface, with no
                   individual white/background cards around each image. */}
               {gallery.length > 0 && (
-                <div className="grid grid-cols-4 gap-3 px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3">
+                <div className="grid grid-cols-4 gap-3 px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3 lg:gap-9.5">
                   {Array.from({ length: 4 }, (_, index) => {
                     const src = gallery[index];
                     if (!src) {
                       return (
-                        <div key={`placeholder-${index}`} className="aspect-square opacity-40">
+                        <div key={`placeholder-${index}`} className="aspect-square opacity-30">
                           <ProductPlaceholder className="h-full w-full" />
                         </div>
                       );
