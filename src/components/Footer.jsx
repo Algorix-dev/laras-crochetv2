@@ -66,7 +66,7 @@ export default function Footer() {
         <div className="flex flex-wrap gap-x-16 gap-y-8">
           {columns.map((col) => (
             <div key={col.title}>
-              <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4px]">
+              <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4%]">
                 {col.title}
               </h3>
               <ul className="space-y-2 text-[16px] text-[var(--muted)]">
@@ -94,7 +94,7 @@ export default function Footer() {
         </div>
 
         <div className="w-full max-w-xs sm:w-auto">
-          <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4px]">
+          <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4%]">
             Subscribe to Our Newsletter
           </h3>
           {subscribed ? (
