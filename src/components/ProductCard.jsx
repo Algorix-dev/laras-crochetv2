@@ -28,6 +28,15 @@
   (now-smaller) inner area with no gaps or letterboxing. If Lara
   wants a specific measurement off Figma instead of this p-3
   default, swap that one class.
+
+  TIP: the un-wishlisted heart now fills faintly instead of being
+  a pure stroke-only outline (fill="none"). At the size this icon
+  renders (14px in the badge, still fairly small at 19px in the
+  recommendation variant), a hollow heart's two top lobes compress
+  down to looking like two separate little blobs rather than one
+  heart shape. A faint fill gives the eye enough mass in the middle
+  to read it as one shape. Wishlisted state is unchanged — solid
+  currentColor fill, no ambiguity there.
 */
 import { Heart, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -35,6 +44,10 @@ import ProductPlaceholder from './ProductPlaceholder';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCurrency } from '../context/CurrencyContext';
+
+// Faint fill for the un-wishlisted state — see the TIP above about
+// why a fully hollow heart reads as "two blobs" at this size.
+const HEART_UNFILLED = 'rgba(64, 64, 64, 0.15)';
 
 export default function ProductCard({ product, variant = 'default' }) {
   const { addToBag, openBag } = useCart();
@@ -83,7 +96,7 @@ export default function ProductCard({ product, variant = 'default' }) {
             <Heart
               size={14}
               strokeWidth={1.5}
-              fill={inWishlist ? 'currentColor' : 'none'}
+              fill={inWishlist ? 'currentColor' : HEART_UNFILLED}
             />
           </button>
         )}
@@ -114,7 +127,7 @@ export default function ProductCard({ product, variant = 'default' }) {
             }}
             className="shrink-0 text-[#404040] transition-colors hover:text-[var(--maroon)]"
           >
-            <Heart size={19} strokeWidth={1.5} fill={inWishlist ? 'currentColor' : 'none'} />
+            <Heart size={19} strokeWidth={1.5} fill={inWishlist ? 'currentColor' : HEART_UNFILLED} />
           </button>
         ) : (
           <button
