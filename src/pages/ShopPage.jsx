@@ -98,7 +98,7 @@ export default function ShopPage() {
         {/* Header row: title/subtitle on the left, search on the right */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-2">
+            <h1 className="text-[36px] md:text-[36px] font-bold uppercase tracking-[-2%] text-[var(--ink)] mb-2">
               Shop Lara's Crochet
             </h1>
             <p className="text-sm text-[var(--muted)]">
@@ -106,7 +106,7 @@ export default function ShopPage() {
             </p>
           </div>
 
-          <label className="relative w-full md:w-72 shrink-0">
+          <label className="relative w-full md:w-161.5">
             <span className="sr-only">Search products</span>
             <input
               type="search"
