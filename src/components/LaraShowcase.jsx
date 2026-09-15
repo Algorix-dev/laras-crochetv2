@@ -5,6 +5,7 @@ import scatterBeach from "../assets/scatter-beach.webp";
 import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.webp";
 import laraDecor from "../assets/decor/lara-decor-composite.png";
+import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
 
 /* ============================================================
    LARA SHOWCASE
@@ -434,11 +435,11 @@ const SCATTER_PHOTOS = [
     alt: "Street-style portrait",
     width: 175.59958036211256,
     height: 103.72863095475553,
-    figmaAngle: -19.63,
+    figmaAngle: 0,          // was -19.63
     enterDirection: "bottom",
     zIndex: 1,
-    finalX: 0,
-    finalY: -25,
+    finalX: -6.63,           // was 0
+    finalY: 26.5,            // was -25
   },
   {
     id: "middle",
@@ -446,10 +447,10 @@ const SCATTER_PHOTOS = [
     alt: "Lara's Crochet customer wearing a turquoise two-piece on the beach",
     width: 175.59957885742188,
     height: 103.72863006591797,
-    figmaAngle: 0,
+    figmaAngle: -19.63,      // was 0
     enterDirection: "left",
     zIndex: 2,
-    finalX: -7,
+    finalX: 0,
     finalY: 0,
   },
   {
@@ -458,14 +459,13 @@ const SCATTER_PHOTOS = [
     alt: "Lara's Crochet customer wearing a teal crochet dress",
     width: 175.59957556823136,
     height: 103.72862812295645,
-    figmaAngle: 8.21,
+    figmaAngle: 8.21,        // unchanged, this one was already right
     enterDirection: "right",
     zIndex: 3,
-    finalX: 0,
-    finalY: 4,
+    finalX: 0.11,            // was 0, negligible but included for accuracy
+    finalY: 22.1,            // was 4
   },
 ];
-
 
 /* ============================================================
    WORDMARK / LAYOUT
@@ -498,7 +498,7 @@ export default function LaraShowcase() {
   const afterTopRef = useRef(0);
   const rafRef = useRef(null);
   const pendingScrollFixRef = useRef(null);
-
+  
   /*
     IMPORTANT DISTINCTION:
 
@@ -534,8 +534,26 @@ export default function LaraShowcase() {
     []
   );
 
-  /* -------------------- reduced motion -------------------- */
+  const { setHidden } = useNavbarVisibility();
+  
+  // Hide the navbar ONLY while the pin is actively scrubbing (pinState
+  // === "pinned"). Before the section is reached, after it releases,
+  // or in any of the "already done" paths (renderCompactFromStart,
+  // reduceMotion, liveCompleted), the navbar stays visible.
+  useEffect(() => {
+    const shouldHide =
+      !renderCompactFromStart && !reduceMotion && !liveCompleted && pinState === "pinned";
+    setHidden(shouldHide);
+  }, [pinState, renderCompactFromStart, reduceMotion, liveCompleted, setHidden]);
 
+  // Safety net: if this unmounts mid-animation (fast client-side nav
+  // away from "/"), don't leave the navbar permanently hidden.
+  useEffect(() => {
+    return () => setHidden(false);
+  }, [setHidden]);
+  
+  /* -------------------- reduced motion -------------------- */
+  
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduceMotion(mq.matches);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { NavbarVisibilityProvider } from "./context/NavbarVisibilityContext";
 import { useCart } from "./context/CartContext";
 import Navbar from "./components/Navbar";
 import BagDrawer from "./components/BagDrawer";
@@ -149,6 +150,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <NavbarVisibilityProvider>
       <ScrollToTop />
       <ConditionalNavbar />
       <BagDrawer open={isBagOpen} onClose={closeBag} />
@@ -175,6 +177,7 @@ export default function App() {
         {/* Catch-all: unknown routes go home rather than a blank page */}
         <Route path="*" element={<SignInPage />} />
       </Routes></PageOffset>
+      </NavbarVisibilityProvider>
     </AuthProvider>
   );
 }
