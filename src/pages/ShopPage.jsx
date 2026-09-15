@@ -20,6 +20,18 @@
   local array — fine for 3 hardcoded items, wasteful once Lara has
   a real catalog).
 */
+/*
+  TIP — 304px SHARED MARGIN: the header block (title/breadcrumb/
+  category tabs/search/loading-error-empty states) previously used
+  its own `mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28`
+  — a totally separate padding scale from every other section on the
+  site. That's why this block's left edge didn't line up with
+  ProductGrid right below it (which already uses the shared class
+  internally), or with the Navbar above it. Swapped to the same
+  `px-5 md:px-8 lg:px-[15.83%]` class used by Navbar/Hero/ProductGrid/
+  Footer/CustomOrderBanner/LaraShowcase, same as Footer and
+  ProductGrid already did for the same reason.
+*/
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
@@ -82,7 +94,7 @@ export default function ShopPage() {
   return (
     <>
     <section className="pt-10">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 md:px-12 lg:px-20 xl:px-28">
+      <div className="px-5 md:px-8 lg:px-[15.83%]">
         {/* Header row: title/subtitle on the left, search on the right */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
