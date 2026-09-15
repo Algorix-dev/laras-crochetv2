@@ -491,7 +491,7 @@ export default function ProductDetail() {
                   <img
                     src={gallery[selectedImage]}
                     alt={product.name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-[center/contain]"
                   />
                 )}
               </div>
@@ -499,7 +499,7 @@ export default function ProductDetail() {
               {/* The thumbnails sit directly inside the same surface, with no
                   individual white/background cards around each image. */}
               {gallery.length > 0 && (
-                <div className="grid grid-cols-4 gap-3 px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3 lg:gap-9.5">
+                <div className="grid grid-cols-4 gap-3 px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3">
                   {Array.from({ length: 4 }, (_, index) => {
                     const src = gallery[index];
                     if (!src) {
