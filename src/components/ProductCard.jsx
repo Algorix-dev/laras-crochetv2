@@ -19,15 +19,34 @@
     recommendation strips consistently drop the category line and
     swap the icon everywhere they appear.
 
-  TIP: the image sits inside a `p-3` inset on its container (not
-  flush edge-to-edge with the white card) so there's visible
-  breathing room between the photo and the card boundary on all
-  four sides. The `aspectRatio: 640/731` still governs the OUTER
-  box (so every card in a grid stays the same size) — the padding
-  just eats into that box, so `object-cover` still fills the
-  (now-smaller) inner area with no gaps or letterboxing. If Lara
-  wants a specific measurement off Figma instead of this p-3
-  default, swap that one class.
+  TIP — IMAGE FIT (changed from object-cover/p-3):
+  The old `p-3` + `object-cover` combo was CROPPING every photo to
+  fill the box — which is exactly what was slicing heads off the
+  top of some cards (object-cover always crops when the photo's own
+  proportions don't match the card's, it never letterboxes). Since
+  Lara specifically chose/posed each product photo on purpose, no
+  photo should ever be cropped here.
+
+  Fixed with two changes together:
+  1. `object-contain` instead of `object-cover` — this CANNOT crop.
+     The whole photo is always fully visible, scaled to fit.
+  2. The flat `p-3` (a fixed 12px, same at every screen size) is
+     replaced with a percentage-based inset matching Figma's actual
+     "Rectangle 37" spec (506.26 x 667.57 photo inside a 640 x 731
+     card): 4.24% top / 4.44% bottom / 10.45% left+right. Using
+     percentages means the inset scales correctly whether this card
+     is rendered small (2-up mobile grid) or large (3-up desktop
+     Shop grid), instead of only being correct at one fixed pixel
+     size.
+
+  Because real product photos vary in their own width-to-height
+  ratio (some are photographed tighter/wider than others), you may
+  see a little more empty space on the left/right of some photos
+  than others — that's expected and correct: it's the trade-off for
+  guaranteeing nothing is ever cropped. If a specific photo still
+  looks too small/swimming in whitespace, that's a photo-cropping
+  fix on the source image itself, not something to solve by going
+  back to object-cover (which brings the head-cropping bug back).
 
   TIP: the un-wishlisted heart now fills faintly instead of being
   a pure stroke-only outline (fill="none"). At the size this icon
@@ -48,6 +67,11 @@ import { useCurrency } from '../context/CurrencyContext';
 // Faint fill for the un-wishlisted state — see the TIP above about
 // why a fully hollow heart reads as "two blobs" at this size.
 const HEART_UNFILLED = 'rgba(64, 64, 64, 0.15)';
+
+// Figma "Rectangle 37" inset, expressed as % of the 640x731 card so
+// it scales correctly at any rendered size: top 31/731, bottom
+// (731-31-667.57)/731, left/right (640-506.26)/2/640.
+const IMAGE_INSET = "4.24% 10.45% 4.44%";
 
 export default function ProductCard({ product, variant = 'default' }) {
   const { addToBag, openBag } = useCart();
@@ -70,18 +94,22 @@ export default function ProductCard({ product, variant = 'default' }) {
     <div className="group">
       <Link
         to={`/product/${product.id}`}
-        className="relative block overflow-hidden bg-white p-3"
+        className="relative block overflow-hidden bg-white"
         style={{ aspectRatio: "640 / 731" }}
       >
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <ProductPlaceholder className="h-full w-full" />
-        )}
+        {/* Photo sits inside this proportionally-inset wrapper,
+            never the full card — see TIP above. */}
+        <div className="absolute inset-0" style={{ padding: IMAGE_INSET }}>
+          {product.image ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <ProductPlaceholder className="h-full w-full" />
+          )}
+        </div>
 
         {!isRecommendation && (
           <button
