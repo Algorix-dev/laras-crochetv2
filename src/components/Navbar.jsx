@@ -42,12 +42,6 @@ import { useAuth } from "../context/AuthContext";
 import CountrySelectorModal from "./CountrySelectorModal";
 import SearchOverlay from "./SearchOverlay";
 import laraCrochetLogo from "../assets/lara-crochet-logo.png";
-import { useEffect, useRef} from "react";
-import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
-
-// Tweak these two numbers to taste — nothing else needs to change.
-const NAVBAR_IDLE_OPACITY = 0.75;          // resting/dimmed state
-const NAVBAR_HOVER_HOLD_MS = 2500;         // stays fully visible this long after you stop hovering
 
 const LINKS = [
   { label: "Shop", to: "/shop" },
@@ -65,33 +59,7 @@ export default function Navbar() {
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { hidden } = useNavbarVisibility();
-  const [isFocused, setIsFocused] = useState(false);
-  const dimTimeoutRef = useRef(null);
 
-const handleMouseEnter = () => {
-  if (dimTimeoutRef.current) {
-    clearTimeout(dimTimeoutRef.current);
-    dimTimeoutRef.current = null;
-  }
-  setIsFocused(true);
-};
-
-const handleMouseLeave = () => {
-  // Don't dim immediately — give a grace window in case they're
-  // moving toward something to click, or it was an accidental
-  // mouse-off.
-  dimTimeoutRef.current = setTimeout(() => {
-    setIsFocused(false);
-    dimTimeoutRef.current = null;
-  }, NAVBAR_HOVER_HOLD_MS);
-};
-
-useEffect(() => {
-  return () => {
-    if (dimTimeoutRef.current) clearTimeout(dimTimeoutRef.current);
-  };
-}, []);
   const isActive = (to) => {
     if (to === "/") {
       return (
@@ -140,15 +108,7 @@ useEffect(() => {
 
   return (
     <>
-      <header
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className="fixed inset-x-0 top-0 z-50 border-b border-[#E5E5E5] bg-[#FAFAFA] transition-opacity duration-300"
-        style={{
-          opacity: hidden ? 0 : isFocused ? 1 : NAVBAR_IDLE_OPACITY,
-          pointerEvents: hidden ? "none" : "auto",
-        }}
-      >
+      <header className="fixed inset-x-0 -top-0.5 z-50 border-b border-[#E5E5E5] bg-[#FAFAFA]">
         {/*
           Mobile (below md): 3 cols, middle is a flexible spacer
           (nav links are hidden anyway), so it behaves like the old
