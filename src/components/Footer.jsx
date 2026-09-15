@@ -66,10 +66,10 @@ export default function Footer() {
         <div className="flex flex-wrap gap-x-16 gap-y-8">
           {columns.map((col) => (
             <div key={col.title}>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-tight">
+              <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4px]">
                 {col.title}
               </h3>
-              <ul className="space-y-2 text-sm text-[var(--muted)]">
+              <ul className="space-y-2 text-[16px] text-[var(--muted)]">
                 {col.links.map((link) => (
                   <li key={link.label}>
                     {link.href ? (
@@ -94,7 +94,7 @@ export default function Footer() {
         </div>
 
         <div className="w-full max-w-xs sm:w-auto">
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-tight">
+          <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4px]">
             Subscribe to Our Newsletter
           </h3>
           {subscribed ? (
@@ -109,11 +109,11 @@ export default function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="w-full min-w-0 border border-[var(--line)] px-3 py-2 text-sm outline-none focus:border-[var(--ink)]"
+                  className="w-full min-w-[356px] border border-[var(--line)] px-3 py-2 text-sm outline-none focus:border-[var(--ink)]"
                 />
                 <button
                   type="submit"
-                  className="shrink-0 bg-[var(--maroon)] px-4 text-xs font-bold uppercase text-white hover:bg-[var(--maroon-dark)]"
+                  className="w-[208px] h-12 bg-[var(--maroon)] px-4 text-[16px] font-bold uppercase text-white hover:bg-[var(--maroon-dark)]"
                 >
                   Subscribe
                 </button>
