@@ -68,8 +68,6 @@ function RequireAuth({ children }) {
 /* Home page is its own component so the route stays clean */
 function HomePage() {
   const [liveProducts, setLiveProducts] = useState(products); // instant first paint, then swapped for live data
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     getProducts()
       .then((data) => {
@@ -78,7 +76,6 @@ function HomePage() {
       .catch(() => {
         // fails quietly to the static fallback already in state
       })
-      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -116,11 +113,7 @@ function HomePage() {
                   Go to shop
                 </Link>
               </div>
-              {loading ? (
-                <p className="text-[16px] text-[var(--muted)] px-5">Loading products...</p>
-              ) : (
-                <ProductGrid products={liveProducts.slice(0, 4)} />
-              )}
+              <ProductGrid products={liveProducts.slice(0, 4)} />
               <div className="text-center mt-10">
                 <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
                   Go to Shop
