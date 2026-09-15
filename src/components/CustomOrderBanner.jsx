@@ -367,7 +367,7 @@ export default function CustomOrderBanner() {
               hover:opacity-90
             "
           >
-            ADD TO BAG
+            Make a Custom Order
           </button>
         </div>
       </div>
