@@ -471,7 +471,7 @@ export default function ProductDetail() {
     addToBag(product, color, shade, size);
     openBag();
   };
-  
+
   if (error || !product) {
     return (
       <main className="mx-auto max-w-7xl px-5 py-24 text-center md:px-8">
@@ -497,13 +497,13 @@ export default function ProductDetail() {
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
             {/* Figma treats the main image and four thumbnails as one gallery container. */}
-            <div className="bg-[#f5f4f4]">
+            <div className="bg-[#E5E5E5]">
               <div className="h-[470px] md:h-[560px]">
                 {gallery[selectedImage] && (
                   <img
                     src={gallery[selectedImage]}
                     alt={product.name}
-                    className="h-full w-full object-[center/contain]"
+                    className="h-full w-full object-center object-cover"
                   />
                 )}
               </div>
@@ -692,7 +692,7 @@ export default function ProductDetail() {
                 it or add `mx-auto`). */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 w-full bg-[#564345] py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-8 max-w-80.5 bg-[#564345] py-4 text-[20px] font-bold uppercase tracking-[-4%] text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>
