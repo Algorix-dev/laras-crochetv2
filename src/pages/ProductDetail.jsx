@@ -496,60 +496,40 @@ export default function ProductDetail() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-7.5">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
-            {/* Figma treats the main image and four thumbnails as one gallery container. */}
-            <div className="bg-[#E5E5E5]">
-              <div className="h-[470px] md:h-[560px]">
-                {gallery[selectedImage] && (
-                  <img
-                    src={gallery[selectedImage]}
-                    alt={product.name}
-                    className="h-full w-full object-center object-cover"
-                  />
-                )}
-              </div>
+  <div className="bg-[#E5E5E5]">
+    <div className="flex flex-col items-center justify-center bg-[#F5F5F5] px-5 py-5 md:px-[185px] md:py-5">
+      {/* Main image — fixed portrait size, not full-bleed */}
+      <div className="h-[380px] w-[145px] md:h-[602px] md:w-[229px]">
+        {gallery[selectedImage] && (
+          <img
+            src={gallery[selectedImage]}
+            alt={product.name}
+            className="h-full w-full object-cover"
+          />
+        )}
+      </div>
 
-              {/* TIP: Figma's dev-mode export ("Frame 67") measures
-                  these thumbnails at 52.96 × 139px (~1:2.62 — a tall
-                  portrait crop matching the main photo, not a square)
-                  laid out as a centered flex row with a 39px gap. It
-                  also marks the *unselected* thumbnails at opacity 0.3
-                  rather than ringing the selected one — so the active
-                  state below is now an opacity toggle instead of a
-                  ring/outline. If you want the ring style back, swap
-                  the opacity-30/opacity-100 pair for the old
-                  ring-1 ring-offset-2 classes. */}
-              {gallery.length > 0 && (
-                <div className="flex items-center justify-center gap-[39px] px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3">
-                  {Array.from({ length: 4 }, (_, index) => {
-                    const src = gallery[index];
-                    if (!src) {
-                      return (
-                        <div
-                          key={`placeholder-${index}`}
-                          className="aspect-[53/139] w-[52.96px] opacity-30"
-                        >
-                          <ProductPlaceholder className="h-full w-full" />
-                        </div>
-                      );
-                    }
-                    return (
-                      <button
-                        key={src + index}
-                        type="button"
-                        aria-label={`View ${product.name} angle ${index + 1}`}
-                        onClick={() => setSelectedImage(index)}
-                        className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${
-                          index === selectedImage ? 'opacity-100' : 'opacity-30'
-                        }`}
-                      >
-                        <img src={src} alt="" className="h-full w-full object-cover" />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </section>
+      {/* Thumbnails — only render images that actually exist */}
+      {gallery.length > 0 && (
+        <div className="mt-3 flex items-center justify-center gap-[39px]">
+          {gallery.slice(0, 4).map((src, index) => (
+            <button
+              key={src + index}
+              type="button"
+              aria-label={`View ${product.name} angle ${index + 1}`}
+              onClick={() => setSelectedImage(index)}
+              className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${
+                index === selectedImage ? 'opacity-100' : 'opacity-30'
+              }`}
+            >
+              <img src={src} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</section>
 
           {/* ---- RIGHT: Product Info & Purchase ---- */}
           <section className="lg:pt-7">
