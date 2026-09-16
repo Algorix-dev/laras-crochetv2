@@ -34,6 +34,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getProduct, getProducts, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
+import ProductPlaceholder from '../components/ProductPlaceholder';
 import Footer from '../components/Footer';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -495,80 +496,40 @@ export default function ProductDetail() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-7.5">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
-            {/* Figma treats the main image and four thumbnails as one gallery container. */}
-            {/* TIP: this used to be a fixed `h-[470px] md:h-[560px]` box —
-                short and wide. But the actual photos (and the Figma spec,
-                229.38 × 602px) are tall portrait shots, ratio ≈ 0.38. A
-                short/wide box forces `object-cover` to zoom way in and
-                crop off the head/feet just to fill that shape — that's
-                the "stretched/zoomed" look from before, and it wasn't a
-                stretch at all, just an aspect-ratio mismatch. Using
-                `aspect-[229.38/602]` on the container instead means its
-                height is always derived from its own width in the right
-                proportion, so cropping stays minimal regardless of
-                screen size. If your real product photos are a different
-                ratio than Figma's mockup (these are closer to ~0.61),
-                adjust the number here to match your actual photos rather
-                than the literal Figma value — e.g. try
-                `aspect-[1280/2092]` to match reina-lilac.jpg exactly. */}
-            <div className="bg-[#E5E5E5]">
-              <div className="aspect-[229.38/602] w-full">
-                {gallery[selectedImage] && (
-                  <img
-                    src={gallery[selectedImage]}
-                    alt={product.name}
-                    className="h-full w-full object-center object-cover"
-                  />
-                )}
-              </div>
+  <div className="bg-[#E5E5E5]">
+    <div className="flex flex-col items-center justify-center bg-[#F5F5F5] px-5 py-5 md:px-[185px] md:py-5">
+      {/* Main image — fixed portrait size, not full-bleed */}
+      <div className="h-[380px] w-[145px] md:h-[602px] md:w-[229px]">
+        {gallery[selectedImage] && (
+          <img
+            src={gallery[selectedImage]}
+            alt={product.name}
+            className="h-full w-full object-cover"
+          />
+        )}
+      </div>
 
-              {/* TIP: Figma's dev-mode export ("Frame 67") measures
-                  these thumbnails at 52.96 × 139px (~1:2.62 — a tall
-                  portrait crop matching the main photo, not a square)
-                  laid out as a centered flex row with a 39px gap. It
-                  also marks the *unselected* thumbnails at opacity 0.3
-                  rather than ringing the selected one — so the active
-                  state below is now an opacity toggle instead of a
-                  ring/outline. If you want the ring style back, swap
-                  the opacity-30/opacity-100 pair for the old
-                  ring-1 ring-offset-2 classes. */}
-              {/* TIP: this used to always render exactly 4 slots via
-                  Array.from({ length: 4 }, ...) and fill any leftover
-                  slots with a ProductPlaceholder — a plain white box
-                  with a mannequin icon (see ProductPlaceholder.jsx).
-                  That's the "images all had their own backgrounds"
-                  issue: any product with fewer than 4 real photos
-                  showed real photo(s) + 1-3 white boxes. Figma's mock
-                  happens to show 4 because that product has 4 real
-                  angles — it's not a fixed requirement. Mapping over
-                  `gallery` directly instead means a 1-photo product
-                  just shows 1 thumbnail, a 4-photo product shows 4,
-                  and no placeholder box ever appears. If you'd rather
-                  keep a fixed 4-wide row (so the row width doesn't
-                  visibly shrink for products with fewer photos), swap
-                  `gallery.map(...)` back for the old
-                  `Array.from({ length: 4 }, ...)` + placeholder branch. */}
-              {gallery.length > 0 && (
-                <div className="flex items-center justify-center gap-[39px] px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3">
-                  {gallery.map((src, index) => {
-                    return (
-                      <button
-                        key={src + index}
-                        type="button"
-                        aria-label={`View ${product.name} angle ${index + 1}`}
-                        onClick={() => setSelectedImage(index)}
-                        className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${
-                          index === selectedImage ? 'opacity-100' : 'opacity-30'
-                        }`}
-                      >
-                        <img src={src} alt="" className="h-full w-full object-cover" />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </section>
+      {/* Thumbnails — only render images that actually exist */}
+      {gallery.length > 0 && (
+        <div className="mt-3 flex items-center justify-center gap-[39px]">
+          {gallery.slice(0, 4).map((src, index) => (
+            <button
+              key={src + index}
+              type="button"
+              aria-label={`View ${product.name} angle ${index + 1}`}
+              onClick={() => setSelectedImage(index)}
+              className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${
+                index === selectedImage ? 'opacity-100' : 'opacity-30'
+              }`}
+            >
+              <img src={src} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</section>
 
           {/* ---- RIGHT: Product Info & Purchase ---- */}
           <section className="lg:pt-7">
