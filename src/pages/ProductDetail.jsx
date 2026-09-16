@@ -692,7 +692,7 @@ export default function ProductDetail() {
                 it or add `mx-auto`). */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 max-w-80.5 bg-[#564345] py-4 text-[20px] font-bold uppercase tracking-[-4%] text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-8 max-w-80.5 bg-[#564345] py-4 px-26 text-[20px] font-bold uppercase tracking-[-4%] text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>
