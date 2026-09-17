@@ -534,15 +534,27 @@ export default function ProductDetail() {
           <section>
             {/* Figma treats the main image and four thumbnails as one gallery container. */}
             <div className="bg-[#E5E5E5]">
-              <div className="h-[470px] md:h-[560px]">
-                {gallery[selectedImage] && (
-                  <img
-                    src={gallery[selectedImage]}
-                    alt={product.name}
-                    className="h-full w-full object-center object-cover"
-                  />
-                )}
-              </div>
+              {/* TIP: fixed — this container previously had no width
+                  constraint (only a height), so object-cover stretched
+                  the image across the FULL column width instead of the
+                  narrow 229×602 portrait crop Figma specifies. It also
+                  switched to its "desktop" size at md:, but the actual
+                  two-column layout above only kicks in at lg: — so
+                  between md and lg this was a single full-width column
+                  showing one giant stretched image, not a small centered
+                  photo with visible gray padding either side. Both are
+                  fixed here: real fixed dimensions instead of stretch,
+                  and lg: to match the grid breakpoint above. */}
+              <div className="flex flex-col items-center justify-center px-5 py-5 lg:px-[19.58%] lg:py-5">
+                <div className="h-[380px] w-[145px] lg:h-[602px] lg:w-[229px]">
+                  {gallery[selectedImage] && (
+                    <img
+                      src={gallery[selectedImage]}
+                      alt={product.name}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                </div>
 
               {/* TIP: Figma's dev-mode export ("Frame 67") measures
                   these thumbnails at 52.96 × 139px (~1:2.62 — a tall
@@ -555,7 +567,7 @@ export default function ProductDetail() {
                   the opacity-30/opacity-100 pair for the old
                   ring-1 ring-offset-2 classes. */}
               {gallery.length > 0 && (
-                <div className="flex items-center justify-center gap-[39px] px-5 pb-5 pt-2 md:px-8 md:pb-8 md:pt-3">
+                <div className="mt-3 flex items-center justify-center gap-[39px]">
                   {Array.from({ length: 4 }, (_, index) => {
                     const src = gallery[index];
                     if (!src) {
@@ -584,6 +596,7 @@ export default function ProductDetail() {
                   })}
                 </div>
               )}
+              </div>
             </div>
           </section>
 
