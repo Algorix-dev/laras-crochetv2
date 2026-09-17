@@ -68,13 +68,23 @@ function RequireAuth({ children }) {
 /* Home page is its own component so the route stays clean */
 function HomePage() {
   const [liveProducts, setLiveProducts] = useState(products); // instant first paint, then swapped for live data
+  // TIP: tracks whether `liveProducts` above is still the static
+  // fallback (fake ids like "wisteria") or real data from the API.
+  // ProductCard uses this to disable clicking/wishlisting/bagging
+  // while it's still fake — see the TIP on ProductCard's isPlaceholder
+  // prop for why that matters.
+  const [isLive, setIsLive] = useState(false);
   useEffect(() => {
     getProducts()
       .then((data) => {
-        if (data.length > 0) setLiveProducts(data.map(normalizeProduct));
+        if (data.length > 0) {
+          setLiveProducts(data.map(normalizeProduct));
+          setIsLive(true);
+        }
       })
       .catch(() => {
-        // fails quietly to the static fallback already in state
+        // fails quietly to the static fallback already in state —
+        // isLive stays false, so those cards correctly stay inert
       })
   }, []);
 
@@ -113,7 +123,7 @@ function HomePage() {
                   Go to shop
                 </Link>
               </div>
-              <ProductGrid products={liveProducts.slice(0, 4)} />
+              <ProductGrid products={liveProducts.slice(0, 4)} isPlaceholder={!isLive} />
               <div className="text-center mt-10">
                 <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
                   Go to Shop

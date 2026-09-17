@@ -73,7 +73,16 @@ const HEART_UNFILLED = 'rgba(64, 64, 64, 0.15)';
 // (731-31-667.57)/731, left/right (640-506.26)/2/640.
 const IMAGE_INSET = "4.24% 10.45% 4.44%";
 
-export default function ProductCard({ product, variant = 'default' }) {
+// TIP: isPlaceholder is true for the brief window where a card is
+// showing static fallback data (e.g. HomePage's "Shop Our Pieces"
+// before the live fetch resolves — see App.jsx). Those fake IDs
+// ("wisteria", "sunset", etc.) don't exist in the real database, so
+// clicking through, wishlisting, or bagging one at that moment would
+// 404 on the product page or leave a broken phantom item in the
+// cart/wishlist. Rather than patch each interaction separately, this
+// one flag turns the whole card into a non-interactive preview until
+// real data swaps in — image still shows, nothing is clickable.
+export default function ProductCard({ product, variant = 'default', isPlaceholder = false }) {
   const { addToBag, openBag } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { formatPriceNumber } = useCurrency();
@@ -81,6 +90,7 @@ export default function ProductCard({ product, variant = 'default' }) {
   const inWishlist = isInWishlist(product.id);
 
   const handleAddToBag = () => {
+    if (isPlaceholder) return;
     addToBag(
       product,
       product.colors?.[0] || 'Default',
@@ -90,10 +100,22 @@ export default function ProductCard({ product, variant = 'default' }) {
     openBag();
   };
 
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+    if (isPlaceholder) return;
+    toggleWishlist(product.id);
+  };
+
+  // Swaps between a real <Link> and an inert <div> with the exact
+  // same classes/layout — so the card looks and sizes identically
+  // either way, it just isn't a navigation target while placeholder.
+  const CardLink = isPlaceholder ? 'div' : Link;
+  const cardLinkProps = isPlaceholder ? {} : { to: `/product/${product.id}` };
+
   return (
     <div className="group">
-      <Link
-        to={`/product/${product.id}`}
+      <CardLink
+        {...cardLinkProps}
         className="relative block overflow-hidden bg-white"
         style={{ aspectRatio: "640 / 731" }}
       >
@@ -115,11 +137,9 @@ export default function ProductCard({ product, variant = 'default' }) {
           <button
             aria-label={`${inWishlist ? 'Remove' : 'Add'} ${product.name} ${inWishlist ? 'from' : 'to'} wishlist`}
             aria-pressed={inWishlist}
-            onClick={(e) => {
-              e.preventDefault();
-              toggleWishlist(product.id);
-            }}
-            className="absolute left-5 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-[#EFE7E7] hover:text-[var(--maroon)]"
+            aria-disabled={isPlaceholder}
+            onClick={handleToggleWishlist}
+            className={`absolute left-5 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-[#EFE7E7] ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}`}
           >
             <Heart
               size={14}
@@ -128,10 +148,10 @@ export default function ProductCard({ product, variant = 'default' }) {
             />
           </button>
         )}
-      </Link>
+      </CardLink>
 
       <div className="mt-[1.1rem] flex items-start justify-between gap-2 px-3">
-        <Link to={`/product/${product.id}`} className="min-w-0 flex-1">
+        <CardLink {...cardLinkProps} className="min-w-0 flex-1">
           {!isRecommendation && (
             <div className="whitespace-nowrap text-xs leading-[18px] text-[#737373]">
               {product.categoryLabel?.toUpperCase() || 'PRODUCT'}
@@ -143,25 +163,24 @@ export default function ProductCard({ product, variant = 'default' }) {
           <div className="whitespace-nowrap text-base leading-6 text-[#404040]">
             {formatPriceNumber(product.price)}
           </div>
-        </Link>
+        </CardLink>
 
         {isRecommendation ? (
           <button
             aria-label={`${inWishlist ? 'Remove' : 'Add'} ${product.name} ${inWishlist ? 'from' : 'to'} wishlist`}
             aria-pressed={inWishlist}
-            onClick={(e) => {
-              e.preventDefault();
-              toggleWishlist(product.id);
-            }}
-            className="shrink-0 text-[#404040] transition-colors hover:text-[var(--maroon)]"
+            aria-disabled={isPlaceholder}
+            onClick={handleToggleWishlist}
+            className={`shrink-0 text-[#404040] transition-colors ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}`}
           >
             <Heart size={19} strokeWidth={1.5} fill={inWishlist ? 'currentColor' : HEART_UNFILLED} />
           </button>
         ) : (
           <button
             aria-label={`Add ${product.name} to bag`}
+            aria-disabled={isPlaceholder}
             onClick={handleAddToBag}
-            className="shrink-0 text-[#404040] transition-colors hover:text-[var(--maroon)]"
+            className={`shrink-0 text-[#404040] transition-colors ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}`}
           >
             <ShoppingBag size={19} strokeWidth={1.5} />
           </button>

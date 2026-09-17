@@ -39,6 +39,7 @@ import { CATEGORIES } from '../data/products';
 import { getProducts, normalizeProduct } from '../api';
 import ProductGrid from '../components/ProductGrid';
 import Footer from '../components/Footer';
+import logoMark from '../assets/lac-logo-mark.png';
 
 // TIP: turns 'two-pieces' into 'Two Pieces' for display, so the data
 // file can stay in clean lowercase-hyphen slugs (good for URLs/code)
@@ -58,10 +59,37 @@ const formatLabel = (slug) =>
 // getProducts() instead — the button UI itself won't need to change.
 const PAGE_SIZE = 9;
 
+// TIP: mirrors the branded splash on /signin (logo fade-in + tagline),
+// per Lara's note that any loading moment should use it. This version
+// is CONTAINED to the content area, not full-screen — unlike /signin,
+// Shop always keeps the Navbar mounted above it (see ConditionalNavbar
+// in App.jsx), so a full-viewport takeover here would blank the nav
+// out on every visit. No artificial timer either — /signin holds its
+// splash for a fixed ~2.5s because "checking" there is instant and
+// needs padding to feel intentional; here the load time is real, so
+// this shows for exactly as long as the fetch actually takes.
+function BrandedLoader() {
+  const [clear, setClear] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setClear(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center text-center">
+      <div className={`transition duration-[1000ms] ${clear ? 'opacity-100 blur-0' : 'opacity-55 blur-[3px]'}`}>
+        <img className="mx-auto h-[120px] w-[186px] object-contain" src={logoMark} alt="Lara's Crochet" />
+        <p className="mt-3 text-[14px] tracking-[0.5em] text-[#A3A3A3]">LIMITED BY NATURE</p>
+      </div>
+    </div>
+  );
+}
+
 export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [products, setProducts] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -71,10 +99,12 @@ export default function ShopPage() {
   // with the new category in the query string.
   useEffect(() => {
     setError(null);
+    setLoading(true);
     setVisibleCount(PAGE_SIZE);
     getProducts(activeCategory)
       .then((data) => setProducts(data.map(normalizeProduct)))
       .catch(() => setError('Could not load products — check your connection and try again.'))
+      .finally(() => setLoading(false));
   }, [activeCategory]);
 
   // TIP: search filters the already-fetched category list client-side
@@ -150,7 +180,13 @@ export default function ShopPage() {
 
         
       </div>
-      <ProductGrid products={visibleProducts} columns={3} />
+      {loading ? (
+        <BrandedLoader />
+      ) : error ? (
+        <p className="px-5 md:px-8 lg:px-[15.83%] py-14 text-center text-sm text-[var(--muted)]">{error}</p>
+      ) : (
+        <>
+          <ProductGrid products={visibleProducts} columns={3} />
           {hasMore && (
             <div className="flex justify-center py-14">
               <button
@@ -161,6 +197,8 @@ export default function ShopPage() {
               </button>
             </div>
           )}
+        </>
+      )}
     </section>
     <Footer />
     </>

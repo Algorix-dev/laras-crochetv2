@@ -15,7 +15,7 @@ const GRID_COLS = {
   4: "grid-cols-2 lg:grid-cols-4",
 };
 
-export default function ProductGrid({ products, columns = 2, cardVariant = 'default' }) {
+export default function ProductGrid({ products, columns = 2, cardVariant = 'default', isPlaceholder = false }) {
   /*
     Figma's "Content" wrapper: 1920px frame, padding: 0 304px 77px,
     row-gap 100px, bg #FAFAFA, exactly 2 cards per row (Frame 34 is
@@ -49,7 +49,7 @@ export default function ProductGrid({ products, columns = 2, cardVariant = 'defa
           // another rather than all popping in at once — a small
           // touch that reads as "designed," not just "animated."
           <Reveal key={product.id} delay={(i % 3) * 0.08}>
-            <ProductCard product={product} variant={cardVariant} />
+            <ProductCard product={product} variant={cardVariant} isPlaceholder={isPlaceholder} />
           </Reveal>
         ))}
       </div>
