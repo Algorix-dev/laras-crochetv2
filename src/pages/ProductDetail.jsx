@@ -313,7 +313,7 @@ function Reviews() {
   };
 
   return (
-    <section className="mt-16 md:mt-20">
+    <section className="mt-16 px-5 md:px-8 lg:px-[15.83%] md:mt-20">
       <h2 className="font-display text-3xl md:text-4xl">Reviews</h2>
 
       <div className="mt-5 flex items-center gap-3">
@@ -342,7 +342,14 @@ function Reviews() {
       <div className="mt-10 hidden md:grid md:grid-cols-[160px_minmax(0,1fr)] md:gap-8">
         <FitScaleAggregate position="true" />
 
-        <div className="grid grid-cols-2 gap-8">
+        {/* TIP: fixed from grid-cols-2 — that creates two EQUAL-width
+            columns stretching to fill the whole parent, so each 359px
+            image sat at the left edge of a much wider column, with
+            a large chunk of empty column space (not the real gap-8)
+            making the visual gap look far bigger than 32px. Explicit
+            359px columns size each track to the image itself, so the
+            only space between them is the actual 32px gap. */}
+        <div className="grid grid-cols-[359px_359px] gap-8">
           <img
             src={reviewRestaurantPhoto}
             alt="Customer wearing The Reina Dress at a restaurant"
@@ -514,7 +521,20 @@ export default function ProductDetail() {
 
   return (
     <>
-      <main className="mx-auto px-5 md:px-8 lg:px-[15.83%] py-8 md:py-12">
+      <main className="mx-auto py-8 md:py-12">
+        {/* TIP: horizontal padding removed from <main> itself. The
+            raw Figma CSS export shows this top gallery+purchase
+            section is a deliberate full-bleed exception — its
+            "Product Details Page" frame is padding: 0px, unlike
+            every section below it (tabs, details, reviews,
+            recommendations), which explicitly carry padding: 0px
+            304px in the export. So the site-wide margin now lives
+            on each of those lower sections individually instead of
+            here, letting this top row run edge-to-edge as intended.
+            The gallery's own gray/lighter-gray frame starts flush
+            against the true left edge of the viewport, and the
+            purchase column's "margin" on the right is just it being
+            the second half of the two-column split — not padding. */}
         {/* TIP: this now matches the shared page margin used by
             ShopPage, ProductGrid, Navbar, and Footer
             (px-5 md:px-8 lg:px-[15.83%]) instead of the old
@@ -750,7 +770,12 @@ export default function ProductDetail() {
         {/* ============================
             INFO TABS
             ============================ */}
-        <div className="mt-16">
+        {/* TIP: this section and everything below it DOES carry the
+            standard site margin (px-5 md:px-8 lg:px-[15.83%]) — the
+            export's own "0px 304px" padding on these lower sections
+            confirms it. Only the gallery+purchase row above stays
+            full-bleed; see the TIP on <main> above for why. */}
+        <div className="mt-16 px-5 md:px-8 lg:px-[15.83%]">
           <div className="flex gap-6 border-b border-[var(--line)]">
             {Object.keys(tabs).map((tabName) => (
               <button
@@ -780,7 +805,7 @@ export default function ProductDetail() {
             RECOMMENDATIONS
             ============================ */}
         {related.length > 0 && (
-          <section className="mt-20">
+          <section className="mt-20 px-5 md:px-8 lg:px-[15.83%]">
             <h2
               className="text-[24px] font-bold leading-[30px] tracking-[-0.48px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]"
               style={{ fontFamily: 'DM Sans, sans-serif' }}
