@@ -68,9 +68,20 @@ const FIGMA_COLOR_MIXES = [
   { label: 'Black / White', color: '#111111' },
 ];
 
+// TIP: shades 2-5 cross-checked against the raw Figma CSS export.
+// Espresso's hex (#412b2d) is a literal match for var(--maroon) —
+// switched to reference that token instead of a second hardcoded
+// hex for the same color. Taupe/Stone/Mauve are a judgment call
+// worth flagging: the export lists all three at the IDENTICAL
+// value #c9baba (Gray/300), repeated three times — which reads
+// like a Figma placeholder (real yarn photos probably replace
+// these three eventually) rather than a deliberate design choice
+// to make them indistinguishable. Left the three distinct existing
+// values in place rather than collapsing them to one flat color;
+// worth confirming with Lara which she actually wants.
 const FIGMA_SHADES = [
   { label: 'Ivory', color: '#efe7e7' },
-  { label: 'Espresso', color: '#4b3032' },
+  { label: 'Espresso', color: 'var(--maroon)' },
   { label: 'Taupe', color: '#c7b9ba' },
   { label: 'Stone', color: '#cbbfc0' },
   { label: 'Mauve', color: '#c6b8b9' },
@@ -194,8 +205,18 @@ function ShadeSwatch({ option, active, onClick }) {
 
    This is super useful for made-to-order pieces where sizing
    can be tricky — it gives social proof from real buyers.
------------------------------------------------------------ */
-function FitIndicator({ fit }) {
+
+   TIP: resized from 190×392 to 160×249 and recolored to match
+   the real Figma CSS export ("Sizing Slider" / Frame 92): the
+   vertical line is var(--mauve) (#ded3d4 — an exact token match),
+   and the dot is #af9d9e (Gray/400), which doesn't have a matching
+   token in index.css yet — worth adding one if this color gets
+   reused elsewhere. The chevron icons are also NOT part of every
+   instance: the export explicitly sets `display: none` on them
+   for the per-review usage, only showing on the aggregate scale
+   at the top of the Reviews section — hence the new showChevrons
+   prop, defaulting to off. */
+function FitIndicator({ fit, showChevrons = false }) {
   const dotPosition =
     fit === 'small'
       ? 'top-0'
@@ -204,9 +225,8 @@ function FitIndicator({ fit }) {
         : 'top-1/2 -translate-y-1/2';
 
   return (
-    <div className="relative h-[392px] w-[190px] shrink-0">
-      {/* Figma-style vertical fit scale */}
-      <div className="absolute left-0 top-0 h-full w-[3px] bg-[#e7dede]" />
+    <div className="relative h-[249px] w-[160px] shrink-0">
+      <div className="absolute left-[3px] top-1 h-[234px] w-[2px] bg-[var(--mauve)]" />
 
       <span className="absolute left-2 top-0 text-xs text-[var(--muted)]">
         Runs small
@@ -219,17 +239,18 @@ function FitIndicator({ fit }) {
       </span>
 
       <span
-        className={`absolute left-[-1px] z-10 h-2 w-2 -translate-x-1/2 rounded-full bg-[var(--maroon)] ${dotPosition}`}
+        className={`absolute left-[-1px] z-10 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#af9d9e] ${dotPosition}`}
       />
 
-      {/* Small chevron cue from the scale toward the customer photos */}
-      <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 text-[#d8c7c7]">
-        <span>›</span>
-        <span>›</span>
-        <span>›</span>
-        <span>›</span>
-        <span>›</span>
-      </div>
+      {showChevrons && (
+        <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 text-[#d8c7c7]">
+          <span>›</span>
+          <span>›</span>
+          <span>›</span>
+          <span>›</span>
+          <span>›</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -237,6 +258,7 @@ function FitIndicator({ fit }) {
 function FitScaleAggregate({ position = 'true' }) {
   return (
     <FitIndicator
+      showChevrons
       fit={
         position === 'small'
           ? 'small'
@@ -253,7 +275,7 @@ function FitScaleAggregate({ position = 'true' }) {
 ----------------------------------------------------------- */
 function Reviews() {
   const renderStars = (rating = 5, size = 14) => (
-    <span className="flex items-center gap-1 text-[var(--maroon)]">
+    <span className="flex items-center gap-1 text-[var(--ink-warm)]">
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
@@ -304,7 +326,7 @@ function Reviews() {
 
       <div className="mt-8">
         <h3 className="text-base font-bold">Reviews Summary</h3>
-        <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
+        <p className="mt-4 text-base leading-6 text-[var(--muted)]">
           Customers say this bra offers exceptional comfort for all-day wear,
           with many noting they forget they&apos;re wearing it. Many reviews mention
           the smooth fit under clothing and precise sizing when following the
@@ -317,7 +339,7 @@ function Reviews() {
       </div>
 
       {/* Figma: tall fit scale + two 359 × 392 customer photos */}
-      <div className="mt-10 hidden md:grid md:grid-cols-[190px_minmax(0,1fr)] md:gap-8">
+      <div className="mt-10 hidden md:grid md:grid-cols-[160px_minmax(0,1fr)] md:gap-8">
         <FitScaleAggregate position="true" />
 
         <div className="grid grid-cols-2 gap-8">
@@ -356,7 +378,7 @@ function Reviews() {
         {reviews.map((review) => (
           <article
             key={review.name}
-            className="grid border-t border-[var(--line)] py-10 md:grid-cols-[190px_minmax(0,359px)_1fr] md:gap-8"
+            className="grid border-t border-[var(--line)] py-10 md:grid-cols-[160px_minmax(0,359px)_1fr] md:gap-8"
           >
             <div className="hidden md:block">
               <FitIndicator fit={review.fit} />
@@ -364,8 +386,8 @@ function Reviews() {
 
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <p className="text-sm font-bold">{review.name}</p>
-                <span className="flex items-center gap-1 text-sm text-[var(--muted)]">
+                <p className="text-xl font-bold">{review.name}</p>
+                <span className="flex items-center gap-1 text-xl text-[var(--ink-warm)]">
                   Verified Buyer
                   <Check size={17} strokeWidth={3} />
                 </span>
@@ -383,12 +405,12 @@ function Reviews() {
                 />
               )}
 
-              <p className="mt-6 text-sm leading-7 text-[var(--muted)]">
+              <p className="mt-6 text-base leading-6 text-[var(--muted)]">
                 {review.text}
               </p>
             </div>
 
-            <time className="mt-2 hidden justify-self-end text-sm text-[var(--muted)] md:block">
+            <time className="mt-2 hidden justify-self-end text-base text-[var(--ink-warm)] md:block">
               {review.date}
             </time>
 
@@ -572,7 +594,7 @@ export default function ProductDetail() {
                 color #564345 (Gray/600) in Figma — not a tiny muted
                 uppercase caption. Dropped the `uppercase` class since
                 categoryLabel() already returns properly-cased text. */}
-            <p className="text-base text-[#564345]">
+            <p className="text-base text-[#564345] underline">
               {categoryLabel(product.category)}
             </p>
             {/* TIP: spec measures this heading at 36px/44px line-height,
@@ -606,13 +628,12 @@ export default function ProductDetail() {
               <ShareButton product={product} />
             </div>
 
-            {/* TIP: spec constrains this paragraph to exactly 412px
-                wide (max-w-lg was 512px — close, but not a match) and
-                colors it #404040 directly. Swap back to
-                text-[var(--muted)] if that CSS variable already
-                resolves to #404040 in your theme and you'd rather use
-                the token instead of a hardcoded hex. */}
-            <p className="mt-7 max-w-[412px] text-sm leading-7 text-[#404040]">
+            {/* TIP: fixed from text-sm/leading-7 (14px/28px) — the
+                real Figma CSS export specifies 16px font-size with a
+                24px line-height for this paragraph (Text md/Regular),
+                confirmed against the same 16/24 spec repeated for the
+                Details tab body and both review-text blocks below. */}
+            <p className="mt-7 max-w-[412px] text-base leading-6 text-[#404040]">
               {productDescription(product)}
             </p>
 
@@ -724,7 +745,7 @@ export default function ProductDetail() {
                 onClick={() => setActiveTab(tabName)}
                 className={`pb-3 text-sm tracking-wide transition-colors ${
                   activeTab === tabName
-                    ? 'border-b-2 border-[var(--ink)] font-medium'
+                    ? 'border-b-2 border-[var(--ink-warm)] font-medium'
                     : 'text-[var(--muted)] hover:text-[var(--ink)]'
                 }`}
               >
@@ -732,7 +753,7 @@ export default function ProductDetail() {
               </button>
             ))}
           </div>
-          <p className="mt-6 max-w-2xl text-sm leading-7 text-[var(--muted)]">
+          <p className="mt-6 max-w-2xl text-base leading-6 text-[var(--muted)]">
             {activeTab === 'Details' ? productDescription(product) : tabs[activeTab]}
           </p>
         </div>
