@@ -506,7 +506,7 @@ export default function ProductDetail() {
 
   return (
     <>
-      <main className="mx-auto py-8 md:py-12">
+      <main className="mx-auto pt-8 md:py-12">
         {/* TIP: horizontal padding removed from <main> itself. The
             raw Figma CSS export shows this top gallery+purchase
             section is a deliberate full-bleed exception — its
