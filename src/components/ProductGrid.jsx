@@ -15,7 +15,7 @@ const GRID_COLS = {
   4: "grid-cols-2 lg:grid-cols-4",
 };
 
-export default function ProductGrid({ products, columns = 2, cardVariant = 'default', isPlaceholder = false }) {
+export default function ProductGrid({ products, columns = 2, cardVariant = 'default', isPlaceholder = false, wrapInSection = true }) {
   /*
     Figma's "Content" wrapper: 1920px frame, padding: 0 304px 77px,
     row-gap 100px, bg #FAFAFA, exactly 2 cards per row (Frame 34 is
@@ -33,26 +33,41 @@ export default function ProductGrid({ products, columns = 2, cardVariant = 'defa
     it was capping this section's own width independently of the
     rest of the page, which is exactly the kind of per-section
     override that broke the "one shared margin" look.
+
+    TIP: wrapInSection=false skips this component's own margin
+    entirely. Needed for RecommendedProducts ("Lara Thinks You'd
+    Love These Too"), which already applies the page margin itself
+    around both its heading AND this grid — without this flag, the
+    margin was being applied twice (once here, once by the parent),
+    which pushed the cards further right than the heading sitting
+    right above them, and shrank the cards below Figma's actual
+    313px spec since they had less real width to work with.
   */
+  const grid = (
+    <div
+      className={`grid ${GRID_COLS[columns] || GRID_COLS[2]}`}
+      style={{
+        columnGap: "clamp(1rem, 1.67vw, 2rem)",
+        rowGap: "clamp(2.5rem, 5.21vw, 6.25rem)",
+      }}
+    >
+      {products.map((product, i) => (
+        // TIP: staggering the delay by index (i * 0.08) is what
+        // makes the cards feel like they're arriving one after
+        // another rather than all popping in at once — a small
+        // touch that reads as "designed," not just "animated."
+        <Reveal key={product.id} delay={(i % 3) * 0.08}>
+          <ProductCard product={product} variant={cardVariant} isPlaceholder={isPlaceholder} />
+        </Reveal>
+      ))}
+    </div>
+  );
+
+  if (!wrapInSection) return grid;
+
   return (
     <section className="px-5 md:px-8 lg:px-[15.83%] pb-16 md:pb-24">
-      <div
-        className={`grid ${GRID_COLS[columns] || GRID_COLS[2]}`}
-        style={{
-          columnGap: "clamp(1rem, 1.67vw, 2rem)",
-          rowGap: "clamp(2.5rem, 5.21vw, 6.25rem)",
-        }}
-      >
-        {products.map((product, i) => (
-          // TIP: staggering the delay by index (i * 0.08) is what
-          // makes the cards feel like they're arriving one after
-          // another rather than all popping in at once — a small
-          // touch that reads as "designed," not just "animated."
-          <Reveal key={product.id} delay={(i % 3) * 0.08}>
-            <ProductCard product={product} variant={cardVariant} isPlaceholder={isPlaceholder} />
-          </Reveal>
-        ))}
-      </div>
+      {grid}
     </section>
   );
 }
