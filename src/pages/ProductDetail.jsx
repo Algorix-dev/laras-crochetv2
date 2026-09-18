@@ -126,6 +126,12 @@ const tabs = {
    which positions the dot on the vertical fit indicator scale.
    The `photo` field holds a customer-submitted image; leave undefined
    if the customer didn't upload one. */
+/* TIP: only one review here on purpose — the raw Figma CSS export
+   for this section contains exactly one individual review card
+   (matching this text verbatim), not two. A second reviewer
+   ("Zainab A.") was in an earlier version of this file but isn't
+   part of the actual design; removed rather than kept as unused
+   placeholder content. */
 const reviews = [
   {
     name: 'Oreoluwa F.',
@@ -136,16 +142,6 @@ const reviews = [
     rating: 4,
     photo: reviewRestaurantPhoto,
     variant: 'Navy mix · Size M',
-  },
-  {
-    name: 'Zainab A.',
-    date: '2 months ago',
-    title: 'So thoughtfully made',
-    text: 'Lara was helpful with sizing and the dress arrived exactly as I hoped. Worth the wait.',
-    fit: 'true',
-    rating: 5,
-    photo: undefined,
-    variant: 'Slate mix · Size S',
   },
 ];
 
@@ -506,7 +502,15 @@ export default function ProductDetail() {
 
   return (
     <>
-      <main className="mx-auto pt-8 md:py-12">
+      <main className="mx-auto pb-8 md:pb-12">
+        {/* TIP: py-8/py-12 changed to pb-only — the raw Figma export
+            shows this gallery+purchase row sitting flush under the
+            navbar with zero vertical gap too, not just horizontal
+            (same "Product Details Page" section, padding: 0px). Top
+            padding was creating an unwanted gap between the navbar
+            and the gallery's gray background; bottom padding is kept
+            since it's genuinely needed as breathing room before the
+            Footer, and nothing in the export suggests that's wrong. */}
         {/* TIP: horizontal padding removed from <main> itself. The
             raw Figma CSS export shows this top gallery+purchase
             section is a deliberate full-bleed exception — its
