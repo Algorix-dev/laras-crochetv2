@@ -35,7 +35,7 @@ export default function WishlistPage() {
 
   if (loading) {
     return (
-      <section className="mx-auto max-w-7xl px-5 pt-10 pb-24 text-sm text-[var(--muted)] md:px-8">
+      <section className="px-5 pt-10 pb-24 md:px-8 lg:px-[15.83%] text-sm text-[var(--muted)]">
         Loading your wishlist...
       </section>
     );
@@ -43,7 +43,7 @@ export default function WishlistPage() {
 
   return (
     <>
-      <section className="mx-auto max-w-7xl px-5 pt-10 md:px-8">
+      <section className="px-5 pt-10 md:px-8 lg:px-[15.83%]">
         {/* TIP: the Figma desktop Wishlist screenshots (Wishlist_Page.png,
             Wishlist_Page__Empty_state_.png) show NO breadcrumb and NO
             AccountSidebar at all — just the header straight into the

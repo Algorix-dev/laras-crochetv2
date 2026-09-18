@@ -17,8 +17,10 @@ import ProductGrid from './ProductGrid';
 
    Two ways to use it:
    - <RecommendedProducts category={product.category} excludeId={product.id} />
-     for a specific product's page (ProductDetail) — recommends
-     other products in the same category, excluding itself.
+     for a specific product's page (ProductDetail) — recommends other
+     products in the same category, excluding itself. If nothing else
+     is in that category, it automatically falls back to the full
+     catalog rather than showing nothing.
    - <RecommendedProducts /> with no props — recommends across all
      products, for the general account pages (Order History,
      Addresses, Account, Wishlist, Bag) where there's no single
@@ -62,8 +64,19 @@ export default function RecommendedProducts({
   useEffect(() => {
     if (!enabled || products.length > 0) return;
     getProducts(category)
-      .then((data) => {
-        const mapped = data.map(normalizeProduct).filter((p) => !excludeIds.includes(p.id));
+      .then(async (data) => {
+        let mapped = data.map(normalizeProduct).filter((p) => !excludeIds.includes(p.id));
+        // TIP: if a category was given and it has no other products
+        // (common right now — every current product is the only one
+        // in its own category), fall back to the full catalog instead
+        // of just hiding the whole section. Only runs when the
+        // category-scoped result comes back empty, so this never
+        // fires an extra request for the no-category (account pages)
+        // case, which already searches everything.
+        if (mapped.length === 0 && category) {
+          const all = await getProducts();
+          mapped = all.map(normalizeProduct).filter((p) => !excludeIds.includes(p.id));
+        }
         setProducts(mapped.slice(0, 4));
       })
       .catch(() => setProducts([]));

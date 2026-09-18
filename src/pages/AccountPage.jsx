@@ -46,7 +46,7 @@ export default function AccountPage() {
 
   return (
     <>
-      <section className="mx-auto max-w-7xl px-5 py-10 md:px-8">
+      <section className="px-5 py-10 md:px-8 lg:px-[15.83%]">
         <p className="mb-6 text-xs text-[var(--muted)]">
           <Link to="/" className="hover:underline">
             Home
