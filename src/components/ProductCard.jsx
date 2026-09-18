@@ -11,13 +11,19 @@
   - "default" — the main Shop grid / homepage teaser. Top-left
     wishlist badge over the image, a muted category line above the
     name, and a bag icon (add straight to cart) bottom-right.
+    Card ratio 640×731, photo inset asymmetric (Rectangle 37:
+    506.26×667.57), text color #404040.
   - "recommendation" — the "Lara Thinks You'd Love These Too"
-    strips on My Bag / Wishlist / Shop. No badge over the image, no
-    category line, and the bottom-right icon is a heart (toggles
-    wishlist) instead of a bag. Confirmed against the Figma exports
-    pixel-by-pixel — these aren't a simplified placeholder, the
-    recommendation strips consistently drop the category line and
-    swap the icon everywhere they appear.
+    strips on My Bag / Wishlist / Shop / Product Detail / account
+    pages. No badge over the image, no category line, and the
+    bottom-right icon is a heart (toggles wishlist) instead of a
+    bag. Confirmed against the Figma exports pixel-by-pixel — these
+    aren't a simplified placeholder, the recommendation strips
+    consistently drop the category line and swap the icon
+    everywhere they appear. Its own separate spec too, not the
+    default card at a smaller size: card ratio 313×404, photo inset
+    symmetric (Rectangle 37 here: 258×340.21, centered), and pure
+    black (#000000) text instead of #404040.
 
   TIP — IMAGE FIT (changed from object-cover/p-3):
   The old `p-3` + `object-cover` combo was CROPPING every photo to
@@ -130,11 +136,14 @@ export default function ProductCard({ product, variant = 'default', isPlaceholde
       <CardLink
         {...cardLinkProps}
         className="relative block overflow-hidden bg-white"
-        style={{ aspectRatio: "640 / 731" }}
+        style={{ aspectRatio: isRecommendation ? RECOMMENDATION_ASPECT_RATIO : "640 / 731" }}
       >
         {/* Photo sits inside this proportionally-inset wrapper,
             never the full card — see TIP above. */}
-        <div className="absolute inset-0" style={{ padding: IMAGE_INSET }}>
+        <div
+          className="absolute inset-0"
+          style={{ padding: isRecommendation ? RECOMMENDATION_IMAGE_INSET : IMAGE_INSET }}
+        >
           {product.image ? (
             <img
               src={product.image}
@@ -170,10 +179,10 @@ export default function ProductCard({ product, variant = 'default', isPlaceholde
               {product.categoryLabel?.toUpperCase() || 'PRODUCT'}
             </div>
           )}
-          <div className="truncate text-base font-bold leading-6 text-[#404040] uppercase">
+          <div className={`truncate text-base font-bold leading-6 uppercase ${isRecommendation ? RECOMMENDATION_TEXT_COLOR : 'text-[#404040]'}`}>
             {product.name}
           </div>
-          <div className="whitespace-nowrap text-base leading-6 text-[#404040]">
+          <div className={`whitespace-nowrap text-base leading-6 ${isRecommendation ? RECOMMENDATION_TEXT_COLOR : 'text-[#404040]'}`}>
             {formatPriceNumber(product.price)}
           </div>
         </CardLink>
