@@ -68,10 +68,23 @@ import { useCurrency } from '../context/CurrencyContext';
 // why a fully hollow heart reads as "two blobs" at this size.
 const HEART_UNFILLED = 'rgba(64, 64, 64, 0.15)';
 
-// Figma "Rectangle 37" inset, expressed as % of the 640x731 card so
-// it scales correctly at any rendered size: top 31/731, bottom
-// (731-31-667.57)/731, left/right (640-506.26)/2/640.
+// Figma "Rectangle 37" inset for the DEFAULT card, expressed as % of
+// the 640x731 card so it scales correctly at any rendered size: top
+// 31/731, bottom (731-31-667.57)/731, left/right (640-506.26)/2/640.
 const IMAGE_INSET = "4.24% 10.45% 4.44%";
+
+// TIP: the "recommendation" card ("Lara Thinks You'd Love These Too")
+// is NOT just a smaller version of the default card — the Figma
+// export for it ("Product Card Small") specifies its own distinct
+// proportions: a 313×404 picture area (not 640×731) holding a
+// 258×340.21 photo centered symmetrically (not the default's
+// asymmetric top/bottom inset), plus pure black (#000000) text
+// instead of the site's usual #404040. Kept as separate constants
+// rather than reusing the default ones, since they're genuinely
+// different specs, not the same one at a different size.
+const RECOMMENDATION_ASPECT_RATIO = "313 / 404";
+const RECOMMENDATION_IMAGE_INSET = "7.89% 8.79%";
+const RECOMMENDATION_TEXT_COLOR = "text-[#000000]";
 
 // TIP: isPlaceholder is true for the brief window where a card is
 // showing static fallback data (e.g. HomePage's "Shop Our Pieces"
