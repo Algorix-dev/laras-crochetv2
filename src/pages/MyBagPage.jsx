@@ -13,9 +13,8 @@ import { ChevronDown, Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
-import ProductCard from '../components/ProductCard';
+import RecommendedProducts from '../components/RecommendedProducts';
 import Footer from '../components/Footer';
-import { getProducts, normalizeProduct } from '../api';
 
 export default function MyBagPage() {
   const {
@@ -32,7 +31,6 @@ export default function MyBagPage() {
   const [promoOpen, setPromoOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
-  const [recommendations, setRecommendations] = useState([]);
 
   // TIP: shipping is flat ₦10,000 (same as CheckoutPage) — keep
   // these in sync, or pull them into a shared constants file later.
@@ -46,21 +44,6 @@ export default function MyBagPage() {
   // doesn't expose this directly.
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const atLimit = totalItems >= 3;
-
-  // Recommendations: fetch real products from the API (like ShopPage
-  // and ProductDetail do) and filter out anything already in the bag,
-  // instead of reading the old hardcoded products.js array.
-  useEffect(() => {
-    getProducts('all')
-      .then((data) => {
-        const cartProductIds = new Set(cartItems.map((item) => item.product.id));
-        setRecommendations(
-          data.map(normalizeProduct).filter((p) => !cartProductIds.has(p.id)).slice(0, 4)
-        );
-      })
-      .catch(() => setRecommendations([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cartItems]);
 
   if (!cartItems.length) {
     return (
@@ -398,27 +381,14 @@ export default function MyBagPage() {
         {/* ================================================================
             Recommendations section
             ================================================================ */}
-        {recommendations.length > 0 && (
-          <section className="border-t border-[var(--line)] bg-[#fafafa] py-14 md:py-16">
-            <div className="mx-auto w-full max-w-[984px] px-5 md:px-0">
-              <h2 className="text-[24px] font-bold leading-[30px] tracking-[-0.48px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]"
-              style={{ fontFamily: 'DM Sans, sans-serif' }}
-              >
-                Lara Thinks You'd Love These Too
-              </h2>
-
-              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4 md:gap-x-3 md:gap-y-10">
-                {recommendations.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    variant="recommendation"
-                  />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        <section className="border-t border-[var(--line)] bg-[#fafafa] py-14 md:py-16">
+          <div className="mx-auto w-full max-w-[984px] px-5 md:px-0">
+            <RecommendedProducts
+              excludeId={cartItems.map((item) => item.product.id)}
+              className=""
+            />
+          </div>
+        </section>
       </main>
 
       <Footer />

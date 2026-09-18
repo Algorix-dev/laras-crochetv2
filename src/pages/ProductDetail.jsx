@@ -31,9 +31,9 @@
 import { Check, Star, Heart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getProduct, getProducts, normalizeProduct } from '../api';
+import { getProduct, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
-import ProductCard from '../components/ProductCard';
+import RecommendedProducts from '../components/RecommendedProducts';
 import ProductPlaceholder from '../components/ProductPlaceholder';
 import Footer from '../components/Footer';
 import { useCurrency } from '../context/CurrencyContext';
@@ -446,7 +446,6 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
-  const [related, setRelated] = useState([]);
 
   useEffect(() => {
     setError(null);
@@ -455,20 +454,6 @@ export default function ProductDetail() {
       .then((data) => setProduct(normalizeProduct(data)))
       .catch(() => setError('This product could not be found.'))
   }, [id]);
-
-  // TIP: once we know the product's category, fetch a few more from
-  // the same category for the "Lara Thinks You'd Love These Too"
-  // section, excluding the product already on the page.
-  useEffect(() => {
-    if (!product?.category) return;
-    getProducts(product.category)
-      .then((data) =>
-        setRelated(
-          data.map(normalizeProduct).filter((p) => p.id !== product.id).slice(0, 4)
-        )
-      )
-      .catch(() => setRelated([]));
-  }, [product?.category, product?.id]);
 
   /* Gallery images come straight from the product's `images` array
      (Cloudinary URLs from the backend) — no more hardcoded angles.
@@ -804,21 +789,11 @@ export default function ProductDetail() {
         {/* ============================
             RECOMMENDATIONS
             ============================ */}
-        {related.length > 0 && (
-          <section className="mt-20 px-5 md:px-8 lg:px-[15.83%]">
-            <h2
-              className="text-[24px] font-bold leading-[30px] tracking-[-0.48px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]"
-              style={{ fontFamily: 'DM Sans, sans-serif' }}
-            >
-              Lara Thinks You&apos;d Love These Too
-            </h2>
-            <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4">
-              {related.map((p) => (
-                <ProductCard key={p.id} product={p} variant="recommendation" />
-              ))}
-            </div>
-          </section>
-        )}
+        <RecommendedProducts
+          category={product.category}
+          excludeId={product.id}
+          className="mt-20 px-5 md:px-8 lg:px-[15.83%]"
+        />
       </main>
 
       <Footer />

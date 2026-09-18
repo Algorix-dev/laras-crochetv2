@@ -9,8 +9,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getProducts, normalizeProduct } from '../api';
-import ProductGrid from '../components/ProductGrid';
+import RecommendedProducts from '../components/RecommendedProducts';
 import AccountSidebar from '../components/AccountSidebar';
 import Footer from '../components/Footer';
 
@@ -19,7 +18,6 @@ export default function OrderHistoryPage() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [recommended, setRecommended] = useState([]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -43,15 +41,6 @@ export default function OrderHistoryPage() {
     }
     fetchOrders();
   }, [isSignedIn, token, navigate]);
-
-  // TIP: recommendations now come from the live catalog (same fix
-  // as ShopPage/ProductDetail/MyBagPage/WishlistPage) instead of the
-  // old hardcoded data/products.js array.
-  useEffect(() => {
-    getProducts('all')
-      .then((data) => setRecommended(data.map(normalizeProduct).slice(0, 4)))
-      .catch(() => setRecommended([]));
-  }, []);
 
   if (!isSignedIn) return null;
 
@@ -124,12 +113,7 @@ export default function OrderHistoryPage() {
           </div>
         </div>
 
-        {recommended.length > 0 && (
-          <div className="mt-16">
-            <h2 className="font-display text-2xl md:text-3xl mb-8">Lara Thinks You'd Love These Too</h2>
-            <ProductGrid products={recommended} />
-          </div>
-        )}
+        <RecommendedProducts />
       </section>
 
       <Footer />

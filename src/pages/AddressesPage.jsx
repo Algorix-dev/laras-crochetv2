@@ -9,8 +9,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getProducts, normalizeProduct } from '../api';
-import ProductGrid from '../components/ProductGrid';
+import RecommendedProducts from '../components/RecommendedProducts';
 import AccountSidebar from '../components/AccountSidebar';
 import Footer from '../components/Footer';
 import CountryDropdown from '../components/CountryDropdown';
@@ -50,13 +49,6 @@ export default function AddressesPage() {
     fetchAddresses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
-
-  const [recommended, setRecommended] = useState([]);
-  useEffect(() => {
-    getProducts('all')
-      .then((data) => setRecommended(data.map(normalizeProduct).slice(0, 4)))
-      .catch(() => setRecommended([]));
-  }, []);
 
   async function fetchAddresses() {
     try {
@@ -309,12 +301,7 @@ export default function AddressesPage() {
           </div>
         </div>
 
-        {recommended.length > 0 && (
-          <div className="mt-16">
-            <h2 className="mb-6 text-sm font-bold">Lara Thinks You'd Love These Too</h2>
-            <ProductGrid products={recommended} />
-          </div>
-        )}
+        <RecommendedProducts />
       </section>
 
       {confirmRemoveId && (

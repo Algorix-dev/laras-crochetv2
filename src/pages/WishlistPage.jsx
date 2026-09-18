@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { useWishlist } from '../context/WishlistContext';
 import { getProducts, normalizeProduct } from '../api';
 import ProductGrid from '../components/ProductGrid';
+import RecommendedProducts from '../components/RecommendedProducts';
 import AccountSidebar from '../components/AccountSidebar';
 import Footer from '../components/Footer';
 
@@ -31,9 +32,6 @@ export default function WishlistPage() {
   }, []);
 
   const wishlistedProducts = allProducts.filter((p) => wishlistItems.includes(p.id));
-
-  // "Lara Thinks You'd Love These Too" — recommend products NOT already in the wishlist
-  const recommended = allProducts.filter((p) => !wishlistItems.includes(p.id)).slice(0, 4);
 
   if (loading) {
     return (
@@ -88,12 +86,10 @@ export default function WishlistPage() {
             </div>
           )}
 
-          {recommended.length > 0 && (
-            <div className={wishlistedProducts.length > 0 ? 'mt-16 pb-16' : 'mt-2 pb-16'}>
-              <h2 className="font-display text-2xl md:text-3xl mb-8">Lara Thinks You'd Love These Too</h2>
-              <ProductGrid products={recommended} columns={4} cardVariant="recommendation" />
-            </div>
-          )}
+          <RecommendedProducts
+            excludeId={wishlistItems}
+            className={wishlistedProducts.length > 0 ? 'mt-16 pb-16' : 'mt-2 pb-16'}
+          />
         </div>
       </section>
 

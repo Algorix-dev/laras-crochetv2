@@ -9,8 +9,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Pencil, Check } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { updateUsername, getProducts, normalizeProduct } from "../api";
-import ProductGrid from "../components/ProductGrid";
+import { updateUsername } from "../api";
+import RecommendedProducts from "../components/RecommendedProducts";
 import AccountSidebar from "../components/AccountSidebar";
 import Footer from "../components/Footer";
 
@@ -21,13 +21,6 @@ export default function AccountPage() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameInput, setUsernameInput] = useState(user?.username || "");
   const [savingUsername, setSavingUsername] = useState(false);
-  const [recommended, setRecommended] = useState([]);
-
-  useEffect(() => {
-    getProducts('all')
-      .then((data) => setRecommended(data.map(normalizeProduct).slice(0, 4)))
-      .catch(() => setRecommended([]));
-  }, []);
 
   useEffect(() => {
     if (!isSignedIn) navigate("/signin?redirect=/account");
@@ -134,15 +127,7 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Recommendations — reuses the same ProductGrid as the shop/homepage */}
-        {recommended.length > 0 && (
-          <div className="mt-16">
-            <h2 className="mb-6 text-sm font-bold">
-              Lara Thinks You'd Love These Too
-            </h2>
-            <ProductGrid products={recommended} />
-          </div>
-        )}
+        <RecommendedProducts />
       </section>
 
       <Footer />

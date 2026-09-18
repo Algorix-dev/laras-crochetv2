@@ -10,12 +10,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Minus, Plus, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { getProducts, normalizeProduct } from '../api';
+import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
-import ProductCard from './ProductCard';
+import RecommendedProducts from './RecommendedProducts';
 
 
 export default function BagDrawer({ open, onClose }) {
@@ -31,19 +30,6 @@ export default function BagDrawer({ open, onClose }) {
   const { toggleWishlist } = useWishlist();
   const navigate = useNavigate();
   const [promoOpen, setPromoOpen] = useState(false);
-  const [recommendations, setRecommendations] = useState([]);
-
-  /* TIP: "Lara Thinks You'd Love These Too" — pulls from the real catalog
-     now instead of the old static products.js file, so it reflects
-     whatever Lara currently has listed. Only fetches once the drawer
-     is actually opened, not on every render. */
-  useEffect(() => {
-    if (open && recommendations.length === 0) {
-      getProducts('all')
-        .then((data) => setRecommendations(data.map(normalizeProduct).slice(0, 4)))
-        .catch(() => setRecommendations([]));
-    }
-  }, [open, recommendations.length]);
 
   const finalTotal = cartTotal;
 
@@ -216,21 +202,13 @@ export default function BagDrawer({ open, onClose }) {
               </div>
 
               {/* Lara Thinks You'd Love These Too */}
-              {recommendations.length > 0 && (
-                <section className="pt-7">
-                  <h3 className="text-xs font-bold uppercase tracking-wide">
-                    Lara Thinks You'd Love These Too
-                  </h3>
-                  <div
-                    className="mt-4 grid grid-cols-2 gap-x-3 gap-y-6"
-                    onClick={onClose}
-                  >
-                    {recommendations.map((product) => (
-                      <ProductCard key={product.id} product={product} variant="recommendation" />
-                    ))}
-                  </div>
-                </section>
-              )}
+              <RecommendedProducts
+                enabled={open}
+                columns={2}
+                headingClassName="text-xs font-bold uppercase tracking-wide"
+                onProductClick={onClose}
+                className="pt-7"
+              />
             </div>
 
             {/* ---- Sticky Footer with Checkout Button ---- */}
