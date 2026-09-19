@@ -46,7 +46,7 @@ export default function AccountSidebar({ active }) {
           <ChevronDown size={16} className={mobileOpen ? 'rotate-180' : ''} />
         </button>
         {mobileOpen && (
-          <div className="border border-t-0 border-[var(--line)] text-xs uppercase tracking-wide">
+          <div className="border border-t-0 border-[var(--line)] text-[16px] uppercase tracking-wide">
             {LINKS.filter((link) => link.key !== active).map((link) => (
               <Link
                 key={link.key}
