@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 import model2 from "../assets/model-images/model-coral.webp";
@@ -27,6 +27,11 @@ const SUPPORT_SCALE_Y = 1.0;
 const SELECTED_SCALE_X = 1.0;
 const SELECTED_SCALE_Y = 1.0;
 
+/*
+  Side models are only a little transparent — deliberately NO
+  blur / backdrop-filter, so they stay crisp instead of "glassy".
+  0.55 = current look; raise toward 1 for less transparent.
+*/
 const SIDE_MODEL_OPACITY = 0.55;
 
 /*
@@ -99,6 +104,45 @@ const MODELS = [
 ];
 
 const CENTER_INDEX = 2;
+
+/* ============================================================
+   RESPONSIVE MODEL COUNT
+   ============================================================
+
+   >= 1440px CSS width : all FIVE models (the Figma layout)
+   <  1440px CSS width : only THREE models — the selected one plus
+                         one on each side, with the exact same
+                         tilt + slightly-transparent side effect.
+
+   NOTE: this is CSS pixels, not screen resolution. A laptop set
+   to 1920x1080 with Windows display scaling at 125% is really
+   ~1536px wide to the browser (150% = ~1280px), which is why it
+   can look different from a 1920px responsive-viewer preview.
+
+   The initial value is read synchronously (not in an effect) so
+   the page never flashes 5 models and then drops to 3 on load.
+*/
+const WIDE_QUERY = "(min-width: 1440px)";
+
+function useIsWide() {
+  const [isWide, setIsWide] = useState(() =>
+    typeof window === "undefined"
+      ? true
+      : window.matchMedia(WIDE_QUERY).matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(WIDE_QUERY);
+    const onChange = (event) => setIsWide(event.matches);
+
+    setIsWide(mq.matches);
+    mq.addEventListener("change", onChange);
+
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  return isWide;
+}
 
 /* ============================================================
    IMAGE SIZES
@@ -212,6 +256,32 @@ function formatNaira(amount) {
    ============================================================ */
 
 export default function Hero() {
+  const isWide = useIsWide();
+  const sectionRef = useRef(null);
+
+  /*
+    PERFORMANCE: the podium's comet is an SVG (SMIL) animation with
+    a blur filter that repaints every frame. That's fine while the
+    hero is on screen, but it kept burning frames while the user
+    scrolled through the rest of the page — a real contributor to
+    the "laggy when I scroll" feel. Pause it whenever the hero is
+    off screen, resume when it's back.
+  */
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+
+    const io = new IntersectionObserver(([entry]) => {
+      el.querySelectorAll("svg").forEach((svg) => {
+        if (entry.isIntersecting) svg.unpauseAnimations?.();
+        else svg.pauseAnimations?.();
+      });
+    });
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   /*
     KEEPING YOUR EXISTING ORDER/SWITCHING MECHANISM.
 
@@ -226,6 +296,11 @@ export default function Hero() {
   const modelsById = Object.fromEntries(
     MODELS.map((model) => [model.id, model])
   );
+
+  // Wide: all five. Narrower: just the middle three (indexes 1-3),
+  // so the selected model is index 1 of what's actually rendered.
+  const visibleOrder = isWide ? order : order.slice(1, 4);
+  const centerIndex = isWide ? CENTER_INDEX : 1;
 
   function handleSelect(id) {
     setOrder((prev) => {
@@ -248,6 +323,7 @@ export default function Hero() {
 
   return (
     <section
+      ref={sectionRef}
       className="
         pt-8
         md:pt-12
@@ -269,29 +345,25 @@ export default function Hero() {
       >
 
         {/* ==================================================
-            FIVE MODEL ROW
+            MODEL ROW — five models at >= 1440px, three below
             ================================================== */}
 
         <div
-          className="
+          className={`
             grid
             w-full
-            grid-cols-5
             items-end
-          "
+            ${isWide ? "grid-cols-5" : "grid-cols-3"}
+          `}
         >
-          {order.map((id, index) => {
+          {visibleOrder.map((id, index) => {
             const model = modelsById[id];
 
             const isSelected =
-              index === CENTER_INDEX;
-
-            const isOuter =
-              index === 0 ||
-              index === order.length - 1;
+              index === centerIndex;
 
             const side =
-              index < CENTER_INDEX
+              index < centerIndex
                 ? -1
                 : 1;
 
@@ -545,6 +617,7 @@ export default function Hero() {
                 <motion.img
                   layout
                   src={model.image}
+                  decoding="async"
                   alt={
                     isSelected
                       ? model.name
