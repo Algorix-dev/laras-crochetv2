@@ -183,7 +183,7 @@ export default function CustomOrderBanner() {
           className="
             relative
             mx-auto
-            mt-[30px]
+            mt-[15px]
             w-[547px]
             max-w-[80vw]
           "
@@ -272,7 +272,7 @@ export default function CustomOrderBanner() {
             relative
             z-20
             mx-auto
-            mt-[-15px]
+            mt-[-25px]
             flex
             justify-center
           "
