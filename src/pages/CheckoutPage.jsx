@@ -128,13 +128,24 @@ export default function CheckoutPage() {
         {/* Figma: form column (Frame 157) is 626px and the order-summary
             column is also 626px within the 1312px content area
             (626 + 60px gap + 626 = 1312) — an even 50/50 split, not the
-            previous 1.1/.9 (~55/45) ratio. */}
-        <div className="px-5 md:px-8 lg:px-[15.83%] grid lg:grid-cols-2">
+            previous 1.1/.9 (~55/45) ratio.
+
+            TIP: the columns used to add their OWN side padding
+            (md:px-12 = 48px) on top of this wrapper's page margin. That
+            pushed the logo and form 48px in from the page's left edge,
+            pushed the order summary 48px in from the right edge, and
+            squeezed each column to ~560px with a ~96px gap instead of
+            Figma's 626px / 60px. Now the wrapper's margin is the ONLY
+            side spacing (the same one as the navbar and footer), and the
+            gap between the columns is what separates them. 60/1920 =
+            3.125% of the width, clamped so it stays sensible on small
+            laptops. */}
+        <div className="px-5 md:px-8 lg:px-[15.83%] grid lg:grid-cols-2 lg:gap-x-[clamp(2rem,3.125vw,3.75rem)]">
 
           {/* ================================================================
               LEFT COLUMN — Checkout form
               ================================================================ */}
-          <form onSubmit={submit} className="px-5 py-8 md:px-12">
+          <form onSubmit={submit} className="py-8">
 
             {/* TIP: Brand link back to the home/shop page. */}
             <Link to="/" aria-label="Lara's Crochet home">
@@ -283,7 +294,7 @@ export default function CheckoutPage() {
           {/* ================================================================
               RIGHT COLUMN — Order summary sidebar
               ================================================================ */}
-          <aside className="px-5 py-8 md:px-12">
+          <aside className="py-8">
 
             {/* TIP: Section header — "Order Summary" in bold. */}
             <h2 className="text-sm font-semibold">Order Summary</h2>
