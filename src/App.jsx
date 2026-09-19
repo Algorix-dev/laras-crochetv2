@@ -11,6 +11,7 @@ import CustomOrderBanner from "./components/CustomOrderBanner";
 import LaraShowcase from "./components/LaraShowcase";
 import Footer from "./components/Footer";
 import Reveal from "./components/Reveal";
+import AutoRiseProvider from "./components/AutoRiseProvider";
 import { products, heroModels } from "./data/products";
 import { getProducts, normalizeProduct } from "./api";
 
@@ -139,9 +140,7 @@ function HomePage() {
               </Reveal>
             </section>
 
-      <Reveal>
-        <CustomOrderBanner />
-      </Reveal>
+      <CustomOrderBanner />
       <Footer />
     </>
   );

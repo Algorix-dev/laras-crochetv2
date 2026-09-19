@@ -19,9 +19,70 @@
   --mauve-light: #efe7e7; /* light pink bg - pills, cards */
   --mauve-muted: #927c7e; /* muted mauve text/border */
   --white-warm: #fffcfc;  /* warm white - button text on maroon */
+
+  /* TIP: Scalable wordmark-to-model overlap for CustomOrderBanner.
+     Scales with viewport from -20px on small mobile up to -52px on desktop. */
+  --wordmark-model-overlap: clamp(-52px, -3.8vw, -20px);
 }
 * {
   box-sizing: border-box;
+}
+
+/* -----------------------------------------------------------
+   GLOBAL AUTO-RISE & SCROLL-TRIGGERED ANIMATIONS
+   Referenced from Emmanuel's Algorix Portfolio (algorix-portfolio.vercel.app):
+   - Fast, smooth rise from underneath (translateY(30px) -> 0)
+   - Soft ease-out cubic-bezier(.22, 1, .36, 1)
+   - Stagger classes (.d1 through .d6)
+   - Clean transition cleanup: [data-revealed="true"] clears
+     transform to 'none' and will-change to 'auto' so containing
+     block / stacking context bugs are prevented on fixed/sticky
+     descendants.
+----------------------------------------------------------- */
+.rv {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.rv.on {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delay utilities */
+.d1 { transition-delay: 0.06s; }
+.d2 { transition-delay: 0.12s; }
+.d3 { transition-delay: 0.18s; }
+.d4 { transition-delay: 0.24s; }
+.d5 { transition-delay: 0.30s; }
+.d6 { transition-delay: 0.36s; }
+
+/* CRITICAL: Once the reveal finishes, clear transform and will-change
+   so the element returns to normal document flow geometry.
+   This protects against position: fixed and sticky containing-block bugs! */
+.rv[data-revealed="true"] {
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* Hero supporting models glassy blur depth of field */
+.hero-model-blurred {
+  filter: blur(4.5px) brightness(0.94);
+  opacity: 0.50;
+  transition: filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-model-focused {
+  filter: blur(0px) brightness(1);
+  opacity: 1;
+  transition: filter 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 body {
   margin: 0;

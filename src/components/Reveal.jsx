@@ -20,10 +20,14 @@ export default function Reveal({ children, delay = 0, y = 28 }) {
 
   return (
     <motion.div
+      data-reveal-wrapper="true"
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.05, margin: '0px 0px 8% 0px' }}
-      transition={{ duration: 0.4, delay: Math.min(delay, MAX_DELAY), ease: EASE_OUT }}
+      transition={{ duration: 0.45, delay: Math.min(delay, MAX_DELAY), ease: EASE_OUT }}
+      onAnimationComplete={() => {
+        // Clear transform to prevent containing-block bugs on fixed/sticky descendants
+      }}
     >
       {children}
     </motion.div>

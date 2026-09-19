@@ -28,11 +28,14 @@ const SELECTED_SCALE_X = 1.0;
 const SELECTED_SCALE_Y = 1.0;
 
 /*
-  Side models are only a little transparent — deliberately NO
-  blur / backdrop-filter, so they stay crisp instead of "glassy".
-  0.55 = current look; raise toward 1 for less transparent.
+  Side models: 3D glassy depth-of-field blur & opacity, matching the
+  client's luxury reference image (SSENSE/Gucci sneakers showcase).
+  Center active model stays crisp and sharp (blur: 0px, opacity: 1),
+  while supporting models have soft blur and lower opacity so the
+  eye naturally locks onto the center product.
 */
-const SIDE_MODEL_OPACITY = 0.55;
+const SIDE_MODEL_OPACITY = 0.50;
+const SIDE_MODEL_BLUR_PX = 4.5;
 
 /*
   Increase/decrease this to control how close the five models are.
@@ -324,6 +327,9 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
+      id="hero"
+      data-hero="true"
+      data-no-rise="true"
       className="
         pt-8
         md:pt-12
@@ -634,6 +640,10 @@ export default function Hero() {
                       ? 1
                       : SIDE_MODEL_OPACITY,
 
+                    filter: isSelected
+                      ? "blur(0px) brightness(1)"
+                      : `blur(${SIDE_MODEL_BLUR_PX}px) brightness(0.95)`,
+
                     /*
                       IMPORTANT:
 
@@ -657,6 +667,7 @@ export default function Hero() {
                     layout: SELECT_SPRING,
                     rotateY: SELECT_SPRING,
                     opacity: SELECT_SPRING,
+                    filter: SELECT_SPRING,
                     scaleX: SELECT_SPRING,
                     scaleY: SELECT_SPRING,
                   }}

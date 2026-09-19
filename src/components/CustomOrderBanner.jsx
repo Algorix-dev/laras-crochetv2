@@ -180,7 +180,9 @@ export default function CustomOrderBanner() {
             ====================================================== */}
 
         <div
+          data-auto-rise="true"
           className="
+            rv
             relative
             mx-auto
             mt-[15px]
@@ -220,7 +222,6 @@ export default function CustomOrderBanner() {
             "
             style={{
               left: "77.46%",
-              top: "5%",
             }}
           >
             ORDERS
@@ -230,52 +231,33 @@ export default function CustomOrderBanner() {
         {/* ======================================================
             MODELS
 
-            Responsive sizing:
-
-            1920px → about 650px
-            1440px → about 490px
-            1280px → about 480px minimum
-            Mobile → scales down with viewport
-
-            This prevents the models from becoming huge on
-            smaller screens while preserving the desktop design.
-
-            TIP: the glow ("Ellipse 27" in Figma) now lives INSIDE
-            this same wrapper, positioned as a % of the models
-            image itself (left-1/2, top-[98%], centered) instead
-            of a fixed page pixel. Checked the actual trio PNG with
-            getbbox() — the models' feet sit right at the very
-            bottom edge of the file (ink runs 0% to 100%, no
-            padding), so 98% down puts the glow right under their
-            feet at ANY screen size, because it's now anchored to
-            the image, not the page.
-
-            TIP — EXPLICIT STACKING: this wrapper now carries its
-            own `relative z-20` (it didn't before — only the <img>
-            deep inside it did). The old setup was technically
-            correct (z-index values on a positioned descendant
-            still "win" against a sibling even through two
-            in-between wrappers that don't set their own z-index),
-            but that correctness depended on nobody ever adding a
-            z-index, transform, opacity, or filter to either of
-            those in-between wrappers — any of those would
-            silently create a new stacking context and trap the
-            image's z-20 inside it, right back behind the wordmark.
-            Putting z-20 on the outer wrapper itself makes "this
-            whole block sits above the wordmark" true on its own
-            terms, not dependent on the wrappers below staying
-            exactly as plain as they are today.
+            TIP — SCALABLE WORDMARK OVERLAP:
+            Replaced the hardcoded negative margin with
+            `var(--wordmark-model-overlap)`, defined in index.css
+            as `clamp(-52px, -3.8vw, -20px)`.
+            This scales the overlap smoothly between small mobile
+            screens and 1920px desktop, keeping the models' heads
+            proportional against the wordmark without clipping.
+            Tuning guide:
+              - Less overlap (models sit lower): change to clamp(-35px, -2.5vw, -12px)
+              - More overlap (models tuck deeper): change to clamp(-65px, -4.5vw, -28px)
             ====================================================== */}
 
         <div
+          data-auto-rise="true"
+          data-banner-overlap="true"
           className="
+            rv
+            d2
             relative
             z-20
             mx-auto
-            mt-[-70px]
             flex
             justify-center
           "
+          style={{
+            marginTop: "var(--wordmark-model-overlap)",
+          }}
         >
           {/* TIP: this inner wrapper is `inline-block` (shrinks to
               fit the image) rather than the outer flex row (which
@@ -328,7 +310,10 @@ export default function CustomOrderBanner() {
             ====================================================== */}
 
         <div
+          data-auto-rise="true"
           className="
+            rv
+            d3
             relative
             z-20
             mx-auto
