@@ -91,6 +91,8 @@ export default function CustomOrderBanner() {
         <img
           src={arcSwirl}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="
             absolute
             max-w-none
@@ -111,6 +113,8 @@ export default function CustomOrderBanner() {
         <img
           src={arcSwirl}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="
             absolute
             max-w-none
@@ -133,6 +137,8 @@ export default function CustomOrderBanner() {
         <img
           src={threadBand}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="
             absolute
             left-1/2
@@ -214,7 +220,7 @@ export default function CustomOrderBanner() {
             "
             style={{
               left: "77.46%",
-              top: "8.8%",
+              top: "10.8%",
             }}
           >
             ORDERS

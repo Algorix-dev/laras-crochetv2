@@ -10,6 +10,7 @@ import ProductGrid from "./components/ProductGrid";
 import CustomOrderBanner from "./components/CustomOrderBanner";
 import LaraShowcase from "./components/LaraShowcase";
 import Footer from "./components/Footer";
+import Reveal from "./components/Reveal";
 import { products, heroModels } from "./data/products";
 import { getProducts, normalizeProduct } from "./api";
 
@@ -105,42 +106,80 @@ function HomePage() {
           for how the pin + scroll-scrub is built. */}
       <LaraShowcase />
 
-      <div className="text-center pt-2 pb-10 md:pb-14">
-        <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
-          Go to Shop
-        </Link>
-      </div>
+      <Reveal>
+        <div className="text-center pt-2 pb-10 md:pb-14">
+          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+            Go to Shop
+          </Link>
+        </div>
+      </Reveal>
 
             {/* Shop Our Pieces — a curated 4-item taste of the catalog, not the full grid */}
             <section className="py-10 md:py-16">
               {/* TIP — 304px shared margin, matching Navbar/Hero/
                   ProductGrid/Footer, so this heading row's left edge
                   lines up with the product grid directly below it. */}
-              <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
-                  Shop Our Pieces
-                </h2>
-                <Link to="/shop" className="pr-3 text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
-                  Go to shop
-                </Link>
-              </div>
+              <Reveal>
+                <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
+                    Shop Our Pieces
+                  </h2>
+                  <Link to="/shop" className="pr-3 text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
+                    Go to shop
+                  </Link>
+                </div>
+              </Reveal>
               <ProductGrid products={liveProducts.slice(0, 4)} isPlaceholder={!isLive} />
-              <div className="text-center mt-10">
-                <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
-                  Go to Shop
-                </Link>
-              </div>
+              <Reveal>
+                <div className="text-center mt-10">
+                  <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+                    Go to Shop
+                  </Link>
+                </div>
+              </Reveal>
             </section>
 
-      <CustomOrderBanner />
+      <Reveal>
+        <CustomOrderBanner />
+      </Reveal>
       <Footer />
     </>
   );
 }
 
+// TIP — EVERY PAGE COMES UP FROM UNDERNEATH:
+// each route change re-mounts this wrapper (key={pathname}), which
+// replays a short rise + fade so every page enters the same way,
+// like the portfolio. Done as a plain CSS animation (not framer-
+// motion) on purpose:
+//   - it runs on the compositor, so it can't lag with the JS thread
+//   - `backwards` fill means that once it ends there is NO leftover
+//     transform on the wrapper. A leftover transform would break the
+//     `position: fixed` pin in LaraShowcase (fixed elements resolve
+//     against any transformed ancestor), so this has to stay `backwards`,
+//     never `forwards` / `both`.
+// Reduced-motion visitors get no animation.
+const PAGE_RISE_CSS = `
+@keyframes page-rise {
+  from { opacity: 0; transform: translateY(24px); }
+}
+.page-rise {
+  animation: page-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-rise { animation: none; }
+}
+`;
+
 function PageOffset({ children }) {
   const { pathname } = useLocation();
-  return <div className={pathname === "/signin" ? "" : "pt-[66px]"}>{children}</div>;
+  return (
+    <div className={pathname === "/signin" ? "" : "pt-[66px]"}>
+      <div key={pathname} className="page-rise">
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export default function App() {
@@ -155,6 +194,7 @@ export default function App() {
   return (
     <AuthProvider>
       <NavbarVisibilityProvider>
+      <style>{PAGE_RISE_CSS}</style>
       <ScrollToTop />
       <ConditionalNavbar />
       <BagDrawer open={isBagOpen} onClose={closeBag} />

@@ -56,7 +56,7 @@ export default function ProductGrid({ products, columns = 2, cardVariant = 'defa
         // makes the cards feel like they're arriving one after
         // another rather than all popping in at once — a small
         // touch that reads as "designed," not just "animated."
-        <Reveal key={product.id} delay={(i % 3) * 0.08}>
+        <Reveal key={product.id} delay={(i % 3) * 0.05}>
           <ProductCard product={product} variant={cardVariant} isPlaceholder={isPlaceholder} />
         </Reveal>
       ))}

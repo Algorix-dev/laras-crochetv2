@@ -10,6 +10,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import lacMonogram from "../assets/lara-monogram.webp";
+import Reveal from "./Reveal";
 
 const columns = [
   {
@@ -48,7 +49,9 @@ export default function Footer() {
   };
 
   return (
-    <footer className="pt-14 pb-0">
+    <footer className="pt-6 pb-0 md:pt-8">
+      {/* TIP — TOP SPACING: was pt-14 (56px). Tightened because on Lara's
+          laptop the gap above the footer felt like too much. */}
       {/* TIP: the Figma export shows the link columns naturally-sized
           and grouped on the left, with the newsletter column pushed
           to the far right by justify-between — NOT an even grid of
@@ -62,8 +65,21 @@ export default function Footer() {
           max-w-7xl for the same reason as ProductGrid — it was
           capping this section's width independently of the rest of
           the page. */}
-      <div className="flex flex-wrap justify-between gap-x-16 gap-y-10 px-5 md:px-8 lg:px-[15.83%]">
-        <div className="flex flex-wrap gap-x-16 gap-y-8">
+      {/* TIP — WHY THE INSTAGRAM / NEWSLETTER SIDE WAS DROPPING DOWN:
+          the newsletter block had a hard minimum width (input
+          min-w-[356px] + a 208px button = 564px) and the gaps were a
+          fixed 64px. At 1920px there's room for all of that, but on a
+          laptop at 125-150% display scaling the browser is really only
+          ~1280-1536px wide, the row ran out of space, and flex-wrap
+          pushed the right-hand column onto a second line below the
+          links (and out of view). Now the gaps and the newsletter block
+          scale with the viewport (clamp), and the input flexes instead
+          of having a hard minimum — so links + newsletter stay on ONE
+          row at every desktop width (at 1920px it looks essentially
+          the same as before). */}
+      <Reveal>
+      <div className="flex flex-wrap justify-between gap-x-[clamp(2rem,4vw,4rem)] gap-y-10 px-5 md:px-8 lg:px-[15.83%]">
+        <div className="flex flex-wrap gap-x-[clamp(2rem,4vw,4rem)] gap-y-8">
           {columns.map((col) => (
             <div key={col.title}>
               <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4%]">
@@ -93,7 +109,7 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="w-full max-w-xs sm:w-auto">
+        <div className="w-full md:max-w-[35.25rem] lg:w-[clamp(20rem,27.5vw,35.25rem)]">
           <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4%]">
             Subscribe to Our Newsletter
           </h3>
@@ -109,11 +125,11 @@ export default function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="w-full min-w-[356px] border border-[var(--line)] px-3 py-2 text-sm outline-none focus:border-[var(--ink)]"
+                  className="min-w-0 flex-1 border border-[var(--line)] px-3 py-2 text-sm outline-none focus:border-[var(--ink)]"
                 />
                 <button
                   type="submit"
-                  className="w-[208px] h-12 bg-[var(--maroon)] px-4 text-[16px] font-bold uppercase text-white hover:bg-[var(--maroon-dark)]"
+                  className="h-12 w-[clamp(7.5rem,10.8vw,13rem)] shrink-0 bg-[var(--maroon)] px-4 text-[16px] font-bold uppercase text-white hover:bg-[var(--maroon-dark)]"
                 >
                   Subscribe
                 </button>
@@ -123,6 +139,7 @@ export default function Footer() {
           )}
         </div>
       </div>
+      </Reveal>
 
       {/* TIP — licensing: "Genty Demo" (the font you sent) is
           personal-use-only, and its license explicitly forbids web

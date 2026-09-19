@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 
 import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.webp";
@@ -86,8 +87,14 @@ const NAVBAR_HEIGHT_PX = 66;
   from Lara fading in to the last review batch fading out lives
   inside this one track. This number controls exactly how slow
   the whole pinned experience feels; bigger = slower.
+
+  Was 1500. Cut to 1000 (~33% less scrolling to get through it)
+  after Lara said the site felt laggy/slow. Every breakpoint below
+  is a FRACTION of this track, so the sequence keeps identical
+  proportions — it just plays faster. Nudge this one number up or
+  down to taste.
 */
-const TRACK_VH = 1500;
+const TRACK_VH = 1000;
 
 
 /* ============================================================
@@ -513,6 +520,119 @@ let showcaseCompletedThisPageVisit = false;
 
 
 /* ============================================================
+   MOTION-VALUE PIECES
+   ============================================================
+
+   PERFORMANCE NOTE (this is the "it lags when I scroll" fix):
+
+   The old version stored scroll progress in React state and ran
+   a requestAnimationFrame loop forever — so EVERY frame it called
+   setProgress(), re-rendering this whole component (all ~60 word
+   spans, 3 photos, 9 review cards) 60 times a second, even when
+   nothing had changed.
+
+   Now progress is a framer-motion MotionValue. Setting it does NOT
+   re-render React — each piece below subscribes to it directly and
+   writes its own opacity/transform straight to the DOM. React only
+   re-renders when the pin state actually changes (a few times per
+   visit). Same math, same timings, no per-frame React work.
+*/
+
+// Each word animates over this fraction of the paragraph's scroll
+// window, so neighbouring words overlap into a smooth wave instead
+// of popping in strictly one at a time.
+const WORD_WINDOW = 0.12;
+const WORD_RISE_PX = 18;
+
+function Word({ progress, index, total, children }) {
+  const t = useTransform(progress, (p) => {
+    const rangeT = clamp01(
+      (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
+    );
+    const start = (index / total) * (1 - WORD_WINDOW);
+    return clamp01((rangeT - start) / WORD_WINDOW);
+  });
+
+  // Rises up from underneath (not in from the left): starts
+  // WORD_RISE_PX below its resting spot and settles up into place.
+  const y = useTransform(t, (v) => (1 - easeOutCubic(v)) * WORD_RISE_PX);
+
+  return (
+    <>
+      <motion.span className="inline-block" style={{ opacity: t, y }}>
+        {children}
+      </motion.span>{" "}
+    </>
+  );
+}
+
+function ScatterPhoto({ photo, range, progress }) {
+  const state = useTransform(progress, (p) => getPhotoState(photo, range, p));
+
+  const opacity = useTransform(
+    progress,
+    (p) => getPhotoState(photo, range, p).opacity * sceneOpacity(p)
+  );
+  const x = useTransform(state, (s) => s.x);
+  const y = useTransform(state, (s) => s.y);
+  const scale = useTransform(state, (s) => s.scale);
+  const rotate = useTransform(state, (s) => s.rotate);
+
+  return (
+    <motion.img
+      src={photo.src}
+      alt={photo.alt}
+      decoding="async"
+      className="absolute block select-none"
+      style={{
+        left: `${photo.finalX}px`,
+        top: `${photo.finalY}px`,
+        width: `${photo.width}px`,
+        height: `${photo.height}px`,
+        zIndex: photo.zIndex,
+        transformOrigin: "50% 50%",
+        objectFit: "cover",
+        willChange: "transform, opacity",
+        opacity,
+        x,
+        y,
+        scale,
+        rotate,
+      }}
+    />
+  );
+}
+
+function ReviewCard({ testimonial, rowIndex, progress }) {
+  const reveal = useTransform(progress, (p) => getReviewRowReveal(rowIndex, p));
+  const opacity = useTransform(reveal, (r) => r.opacity);
+  const y = useTransform(reveal, (r) => r.y);
+
+  return (
+    <motion.div
+      className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
+      style={{ opacity, y }}
+    >
+      <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
+        "{testimonial.quote}"
+      </p>
+
+      <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
+        {testimonial.name}
+        <span
+          aria-hidden="true"
+          className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
+        >
+          ✓
+        </span>
+      </p>
+
+      <p className="mt-1 text-xs text-[var(--muted)]">Verified Customer</p>
+    </motion.div>
+  );
+}
+
+/* ============================================================
    COMPONENT
    ============================================================ */
 
@@ -521,7 +641,6 @@ export default function LaraShowcase() {
   const contentRef = useRef(null);
   const contentHeightRef = useRef(0);
   const afterTopRef = useRef(0);
-  const rafRef = useRef(null);
   const pendingScrollFixRef = useRef(null);
 
   /*
@@ -544,7 +663,9 @@ export default function LaraShowcase() {
     () => showcaseCompletedThisPageVisit
   );
 
-  const [progress, setProgress] = useState(renderCompactFromStart ? 1 : 0);
+  // Scroll progress lives in a MotionValue, NOT React state — see
+  // the MOTION-VALUE PIECES note above.
+  const progress = useMotionValue(renderCompactFromStart ? 1 : 0);
 
   const [pinState, setPinState] = useState(
     renderCompactFromStart ? "after" : "before"
@@ -552,12 +673,22 @@ export default function LaraShowcase() {
 
   const [liveCompleted, setLiveCompleted] = useState(false);
 
-  const [reduceMotion, setReduceMotion] = useState(false);
+  // Read the preference up-front so a reduced-motion visitor never
+  // sees one frame of the animated version first.
+  const [reduceMotion, setReduceMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 
   const { result: wordParagraphs, totalWords } = useMemo(
     () => buildWordParagraphs(PARAGRAPHS),
     []
   );
+
+  const sceneMV = useTransform(progress, sceneOpacity);
+  const paragraphMV = useTransform(progress, paragraphContainerOpacity);
+  const reviewsMV = useTransform(progress, reviewsContainerOpacity);
 
   /* -------------------- navbar hide-during-pin -------------------- */
 
@@ -606,7 +737,7 @@ export default function LaraShowcase() {
     // the navbar) — regardless of how deep into the tall pin track
     // a fast/fling scroll had carried the user before this fired.
     // Anchoring to the section's own document position (captured
-    // in tick(), below) rather than trying to preserve an exact
+    // in update(), below) rather than trying to preserve an exact
     // scroll fraction via a height-delta calc is what keeps a fast
     // scroll from skipping clean past Shop straight to the footer.
     window.scrollTo(0, Math.max(0, pending.wrapperTop - NAVBAR_HEIGHT_PX));
@@ -624,91 +755,101 @@ export default function LaraShowcase() {
     // effect running again from scratch.
     if (renderCompactFromStart || reduceMotion || liveCompleted) return;
 
+    let rafId = null;
+    let done = false;
+
     const measure = () => {
       if (contentRef.current) {
         contentHeightRef.current = contentRef.current.offsetHeight;
       }
     };
 
-    measure();
+    const update = () => {
+      rafId = null;
+      if (done) return;
 
-    const ro = new ResizeObserver(measure);
-    if (contentRef.current) ro.observe(contentRef.current);
-
-    window.addEventListener("resize", measure);
-    window.addEventListener("load", measure);
-
-    const tick = () => {
       const wrapper = wrapperRef.current;
+      if (!wrapper) return;
 
-      if (wrapper) {
-        const rect = wrapper.getBoundingClientRect();
-        const contentHeight = contentHeightRef.current;
-        const pinnableRange = rect.height - contentHeight;
+      const rect = wrapper.getBoundingClientRect();
+      const contentHeight = contentHeightRef.current;
+      const pinnableRange = rect.height - contentHeight;
 
-        let nextState;
-        let next;
+      let nextState;
+      let next;
 
-        if (rect.top > NAVBAR_HEIGHT_PX) {
-          nextState = "before";
+      if (rect.top > NAVBAR_HEIGHT_PX) {
+        nextState = "before";
 
-          // Soft pre-roll: instead of snapping straight from 0%
-          // opacity to pinned, start easing Lara in during the
-          // last stretch of normal scroll before the section
-          // reaches the navbar — removes the blank-screen gap
-          // between the Hero section and Lara appearing.
-          const approachWindow = window.innerHeight * 0.8;
-          const distanceToEngage = rect.top - NAVBAR_HEIGHT_PX;
-          const approachT = clamp01(1 - distanceToEngage / approachWindow);
-          next = approachT * WORDMARK_FADE_IN_END;
-        } else if (rect.bottom <= NAVBAR_HEIGHT_PX + contentHeight) {
-          nextState = "after";
-          next = 1;
-          afterTopRef.current = Math.max(0, rect.height - contentHeight);
-        } else {
-          nextState = "pinned";
-          next =
-            pinnableRange > 0
-              ? clamp01((NAVBAR_HEIGHT_PX - rect.top) / pinnableRange)
-              : 1;
-        }
-
-        setPinState((previous) => (previous === nextState ? previous : nextState));
-        setProgress(next);
-
-        if (next >= RELEASE_AT && !showcaseCompletedThisPageVisit) {
-          pendingScrollFixRef.current = {
-            wrapperTop: window.scrollY + rect.top,
-          };
-          showcaseCompletedThisPageVisit = true;
-          setLiveCompleted(true);
-          return; // stop here — the layout effect above takes over
-                  // positioning once the compact markup commits
-        }
+        // Soft pre-roll: instead of snapping straight from 0%
+        // opacity to pinned, start easing Lara in during the
+        // last stretch of normal scroll before the section
+        // reaches the navbar — removes the blank-screen gap
+        // between the Hero section and Lara appearing.
+        const approachWindow = window.innerHeight * 0.8;
+        const distanceToEngage = rect.top - NAVBAR_HEIGHT_PX;
+        const approachT = clamp01(1 - distanceToEngage / approachWindow);
+        next = approachT * WORDMARK_FADE_IN_END;
+      } else if (rect.bottom <= NAVBAR_HEIGHT_PX + contentHeight) {
+        nextState = "after";
+        next = 1;
+        afterTopRef.current = Math.max(0, rect.height - contentHeight);
+      } else {
+        nextState = "pinned";
+        next =
+          pinnableRange > 0
+            ? clamp01((NAVBAR_HEIGHT_PX - rect.top) / pinnableRange)
+            : 1;
       }
 
-      rafRef.current = requestAnimationFrame(tick);
+      // Only re-renders React when the pin state really changes.
+      setPinState((previous) => (previous === nextState ? previous : nextState));
+
+      // Never re-renders React — every visual subscribes to this.
+      progress.set(next);
+
+      if (next >= RELEASE_AT && !showcaseCompletedThisPageVisit) {
+        done = true;
+        pendingScrollFixRef.current = {
+          wrapperTop: window.scrollY + rect.top,
+        };
+        showcaseCompletedThisPageVisit = true;
+        setLiveCompleted(true); // the layout effect above takes over
+      }
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    // Event-driven instead of a forever-running rAF loop: scroll /
+    // resize events just schedule ONE update for the next frame
+    // (scroll events fire before rAF in the same frame, so this is
+    // not a frame behind). Idle = zero work.
+    const schedule = () => {
+      if (rafId == null) rafId = requestAnimationFrame(update);
+    };
+
+    const onResize = () => {
+      measure();
+      schedule();
+    };
+
+    measure();
+    update();
+
+    const ro = new ResizeObserver(onResize);
+    if (contentRef.current) ro.observe(contentRef.current);
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", onResize);
+    window.addEventListener("load", onResize);
 
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      done = true;
+      if (rafId != null) cancelAnimationFrame(rafId);
       ro.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("load", measure);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("load", onResize);
     };
-  }, [renderCompactFromStart, reduceMotion, liveCompleted]);
-
-  const p = reduceMotion || renderCompactFromStart || liveCompleted ? 1 : progress;
-
-  const scene = sceneOpacity(p);
-  const paragraphContainer = paragraphContainerOpacity(p);
-  const reviewsContainer = reviewsContainerOpacity(p);
-
-  const paragraphWordsT = clamp01(
-    (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
-  );
+  }, [renderCompactFromStart, reduceMotion, liveCompleted, progress]);
 
   /* ============================================================
      NORMAL FLOW — pin already finished
@@ -764,7 +905,7 @@ export default function LaraShowcase() {
         </div>
 
         <div className="flex items-center justify-center pb-16 pt-6 md:pb-20">
-          <div className="mx-auto max-w-2xl text-center text-[16px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
+          <div className="mx-auto max-w-2xl text-center text-[20px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
             {PARAGRAPHS.map((paragraph, index) => (
               <p key={index} className={index === PARAGRAPHS.length - 1 ? "mt-8" : "mb-6"}>
                 {paragraph}
@@ -857,7 +998,7 @@ export default function LaraShowcase() {
     };
   }
 
-  const layerBaseStyle = { position: "absolute", inset: 0 };
+  const layerBaseStyle = { position: "absolute", inset: 0, willChange: "opacity" };
 
   return (
     <>
@@ -869,11 +1010,11 @@ export default function LaraShowcase() {
         <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
           <div className="relative h-full w-full">
             {/* ======================= LARA + PHOTOS ======================= */}
-            <div
+            <motion.div
               className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
               style={{
                 ...layerBaseStyle,
-                opacity: scene,
+                opacity: sceneMV,
                 pointerEvents: "none",
               }}
             >
@@ -882,6 +1023,7 @@ export default function LaraShowcase() {
                   src={laraDecor}
                   alt=""
                   aria-hidden="true"
+                  decoding="async"
                   className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
                   style={{ width: "100vw" }}
                 />
@@ -889,6 +1031,7 @@ export default function LaraShowcase() {
                 <img
                   src={laraWordmark}
                   alt="Lara's Crochet"
+                  decoding="async"
                   className="relative z-10 block h-auto w-full select-none pointer-events-none"
                 />
 
@@ -900,106 +1043,70 @@ export default function LaraShowcase() {
                     transform: "translate(-50%, -50%)",
                   }}
                 >
-                  {SCATTER_PHOTOS.map((photo, index) => {
-                    const state = getPhotoState(photo, PHOTO_RANGES[index], p);
-
-                    return (
-                      <img
-                        key={photo.id}
-                        src={photo.src}
-                        alt={photo.alt}
-                        className="absolute block select-none"
-                        style={{
-                          left: `${photo.finalX}px`,
-                          top: `${photo.finalY}px`,
-                          width: `${photo.width}px`,
-                          height: `${photo.height}px`,
-                          zIndex: photo.zIndex,
-                          transformOrigin: "50% 50%",
-                          objectFit: "cover",
-                          opacity: state.opacity * scene,
-                          transform: `translate(${state.x}px, ${state.y}px) scale(${state.scale}) rotate(${state.rotate}deg)`,
-                        }}
-                      />
-                    );
-                  })}
+                  {SCATTER_PHOTOS.map((photo, index) => (
+                    <ScatterPhoto
+                      key={photo.id}
+                      photo={photo}
+                      range={PHOTO_RANGES[index]}
+                      progress={progress}
+                    />
+                  ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* ======================= PARAGRAPH ======================= */}
-            <div
+            <motion.div
               className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
               style={{
                 ...layerBaseStyle,
-                opacity: paragraphContainer,
+                opacity: paragraphMV,
                 pointerEvents: "none",
               }}
             >
-              <div className="mx-auto max-w-2xl text-center text-[16px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
+              <div className="mx-auto max-w-2xl text-center text-[20px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
                 {wordParagraphs.map((words, paragraphIndex) => (
                   <p
                     key={paragraphIndex}
                     className={paragraphIndex === wordParagraphs.length - 1 ? "mt-8" : "mb-6"}
                   >
-                    {words.map(({ word, index }) => {
-                      const wordT = clamp01(
-                        (paragraphWordsT - index / totalWords) / (1 / totalWords)
-                      );
-
-                      return (
-                        <span key={index} style={{ opacity: wordT }}>
-                          {word}{" "}
-                        </span>
-                      );
-                    })}
+                    {words.map(({ word, index }) => (
+                      <Word
+                        key={index}
+                        progress={progress}
+                        index={index}
+                        total={totalWords}
+                      >
+                        {word}
+                      </Word>
+                    ))}
                   </p>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* ======================= REVIEWS ======================= */}
-            <div
+            <motion.div
               className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
               style={{
                 ...layerBaseStyle,
-                opacity: reviewsContainer,
+                opacity: reviewsMV,
                 pointerEvents: "none",
               }}
             >
               <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 sm:grid-cols-3">
-                {REVIEW_ROWS.map((row, rowIndex) => {
-                  const { opacity, y } = getReviewRowReveal(rowIndex, p);
-
-                  return row.map((testimonial, colIndex) => (
-                    <div
+                {REVIEW_ROWS.map((row, rowIndex) =>
+                  row.map((testimonial) => (
+                    <ReviewCard
                       key={testimonial.name}
-                      className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
-                      style={{
-                        opacity,
-                        transform: `translateY(${y}px)`,
-                      }}
-                    >
-                      <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
-                        "{testimonial.quote}"
-                      </p>
-
-                      <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
-                        {testimonial.name}
-                        <span
-                          aria-hidden="true"
-                          className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
-                        >
-                          ✓
-                        </span>
-                      </p>
-
-                      <p className="mt-1 text-xs text-[var(--muted)]">Verified Customer</p>
-                    </div>
-                  ));
-                })}
+                      testimonial={testimonial}
+                      rowIndex={rowIndex}
+                      progress={progress}
+                    />
+                  ))
+                )}
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
