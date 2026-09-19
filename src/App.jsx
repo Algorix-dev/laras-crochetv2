@@ -24,6 +24,7 @@ import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import MyBagPage from "./pages/MyBagPage";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import AddressesPage from "./pages/AddressesPage";
+import OrderTrackingPage from "./pages/OrderTrackingPage";
 import WishlistPage from "./pages/WishlistPage";
 import ComingSoon from "./pages/ComingSoon";
 
@@ -176,6 +177,7 @@ export default function App() {
         <Route path="/account/orders" element={<OrderHistoryPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/bag" element={<MyBagPage />} />
+        <Route path="/account/orders/:id" element={<OrderTrackingPage />} />
 
         {/* Catch-all: unknown routes go home rather than a blank page */}
         <Route path="*" element={<SignInPage />} />

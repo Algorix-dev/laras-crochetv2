@@ -60,7 +60,7 @@ export default function OrderConfirmationPage() {
               Order Confirmed
             </h1>
             <p className="mt-3 text-sm text-[var(--muted)]">
-              Thank you! Your order has been placed{order ? ` — reference #${order.paystackReference}` : ''}.
+              Thank you! Your order has been placed{order ? ` — reference #${order.orderNumber || order.paystackReference}` : ''}.
               We'll email you as soon as it ships.
             </p>
             {order && (

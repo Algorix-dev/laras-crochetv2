@@ -40,7 +40,17 @@ app.use(
     },
   })
 );
-app.use(express.json()); // lets req.body work for JSON requests
+// TIP: verify() hands us the raw bytes of each JSON body before it's
+// parsed. Only the Paystack webhook needs them (its signature is
+// computed over the exact bytes Paystack sent), so it's the only
+// route that keeps a copy — every other request is unchanged.
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      if (req.originalUrl.startsWith("/api/payments/webhook")) req.rawBody = buf;
+    },
+  })
+); // lets req.body work for JSON requests
 
 // TIP: every route file gets "mounted" under a base path here.
 // A request to POST /api/auth/login actually runs the '/login'

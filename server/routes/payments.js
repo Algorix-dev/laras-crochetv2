@@ -1,9 +1,23 @@
+import crypto from 'crypto';
 import { Router } from 'express';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 
 const router = Router();
 const PAYSTACK_BASE = 'https://api.paystack.co';
+
+// TIP: pulls "how did they pay" out of a Paystack transaction object
+// (the same shape comes back from /transaction/verify and inside the
+// charge.success webhook). Only the channel, card brand and last four
+// digits are kept — never anything that could be used to charge the
+// card again.
+function paymentInfo(data = {}) {
+  return {
+    channel: data.channel,
+    cardType: data.authorization?.card_type?.trim(),
+    last4: data.authorization?.last4,
+  };
+}
 
 // TIP: Paystack works in two steps, and BOTH must happen on the
 // backend, never the frontend:
@@ -87,15 +101,64 @@ router.get('/verify/:reference', async (req, res) => {
   const paystackData = await paystackRes.json();
 
   if (paystackData.data?.status === 'success') {
-    const order = await Order.findOneAndUpdate(
-      { paystackReference: reference },
-      { status: 'paid' },
-      { new: true }
-    );
+    // TIP: markPaid (in models/Order.js) flips pending -> paid, gives
+    // the order its AG-YYYY-NNNN number, and does nothing if the
+    // order was already paid — so refreshing this page later can't
+    // undo a "shipped" or "delivered" status.
+    const order = await Order.markPaid(reference, paymentInfo(paystackData.data));
     return res.json({ verified: true, order });
   }
 
   res.json({ verified: false });
+});
+
+// POST /api/payments/webhook
+// TIP: verify above only runs if the customer's browser makes it back
+// to /order-confirmation. If they pay and then close the tab, lose
+// signal, or the redirect fails, that never happens and a PAID order
+// would sit as "pending" forever. Paystack solves this by also
+// calling this URL itself, server-to-server, whenever a payment
+// succeeds — no browser involved. Set the URL in your Paystack
+// dashboard (Settings → API Keys & Webhooks); test mode and live mode
+// each have their own webhook URL.
+//
+// Anyone on the internet can POST to this URL, so the first job is
+// proving the request really came from Paystack: they sign the raw
+// request body with your secret key (HMAC SHA512) and send the result
+// in the x-paystack-signature header. req.rawBody is captured in
+// index.js, because the signature is over the exact bytes Paystack
+// sent — re-stringifying the parsed JSON isn't guaranteed identical.
+router.post('/webhook', async (req, res) => {
+  const signature = req.get('x-paystack-signature');
+  if (!signature || !req.rawBody) return res.sendStatus(400);
+
+  const expected = crypto
+    .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
+    .update(req.rawBody)
+    .digest('hex');
+  const a = Buffer.from(expected);
+  const b = Buffer.from(signature);
+  // timingSafeEqual (unlike ===) doesn't leak how much of the
+  // signature matched, and throws if lengths differ — hence the check.
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.sendStatus(401);
+  }
+
+  try {
+    if (req.body.event === 'charge.success') {
+      // Same helper as verify — safe if the redirect already handled
+      // this payment, and safe if Paystack retries the webhook.
+      await Order.markPaid(req.body.data.reference, paymentInfo(req.body.data));
+    }
+    // 200 for every correctly-signed event (even ones we ignore, or a
+    // reference that isn't ours) so Paystack stops resending it.
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Paystack webhook error:', err);
+    // 500 tells Paystack to retry later, which is what we want if the
+    // database was briefly unreachable.
+    res.sendStatus(500);
+  }
 });
 
 export default router;
