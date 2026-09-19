@@ -94,7 +94,12 @@ export default function RecommendedProducts({
         Lara Thinks You&apos;d Love These Too
       </h2>
       <div className="mt-6" onClick={onProductClick}>
-        <ProductGrid products={products} columns={columns} cardVariant="recommendation" />
+        <ProductGrid
+          products={products}
+          columns={columns}
+          cardVariant="recommendation"
+          wrapInSection={false}
+        />
       </div>
     </section>
   );
