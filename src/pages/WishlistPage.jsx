@@ -70,7 +70,7 @@ export default function WishlistPage() {
               <p className="mb-8 text-sm text-[var(--muted)]">
                 Some pieces you love from Lara's Crochet.
               </p>
-              <ProductGrid products={wishlistedProducts} columns={3} />
+              <ProductGrid products={wishlistedProducts} columns={3} wrapInSection={false} />
             </>
           ) : (
             <div className="mb-12">

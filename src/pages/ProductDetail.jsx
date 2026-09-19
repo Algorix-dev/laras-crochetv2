@@ -42,6 +42,7 @@ import ShareButton from '../components/ShareButton';
 import SizeGuideModal from '../components/SizeGuideModal';
 import reviewBeachPhoto from '../assets/reviews/review-restaurant.webp';
 import reviewRestaurantPhoto from '../assets/reviews/review-beach.webp';
+import logoMark from '../assets/lac-logo-mark.png';
 // TIP: the source files on disk are mislabeled relative to what they
 // actually show — review-restaurant.webp is the beach photo, and
 // review-beach.webp is the restaurant photo. Rather than have every
@@ -433,6 +434,34 @@ function Reviews() {
 /* -----------------------------------------------------------
    Main Product Detail Page component
 ----------------------------------------------------------- */
+// TIP: mirrors the same branded splash used on ShopPage while its
+// fetch is in flight (logo fade-in + tagline), per Lara's note that
+// any loading moment should use it — this was the missing piece
+// here. Before this, the fetch effect below set `product` to null
+// at the START of every fetch (correctly, so a stale product doesn't
+// flash while navigating between two product pages), but the render
+// logic only checked `error || !product` — with no separate loading
+// flag, "still fetching" and "genuinely 404'd" looked identical, so
+// the real error message flashed for the ~1-2s the fetch takes
+// before the actual product swapped in, even on a normal successful
+// load. Now it only shows once the fetch actually fails.
+function BrandedLoader() {
+  const [clear, setClear] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setClear(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center text-center">
+      <div className={`transition duration-[1000ms] ${clear ? 'opacity-100 blur-0' : 'opacity-55 blur-[3px]'}`}>
+        <img className="mx-auto h-[120px] w-[186px] object-contain" src={logoMark} alt="Lara's Crochet" />
+        <p className="mt-3 text-[14px] tracking-[0.5em] text-[#A3A3A3]">LIMITED BY NATURE</p>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductDetail() {
   /* TIP: useParams() reads the :id from the URL — this is now a
      real Mongo _id coming from ProductCard's <Link to={`/product/${product.id}`}>,
@@ -442,13 +471,16 @@ export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setError(null);
     setProduct(null);
+    setLoading(true);
     getProduct(id)
       .then((data) => setProduct(normalizeProduct(data)))
       .catch(() => setError('This product could not be found.'))
+      .finally(() => setLoading(false));
   }, [id]);
 
   /* Gallery images come straight from the product's `images` array
@@ -488,6 +520,10 @@ export default function ProductDetail() {
     addToBag(product, color, shade, size);
     openBag();
   };
+
+  if (loading) {
+    return <BrandedLoader />;
+  }
 
   if (error || !product) {
     return (

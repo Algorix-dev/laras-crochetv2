@@ -129,7 +129,7 @@ export default function CheckoutPage() {
             column is also 626px within the 1312px content area
             (626 + 60px gap + 626 = 1312) — an even 50/50 split, not the
             previous 1.1/.9 (~55/45) ratio. */}
-        <div className="mx-auto grid max-w-7xl lg:grid-cols-2">
+        <div className="px-5 md:px-8 lg:px-[15.83%] grid lg:grid-cols-2">
 
           {/* ================================================================
               LEFT COLUMN — Checkout form

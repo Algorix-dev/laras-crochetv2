@@ -76,7 +76,7 @@ export default function MyBagPage() {
   return (
     <>
       <main className="min-h-screen">
-        <section className="mx-auto max-w-[984px] px-5 pt-8 pb-16 md:px-0 md:pt-10">
+        <section className="px-5 md:px-8 lg:px-[15.83%] pt-8 pb-16 md:pt-10">
           {/* Breadcrumb */}
           <p className="mb-4 text-xs text-[var(--muted)]">
             <Link to="/" className="hover:underline">Home</Link> /{' '}
@@ -382,7 +382,7 @@ export default function MyBagPage() {
             Recommendations section
             ================================================================ */}
         <section className="border-t border-[var(--line)] bg-[#fafafa] py-14 md:py-16">
-          <div className="mx-auto w-full max-w-[984px] px-5 md:px-0">
+          <div className="px-5 md:px-8 lg:px-[15.83%]">
             <RecommendedProducts
               excludeId={cartItems.map((item) => item.product.id)}
               className=""
