@@ -46,7 +46,7 @@ export default function AccountSidebar({ active }) {
           <ChevronDown size={16} className={mobileOpen ? 'rotate-180' : ''} />
         </button>
         {mobileOpen && (
-          <div className="border border-t-0 border-[var(--line)] text-[16px] uppercase tracking-wide">
+          <div className="border border-t-0 border-[var(--line)] text-[18px] uppercase tracking-wide">
             {LINKS.filter((link) => link.key !== active).map((link) => (
               <Link
                 key={link.key}
@@ -74,7 +74,7 @@ export default function AccountSidebar({ active }) {
           only the active one is underlined. AccountLayout puts this in
           the same grid row as the page content, so its first link lines
           up with the first thing under the heading — no margin-top needed. */}
-      <nav className="hidden text-base font-bold uppercase tracking-wide text-[var(--ink)] md:flex md:flex-col md:gap-4">
+      <nav className="hidden text-[18px] font-bold uppercase tracking-wide text-[var(--ink)] md:flex md:flex-col md:gap-4">
         {LINKS.map((link) => (
           <Link
             key={link.key}
