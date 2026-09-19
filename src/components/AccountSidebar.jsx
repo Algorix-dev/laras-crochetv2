@@ -64,7 +64,7 @@ export default function AccountSidebar({ active }) {
               }}
               className="block w-full px-4 py-3 text-left text-[var(--muted)] hover:text-[var(--ink)] font-bold"
             >
-              Logout
+              LOGOUT
             </button>
           </div>
         )}
