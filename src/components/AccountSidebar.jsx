@@ -1,10 +1,11 @@
 /*
   TIP: Pulling this out of AccountPage.jsx and into its own component
-  is the same move as ProductGrid earlier — four pages (Account,
-  Order History, Addresses, Wishlist) need the EXACT same sidebar
-  with just a different active link. Rather than copy-pasting the
-  nav + logout logic into all four, one component takes an `active`
-  prop and every page renders <AccountSidebar active="orders" /> etc.
+  is the same move as ProductGrid earlier — the account pages (Account,
+  Order History, Order Tracking, Addresses, Wishlist) need the EXACT
+  same sidebar with just a different active link. One component takes
+  an `active` prop. Most pages get it through <AccountLayout active="orders" />,
+  which also handles where the sidebar sits; Wishlist renders it directly
+  (mobile only).
 */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -69,16 +70,20 @@ export default function AccountSidebar({ active }) {
         )}
       </div>
 
-      {/* Desktop: plain vertical link list, unchanged from before. */}
-      <nav className="hidden text-xs uppercase tracking-wide md:flex md:flex-col md:gap-3">
+      {/* TIP: Desktop links match Figma: every link is the same dark ink,
+          only the active one is underlined. AccountLayout puts this in
+          the same grid row as the page content, so its first link lines
+          up with the first thing under the heading — no margin-top needed. */}
+      <nav className="hidden text-base font-bold uppercase tracking-wide text-[var(--ink)] md:flex md:flex-col md:gap-4">
         {LINKS.map((link) => (
           <Link
             key={link.key}
             to={link.to}
+            aria-current={active === link.key ? 'page' : undefined}
             className={
               active === link.key
-                ? 'font-bold text-[var(--ink)] underline underline-offset-4'
-                : 'text-[var(--muted)] hover:text-[var(--ink)] font-bold'
+                ? 'underline underline-offset-4'
+                : 'hover:text-[var(--maroon)]'
             }
           >
             {link.label}
@@ -86,7 +91,7 @@ export default function AccountSidebar({ active }) {
         ))}
         <button
           onClick={() => setConfirmOpen(true)}
-          className="text-left text-[var(--muted)] hover:text-[var(--ink)] font-bold"
+          className="text-left hover:text-[var(--maroon)]"
         >
           Logout
         </button>

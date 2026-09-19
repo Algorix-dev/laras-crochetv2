@@ -6,12 +6,10 @@
   `formOpen` + `editingId` together decide which of those to show.
 */
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Trash2, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import RecommendedProducts from '../components/RecommendedProducts';
-import AccountSidebar from '../components/AccountSidebar';
-import Footer from '../components/Footer';
+import AccountLayout from '../components/AccountLayout';
 import CountryDropdown from '../components/CountryDropdown';
 import { defaultCountry } from '../data/countries';
 
@@ -109,200 +107,188 @@ export default function AddressesPage() {
 
   if (!isSignedIn) return null;
 
+  // TIP: the "Add Address" button lives in the heading row (top right of
+  // the title), so it's passed to the layout as headerAction. It hides
+  // itself while the form is open.
+  const addButton = !formOpen && (
+    <button
+      onClick={() => {
+        setForm(emptyForm);
+        setEditingId(null);
+        setFormOpen(true);
+      }}
+      className="bg-[var(--ink)] px-4 py-2.5 text-xs uppercase tracking-wide text-white hover:bg-[var(--maroon)]"
+    >
+      {addresses.length > 0 ? 'Add a New Address' : 'Add Address'}
+    </button>
+  );
+
   return (
     <>
-      <section className="px-5 py-10 md:px-8 lg:px-[15.83%]">
-        <p className="mb-6 text-xs text-[var(--muted)]">
-          <Link to="/" className="hover:underline">Home</Link> / Account
-        </p>
-
-        <div className="grid gap-10 md:grid-cols-[180px_1fr]">
-          <AccountSidebar active="addresses" />
-
-          <div>
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">Addresses</h1>
-              {!formOpen && (
-                <button
-                  onClick={() => {
-                    setForm(emptyForm);
-                    setEditingId(null);
-                    setFormOpen(true);
-                  }}
-                  className="bg-[var(--ink)] px-4 py-2.5 text-xs uppercase tracking-wide text-white hover:bg-[var(--maroon)]"
-                >
-                  {addresses.length > 0 ? 'Add a New Address' : 'Add Address'}
-                </button>
-              )}
-            </div>
-
-            {loading ? (
-              <div className="max-w-sm animate-pulse space-y-3 border border-[var(--line)] p-4" aria-busy="true" aria-label="Loading addresses">
-                <div className="h-3.5 w-32 rounded bg-[var(--line)]" />
-                <div className="h-3 w-full rounded bg-[var(--line)]" />
-                <div className="h-3 w-3/4 rounded bg-[var(--line)]" />
-                <div className="h-3 w-1/2 rounded bg-[var(--line)]" />
-              </div>
-            ) : (
-              <>
-                {/* Saved address cards */}
-                {!formOpen && addresses.length > 0 && (
-                  <div className="space-y-4">
-                    {addresses.map((a) => (
-                      <div key={a._id} className="max-w-sm border border-[var(--line)] p-4 text-sm">
-                        <p className="font-bold">{a.firstName} {a.lastName}</p>
-                        <p className="text-[var(--muted)]">
-                          {a.addressLine1}, {a.city}
-                          <br />
-                          {a.postalCode} · {a.state}
-                          <br />
-                          {a.country?.name}
-                        </p>
-                        <div className="mt-3 flex items-center justify-between">
-                          {a.isDefault && (
-                            <span className="flex items-center gap-1 text-xs">
-                              <input type="checkbox" checked readOnly /> Default
-                            </span>
-                          )}
-                          <div className="ml-auto flex gap-3 text-xs">
-                            <button onClick={() => startEdit(a)} className="underline hover:text-[var(--maroon)]">
-                              Edit
-                            </button>
-                            <button onClick={() => setConfirmRemoveId(a._id)} className="underline hover:text-[var(--maroon)]">
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Empty state — no addresses, form not open yet */}
-                {!formOpen && addresses.length === 0 && (
-                  <p className="text-sm text-[var(--muted)]">No addresses saved yet.</p>
-                )}
-
-                {/* Add/edit form */}
-                {formOpen && (
-                  <form onSubmit={handleSubmit} className="max-w-2xl">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <input
-                        required
-                        placeholder="First Name"
-                        value={form.firstName}
-                        onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                        className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
-                      />
-                      <input
-                        required
-                        placeholder="Last Name"
-                        value={form.lastName}
-                        onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                        className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
-                      />
-                      <input
-                        placeholder="Company (optional)"
-                        value={form.company}
-                        onChange={(e) => setForm({ ...form, company: e.target.value })}
-                        className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
-                      />
-                      <input
-                        required
-                        placeholder="Address Line 1"
-                        value={form.addressLine1}
-                        onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
-                        className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
-                      />
-                      <input
-                        placeholder="Address Line 2 (Optional)"
-                        value={form.addressLine2}
-                        onChange={(e) => setForm({ ...form, addressLine2: e.target.value })}
-                        className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
-                      />
-                      <input
-                        required
-                        placeholder="City"
-                        value={form.city}
-                        onChange={(e) => setForm({ ...form, city: e.target.value })}
-                        className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
-                      />
-                      <input
-                        required
-                        placeholder="State/Province"
-                        value={form.state}
-                        onChange={(e) => setForm({ ...form, state: e.target.value })}
-                        className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
-                      />
-                      <input
-                        required
-                        placeholder="Postal/Zip Code"
-                        value={form.postalCode}
-                        onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-                        className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
-                      />
-                      <CountryDropdown
-                        value={form.country}
-                        onChange={(c) => setForm({ ...form, country: c })}
-                      />
-
-                      {/* Phone — country dial code prefix comes from the same
-                          country selection above, matching her design's
-                          combined flag+code+number field */}
-                      <div className="sm:col-span-2">
-                        <label className="mb-1 block text-xs text-[var(--muted)]">Phone</label>
-                        <div className="flex border border-[var(--line)]">
-                          <span className="flex items-center gap-1 border-r border-[var(--line)] px-3 text-sm text-[var(--muted)]">
-                            {form.country.flag} {form.country.dial}
-                          </span>
-                          <input
-                            required
-                            value={form.phone}
-                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                            placeholder="Phone number"
-                            className="w-full px-3 py-2.5 text-sm outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <label className="mt-4 flex items-center gap-2 text-xs">
-                      <input
-                        type="checkbox"
-                        checked={form.setDefault}
-                        onChange={(e) => setForm({ ...form, setDefault: e.target.checked })}
-                      />
-                      Set as default address
-                    </label>
-
-                    <div className="mt-5 flex gap-3">
-                      <button
-                        type="submit"
-                        disabled={saving}
-                        className="bg-[var(--ink)] px-6 py-2.5 text-xs uppercase tracking-wide text-white hover:bg-[var(--maroon)] disabled:opacity-50"
-                      >
-                        {saving ? 'Saving...' : 'Add Address'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormOpen(false);
-                          setEditingId(null);
-                        }}
-                        className="px-6 py-2.5 text-xs uppercase tracking-wide text-[var(--muted)] hover:text-[var(--ink)]"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </>
-            )}
+      <AccountLayout active="addresses" title="Addresses" headerAction={addButton}>
+        {loading ? (
+          <div className="max-w-sm animate-pulse space-y-3 border border-[var(--line)] p-4" aria-busy="true" aria-label="Loading addresses">
+            <div className="h-3.5 w-32 rounded bg-[var(--line)]" />
+            <div className="h-3 w-full rounded bg-[var(--line)]" />
+            <div className="h-3 w-3/4 rounded bg-[var(--line)]" />
+            <div className="h-3 w-1/2 rounded bg-[var(--line)]" />
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Saved address cards */}
+            {!formOpen && addresses.length > 0 && (
+              <div className="space-y-4">
+                {addresses.map((a) => (
+                  <div key={a._id} className="max-w-sm border border-[var(--line)] p-4 text-sm">
+                    <p className="font-bold">{a.firstName} {a.lastName}</p>
+                    <p className="text-[var(--muted)]">
+                      {a.addressLine1}, {a.city}
+                      <br />
+                      {a.postalCode} · {a.state}
+                      <br />
+                      {a.country?.name}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between">
+                      {a.isDefault && (
+                        <span className="flex items-center gap-1 text-xs">
+                          <input type="checkbox" checked readOnly /> Default
+                        </span>
+                      )}
+                      <div className="ml-auto flex gap-3 text-xs">
+                        <button onClick={() => startEdit(a)} className="underline hover:text-[var(--maroon)]">
+                          Edit
+                        </button>
+                        <button onClick={() => setConfirmRemoveId(a._id)} className="underline hover:text-[var(--maroon)]">
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-        <RecommendedProducts />
-      </section>
+            {/* Empty state — no addresses, form not open yet */}
+            {!formOpen && addresses.length === 0 && (
+              <p className="text-sm text-[var(--muted)]">No addresses saved yet.</p>
+            )}
+
+            {/* Add/edit form */}
+            {formOpen && (
+              <form onSubmit={handleSubmit} className="max-w-2xl">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <input
+                    required
+                    placeholder="First Name"
+                    value={form.firstName}
+                    onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                  />
+                  <input
+                    required
+                    placeholder="Last Name"
+                    value={form.lastName}
+                    onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                  />
+                  <input
+                    placeholder="Company (optional)"
+                    value={form.company}
+                    onChange={(e) => setForm({ ...form, company: e.target.value })}
+                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
+                  />
+                  <input
+                    required
+                    placeholder="Address Line 1"
+                    value={form.addressLine1}
+                    onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
+                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
+                  />
+                  <input
+                    placeholder="Address Line 2 (Optional)"
+                    value={form.addressLine2}
+                    onChange={(e) => setForm({ ...form, addressLine2: e.target.value })}
+                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
+                  />
+                  <input
+                    required
+                    placeholder="City"
+                    value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                  />
+                  <input
+                    required
+                    placeholder="State/Province"
+                    value={form.state}
+                    onChange={(e) => setForm({ ...form, state: e.target.value })}
+                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                  />
+                  <input
+                    required
+                    placeholder="Postal/Zip Code"
+                    value={form.postalCode}
+                    onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
+                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                  />
+                  <CountryDropdown
+                    value={form.country}
+                    onChange={(c) => setForm({ ...form, country: c })}
+                  />
+
+                  {/* Phone — country dial code prefix comes from the same
+                      country selection above, matching her design's
+                      combined flag+code+number field */}
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-xs text-[var(--muted)]">Phone</label>
+                    <div className="flex border border-[var(--line)]">
+                      <span className="flex items-center gap-1 border-r border-[var(--line)] px-3 text-sm text-[var(--muted)]">
+                        {form.country.flag} {form.country.dial}
+                      </span>
+                      <input
+                        required
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        placeholder="Phone number"
+                        className="w-full px-3 py-2.5 text-sm outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <label className="mt-4 flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={form.setDefault}
+                    onChange={(e) => setForm({ ...form, setDefault: e.target.checked })}
+                  />
+                  Set as default address
+                </label>
+
+                <div className="mt-5 flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-[var(--ink)] px-6 py-2.5 text-xs uppercase tracking-wide text-white hover:bg-[var(--maroon)] disabled:opacity-50"
+                  >
+                    {saving ? 'Saving...' : 'Add Address'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormOpen(false);
+                      setEditingId(null);
+                    }}
+                    className="px-6 py-2.5 text-xs uppercase tracking-wide text-[var(--muted)] hover:text-[var(--ink)]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </>
+        )}
+      </AccountLayout>
 
       {confirmRemoveId && (
         <div
@@ -345,8 +331,6 @@ export default function AddressesPage() {
           </div>
         </div>
       )}
-
-      <Footer />
     </>
   );
 }
