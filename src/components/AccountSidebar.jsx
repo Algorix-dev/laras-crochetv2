@@ -51,7 +51,7 @@ export default function AccountSidebar({ active }) {
                 key={link.key}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className="block border-b border-[var(--line)] px-4 py-3 text-[var(--muted)] last:border-b-0 hover:text-[var(--ink)]"
+                className="block border-b border-[var(--line)] px-4 py-3 text-[var(--muted)] last:border-b-0 hover:text-[var(--ink)] font-bold"
               >
                 {link.label}
               </Link>
@@ -61,7 +61,7 @@ export default function AccountSidebar({ active }) {
                 setMobileOpen(false);
                 setConfirmOpen(true);
               }}
-              className="block w-full px-4 py-3 text-left text-[var(--muted)] hover:text-[var(--ink)]"
+              className="block w-full px-4 py-3 text-left text-[var(--muted)] hover:text-[var(--ink)] font-bold"
             >
               Logout
             </button>
@@ -78,7 +78,7 @@ export default function AccountSidebar({ active }) {
             className={
               active === link.key
                 ? 'font-bold text-[var(--ink)] underline underline-offset-4'
-                : 'text-[var(--muted)] hover:text-[var(--ink)]'
+                : 'text-[var(--muted)] hover:text-[var(--ink)] font-bold'
             }
           >
             {link.label}
@@ -86,7 +86,7 @@ export default function AccountSidebar({ active }) {
         ))}
         <button
           onClick={() => setConfirmOpen(true)}
-          className="text-left text-[var(--muted)] hover:text-[var(--ink)]"
+          className="text-left text-[var(--muted)] hover:text-[var(--ink)] font-bold"
         >
           Logout
         </button>
