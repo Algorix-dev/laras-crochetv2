@@ -272,7 +272,7 @@ export default function CustomOrderBanner() {
             relative
             z-20
             mx-auto
-            mt-[-60px]
+            mt-[-70px]
             flex
             justify-center
           "
