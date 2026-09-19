@@ -93,7 +93,7 @@ export default function AccountSidebar({ active }) {
           onClick={() => setConfirmOpen(true)}
           className="text-left hover:text-[var(--maroon)]"
         >
-          Logout
+          LOGOUT
         </button>
       </nav>
 
