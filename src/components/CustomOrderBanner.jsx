@@ -216,11 +216,11 @@ export default function CustomOrderBanner() {
               font-sans
               font-normal
               text-black
-              text-[clamp(16px,1.33vw,25px)]
+              text-[clamp(16px,1.33vw,25.47px)]
             "
             style={{
               left: "77.46%",
-              top: "8%",
+              top: "5%",
             }}
           >
             ORDERS
