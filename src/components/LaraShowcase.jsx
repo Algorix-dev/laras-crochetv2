@@ -87,7 +87,7 @@ const NAVBAR_HEIGHT_PX = 66;
   inside this one track. This number controls exactly how slow
   the whole pinned experience feels; bigger = slower.
 */
-const TRACK_VH = 2000;
+const TRACK_VH = 1500;
 
 
 /* ============================================================
