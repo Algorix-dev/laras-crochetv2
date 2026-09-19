@@ -15,6 +15,23 @@ import RecommendedProducts from '../components/RecommendedProducts';
 import AccountSidebar from '../components/AccountSidebar';
 import Footer from '../components/Footer';
 
+function BrandedLoader() {
+  const [clear, setClear] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setClear(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center text-center">
+      <div className={`transition duration-[1000ms] ${clear ? 'opacity-100 blur-0' : 'opacity-55 blur-[3px]'}`}>
+        <img className="mx-auto h-[120px] w-[186px] object-contain" src={logoMark} alt="Lara's Crochet" />
+        <p className="mt-3 text-[14px] tracking-[0.5em] text-[#A3A3A3]">LIMITED BY NATURE</p>
+      </div>
+    </div>
+  );
+}
+
 export default function WishlistPage() {
   const { wishlistItems } = useWishlist();
   const [allProducts, setAllProducts] = useState([]);
@@ -34,9 +51,14 @@ export default function WishlistPage() {
   const wishlistedProducts = allProducts.filter((p) => wishlistItems.includes(p.id));
 
   if (loading) {
+    // TIP: was a plain "Loading your wishlist..." line — swapped for
+    // the same branded splash Shop and Product Detail use, per the
+    // note that every loading moment should look the same. minHeight
+    // is shorter than those two pages' default 60vh since this sits
+    // below a page header rather than replacing the whole page.
     return (
-      <section className="px-5 pt-10 pb-24 md:px-8 lg:px-[15.83%] text-sm text-[var(--muted)]">
-        Loading your wishlist...
+      <section className="px-5 pt-10 pb-24 md:px-8 lg:px-[15.83%]">
+        <BrandedLoader minHeight="40vh" />
       </section>
     );
   }
