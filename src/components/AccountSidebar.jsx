@@ -62,7 +62,7 @@ export default function AccountSidebar({ active }) {
                 setMobileOpen(false);
                 setConfirmOpen(true);
               }}
-              className="block w-full px-4 py-3 text-left text-[var(--muted)] hover:text-[var(--ink)] font-bold"
+              className="block w-full px-4 py-3 text-left uppercase text-[var(--muted)] hover:text-[var(--ink)] font-bold"
             >
               LOGOUT
             </button>

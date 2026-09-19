@@ -183,7 +183,7 @@ export default function CustomOrderBanner() {
           className="
             relative
             mx-auto
-            mt-[15px]
+            mt-[20px]
             w-[547px]
             max-w-[80vw]
           "
