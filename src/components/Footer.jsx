@@ -77,12 +77,12 @@ export default function Footer() {
                         href={link.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="hover:text-[var(--maroon)]"
+                        className="hover:text-[var(--maroon)] uppercase"
                       >
                         {link.label}
                       </a>
                     ) : (
-                      <Link to={link.to} className="hover:text-[var(--maroon)]">
+                      <Link to={link.to} className="hover:text-[var(--maroon)] uppercase">
                         {link.label}
                       </Link>
                     )}
