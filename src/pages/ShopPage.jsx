@@ -39,7 +39,7 @@ import { CATEGORIES } from '../data/products';
 import { getProducts, normalizeProduct } from '../api';
 import ProductGrid from '../components/ProductGrid';
 import Footer from '../components/Footer';
-import logoMark from '../assets/lac-logo-mark.png';
+import BrandedLoader from '../components/BrandedLoader';
 
 // TIP: turns 'two-pieces' into 'Two Pieces' for display, so the data
 // file can stay in clean lowercase-hyphen slugs (good for URLs/code)
@@ -68,23 +68,6 @@ const PAGE_SIZE = 9;
 // splash for a fixed ~2.5s because "checking" there is instant and
 // needs padding to feel intentional; here the load time is real, so
 // this shows for exactly as long as the fetch actually takes.
-function BrandedLoader() {
-  const [clear, setClear] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setClear(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center text-center">
-      <div className={`transition duration-[1000ms] ${clear ? 'opacity-100 blur-0' : 'opacity-55 blur-[3px]'}`}>
-        <img className="mx-auto h-[120px] w-[186px] object-contain" src={logoMark} alt="Lara's Crochet" />
-        <p className="mt-3 text-[14px] tracking-[0.5em] text-[#A3A3A3]">LIMITED BY NATURE</p>
-      </div>
-    </div>
-  );
-}
-
 export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [products, setProducts] = useState([]);

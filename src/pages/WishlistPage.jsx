@@ -13,24 +13,8 @@ import { getProducts, normalizeProduct } from '../api';
 import ProductGrid from '../components/ProductGrid';
 import RecommendedProducts from '../components/RecommendedProducts';
 import AccountSidebar from '../components/AccountSidebar';
+import BrandedLoader from '../components/BrandedLoader';
 import Footer from '../components/Footer';
-
-function BrandedLoader() {
-  const [clear, setClear] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setClear(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center text-center">
-      <div className={`transition duration-[1000ms] ${clear ? 'opacity-100 blur-0' : 'opacity-55 blur-[3px]'}`}>
-        <img className="mx-auto h-[120px] w-[186px] object-contain" src={logoMark} alt="Lara's Crochet" />
-        <p className="mt-3 text-[14px] tracking-[0.5em] text-[#A3A3A3]">LIMITED BY NATURE</p>
-      </div>
-    </div>
-  );
-}
 
 export default function WishlistPage() {
   const { wishlistItems } = useWishlist();
