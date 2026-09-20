@@ -20,13 +20,20 @@ export default function AboutPage() {
         </div>
 
         {/* Right content */}
-        <section className="flex w-full items-center justify-center px-6 py-12 text-center sm:px-10 md:w-1/2 md:px-8 lg:px-12 xl:px-16">
+        {/* TIP — 1920×1080 FIT: this column used to be py-12 (48px top +
+            48px bottom) at every size. The heading, portrait, story and
+            Instagram link stack to a bit over the ~1014px available under
+            the 66px navbar, so the link fell just below the fold. Mobile
+            keeps py-12; from md up the padding tightens (md:py-6 →
+            lg:py-8 → 2xl:py-6). To give it more/less air, change the
+            number after `py-` on the matching breakpoint below. */}
+        <section className="flex w-full items-center justify-center px-6 py-12 text-center sm:px-10 md:w-1/2 md:px-8 md:py-6 lg:px-12 lg:py-8 xl:px-16 2xl:py-6">
           <div className="flex w-full max-w-[560px] flex-col items-center">
             {/* Heading */}
             <img
               src={aboutHeadingLockup}
               alt="This is Lara's Crochet"
-              className="h-auto w-full max-w-[420px]"
+              className="rv h-auto w-full max-w-[420px]"
             />
 
             {/* TIP: mobile-only duplicate of the left-column photo.
@@ -38,11 +45,19 @@ export default function AboutPage() {
             <img
               src={laraSunglasses}
               alt="Lara — founder of Lara's Crochet"
-              className="mt-8 block h-auto w-full max-w-[420px] object-cover md:hidden"
+              className="rv d1 mt-8 block h-auto w-full max-w-[420px] object-cover md:hidden"
             />
 
             {/* Meet Lara + portrait */}
-            <div className="relative mt-10 w-full max-w-[416px]">
+            {/* TIP — STAGGER: .rv starts the element hidden + 30px low and
+                the engine (scrollReveal.js) lifts it in; .d1/.d2/.d3 only
+                add a transition-delay (0.06s / 0.12s / 0.18s) so the four
+                blocks rise in sequence instead of all at once. These
+                sit directly inside a plain (non-.rv) wrapper, so nothing
+                double-rises. Portrait max-w: 416px → 380px, and 360px at
+                2xl (≥1536px) so it stops pushing the Instagram link off
+                screen — edit those two numbers to resize it. */}
+            <div className="rv d1 relative mt-10 w-full max-w-[380px] 2xl:max-w-[360px]">
               {/* Desktop: rotated caption running up the left edge */}
               <p
                 className="absolute bottom-0 right-full hidden whitespace-nowrap text-base font-bold md:block"
@@ -69,12 +84,12 @@ export default function AboutPage() {
             </div>
 
             {/* Story */}
-            <p className="mt-9 max-w-[520px] text-[16px] leading-6 text-[var(--muted)]">
+            <p className="rv d2 mt-9 max-w-[520px] text-[16px] leading-6 text-[var(--muted)]">
              Lara's Crochet started with a hook, a ball of yarn, and a refusal to settle for basic. Founded by Lara, it's grown into a brand built on precision — every dress, bikini, and two-piece crocheted by hand, made to order, and shaped to fit exactly how you want it. No two customers are styled the same way, because no two bodies are. This is slow fashion done properly: considered, made-to-measure, and built to last far longer than anything off a rack.
             </p>
 
             {/* Instagram */}
-            <div className="mt-8 flex justify-center text-[16px] underline underline-offset-4">
+            <div className="rv d3 mt-8 flex justify-center text-[16px] underline underline-offset-4">
               <a
                 href="https://www.instagram.com/_larascrochet/"
                 target="_blank"

@@ -17,12 +17,18 @@
  */
 
 // Track observed and revealed elements across the page lifecycle
-const observedElements = new WeakSet();
+// TIP: `let`, not `const`, so teardown can hand out a fresh WeakSet.
+// In dev, React StrictMode runs init -> teardown -> init. With a `const`
+// set, elements registered with the FIRST (now disconnected) observer
+// were remembered as "already observed" and the second observer never
+// picked them up.
+let observedElements = new WeakSet();
 const animatedElements = new WeakSet();
 
 let globalObserver = null;
 let globalMutationObserver = null;
 let sweepScheduled = false;
+let scanScheduled = false;
 
 /**
  * Checks if user prefers reduced motion
@@ -84,10 +90,15 @@ function isExcluded(el) {
   }
 
   const style = window.getComputedStyle(el);
+  // TIP: `.rv` elements START at opacity: 0 by design (see index.css), so
+  // the old `style.opacity === "0"` test rejected every not-yet-revealed
+  // .rv element as "hidden". They never reached the IntersectionObserver
+  // and only ever appeared because the scroll-sweep caught them. Skipping
+  // the opacity test for .rv elements lets the observer do its job too.
   if (
     style.display === "none" ||
     style.visibility === "hidden" ||
-    style.opacity === "0"
+    (style.opacity === "0" && !el.classList.contains("rv"))
   ) {
     return true;
   }
@@ -267,6 +278,21 @@ export function scanAndRegisterElements(container = document.body) {
 }
 
 /**
+ * TIP: React can mount dozens of nodes in one commit (a product grid, a
+ * whole page). Scanning the entire body once per mutation record is
+ * wasted work, so all scan requests inside the same frame collapse into
+ * one requestAnimationFrame callback.
+ */
+function scheduleScan() {
+  if (scanScheduled) return;
+  scanScheduled = true;
+  requestAnimationFrame(() => {
+    scanScheduled = false;
+    scanAndRegisterElements(document.body);
+  });
+}
+
+/**
  * Registers an individual element into the IntersectionObserver
  */
 function registerElement(el) {
@@ -333,7 +359,7 @@ export function initScrollReveal() {
         }
       }
       if (needsScan) {
-        scanAndRegisterElements(document.body);
+        scheduleScan();
       }
     });
 
@@ -355,5 +381,6 @@ export function initScrollReveal() {
       globalMutationObserver.disconnect();
       globalMutationObserver = null;
     }
+    observedElements = new WeakSet();
   };
 }

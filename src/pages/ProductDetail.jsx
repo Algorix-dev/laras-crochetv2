@@ -310,7 +310,7 @@ function Reviews() {
   };
 
   return (
-    <section className="mt-16 px-5 md:px-8 lg:px-[15.83%] md:mt-20">
+    <section className="mt-16 px-5 md:px-8 lg:px-[15.83%] md:mt-20" data-auto-rise="true">
       <h2 className="font-display text-3xl md:text-4xl">Reviews</h2>
 
       <div className="mt-5 flex items-center gap-3">
@@ -787,7 +787,11 @@ export default function ProductDetail() {
             export's own "0px 304px" padding on these lower sections
             confirms it. Only the gallery+purchase row above stays
             full-bleed; see the TIP on <main> above for why. */}
-        <div className="mt-16 px-5 md:px-8 lg:px-[15.83%]">
+        {/* TIP: data-auto-rise = "let the scroll engine lift this block in
+            when it scrolls into view". Static className on purpose — if a
+            className here ever became dynamic, React would overwrite the
+            .rv/.on classes the engine adds. */}
+        <div className="mt-16 px-5 md:px-8 lg:px-[15.83%]" data-auto-rise="true">
           <div className="flex gap-6 border-b border-[var(--line)]">
             {Object.keys(tabs).map((tabName) => (
               <button

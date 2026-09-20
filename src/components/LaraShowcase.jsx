@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 
 import laraWordmark from "../assets/lara-wordmark-solid.png";
@@ -366,17 +366,27 @@ const PARAGRAPHS = [
   "This isn't fast fashion. It's handmade, made with love.",
 ];
 
-function buildWordParagraphs(paragraphs) {
+// TIP: WORD → LETTER. Instead of one flat list of words, every paragraph
+// becomes an array of WORDS, and every word an array of LETTERS
+// ({ char, globalIndex }). globalIndex counts letters across ALL four
+// paragraphs (spaces are not counted), which is what lets the wave run
+// continuously from the first letter of paragraph 1 to the last letter of
+// paragraph 4. Keeping the word grouping matters: each word is wrapped in
+// its own no-wrap box below, so a line can only break BETWEEN words —
+// never in the middle of one.
+function buildLetterParagraphs(paragraphs) {
   let globalIndex = 0;
 
   const result = paragraphs.map((paragraph) =>
-    paragraph.split(" ").map((word) => ({
-      word,
-      index: globalIndex++,
-    }))
+    paragraph.split(" ").map((word) =>
+      Array.from(word).map((char) => ({
+        char,
+        globalIndex: globalIndex++,
+      }))
+    )
   );
 
-  return { result, totalWords: globalIndex };
+  return { result, totalLetters: globalIndex };
 }
 
 
@@ -538,31 +548,67 @@ let showcaseCompletedThisPageVisit = false;
    visit). Same math, same timings, no per-frame React work.
 */
 
-// Each word animates over this fraction of the paragraph's scroll
-// window, so neighbouring words overlap into a smooth wave instead
-// of popping in strictly one at a time.
-const WORD_WINDOW = 0.12;
-const WORD_RISE_PX = 18;
+// Each LETTER animates over this fraction of the paragraph's scroll
+// window, so neighbouring letters overlap into a smooth wave.
+// TIP: this is the knob for how "wide" the wave feels. There are ~350
+// letters vs ~60 words, so at 0.12 roughly a line and a half of text is
+// mid-rise at any moment. Lower it (try 0.06) for a tighter, more
+// obviously letter-by-letter ripple; raise it for a softer fade.
+const LETTER_WINDOW = 0.12;
+const WORD_RISE_PX = 18; // how far below its resting spot each letter starts
 
-function Word({ progress, index, total, children }) {
+function Letter({ progress, globalIndex, totalLetters, children }) {
   const t = useTransform(progress, (p) => {
     const rangeT = clamp01(
       (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
     );
-    const start = (index / total) * (1 - WORD_WINDOW);
-    return clamp01((rangeT - start) / WORD_WINDOW);
+    const start = (globalIndex / totalLetters) * (1 - LETTER_WINDOW);
+    return clamp01((rangeT - start) / LETTER_WINDOW);
   });
 
-  // Rises up from underneath (not in from the left): starts
-  // WORD_RISE_PX below its resting spot and settles up into place.
+  // Rises up from underneath: starts WORD_RISE_PX below its resting spot
+  // and settles into place (same easing as the old word version).
   const y = useTransform(t, (v) => (1 - easeOutCubic(v)) * WORD_RISE_PX);
 
+  // TIP: `inline-block`, NOT plain `inline`. CSS transforms (which is what
+  // framer-motion's `y` becomes) are ignored on non-replaced inline
+  // elements, so an `inline` letter would fade in but never actually rise.
   return (
-    <>
-      <motion.span className="inline-block" style={{ opacity: t, y }}>
-        {children}
-      </motion.span>{" "}
-    </>
+    <motion.span className="inline-block" style={{ opacity: t, y }}>
+      {children}
+    </motion.span>
+  );
+}
+
+// One paragraph = words separated by real spaces. Each word is an
+// inline-block that refuses to wrap internally, so line breaks can only
+// happen at the spaces between words.
+// TIP (accessibility): screen readers would otherwise announce ~350
+// separate one-letter spans, so the animated letters are aria-hidden and
+// the full sentence is provided once as visually-hidden text.
+function LetterParagraph({ words, text, progress, totalLetters, className }) {
+  return (
+    <p className={className}>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">
+        {words.map((letters, wordIndex) => (
+          <Fragment key={wordIndex}>
+            <span className="inline-block whitespace-nowrap">
+              {letters.map(({ char, globalIndex }) => (
+                <Letter
+                  key={globalIndex}
+                  progress={progress}
+                  globalIndex={globalIndex}
+                  totalLetters={totalLetters}
+                >
+                  {char}
+                </Letter>
+              ))}
+            </span>{" "}
+          </Fragment>
+        ))}
+      </span>
+    </p>
   );
 }
 
@@ -681,8 +727,8 @@ export default function LaraShowcase() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 
-  const { result: wordParagraphs, totalWords } = useMemo(
-    () => buildWordParagraphs(PARAGRAPHS),
+  const { result: letterParagraphs, totalLetters } = useMemo(
+    () => buildLetterParagraphs(PARAGRAPHS),
     []
   );
 
@@ -965,7 +1011,11 @@ export default function LaraShowcase() {
   if (renderCompactFromStart || reduceMotion || liveCompleted) {
     return (
       <>
-        <section className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
+        {/* TIP: scrollReveal.js skips anything inside #lara-showcase (this
+            section is pinned + scroll-scrubbed by its own code), but no
+            element actually had that id, so the exclusion matched nothing.
+            The id makes it real, in both the static and animated markup. */}
+        <section id="lara-showcase" className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
         {reviewsStatic}
       </>
     );
@@ -1003,6 +1053,7 @@ export default function LaraShowcase() {
   return (
     <>
       <section
+        id="lara-showcase"
         ref={wrapperRef}
         className="relative w-full bg-[var(--cream)]"
         style={{ height: `${TRACK_VH}vh` }}
@@ -1065,22 +1116,17 @@ export default function LaraShowcase() {
               }}
             >
               <div className="mx-auto max-w-2xl text-center text-[20px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
-                {wordParagraphs.map((words, paragraphIndex) => (
-                  <p
+                {letterParagraphs.map((words, paragraphIndex) => (
+                  <LetterParagraph
                     key={paragraphIndex}
-                    className={paragraphIndex === wordParagraphs.length - 1 ? "mt-8" : "mb-6"}
-                  >
-                    {words.map(({ word, index }) => (
-                      <Word
-                        key={index}
-                        progress={progress}
-                        index={index}
-                        total={totalWords}
-                      >
-                        {word}
-                      </Word>
-                    ))}
-                  </p>
+                    words={words}
+                    text={PARAGRAPHS[paragraphIndex]}
+                    progress={progress}
+                    totalLetters={totalLetters}
+                    className={
+                      paragraphIndex === letterParagraphs.length - 1 ? "mt-8" : "mb-6"
+                    }
+                  />
                 ))}
               </div>
             </motion.div>

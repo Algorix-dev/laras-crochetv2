@@ -163,7 +163,7 @@ export default function CheckoutPage() {
             </p>
 
             {/* TIP: Contact section — email field and newsletter opt-in. */}
-            <section className="mt-8">
+            <section className="mt-8" data-auto-rise="true">
               <h2 className="text-sm font-semibold">Contact</h2>
 
               <div className="mt-3 relative">
@@ -192,7 +192,7 @@ export default function CheckoutPage() {
             </section>
 
             {/* TIP: Shipping address section — matches the Figma exactly. */}
-            <section className="mt-8">
+            <section className="mt-8" data-auto-rise="true">
               <h2 className="text-sm font-semibold">Shipping Address</h2>
               <p className="mt-1 text-[11px] text-[var(--muted)]">
                 Please ensure your address is correct. We cannot change addresses after checkout.

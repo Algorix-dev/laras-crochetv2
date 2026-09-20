@@ -193,6 +193,14 @@ export default function App() {
   return (
     <AuthProvider>
       <NavbarVisibilityProvider>
+      {/* TIP: AutoRiseProvider was imported at the top of this file but
+          never rendered, so initScrollReveal() never ran and the whole
+          scroll engine was dormant on every page. It has to sit INSIDE
+          <BrowserRouter> (it calls useLocation to re-scan on every route
+          change) and wrap everything that can contain .rv / data-auto-rise
+          elements — which is why it wraps the routes AND the navbar
+          (the navbar is safe: the engine skips anything inside <nav>). */}
+      <AutoRiseProvider>
       <style>{PAGE_RISE_CSS}</style>
       <ScrollToTop />
       <ConditionalNavbar />
@@ -221,6 +229,7 @@ export default function App() {
         {/* Catch-all: unknown routes go home rather than a blank page */}
         <Route path="*" element={<SignInPage />} />
       </Routes></PageOffset>
+      </AutoRiseProvider>
       </NavbarVisibilityProvider>
     </AuthProvider>
   );

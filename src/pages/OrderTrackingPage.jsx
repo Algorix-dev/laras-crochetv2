@@ -290,7 +290,7 @@ export default function OrderTrackingPage() {
 
           {/* ===== Tracking information (only once there's something to show) ===== */}
           {hasTracking && (
-            <section className="mt-8 border-t border-[var(--line)] pt-8 md:mt-0">
+            <section className="mt-8 border-t border-[var(--line)] pt-8 md:mt-0" data-auto-rise="true">
               <h2 className="text-xl font-semibold text-[var(--ink)]">Tracking Information</h2>
               <div className="mt-6 space-y-5 text-sm text-[var(--ink)]">
                 {(order.carrier || order.trackingNumber) && (
@@ -314,7 +314,7 @@ export default function OrderTrackingPage() {
           )}
 
           {/* ===== Order items ===== */}
-          <section className="mt-8 border-t border-[var(--line)] pt-8 md:mt-10">
+          <section className="mt-8 border-t border-[var(--line)] pt-8 md:mt-10" data-auto-rise="true">
             <h2 className="text-xl font-semibold text-[var(--ink)]">Order Items</h2>
 
             {/* Desktop column headings */}
@@ -378,7 +378,7 @@ export default function OrderTrackingPage() {
           </section>
 
           {/* ===== Shipping address + payment method ===== */}
-          <section className="grid gap-10 border-y border-[var(--line)] py-8 md:grid-cols-2">
+          <section className="grid gap-10 border-y border-[var(--line)] py-8 md:grid-cols-2" data-auto-rise="true">
             <div>
               <h2 className="text-xl font-semibold text-[var(--ink)]">Shipping Address</h2>
               <div className="mt-6 space-y-4 text-sm text-[var(--ink)]">
