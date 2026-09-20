@@ -8,14 +8,22 @@ import mongoose from "mongoose";
 
 await connectDB();
 
-const existing = await AdminUser.findOne({ email: "lara@example.com" });
+// TIP: EDIT THESE THREE before running. (The old file checked for one email
+// but created another, so a second run crashed with a duplicate-key error;
+// now the same constant is used for both.) Use a strong password, since
+// this account can change every product on the shop.
+const ADMIN_EMAIL = "lara@admin.com";
+const ADMIN_PASSWORD = "laraspassword";
+const ADMIN_NAME = "Lara";
+
+const existing = await AdminUser.findOne({ email: ADMIN_EMAIL });
 if (existing) {
   console.log("Admin already exists for that email — nothing to do.");
 } else {
   await AdminUser.create({
-    email: "lara@admin.com",
-    password: "laraspassword",
-    name: "Lara",
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
+    name: ADMIN_NAME,
   });
   console.log("Admin user created.");
 }

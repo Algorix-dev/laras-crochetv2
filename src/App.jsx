@@ -12,14 +12,16 @@ import LaraShowcase from "./components/LaraShowcase";
 import Footer from "./components/Footer";
 import Reveal from "./components/Reveal";
 import AutoRiseProvider from "./components/AutoRiseProvider";
-import { products, heroModels } from "./data/products";
-import { getProducts, normalizeProduct } from "./api";
+import { products } from "./data/products";
+import { FALLBACK_HERO_MODELS } from "./data/heroFallback";
+import { getProducts, normalizeProduct, toHeroModel } from "./api";
 
 import SignInPage from "./pages/SignInPage";
 import AccountPage from "./pages/AccountPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ShopPage from "./pages/ShopPage";
+import AdminPage from "./pages/AdminPage";
 import ProductDetail from "./pages/ProductDetail";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
@@ -43,7 +45,7 @@ function ScrollToTop() {
 // landing page, gets the normal site nav.
 function ConditionalNavbar() {
   const { pathname } = useLocation();
-  if (pathname === "/signin") return null;
+  if (pathname === "/signin" || pathname === "/admin") return null;
   return <Navbar />;
 }
 
@@ -77,18 +79,40 @@ function HomePage() {
   // while it's still fake — see the TIP on ProductCard's isPlaceholder
   // prop for why that matters.
   const [isLive, setIsLive] = useState(false);
+
+  // TIP — THE HERO IS DRIVEN BY THE PRODUCTS. `null` = still loading (the
+  // hero holds its space, empty). Once the products arrive it becomes
+  // every piece marked "Hero" in the admin page — or, if none is marked
+  // yet (or the API can't be reached), the sample models in
+  // data/heroFallback.js so the landing page is never empty.
+  const [heroModels, setHeroModels] = useState(null);
+
   useEffect(() => {
     getProducts()
       .then((data) => {
-        if (data.length > 0) {
-          setLiveProducts(data.map(normalizeProduct));
+        const live = data.map(normalizeProduct);
+
+        const onHero = live
+          .filter((product) => product.placements.includes("hero"))
+          .map(toHeroModel);
+        setHeroModels(onHero.length > 0 ? onHero : FALLBACK_HERO_MODELS);
+
+        if (live.length > 0) {
+          // "Shop Our Pieces" shows the first four: pieces marked
+          // "Featured" come first, then the rest (newest first)
+          const isFeatured = (product) => product.placements.includes("featured");
+          setLiveProducts([
+            ...live.filter(isFeatured),
+            ...live.filter((product) => !isFeatured(product)),
+          ]);
           setIsLive(true);
         }
       })
       .catch(() => {
-        // fails quietly to the static fallback already in state —
-        // isLive stays false, so those cards correctly stay inert
-      })
+        // fails quietly to the static fallbacks — isLive stays false, so
+        // those cards correctly stay inert
+        setHeroModels(FALLBACK_HERO_MODELS);
+      });
   }, []);
 
   return (
@@ -166,7 +190,8 @@ function HomePage() {
 //   the page pan left/right on a phone.
 function PageOffset({ children }) {
   const { pathname } = useLocation();
-  const isSignIn = pathname === "/signin";
+  // /signin and /admin are standalone screens: no navbar, no scroll-rise
+  const isSignIn = pathname === "/signin" || pathname === "/admin";
   return (
     <div className={isSignIn ? "" : "pt-[66px]"}>
       <div
@@ -209,6 +234,9 @@ export default function App() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/signin" element={<SignInPage />} />
+        {/* Lara's page for adding / editing pieces — not linked anywhere;
+            she signs in with the admin account from server/seedAdmin.js */}
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/addresses" element={<AddressesPage />} />
 

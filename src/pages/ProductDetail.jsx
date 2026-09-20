@@ -470,11 +470,28 @@ export default function ProductDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  /* Gallery images come straight from the product's `images` array
-     (Cloudinary URLs from the backend) — no more hardcoded angles.
-     Every product needs at least one image (enforced by the schema),
-     so this is safe once `product` is loaded. */
-  const gallery = product?.images?.length ? product.images : [];
+  /* TIP — THE FOUR THUMBNAILS ARE ANGLE SHOTS, NOTHING ELSE.
+     Each product has up to four angle photos (product.views, set in the
+     admin page): front, left, right, back — always in that order. A
+     slot with no photo yet shows the placeholder and can't be clicked.
+     The big photo is whichever slot is selected (front to start with).
+     Older products that only have `images` count their first image as
+     the front (see normalizeProduct in api.js), so they show one real
+     thumbnail and three placeholders until angle shots are added.
+     TIP: to show NO thumbnails until a product has more than its front
+     photo, add `&& angleShots.filter((shot) => shot.src).length > 1`
+     to the `product &&` check on the thumbnail row below. */
+  const ANGLES = [
+    { key: 'front', label: 'Front' },
+    { key: 'left', label: 'Left' },
+    { key: 'right', label: 'Right' },
+    { key: 'back', label: 'Back' },
+  ];
+  const angleShots = ANGLES.map(({ key, label }) => ({
+    key,
+    label,
+    src: product?.views?.[key] || null,
+  }));
 
   /* TIP: Each selector (color, shade, size) has its own state.
      When the user clicks "Add to Bag", we send all three
@@ -579,9 +596,9 @@ export default function ProductDetail() {
                   and lg: to match the grid breakpoint above. */}
               <div className="flex flex-col items-center justify-center px-5 py-5 lg:px-[19.58%] lg:py-5">
                 <div className="h-[380px] w-[145px] lg:h-[602px] lg:w-[229px]">
-                  {gallery[selectedImage] && (
+                  {angleShots[selectedImage]?.src && (
                     <img
-                      src={gallery[selectedImage]}
+                      src={angleShots[selectedImage].src}
                       alt={product.name}
                       className="h-full w-full object-cover"
                     />
@@ -598,10 +615,9 @@ export default function ProductDetail() {
                   ring/outline. If you want the ring style back, swap
                   the opacity-30/opacity-100 pair for the old
                   ring-1 ring-offset-2 classes. */}
-              {gallery.length > 0 && (
+              {product && (
                 <div className="mt-3 flex items-center justify-center gap-[39px]">
-                  {Array.from({ length: 4 }, (_, index) => {
-                    const src = gallery[index];
+                  {angleShots.map(({ key, label, src }, index) => {
                     if (!src) {
                       return (
                         <div
@@ -614,9 +630,9 @@ export default function ProductDetail() {
                     }
                     return (
                       <button
-                        key={src + index}
+                        key={key}
                         type="button"
-                        aria-label={`View ${product.name} angle ${index + 1}`}
+                        aria-label={`View ${product.name} — ${label}`}
                         onClick={() => setSelectedImage(index)}
                         className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${
                           index === selectedImage ? 'opacity-100' : 'opacity-30'
@@ -770,9 +786,15 @@ export default function ProductDetail() {
                 be fixed-width, swap `w-full` for `w-[322px]` (you may
                 also want to center the button in that case, e.g. wrap
                 it or add `mx-auto`). */}
+            {/* TIP - PHONE FIX: the button used to have px-26 (104px padding each
+                side) inside a 322px cap, leaving ~114px for the label, so
+                "ADD TO BAG" wrapped onto two lines. It is now full width up
+                to the Figma's 322px, with normal padding, and never wraps.
+                (tracking-[-4%] was also not a real Tailwind value, so it
+                did nothing; -0.04em is the same -4% and actually applies.) */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 max-w-80.5 bg-[#564345] py-4 px-26 text-[20px] font-bold uppercase tracking-[-4%] text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-8 w-full max-w-[322px] whitespace-nowrap bg-[#564345] px-6 py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>

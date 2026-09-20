@@ -44,25 +44,19 @@ import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
      positioning, no more scroll tracking for this section at all
    - a full page refresh does reset it (module reloads, flag resets)
 
-   SCROLL-POSITION FIX ON LIVE COMPLETION:
-   - the instant `liveCompleted` flips true, the tall TRACK_VH
-     wrapper collapses into short static markup. That's a huge,
-     sudden drop in total document height, and the browser will
-     silently clamp scrollY to fit — which used to throw you
-     straight past the compact Lara section.
-   - `pendingScrollFixRef` captures where the section ITSELF sits
-     in the document (window.scrollY + the wrapper's top, right as
-     completion is detected inside tick()) — not the user's
-     scrollY at that instant. A useLayoutEffect (fires before
-     paint) then scrolls to just below that anchor once the swap
-     has committed.
-   - anchoring to the section's own position, instead of trying to
-     preserve the user's exact scroll fraction via a height-delta
-     calc, is what makes this robust to a fast/fling scroll: it
-     doesn't matter how far past the release point the fling
-     carried them, they land in the same sane spot (right at the
-     top of the compact section) instead of occasionally overshooting
-     clean past Shop and into the footer.
+   SEAMLESS HAND-OFF (replaces the old "scroll-position fix"):
+   - the pinned track is now sized to END exactly when the last
+     review is revealed (TIMELINE_END below). There is no fade-out
+     and no empty "hold" stage any more — the reviews simply stay on
+     screen and scroll away in normal flow when the pin releases, with
+     the next section (Go to Shop / Shop Our Pieces) directly under
+     them (see `tailOverlap`).
+   - the swap to the light static markup is DELAYED until the whole
+     track has scrolled out of sight above the viewport, so the user
+     never sees it happen. The document just got shorter above the
+     viewport, so we subtract exactly that height difference from
+     scrollY (see the useLayoutEffect) — the page underneath doesn't
+     move a pixel. No more forced jump to a "sane spot".
 
    NAVBAR VISIBILITY:
    - while this section is actively pinned and scrubbing
@@ -97,94 +91,100 @@ const VH_UNIT =
     ? "svh"
     : "vh";
 
+
 /*
-  Scroll track for the WHOLE pinned sequence — wordmark, photos,
-  paragraph, AND now the reviews (shown 3 at a time). Everything
-  from Lara fading in to the last review batch fading out lives
-  inside this one track. This number controls exactly how slow
-  the whole pinned experience feels; bigger = slower.
-
-  Was 1500. Cut to 1000 (~33% less scrolling to get through it)
-  after Lara said the site felt laggy/slow. Every breakpoint below
-  is a FRACTION of this track, so the sequence keeps identical
-  proportions — it just plays faster. Nudge this one number up or
-  down to taste.
+  TIP — HOW THE TIMELINE IS MEASURED:
+  Every breakpoint below is a fraction of "progress". Progress runs from
+  0 (the section starts sliding into view) to TIMELINE_END (the last
+  review has been revealed and the pin lets go). One unit of progress
+  is worth ~900vh of scrolling, so 0.001 ≈ 0.9vh. To make a stage
+  slower, give it a wider range; to make it faster, a narrower one.
+  You never have to touch TRACK_VH by hand — it is derived from
+  TIMELINE_END so the track always ends exactly when the animation does.
 */
-const TRACK_VH = 1000;
-
 
 /* ============================================================
-   PROGRESS MAP (fractions of the pin's 0 → 1 scroll progress)
+   PROGRESS MAP
    ============================================================
 
-   All the wordmark/photo/paragraph breakpoints below are the
-   exact same ABSOLUTE scroll distance as before (they're just
-   expressed as smaller fractions now that TRACK_VH is bigger),
-   so that part of the sequence still feels exactly as slow as
-   it always did. Everything from 0.594 onward is new: the
-   paragraph cross-fades into review batch 1, batch 1 holds then
-   cross-fades into batch 2, batch 2 holds then cross-fades into
-   batch 3, batch 3 holds then fades out — THEN the pin releases.
+   Stages now OVERLAP on purpose (that is what removes the "breaks"):
 
-   0.00                                                                                          1.00
-   |fade in|-photo1-|-photo2-|-photo3-|hold|exit|-----words-----|hold|--batch1--|--batch2--|--batch3--|
-   0     0.018    0.126    0.234    0.342 .396 .432  .444     .564 .594      .714       .834      .954  .979 1.0
+   0        .05                                                      .70
+   |approach |----------------- pinned scrolling ----------------------|
+   Lara fades in ▓▓░
+   photo 1        ▓▓▓▓▓▓
+   photo 2               ▓▓▓▓▓▓▓
+   photo 3                      ▓▓▓▓▓▓▓
+   Lara+photos                        ─── hold ─── ░░ fade out
+   paragraph letters                                 ▓▓▓▓▓▓▓▓▓▓ (starts WHILE Lara fades)
+   paragraph out / reviews in                                    ░░░▓▓
+   review rows                                                     ▓▓▓▓▓▓
+   release ─────────────────────────────────────────────────────────────┘
 */
 
-const WORDMARK_FADE_IN_END = 0.018;
+// Pre-roll: the stretch of NORMAL scrolling (before the section pins)
+// that is already part of the animation. Lara fades in and photo 1
+// starts flying in during it, so by the time Lara reaches the middle
+// the first photo is already mid-flight — the animation "just
+// continues" instead of starting from zero at the pin.
+const PRE_ROLL_END = 0.05;
+
+const WORDMARK_FADE_IN_END = 0.012;
 
 const PHOTO_RANGES = [
-  { start: 0.018, end: 0.126 }, // back   (comes from bottom)
-  { start: 0.126, end: 0.234 }, // middle (comes from left)
-  { start: 0.234, end: 0.342 }, // front  (comes from right)
+  { start: 0.008, end: 0.116 }, // back   (comes from bottom) — starts during the approach
+  { start: 0.116, end: 0.224 }, // middle (comes from left)
+  { start: 0.224, end: 0.332 }, // front  (comes from right)
 ];
 
-const LARA_HOLD_END = 0.396; // finished photo stack stays visible
-const LARA_EXIT_END = 0.432; // Lara + photos fade out together
+// Photo stack sits complete for a short beat, then Lara + photos fade.
+const LARA_HOLD_END = 0.372;
+const LARA_EXIT_END = 0.408;
 
-const PARAGRAPH_CONTAINER_FADE_START = 0.42;
-const PARAGRAPH_CONTAINER_FADE_END = 0.438;
+// TIP: the paragraph now starts at the SAME moment Lara starts to fade
+// (LARA_HOLD_END), not after she has finished — the letters begin
+// rising while Lara is still dissolving. Push these later for a gap,
+// earlier for more overlap.
+const PARAGRAPH_CONTAINER_FADE_START = 0.372;
+const PARAGRAPH_CONTAINER_FADE_END = 0.392;
 
-const PARAGRAPH_WORDS_START = 0.444;
-const PARAGRAPH_WORDS_END = 0.564;
+const PARAGRAPH_WORDS_START = 0.372;
+const PARAGRAPH_WORDS_END = 0.492;
 
-// Paragraph stays fully visible until this point, then cross-
-// fades into the reviews grid over REVIEWS_CONTAINER_FADE_START →
-// REVIEWS_CONTAINER_FADE_END (same start as this, so paragraph-out
-// and reviews-in happen in the same window instead of a gap).
-const PARAGRAPH_HOLD_END = 0.594;
+// Paragraph cross-fades into the reviews in the SAME window, and that
+// window opens just as the last letters are settling — so there is
+// never a moment with nothing on screen.
+const PARAGRAPH_HOLD_END = 0.505;
 
-const REVIEWS_CONTAINER_FADE_START = 0.594;
-const REVIEWS_CONTAINER_FADE_END = 0.614;
+const REVIEWS_CONTAINER_FADE_START = 0.505;
+const REVIEWS_CONTAINER_FADE_END = 0.535;
 
-// Reviews reveal 3 at a time (one grid row per step) — same
-// "word by word" technique as the paragraph, just with a row of
-// 3 cards standing in for a word. Once a row appears it STAYS
-// visible (unlike the old batch version), so by REVEAL_END all 9
-// are on screen together.
-const REVIEWS_REVEAL_START = 0.62;
-const REVIEWS_REVEAL_END = 0.72;
+// Review rows rise one row (3 cards) at a time, starting right as they
+// fade in. Once a row is up it stays up.
+const REVIEWS_REVEAL_START = 0.51;
+const REVIEWS_REVEAL_END = 0.62;
 
-// All 9 reviews hold fully visible here — plenty of time to read
-// them before anything moves again.
-const REVIEWS_HOLD_END = 0.87;
+// Everything from REVIEWS_REVEAL_END to here is a plain read-time hold
+// with all 9 reviews visible. When progress reaches this value the pin
+// releases and the reviews scroll away in normal flow. There is NO
+// fade-out and NO empty stage after it.
+const TIMELINE_END = 0.74;
 
-// The whole grid (all 9, together — not card by card) fades out
-// here. This is the "soft exit" before the pin releases: instead
-// of the pin just cutting to normal scroll, everything gently
-// disappears first, so the handoff to whatever comes next (Shop)
-// feels deliberate instead of abrupt.
-const REVIEWS_FADE_OUT_END = 0.92;
+// PHONES ONLY: the last of the three review rows finishes its turn here
+// (rows take turns between REVIEWS_REVEAL_START and this point, and the
+// last row then holds until TIMELINE_END). Desktop doesn't use it.
+const REVIEWS_HOLD_END = 0.70;
 
-// 0.92 → 1.0 is a short hold on the empty stage after the fade,
-// right before the pin releases into normal scroll flow.
+// Scroll track length, derived so the pin releases exactly at
+// TIMELINE_END (100vh stage + 900vh-per-unit of progress).
+const TRACK_VH = Math.round(100 + 900 * TIMELINE_END);
 
-// TIP: this is a "close enough to 1" threshold, not exactly 1.
-// Floating point scroll math (fast scrolls / trackpad inertia)
-// can jump past 1 between frames, so checking >= RELEASE_AT
-// with a small margin below 1 makes sure we reliably catch the
-// "reveal is done" moment instead of risking a skipped frame.
-const RELEASE_AT = 0.995;
+// Gap kept between the last review row and whatever comes next.
+const TAIL_BREATHING_PX = 56;
+
+// The static swap waits until the whole track is this far above the
+// viewport, so it can never be seen.
+const COMPLETE_MARGIN_PX = 80;
 
 
 /* ============================================================
@@ -279,11 +279,10 @@ function paragraphContainerOpacity(progress) {
 }
 
 /*
-  Opacity for the reviews grid AS A WHOLE — fades in, holds while
-  all 9 cards are visible and being individually revealed (see
-  getReviewCardReveal below), then fades OUT as a single group.
-  Deliberately one fade for all 9 together (not per-card) — this
-  is the "soft exit" right before the pin releases.
+  Opacity for the reviews grid AS A WHOLE — fades in while the paragraph
+  fades out, then simply STAYS at 1. (It used to fade out again and leave
+  an empty stage before the pin released; now the reviews just scroll
+  away naturally when the pin lets go.)
 */
 function reviewsContainerOpacity(progress) {
   if (progress < REVIEWS_CONTAINER_FADE_START) return 0;
@@ -295,16 +294,7 @@ function reviewsContainerOpacity(progress) {
     );
   }
 
-  if (progress < REVIEWS_HOLD_END) return 1;
-
-  if (progress < REVIEWS_FADE_OUT_END) {
-    return (
-      1 -
-      clamp01((progress - REVIEWS_HOLD_END) / (REVIEWS_FADE_OUT_END - REVIEWS_HOLD_END))
-    );
-  }
-
-  return 0;
+  return 1;
 }
 
 const REVIEW_ROWS_COUNT = 3;
@@ -408,29 +398,22 @@ const PARAGRAPHS = [
   "This isn't fast fashion. It's handmade, made with love.",
 ];
 
-// TIP: WORD → LETTER. Instead of one flat list of words, every paragraph
-// becomes an array of WORDS, and every word an array of LETTERS
-// ({ char, globalIndex }). globalIndex counts letters across ALL four
-// paragraphs (spaces are not counted), which is what lets the wave run
-// continuously from the first letter of paragraph 1 to the last letter of
-// paragraph 4. Keeping the word grouping matters: each word is wrapped in
-// its own no-wrap box below, so a line can only break BETWEEN words —
-// never in the middle of one.
-function buildLetterParagraphs(paragraphs) {
+// TIP: the paragraph is revealed WORD BY WORD, each word fading in from a
+// little below its resting spot. (It was letter-by-letter with every letter
+// flying up from the bottom of the screen; that read as a curved strand of
+// spaghetti straightening out, so it went back to this calmer version.)
+// Every paragraph becomes an array of words, and each word gets one global
+// index across ALL four paragraphs so the wave runs continuously from the
+// first word of paragraph 1 to the last word of paragraph 4.
+function buildWordParagraphs(paragraphs) {
   let globalIndex = 0;
 
   const result = paragraphs.map((paragraph) =>
-    paragraph.split(" ").map((word) =>
-      Array.from(word).map((char) => ({
-        char,
-        globalIndex: globalIndex++,
-      }))
-    )
+    paragraph.split(" ").map((word) => ({ word, globalIndex: globalIndex++ }))
   );
 
-  return { result, totalLetters: globalIndex };
+  return { result, totalWords: globalIndex };
 }
-
 
 /* ============================================================
    REVIEWS
@@ -590,98 +573,52 @@ let showcaseCompletedThisPageVisit = false;
    visit). Same math, same timings, no per-frame React work.
 */
 
-// Each LETTER animates over this fraction of the paragraph's scroll
-// window; neighbouring letters overlap into a wave.
-// TIP: this is the knob for how "wide" the wave feels. There are ~350
-// letters, so at 0.10 roughly 35 letters (a line and a bit) are in flight
-// at any moment. Lower it (0.06) for a tighter, more obviously
-// letter-by-letter ripple; raise it (0.16) for a softer wave.
-const LETTER_WINDOW = 0.1;
+// Each WORD animates over this fraction of the paragraph's scroll window;
+// neighbouring words overlap into a soft wave.
+// TIP: lower it (0.08) for a more obvious one-word-at-a-time ripple, raise
+// it (0.18) for a softer, more blended wave.
+const WORD_WINDOW = 0.12;
 
-/*
-  TIP — WHERE EACH LETTER COMES FROM:
-  Every letter starts BELOW THE BOTTOM OF THE SCREEN and rises to its place.
-  (It used to start only 18px under its resting spot, so the whole
-  paragraph just looked like it was straightening out of a wobbly line.)
-  The start distance is measured from the paragraph's resting position,
-  which is roughly the middle of the screen, so
-      distance = LETTER_RISE_VH * screen height + LETTER_RISE_EXTRA_PX
-  puts every letter just past the bottom edge. Lower LETTER_RISE_VH (0.3)
-  and they start higher up the screen; 0.55 = from the very bottom.
-*/
-const LETTER_RISE_VH = 0.55;
-const LETTER_RISE_EXTRA_PX = 40;
+// How far below its resting spot each word starts. Small on purpose: the
+// words should fade up into place, not travel. Raise it (30) for a bigger
+// rise, lower it (10) for almost none.
+const WORD_RISE_PX = 18;
 
-// A letter fades in over the first part of its own flight, so you SEE it
-// travelling instead of it appearing already in place.
-const LETTER_FADE_IN_FRACTION = 0.35;
-
-// Kept in a module variable (and refreshed on resize by the component) so
-// the ~350 letters don't each read window.innerHeight every frame.
-let letterRisePx = 640;
-
-function refreshLetterRise() {
-  if (typeof window === "undefined") return;
-  letterRisePx = Math.round(
-    window.innerHeight * LETTER_RISE_VH + LETTER_RISE_EXTRA_PX
-  );
-}
-
-function Letter({ progress, globalIndex, totalLetters, children }) {
+function Word({ progress, globalIndex, totalWords, children }) {
   const t = useTransform(progress, (p) => {
     const rangeT = clamp01(
       (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
     );
-    const start = (globalIndex / totalLetters) * (1 - LETTER_WINDOW);
-    return clamp01((rangeT - start) / LETTER_WINDOW);
+    const start = (globalIndex / totalWords) * (1 - WORD_WINDOW);
+    return clamp01((rangeT - start) / WORD_WINDOW);
   });
 
-  // Rises up from below the screen and settles into place (ease-out, so it
-  // decelerates as it lands).
-  const y = useTransform(t, (v) => (1 - easeOutCubic(v)) * letterRisePx);
-  const opacity = useTransform(t, (v) => clamp01(v / LETTER_FADE_IN_FRACTION));
+  const y = useTransform(t, (v) => (1 - easeOutCubic(v)) * WORD_RISE_PX);
 
-  // TIP: `inline-block`, NOT plain `inline`. CSS transforms (which is what
-  // framer-motion's `y` becomes) are ignored on non-replaced inline
-  // elements, so an `inline` letter would fade in but never actually rise.
+  // TIP: `inline-block`, NOT plain `inline`: CSS transforms (what framer's
+  // `y` becomes) are ignored on non-replaced inline elements, so an inline
+  // word would fade in but never actually rise.
   return (
-    <motion.span className="inline-block" style={{ opacity, y }}>
+    <motion.span className="inline-block" style={{ opacity: t, y }}>
       {children}
     </motion.span>
   );
 }
 
-// One paragraph = words separated by real spaces. Each word is an
-// inline-block that refuses to wrap internally, so line breaks can only
-// happen at the spaces between words.
-// TIP (accessibility): screen readers would otherwise announce ~350
-// separate one-letter spans, so the animated letters are aria-hidden and
-// the full sentence is provided once as visually-hidden text.
-function LetterParagraph({ words, text, progress, totalLetters, className }) {
+function WordParagraph({ words, progress, totalWords, className }) {
   return (
     <p className={className}>
-      <span className="sr-only">{text}</span>
-      <span aria-hidden="true">
-        {words.map((letters, wordIndex) => (
-          <Fragment key={wordIndex}>
-            <span className="inline-block whitespace-nowrap">
-              {letters.map(({ char, globalIndex }) => (
-                <Letter
-                  key={globalIndex}
-                  progress={progress}
-                  globalIndex={globalIndex}
-                  totalLetters={totalLetters}
-                >
-                  {char}
-                </Letter>
-              ))}
-            </span>{" "}
-          </Fragment>
-        ))}
-      </span>
+      {words.map(({ word, globalIndex }) => (
+        <Fragment key={globalIndex}>
+          <Word progress={progress} globalIndex={globalIndex} totalWords={totalWords}>
+            {word}
+          </Word>{" "}
+        </Fragment>
+      ))}
     </p>
   );
 }
+
 
 function ScatterPhoto({ photo, range, progress }) {
   const state = useTransform(progress, (p) => getPhotoState(photo, range, p));
@@ -764,7 +701,7 @@ function ReviewCardBody({ testimonial, compact = false }) {
 // PHONES ONLY: one row of 3 cards, stacked, shown on its own turn (see
 // getReviewRowRevealNarrow above). All three rows sit on top of each other
 // and cross-fade.
-function NarrowReviewRow({ row, rowIndex, progress }) {
+function NarrowReviewRow({ row, rowIndex, progress, innerRef }) {
   const reveal = useTransform(progress, (p) =>
     getReviewRowRevealNarrow(rowIndex, p)
   );
@@ -776,14 +713,18 @@ function NarrowReviewRow({ row, rowIndex, progress }) {
       className="absolute inset-0 flex flex-col justify-center gap-3"
       style={{ opacity, y }}
     >
-      {row.map((testimonial) => (
-        <div
-          key={testimonial.name}
-          className="border border-[var(--line)] bg-[var(--cream)] p-4 text-center"
-        >
-          <ReviewCardBody testimonial={testimonial} compact />
-        </div>
-      ))}
+      {/* TIP: wrapper only exists so the last row's real height can be
+          measured (the row itself is a full-screen flex box). */}
+      <div ref={innerRef} className="flex flex-col gap-3">
+        {row.map((testimonial) => (
+          <div
+            key={testimonial.name}
+            className="border border-[var(--line)] bg-[var(--cream)] p-4 text-center"
+          >
+            <ReviewCardBody testimonial={testimonial} compact />
+          </div>
+        ))}
+      </div>
     </motion.div>
   );
 }
@@ -819,6 +760,18 @@ export default function LaraShowcase() {
   const contentHeightRef = useRef(0);
   const afterTopRef = useRef(0);
   const pendingScrollFixRef = useRef(null);
+  const reviewsGridRef = useRef(null);
+  const staticTopRef = useRef(null);
+  const staticBottomRef = useRef(null);
+  const tailOverlapRef = useRef(0);
+
+  // TIP — NO EMPTY SPACE UNDER THE REVIEWS: the pinned stage is a full
+  // screen tall with the reviews centred in it, so when the pin lets go
+  // there is a band of empty stage under the last row. tailOverlap is that
+  // band minus TAIL_BREATHING_PX, applied as a NEGATIVE bottom margin so
+  // the next section slides up into the empty band and follows the
+  // reviews directly.
+  const [tailOverlap, setTailOverlap] = useState(0);
 
   /*
     IMPORTANT DISTINCTION:
@@ -860,16 +813,8 @@ export default function LaraShowcase() {
 
   const isNarrow = useIsNarrow();
 
-  // Letters start a screen-height below their spot (see LETTER_RISE_VH), so
-  // keep that distance in step with the screen size.
-  useEffect(() => {
-    refreshLetterRise();
-    window.addEventListener("resize", refreshLetterRise);
-    return () => window.removeEventListener("resize", refreshLetterRise);
-  }, []);
-
-  const { result: letterParagraphs, totalLetters } = useMemo(
-    () => buildLetterParagraphs(PARAGRAPHS),
+  const { result: wordParagraphs, totalWords } = useMemo(
+    () => buildWordParagraphs(PARAGRAPHS),
     []
   );
 
@@ -920,14 +865,70 @@ export default function LaraShowcase() {
     const pending = pendingScrollFixRef.current;
     if (!pending) return;
 
-    // Land right at the top of the now-compact section (just below
-    // the navbar) — regardless of how deep into the tall pin track
-    // a fast/fling scroll had carried the user before this fired.
-    // Anchoring to the section's own document position (captured
-    // in update(), below) rather than trying to preserve an exact
-    // scroll fraction via a height-delta calc is what keeps a fast
-    // scroll from skipping clean past Shop straight to the footer.
-    window.scrollTo(0, Math.max(0, pending.wrapperTop - NAVBAR_HEIGHT_PX));
+    // TIP: by the time we get here the tall track was ALREADY above the
+    // viewport (update() only completes once it is), and it has just been
+    // replaced by the much shorter static markup. Everything the user can
+    // see sits below that point, so it moved UP by exactly
+    // (old height - new height). Scrolling up by the same amount puts it
+    // back where it was: no visible jump, and no more "teleport to the top
+    // of the section" that used to happen here.
+    // TIP - HOW THE HAND-OFF STAYS INVISIBLE: right before the swap,
+    // update() remembered where the FOOTER sat on screen. The footer is a
+    // good anchor because it is below everything that changes (so it moves
+    // by exactly the height difference) and it is never itself animated
+    // with a transform. Now that the static markup is in, we scroll by
+    // however far the footer moved, which puts it back exactly where it
+    // was: whatever the user is looking at doesn't budge, however tall the
+    // static block turned out to be (measuring that height directly was
+    // ~1500px off on phones, because images weren't laid out yet).
+    const footer = document.querySelector("footer");
+    if (footer && pending.footerTop != null) {
+      window.scrollBy(0, footer.getBoundingClientRect().top - pending.footerTop);
+    } else {
+      // no footer to anchor to: fall back to comparing block heights
+      const top = staticTopRef.current;
+      const bottom = staticBottomRef.current;
+      const staticHeight =
+        top && bottom ? bottom.offsetTop + bottom.offsetHeight - top.offsetTop : 0;
+      window.scrollTo(
+        0,
+        Math.max(0, pending.scrollY - (pending.occupiedHeight - staticHeight))
+      );
+    }
+
+    // TIP - LATE LAYOUT: images and fonts inside the freshly-mounted static
+    // block can still settle a few frames after this point (measured: ~80px
+    // on a phone), and that would nudge the page. For the next 700ms we
+    // watch the footer's position IN THE DOCUMENT (its on-screen top plus
+    // scrollY). Genuine scrolling by the user doesn't change that number;
+    // layout growth above it does, so any change is cancelled straight away.
+    // Scroll anchoring stays off for that window so the two never fight.
+    const holdFooter = document.querySelector("footer");
+    const restoreAnchor = () => {
+      document.documentElement.style.overflowAnchor = pending.prevAnchor;
+    };
+    if (holdFooter) {
+      let baseDocY = holdFooter.getBoundingClientRect().top + window.scrollY;
+      const hold = () => {
+        const docY = holdFooter.getBoundingClientRect().top + window.scrollY;
+        if (Math.abs(docY - baseDocY) > 1) {
+          window.scrollBy(0, docY - baseDocY);
+          baseDocY = docY;
+        }
+      };
+      // TIP: a ResizeObserver callback runs AFTER layout but BEFORE paint,
+      // so the correction lands in the same frame as the growth: nothing
+      // is ever drawn out of place (a requestAnimationFrame loop showed
+      // one frame of the ~80px shift first).
+      const resizeWatch = new ResizeObserver(hold);
+      resizeWatch.observe(document.body);
+      window.setTimeout(() => {
+        resizeWatch.disconnect();
+        restoreAnchor();
+      }, 700);
+    } else {
+      requestAnimationFrame(restoreAnchor);
+    }
 
     pendingScrollFixRef.current = null;
   }, [liveCompleted, renderCompactFromStart]);
@@ -949,6 +950,19 @@ export default function LaraShowcase() {
       if (contentRef.current) {
         contentHeightRef.current = contentRef.current.offsetHeight;
       }
+
+      // How much empty stage is left around the reviews? Half of it (minus
+      // the breathing room we want to keep) becomes the negative margin
+      // that pulls the next section up under the reviews.
+      if (contentHeightRef.current && reviewsGridRef.current) {
+        const gridHeight = reviewsGridRef.current.offsetHeight;
+        const overlap = Math.max(
+          0,
+          Math.round((contentHeightRef.current - gridHeight) / 2 - TAIL_BREATHING_PX)
+        );
+        tailOverlapRef.current = overlap;
+        setTailOverlap((previous) => (previous === overlap ? previous : overlap));
+      }
     };
 
     const update = () => {
@@ -968,25 +982,33 @@ export default function LaraShowcase() {
       if (rect.top > NAVBAR_HEIGHT_PX) {
         nextState = "before";
 
-        // Soft pre-roll: instead of snapping straight from 0%
-        // opacity to pinned, start easing Lara in during the
-        // last stretch of normal scroll before the section
-        // reaches the navbar — removes the blank-screen gap
-        // between the Hero section and Lara appearing.
-        const approachWindow = window.innerHeight * 0.8;
+        // PRE-ROLL (normal scrolling, before the pin): progress climbs
+        // 0 -> PRE_ROLL_END while the section rises toward the navbar.
+        // TIP: the window is sized so progress moves at the SAME speed per
+        // pixel here as it does once pinned, which makes the hand-off
+        // invisible: there is no change of pace at the moment Lara reaches
+        // the middle, and photo 1 is already flying in by then.
+        const approachWindow =
+          pinnableRange > 0
+            ? (PRE_ROLL_END * pinnableRange) / (TIMELINE_END - PRE_ROLL_END)
+            : window.innerHeight * 0.8;
         const distanceToEngage = rect.top - NAVBAR_HEIGHT_PX;
-        const approachT = clamp01(1 - distanceToEngage / approachWindow);
-        next = approachT * WORDMARK_FADE_IN_END;
+        next = clamp01(1 - distanceToEngage / approachWindow) * PRE_ROLL_END;
       } else if (rect.bottom <= NAVBAR_HEIGHT_PX + contentHeight) {
         nextState = "after";
-        next = 1;
+        next = TIMELINE_END;
         afterTopRef.current = Math.max(0, rect.height - contentHeight);
       } else {
         nextState = "pinned";
-        next =
+        // TIP: this used to restart from 0 the instant the pin engaged,
+        // while the pre-roll had already reached its end, so Lara's
+        // opacity dropped to 0 and faded back in (the "break").
+        // Continuing from PRE_ROLL_END keeps progress continuous.
+        const pinnedT =
           pinnableRange > 0
             ? clamp01((NAVBAR_HEIGHT_PX - rect.top) / pinnableRange)
             : 1;
+        next = lerp(PRE_ROLL_END, TIMELINE_END, pinnedT);
       }
 
       // Only re-renders React when the pin state really changes.
@@ -995,11 +1017,24 @@ export default function LaraShowcase() {
       // Never re-renders React — every visual subscribes to this.
       progress.set(next);
 
-      if (next >= RELEASE_AT && !showcaseCompletedThisPageVisit) {
+      // Complete ONLY once the whole track is out of sight above the
+      // viewport, so the swap to the static markup can't be seen.
+      if (
+        nextState === "after" &&
+        rect.bottom < -COMPLETE_MARGIN_PX &&
+        !showcaseCompletedThisPageVisit
+      ) {
         done = true;
+        const root = document.documentElement;
         pendingScrollFixRef.current = {
-          wrapperTop: window.scrollY + rect.top,
+          scrollY: window.scrollY,
+          occupiedHeight: rect.height - tailOverlapRef.current,
+          prevAnchor: root.style.overflowAnchor,
+          footerTop: document.querySelector("footer")?.getBoundingClientRect().top ?? null,
         };
+        // stop the browser's own scroll anchoring from also adjusting for
+        // the height change; the layout effect does it exactly.
+        root.style.overflowAnchor = "none";
         showcaseCompletedThisPageVisit = true;
         setLiveCompleted(true); // the layout effect above takes over
       }
@@ -1023,6 +1058,7 @@ export default function LaraShowcase() {
 
     const ro = new ResizeObserver(onResize);
     if (contentRef.current) ro.observe(contentRef.current);
+    if (reviewsGridRef.current) ro.observe(reviewsGridRef.current);
 
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", onResize);
@@ -1062,11 +1098,11 @@ export default function LaraShowcase() {
             />
 
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 z-20"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-20 [--photo-scale:0.55] sm:[--photo-scale:1]"
               style={{
                 width: `${PHOTO_WIDTH_PX}px`,
                 height: "103.72863006591797px",
-                transform: "translate(-50%, -50%)",
+                transform: "translate(-50%, -50%) scale(var(--photo-scale, 1))",
               }}
             >
               {SCATTER_PHOTOS.map((photo) => (
@@ -1113,14 +1149,16 @@ export default function LaraShowcase() {
      ============================================================ */
 
   const reviewsStatic = (
-    <section className={`w-full bg-[var(--cream)] pb-0 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
+    <section ref={staticBottomRef} className={`w-full bg-[var(--cream)] pb-0 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
       <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-3">
         {TESTIMONIALS.map((testimonial, index) => (
           <div
             key={`${testimonial.name}-${index}`}
-            className={`min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center ${
-              index % 3 === 1 ? "lg:-translate-y-5" : ""
-            }`}
+            // TIP: the old `lg:-translate-y-5` lifted the MIDDLE card of each
+            // row 20px. The animated version never did that, so the two
+            // versions didn't match (Lara flagged it). Removed: every card
+            // now sits on the same line in both.
+            className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
           >
             <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
               "{testimonial.quote}"
@@ -1160,7 +1198,7 @@ export default function LaraShowcase() {
             so the engine no longer skips it: once the pinned sequence is
             done, the compact Lara / paragraph blocks rise like everything
             else instead of just sitting there. */}
-        <section id="lara-showcase-static" className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
+        <section ref={staticTopRef} id="lara-showcase-static" className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
         {reviewsStatic}
       </>
     );
@@ -1172,15 +1210,21 @@ export default function LaraShowcase() {
 
   let containerStyle;
 
+  // TIP - THE 33px HITCH: the stage used to be 100vh tall before the pin
+  // and after it, but 100vh - 66px while pinned. Its contents are
+  // vertically centred, so they jumped 33px at both hand-offs. Every state
+  // now uses the SAME height, so pinning / unpinning is invisible.
+  const STAGE_HEIGHT = `calc(100${VH_UNIT} - ${NAVBAR_HEIGHT_PX}px)`;
+
   if (pinState === "before") {
-    containerStyle = { position: "relative", height: `100${VH_UNIT}` };
+    containerStyle = { position: "relative", height: STAGE_HEIGHT };
   } else if (pinState === "pinned") {
     containerStyle = {
       position: "fixed",
       top: NAVBAR_HEIGHT_PX,
       left: 0,
       right: 0,
-      height: `calc(100${VH_UNIT} - ${NAVBAR_HEIGHT_PX}px)`,
+      height: STAGE_HEIGHT,
       zIndex: 10,
     };
   } else {
@@ -1189,7 +1233,13 @@ export default function LaraShowcase() {
       top: afterTopRef.current,
       left: 0,
       right: 0,
-      height: `100${VH_UNIT}`,
+      height: STAGE_HEIGHT,
+      // TIP: the next section is pulled up UNDER this stage (see
+      // tailOverlap), so once released the stage must be see-through and
+      // click-through, otherwise its cream background would hide the top
+      // of Shop Our Pieces and it would swallow clicks on it.
+      background: "transparent",
+      pointerEvents: "none",
     };
   }
 
@@ -1201,7 +1251,7 @@ export default function LaraShowcase() {
         id="lara-showcase"
         ref={wrapperRef}
         className="relative w-full overflow-x-clip bg-[var(--cream)]"
-        style={{ height: `${TRACK_VH}${VH_UNIT}` }}
+        style={{ height: `${TRACK_VH}${VH_UNIT}`, marginBottom: -tailOverlap }}
       >
         <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
           <div className="relative h-full w-full">
@@ -1232,11 +1282,15 @@ export default function LaraShowcase() {
                 />
 
                 <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible"
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible [--photo-scale:0.55] sm:[--photo-scale:1]"
                   style={{
                     width: `${PHOTO_WIDTH_PX}px`,
                     height: "103.72863006591797px",
-                    transform: "translate(-50%, -50%)",
+                    // TIP: --photo-scale shrinks the whole photo cluster on
+                    // phones (0.55) because the wordmark is only ~350px wide
+                    // there, so full-size photos covered it. Change 0.55 in
+                    // the class above to make phone photos bigger/smaller.
+                    transform: "translate(-50%, -50%) scale(var(--photo-scale, 1))",
                   }}
                 >
                   {SCATTER_PHOTOS.map((photo, index) => (
@@ -1261,15 +1315,14 @@ export default function LaraShowcase() {
               }}
             >
               <div className="mx-auto max-w-2xl text-center text-[20px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
-                {letterParagraphs.map((words, paragraphIndex) => (
-                  <LetterParagraph
+                {wordParagraphs.map((words, paragraphIndex) => (
+                  <WordParagraph
                     key={paragraphIndex}
                     words={words}
-                    text={PARAGRAPHS[paragraphIndex]}
                     progress={progress}
-                    totalLetters={totalLetters}
+                    totalWords={totalWords}
                     className={
-                      paragraphIndex === letterParagraphs.length - 1 ? "mt-8" : "mb-6"
+                      paragraphIndex === wordParagraphs.length - 1 ? "mt-8" : "mb-6"
                     }
                   />
                 ))}
@@ -1294,11 +1347,15 @@ export default function LaraShowcase() {
                       row={row}
                       rowIndex={rowIndex}
                       progress={progress}
+                      innerRef={rowIndex === REVIEW_ROWS.length - 1 ? reviewsGridRef : undefined}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 sm:grid-cols-3">
+                <div
+                  ref={reviewsGridRef}
+                  className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 sm:grid-cols-3"
+                >
                   {REVIEW_ROWS.map((row, rowIndex) =>
                     row.map((testimonial) => (
                       <ReviewCard

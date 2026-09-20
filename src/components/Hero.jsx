@@ -1,12 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
-import model2 from "../assets/model-images/model-coral.webp";
-import model3 from "../assets/model-images/model-marina.webp";
-import model5 from "../assets/model-images/model-sienna.webp";
-import model6 from "../assets/model-images/model-amber.webp";
-import heroCenter from "../assets/reina-front.webp";
-
 /* ============================================================
    HERO TUNING
    ============================================================ */
@@ -83,6 +77,10 @@ const WRAP_DURATION_SECONDS = 0.95;
 // Fraction of that path spent leaving; the rest is spent fading back in.
 const WRAP_EXIT_FRACTION = 0.4;
 
+// How long a model takes to swap between its side-facing photo and its
+// front-facing photo as it arrives in / leaves the middle slot.
+const FACE_FADE_SECONDS = 0.5;
+
 // Name + price: fade OUT as the clicked model starts moving, then fade IN
 // after a short delay so it appears while the model is still settling into
 // the middle — never before it has started to arrive.
@@ -100,53 +98,21 @@ const RIPPLE_END_SCALE = 1.9;
 const RIPPLE_PEAK_OPACITY = 0.55;
 
 /* ============================================================
-   MODELS
+   MODELS — now DATA, not hardcoded
    ============================================================
 
+   Hero receives its models as a prop (see HomePage in App.jsx): every
+   piece Lara marks "Hero" in the admin page, in the shape
+
+     { id, name, price, views: { front, left, right } }
+
    TIP — HOW MANY MODELS:
-   Add or remove entries here and the carousel adapts. Five (or three
-   on a narrow screen) are ever shown at once; any beyond that wait
-   invisibly at the edges and slide in as you click toward them. With
-   exactly five, the one that leaves an edge re-enters from the other
-   side. Use an ODD count where you can (5, 7, 9) so the middle is
-   always a single model.
+   The carousel adapts to however many there are. Five (or three on a
+   narrow screen) are shown at once; any beyond that wait invisibly at
+   the edges and slide in as you click toward them. Use an ODD count
+   where you can (3, 5, 7…) so the middle is always a single model — with
+   only one or two pieces on the hero, just one or two models are shown.
 */
-
-const MODELS = [
-  {
-    id: "model2",
-    name: "Coral",
-    price: 70000,
-    image: model2,
-  },
-  {
-    id: "model6",
-    name: "Amber",
-    price: 70000,
-    image: model6,
-  },
-  {
-    id: "reina",
-    name: "Reina",
-    price: 70000,
-    image: heroCenter,
-  },
-  {
-    id: "model5",
-    name: "Sienna",
-    price: 70000,
-    image: model5,
-  },
-  {
-    id: "model3",
-    name: "Marina",
-    price: 70000,
-    image: model3,
-  },
-];
-
-// Which model is in the middle on first load.
-const INITIAL_ACTIVE_INDEX = 2;
 
 /* ============================================================
    RESPONSIVE MODEL COUNT
@@ -334,6 +300,24 @@ function formatNaira(amount) {
   return `₦${amount.toLocaleString("en-NG")}`;
 }
 
+/*
+  Which photo(s) does this model show at this offset?
+  Returns { front, side, mirror }.
+*/
+function getViews(model, offset) {
+  const { front, left, right } = model.views;
+  const native = left ?? right ?? front;
+
+  if (offset === 0) return { front: front ?? native, side: native, mirror: false };
+
+  const want = offset < 0 ? left : right;
+  const other = offset < 0 ? right : left;
+
+  if (want) return { front: front ?? want, side: want, mirror: false };
+  if (other) return { front: front ?? other, side: other, mirror: true };
+  return { front, side: front, mirror: false };
+}
+
 /* ============================================================
    ONE MODEL IN THE ROW
    ============================================================ */
@@ -352,6 +336,15 @@ function HeroModel({
   const isSelected = offset === 0;
   const isShown = Math.abs(offset) <= half;
   const edge = half + 1; // the invisible waiting slot
+
+  const hasFront = Boolean(model.views.front);
+  // With a front photo, the side photo fades out at the middle, so let it
+  // keep the direction it arrived with. Without one, it must stay as-is.
+  const view = getViews(model, hasFront ? offset || prevOffset : offset);
+  const fade = {
+    duration: reduceMotion ? 0 : FACE_FADE_SECONDS,
+    ease: "easeInOut",
+  };
 
   const { animate, transition } = useMemo(() => {
     const look = getSlotLook(offset, half);
@@ -494,21 +487,33 @@ function HeroModel({
         overflow-visible
       "
     >
-      <img
-        src={model.image}
-        decoding="async"
-        draggable={false}
-        alt={isSelected ? model.name : ""}
-        className={`
-          block
-          select-none
-          w-auto
-          max-w-none
-          shrink-0
-          object-contain
-          ${IMAGE_HEIGHT_SELECTED}
-        `}
-      />
+      <div className={`relative w-full ${IMAGE_HEIGHT_SELECTED}`}>
+        <motion.img
+          src={view.side}
+          decoding="async"
+          draggable={false}
+          alt=""
+          initial={false}
+          animate={{ opacity: isSelected && hasFront ? 0 : 1 }}
+          transition={fade}
+          className={`absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2 select-none object-contain ${
+            view.mirror ? "-scale-x-100" : ""
+          }`}
+        />
+
+        {hasFront && (
+          <motion.img
+            src={view.front}
+            decoding="async"
+            draggable={false}
+            alt={isSelected ? model.name : ""}
+            initial={false}
+            animate={{ opacity: isSelected ? 1 : 0 }}
+            transition={fade}
+            className="absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2 select-none object-contain"
+          />
+        )}
+      </div>
     </motion.button>
   );
 }
@@ -517,21 +522,24 @@ function HeroModel({
    HERO
    ============================================================ */
 
-export default function Hero() {
+function HeroCarousel({ models }) {
   const isWide = useIsWide();
   const reduceMotion = useReducedMotion();
   const sectionRef = useRef(null);
   const rowRef = useRef(null);
 
-  const count = MODELS.length;
+  const count = models.length;
 
   // Five slots wide, three narrow — but never more than the models we
   // have, and always odd so there is one true middle.
   const wantedVisible = isWide ? 5 : 3;
   const cappedVisible = Math.min(wantedVisible, count);
+  // TIP: an even count is trimmed to the odd number below it so there is
+  // one true middle model, EXCEPT with exactly two models, where trimming
+  // would leave just one on screen and the other could never be reached.
   const visibleCount =
-    cappedVisible % 2 === 0 ? cappedVisible - 1 : cappedVisible;
-  const half = (visibleCount - 1) / 2;
+    cappedVisible % 2 === 0 && count > 2 ? cappedVisible - 1 : cappedVisible;
+  const half = Math.floor(visibleCount / 2);
 
   /*
     PERFORMANCE: the podium's comet is an SVG (SMIL) animation with
@@ -581,7 +589,7 @@ export default function Hero() {
   /* -------------------- carousel state -------------------- */
 
   /*
-    active     : index (into MODELS) of the model in the middle
+    active     : index (into models) of the model in the middle
     prevActive : the one that was in the middle before the last click
     move       : how many slots the clicked model travelled (its old offset)
     moveId     : goes up by one per click — used to restart the text/ripple
@@ -589,16 +597,17 @@ export default function Hero() {
     and how far the belt moved, which is what makes multi-slot clicks
     (e.g. the far-right model) glide as ONE continuous motion.
   */
-  const [nav, setNav] = useState({
-    active: INITIAL_ACTIVE_INDEX,
-    prevActive: INITIAL_ACTIVE_INDEX,
+  // the middle model on first load: the middle of the list
+  const [nav, setNav] = useState(() => ({
+    active: Math.floor(count / 2),
+    prevActive: Math.floor(count / 2),
     move: 0,
     moveId: 0,
-  });
+  }));
 
   function handleSelect(id) {
     setNav((state) => {
-      const clickedIndex = MODELS.findIndex((model) => model.id === id);
+      const clickedIndex = models.findIndex((model) => model.id === id);
       const clickedOffset = wrapOffset(clickedIndex - state.active, count);
 
       // already in the middle, or not one of the shown slots
@@ -607,7 +616,7 @@ export default function Hero() {
       }
 
       return {
-        // keep `active` a plain 0…count-1 index into MODELS
+        // keep `active` a plain 0…count-1 index into models
         active: (((state.active + clickedOffset) % count) + count) % count,
         prevActive: state.active,
         move: clickedOffset,
@@ -632,7 +641,7 @@ export default function Hero() {
     return () => clearTimeout(timer);
   }, [nav.moveId]);
 
-  const activeModel = MODELS[nav.active];
+  const activeModel = models[nav.active];
 
   // The podium's spin phase is fixed once so re-renders don't restart it.
   const [podiumDelay] = useState(getPodiumAnimationDelay);
@@ -970,7 +979,7 @@ export default function Hero() {
               ============================================== */}
 
           {slotWidth > 0 &&
-            MODELS.map((model, index) => (
+            models.map((model, index) => (
               <HeroModel
                 key={model.id}
                 model={model}
@@ -1059,5 +1068,39 @@ export default function Hero() {
         </div>
       </div>
     </section>
+  );
+}
+
+/* ============================================================
+   HERO — waits for the models, then mounts the carousel
+   ============================================================
+
+   `models` is null while the products are still loading: the stage is
+   held open at the same height so the page doesn't jump when the
+   carousel appears. `key` remounts the carousel if the list of models
+   changes, so its selected-model state never points at a model that
+   is no longer there.
+*/
+export default function Hero({ models }) {
+  if (!models?.length) {
+    return (
+      <section
+        id="hero"
+        data-hero="true"
+        data-no-rise="true"
+        className="pt-8 md:pt-12 lg:pt-14 pb-24 md:pb-32"
+      >
+        <div className={`relative mx-auto ${PAGE_CONTAINER_PADDING}`}>
+          <div className={`w-full ${IMAGE_HEIGHT_SELECTED}`} />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <HeroCarousel
+      key={models.map((model) => model.id).join("|")}
+      models={models}
+    />
   );
 }

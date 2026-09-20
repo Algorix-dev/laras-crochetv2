@@ -90,13 +90,100 @@ const CATEGORY_LABELS = {
 };
 
 export function normalizeProduct(apiProduct) {
+  // TIP — ANGLE SHOTS: `views` holds one photo per direction. Older
+  // products (seeded before angle shots existed) only have `images`, so
+  // their first image is treated as the FRONT view and the other three
+  // angles are simply empty ("" = not uploaded yet).
+  const views = {
+    front: apiProduct.views?.front || apiProduct.images?.[0] || "",
+    left: apiProduct.views?.left || "",
+    right: apiProduct.views?.right || "",
+    back: apiProduct.views?.back || "",
+  };
+
   return {
     ...apiProduct,
     id: apiProduct._id,
-    image: apiProduct.images?.[0],
+    views,
+    image: views.front || undefined,
+    placements: apiProduct.placements || [],
     // ProductCard reads `categoryLabel`, but the API only sends
     // `category` (a slug like "two-pieces") — map it here so the
     // real label shows instead of falling back to "PRODUCT".
     categoryLabel: CATEGORY_LABELS[apiProduct.category] || apiProduct.category,
   };
+}
+
+// TIP: the hero carousel only needs a name, a price and up to three
+// photos per piece: front (middle slot) and left / right (the side
+// slots). Anything missing is null and Hero.jsx falls back sensibly
+// (mirrors the other side, or stays front-facing).
+export function toHeroModel(product) {
+  return {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    views: {
+      front: product.views.front || null,
+      left: product.views.left || null,
+      right: product.views.right || null,
+    },
+  };
+}
+
+/* ============================================================
+   ADMIN — used only by pages/AdminPage.jsx
+   ============================================================ */
+
+const ADMIN_TOKEN_KEY = "laras-admin-token";
+
+export const adminSession = {
+  get: () => localStorage.getItem(ADMIN_TOKEN_KEY),
+  set: (token) => localStorage.setItem(ADMIN_TOKEN_KEY, token),
+  clear: () => localStorage.removeItem(ADMIN_TOKEN_KEY),
+};
+
+export async function adminLogin(email, password) {
+  const res = await fetch(`${API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not sign in");
+  return data; // { token, name, email }
+}
+
+// TIP: sends ONE photo to POST /api/upload, which strips the background
+// and stores it on Cloudinary, and returns its URL. (That route wants
+// multipart/form-data, so this can't reuse authenticatedFetch, which
+// forces a JSON Content-Type.)
+export async function uploadPhoto(file) {
+  const body = new FormData();
+  body.append("images", file);
+  const res = await fetch(`${API_URL}/api/upload`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${adminSession.get()}` },
+    body,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) throw new Error("SESSION_EXPIRED");
+  if (!res.ok) throw new Error(data.error || "Upload failed");
+  return data.urls[0];
+}
+
+// POST when there's no id (new piece), PUT when there is (editing one).
+export async function saveProduct(payload, id) {
+  const res = await fetch(`${API_URL}/api/products${id ? `/${id}` : ""}`, {
+    method: id ? "PUT" : "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${adminSession.get()}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) throw new Error("SESSION_EXPIRED");
+  if (!res.ok) throw new Error(data.error || "Could not save the piece");
+  return data;
 }

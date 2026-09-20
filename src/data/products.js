@@ -104,6 +104,3 @@ export const products = [
     categoryLabel: "Two-Piece",
   },
 ];
-
-// Hero only ever shows 5 slots at once — first 5 products by default.
-export const heroModels = products.slice(0, 5);
