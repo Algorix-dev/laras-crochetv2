@@ -1,365 +1,491 @@
 /**
  * scrollReveal.js
  *
- * Global auto-rise and outermost-element detection engine for Lara's Crochet.
- * Inspired by Emmanuel's Algorix Portfolio (https://algorix-portfolio.vercel.app/).
+ * Global rise-from-below engine for Lara's Crochet (modelled on
+ * Emmanuel's Algorix Portfolio).
  *
- * Features:
- * - Outermost-element detection algorithm avoiding double animation.
- * - Ancestor eligibility conflict resolution.
- * - Exclusion of Hero, pinned sections, fixed overlays, and interactive form inputs.
- * - Fast-scroll sweep so fast flings never skip elements.
- * - Mid-page scroll landing handler for instant above-fold reveal.
- * - MutationObserver for dynamic asynchronously loaded content.
- * - Transition cleanup: resets transform to 'none' upon completion to prevent
- *   stacking-context & containing-block bugs on fixed/sticky descendants.
+ * WHAT CHANGED IN THIS VERSION
+ * ----------------------------
+ * 1. REPLAYS EVERY TIME. Before, an element was revealed once and then
+ *    permanently locked (unobserved + data-revealed). Now, when an element
+ *    has fully left the screen it is reset to its hidden state, so it rises
+ *    again the next time you scroll it into view, up or down.
+ * 2. ONE BY ONE. Elements that become visible in the same moment are
+ *    sorted top-to-bottom / left-to-right and given a small incremental
+ *    delay, so a row of cards or a stack of blocks cascades instead of
+ *    popping in together.
+ * 3. EVERY PAGE. Anything inside a [data-page] wrapper (see App.jsx) is
+ *    scanned and its top-level blocks are given the rise automatically -
+ *    no need to hand-mark each page. Opt out with data-no-rise.
+ * 4. CHEAPER ON PHONES. The old version ran getBoundingClientRect() on
+ *    every hidden element on every scroll frame. IntersectionObserver
+ *    already reports every entry/exit, so the scroll/resize sweeps are gone.
+ *
+ * Still true from before:
+ * - Hero, the pinned LaraShowcase, navbar, bag drawer, dialogs and form
+ *   controls are never animated by this engine.
+ * - After a reveal finishes, transform is cleared (data-revealed) so it
+ *   can't trap position:fixed descendants in a containing block.
  * - Safe for jsdom / SSR / prefers-reduced-motion.
  */
 
-// Track observed and revealed elements across the page lifecycle
-// TIP: `let`, not `const`, so teardown can hand out a fresh WeakSet.
-// In dev, React StrictMode runs init -> teardown -> init. With a `const`
-// set, elements registered with the FIRST (now disconnected) observer
-// were remembered as "already observed" and the second observer never
-// picked them up.
+/* ------------------------------------------------------------
+   TUNING
+   ------------------------------------------------------------ */
+
+// Delay added per element when several become visible together.
+const STAGGER_STEP_MS = 90;
+const STAGGER_MAX_MS = 450;
+
+// How long after `.on` is added the transform is cleared (must be longer
+// than the CSS transition + the longest possible delay).
+const CLEANUP_AFTER_MS = 1200;
+
+// An element counts as "in view" once 5% of it, or this many px, is inside
+// the trigger band (the second rule is for very tall blocks).
+const MIN_RATIO = 0.05;
+const MIN_VISIBLE_PX = 120;
+
+// Trigger band: the bottom 8% of the screen does not count, so things
+// start rising a little way up the screen where you actually see it.
+const ROOT_MARGIN = "0px 0px -8% 0px";
+
+// Auto-detection limits.
+const MAX_DEPTH = 6;
+const MAX_AUTO_UNITS = 160;
+// A container with this many children (or more) is treated as a list/grid:
+// each child rises on its own instead of the container rising as one block.
+const GROUP_MIN_CHILDREN = 4;
+
+const SKIP_TAGS = new Set([
+  "SCRIPT",
+  "STYLE",
+  "TEMPLATE",
+  "NOSCRIPT",
+  "LINK",
+  "META",
+  "BR",
+]);
+
+// Elements that are always animated as ONE piece (never descended into).
+const LEAF_TAGS = new Set([
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "P",
+  "IMG",
+  "PICTURE",
+  "FIGURE",
+  "UL",
+  "OL",
+  "DL",
+  "TABLE",
+  "FORM",
+  "BUTTON",
+  "A",
+  "BLOCKQUOTE",
+  "HR",
+  "SVG",
+  "CANVAS",
+  "VIDEO",
+]);
+
+const FORM_CONTROL_TAGS = new Set([
+  "INPUT",
+  "TEXTAREA",
+  "SELECT",
+  "OPTION",
+  "LABEL",
+]);
+
+const STRUCTURAL_EXCLUDE_SELECTOR = [
+  "[data-no-rise]",
+  "[data-reveal-ignore]",
+  "[data-hero]",
+  "[data-pinned]",
+  "#hero",
+  "#lara-showcase",
+  "nav",
+  "#bag-drawer",
+  "[role='dialog']",
+  "[data-modal]",
+  "[aria-hidden='true']",
+].join(",");
+
+/* ------------------------------------------------------------
+   STATE
+   ------------------------------------------------------------ */
+
+// TIP: `let`, not `const`, so teardown can hand out a fresh WeakSet. In dev,
+// React StrictMode runs init -> teardown -> init; elements registered with
+// the first (disconnected) observer must be picked up by the second.
 let observedElements = new WeakSet();
-const animatedElements = new WeakSet();
+
+// Elements this engine added `.rv` to itself. If React later rewrites such an
+// element's className (dropping `.rv`), we leave it alone instead of hiding
+// it again with no observer to bring it back.
+const autoMarked = new WeakSet();
+
+const cleanupTimers = new WeakMap();
 
 let globalObserver = null;
 let globalMutationObserver = null;
-let sweepScheduled = false;
-let scanScheduled = false;
+let scanQueued = false;
 
-/**
- * Checks if user prefers reduced motion
- */
+/* ------------------------------------------------------------
+   HELPERS
+   ------------------------------------------------------------ */
+
 export function prefersReducedMotion() {
   if (typeof window === "undefined" || !window.matchMedia) return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/**
- * Checks if an element or any of its ancestors should be excluded
- */
-function isExcluded(el) {
+const isUsable = (el) =>
+  el instanceof HTMLElement && !SKIP_TAGS.has(el.tagName);
+
+/** Excluded by WHERE it is or WHAT it is (never by how it currently looks). */
+function isStructurallyExcluded(el) {
   if (!el || !(el instanceof HTMLElement)) return true;
+  if (el.closest(STRUCTURAL_EXCLUDE_SELECTOR)) return true;
+  // Animating inputs directly breaks hitboxes, focus and autofill.
+  return FORM_CONTROL_TAGS.has(el.tagName);
+}
 
-  // Explicit ignores
-  if (
-    el.hasAttribute("data-no-rise") ||
-    el.hasAttribute("data-reveal-ignore") ||
-    el.hasAttribute("data-hero") ||
-    el.hasAttribute("data-pinned")
-  ) {
+/** Not currently rendered (display:none itself or via an ancestor). */
+function isUnrenderable(el) {
+  if (typeof el.getClientRects === "function" && el.getClientRects().length === 0) {
     return true;
   }
-
-  // Pinned, hero, or fixed overlays
-  if (
-    el.closest("#hero") ||
-    el.closest("#lara-showcase") ||
-    el.closest("[data-hero]") ||
-    el.closest("[data-pinned]") ||
-    el.closest("nav") ||
-    el.closest("#bag-drawer") ||
-    el.closest("[role='dialog']") ||
-    el.closest("[data-modal]") ||
-    el.closest("[aria-hidden='true']")
-  ) {
-    return true;
-  }
-
-  // Interactive inputs and form controls (animating them directly breaks hitboxes/focus/autofill)
-  const tag = el.tagName.toLowerCase();
-  if (
-    tag === "input" ||
-    tag === "textarea" ||
-    tag === "select" ||
-    tag === "option" ||
-    tag === "label"
-  ) {
-    return true;
-  }
-
-  // Hidden elements
-  if (
-    el.offsetParent === null &&
-    window.getComputedStyle(el).position !== "fixed"
-  ) {
-    return true;
-  }
-
   const style = window.getComputedStyle(el);
-  // TIP: `.rv` elements START at opacity: 0 by design (see index.css), so
-  // the old `style.opacity === "0"` test rejected every not-yet-revealed
-  // .rv element as "hidden". They never reached the IntersectionObserver
-  // and only ever appeared because the scroll-sweep caught them. Skipping
-  // the opacity test for .rv elements lets the observer do its job too.
-  if (
-    style.display === "none" ||
-    style.visibility === "hidden" ||
-    (style.opacity === "0" && !el.classList.contains("rv"))
-  ) {
-    return true;
-  }
+  return style.display === "none" || style.visibility === "hidden";
+}
 
-  // Elements with explicit existing non-identity transform (e.g. rotated captions like "MEET LARA")
-  if (
-    style.transform &&
-    style.transform !== "none" &&
-    !el.classList.contains("rv")
-  ) {
-    return true;
-  }
-
-  // Fixed or sticky elements (transform would break their viewport anchoring)
-  if (style.position === "fixed" || style.position === "sticky") {
-    return true;
-  }
-
-  return false;
+/** Auto-detected elements only: skip anything whose own geometry we'd break. */
+function isGeometryBlocked(el) {
+  const style = window.getComputedStyle(el);
+  if (style.position === "fixed" || style.position === "sticky") return true;
+  if (style.opacity === "0") return true;
+  // An existing non-identity transform (e.g. rotated captions) would be
+  // overwritten by the rise.
+  return Boolean(style.transform) && style.transform !== "none";
 }
 
 /**
- * Checks if any ancestor of el is already designated to animate.
- * Prevents "nested double rise" unless explicitly designated as a stagger child.
+ * A "layered composition": a container whose children are positioned
+ * absolutely (wordmark + photos, banner with models, etc). Splitting these
+ * up would break their stacking, so they rise as ONE block.
  */
-function hasAnimatedAncestor(el) {
-  let parent = el.parentElement;
-  while (parent && parent !== document.body) {
-    if (parent.hasAttribute("data-reveal-wrapper")) {
-      return true;
-    }
-    if (parent.classList && parent.classList.contains("rv")) {
-      // If child is explicitly marked as a stagger card inside a group, allow it
-      if (el.hasAttribute("data-stagger-child") || el.hasAttribute("data-reveal-card")) {
-        return false;
-      }
-      return true;
-    }
-    parent = parent.parentElement;
-  }
-  return false;
-}
-
-/**
- * Transition completion handler:
- * Clears the transform and will-change property so the element returns to static geometry.
- */
-function handleRevealComplete(el) {
-  if (!el || animatedElements.has(el)) return;
-  animatedElements.add(el);
-
-  const cleanup = () => {
-    el.setAttribute("data-revealed", "true");
-    el.removeEventListener("transitionend", onEnd);
-  };
-
-  const onEnd = (e) => {
-    // Only trigger on the element itself, not bubbling from children
-    if (e.target === el && (e.propertyName === "transform" || e.propertyName === "opacity")) {
-      cleanup();
-    }
-  };
-
-  el.addEventListener("transitionend", onEnd, { passive: true });
-
-  // Safety timeout in case transitionend does not fire (e.g. tab switched)
-  setTimeout(cleanup, 850);
-}
-
-/**
- * Triggers reveal on an individual element
- */
-export function revealElement(el) {
-  if (!el || el.classList.contains("on")) return;
-
-  el.classList.add("on");
-  handleRevealComplete(el);
-
-  if (globalObserver) {
-    globalObserver.unobserve(el);
-  }
-}
-
-/**
- * Sweeps any elements currently above or within view.
- * Essential for fast flings, trackpad flick scrolling, and mid-page landings!
- */
-export function sweepVisibleElements() {
-  if (typeof window === "undefined") return;
-
-  const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-  const elements = document.querySelectorAll(".rv:not(.on)");
-
-  for (let i = 0; i < elements.length; i++) {
-    const el = elements[i];
-    const rect = el.getBoundingClientRect();
-    // Reveal if it has entered the viewport or was already scrolled past
-    if (rect.top <= windowHeight + 20) {
-      revealElement(el);
-    }
-  }
-}
-
-/**
- * Schedule a sweep using requestAnimationFrame to prevent layout thrashing
- */
-function scheduleSweep() {
-  if (sweepScheduled) return;
-  sweepScheduled = true;
-  requestAnimationFrame(() => {
-    sweepVisibleElements();
-    sweepScheduled = false;
+function isLayered(children) {
+  return children.some((child) => {
+    const position = window.getComputedStyle(child).position;
+    return position === "absolute" || position === "fixed";
   });
 }
 
+function clearPendingCleanup(el) {
+  const id = cleanupTimers.get(el);
+  if (id !== undefined) {
+    clearTimeout(id);
+    cleanupTimers.delete(el);
+  }
+}
+
+function scheduleCleanup(el, afterMs) {
+  clearPendingCleanup(el);
+  const id = setTimeout(() => {
+    cleanupTimers.delete(el);
+    // Only lock in the settled state if it is still revealed. (A reset in
+    // the meantime cancels this timer, but be defensive anyway.)
+    if (el.classList.contains("on")) {
+      el.setAttribute("data-revealed", "true");
+      el.style.removeProperty("transition-delay");
+    }
+  }, afterMs);
+  cleanupTimers.set(el, id);
+}
+
+const HAS_DELAY_CLASS = /(^|\s)d[1-6](\s|$)/;
+
+/* ------------------------------------------------------------
+   REVEAL / RESET
+   ------------------------------------------------------------ */
+
 /**
- * Outermost-element scanner:
- * Discovers candidates across the container, groups card grids, and attaches .rv
+ * Reveal a group of elements that became visible together, one after
+ * another. `items` is [{ el, top, left }].
+ */
+function revealBatch(items) {
+  const fresh = items.filter(({ el }) => !el.classList.contains("on"));
+  if (fresh.length === 0) return;
+
+  // Top to bottom (rows ~48px tall count as the same row), then left to right.
+  fresh.sort((a, b) => {
+    const rowDiff = Math.round(a.top / 48) - Math.round(b.top / 48);
+    return rowDiff || a.left - b.left;
+  });
+
+  fresh.forEach(({ el }, index) => {
+    const base = Number(el.getAttribute("data-rise-delay")) || 0;
+    // Elements that already carry a .d1-.d6 class bring their own delay.
+    const stagger = HAS_DELAY_CLASS.test(el.className)
+      ? 0
+      : Math.min(index * STAGGER_STEP_MS, STAGGER_MAX_MS);
+    const total = base + stagger;
+
+    if (total > 0) el.style.transitionDelay = `${total}ms`;
+    else el.style.removeProperty("transition-delay");
+
+    el.classList.add("on");
+    scheduleCleanup(el, CLEANUP_AFTER_MS + total);
+  });
+}
+
+/** Reveal one element straight away (public helper). */
+export function revealElement(el) {
+  if (!el || el.classList.contains("on")) return;
+  revealBatch([{ el, top: 0, left: 0 }]);
+}
+
+/** Put an element back to its hidden, ready-to-rise-again state. */
+function resetElement(el) {
+  if (!el.classList.contains("on")) return;
+  clearPendingCleanup(el);
+  el.removeAttribute("data-revealed");
+  el.style.removeProperty("transition-delay");
+  el.classList.remove("on");
+}
+
+function forceShow(el) {
+  el.classList.add("on");
+  el.setAttribute("data-revealed", "true");
+}
+
+function showAll(container) {
+  container.querySelectorAll(".rv:not(.on)").forEach(forceShow);
+}
+
+function onIntersect(entries) {
+  const entering = [];
+
+  for (const entry of entries) {
+    const el = entry.target;
+    const visiblePx = entry.intersectionRect ? entry.intersectionRect.height : 0;
+
+    if (
+      entry.isIntersecting &&
+      (entry.intersectionRatio >= MIN_RATIO || visiblePx >= MIN_VISIBLE_PX)
+    ) {
+      entering.push({
+        el,
+        top: entry.boundingClientRect.top,
+        left: entry.boundingClientRect.left,
+      });
+    } else if (entry.intersectionRatio === 0) {
+      // Fully out of the trigger band: get ready to rise again next time.
+      resetElement(el);
+    }
+  }
+
+  revealBatch(entering);
+}
+
+/* ------------------------------------------------------------
+   AUTO-DETECTION ("rise units")
+   ------------------------------------------------------------ */
+
+function consider(el, depth, out) {
+  if (out.length >= MAX_AUTO_UNITS || SKIP_TAGS.has(el.tagName)) return;
+
+  // Explicitly marked in JSX (or by a previous scan).
+  if (el.classList.contains("rv")) {
+    out.push(el);
+    return;
+  }
+
+  if (isStructurallyExcluded(el) || autoMarked.has(el) || isUnrenderable(el)) {
+    return;
+  }
+
+  // Hand-marked blocks (kept from the old system): rise as one piece -
+  // unless they contain hand-placed .rv elements, which then rise instead
+  // (never both, or the block and its contents would move twice).
+  if (
+    (el.hasAttribute("data-auto-rise") || el.hasAttribute("data-reveal")) &&
+    !el.querySelector(".rv")
+  ) {
+    if (!isGeometryBlocked(el)) out.push(el);
+    return;
+  }
+
+  const kids = Array.from(el.children).filter(isUsable);
+
+  // Explicit stagger group: every child is its own unit.
+  if (el.hasAttribute("data-stagger-group")) {
+    kids.forEach((kid) => consider(kid, MAX_DEPTH, out));
+    return;
+  }
+
+  // Contains hand-placed .rv elements or hand-marked blocks somewhere
+  // inside (e.g. a <form> wrapping several data-auto-rise sections): don't
+  // animate the container as well, just look inside it.
+  if (el.querySelector(".rv, [data-auto-rise], [data-reveal]")) {
+    kids.forEach((kid) => consider(kid, depth + 1, out));
+    return;
+  }
+
+  if (isGeometryBlocked(el)) return;
+
+  if (LEAF_TAGS.has(el.tagName) || depth >= MAX_DEPTH || kids.length === 0) {
+    out.push(el);
+    return;
+  }
+
+  if (isLayered(kids)) {
+    out.push(el);
+    return;
+  }
+
+  if (kids.length >= GROUP_MIN_CHILDREN) {
+    // A list / grid: each child rises on its own (one by one).
+    kids.forEach((kid) => consider(kid, MAX_DEPTH, out));
+    return;
+  }
+
+  // A plain layout wrapper: look inside.
+  kids.forEach((kid) => consider(kid, depth + 1, out));
+}
+
+/* ------------------------------------------------------------
+   SCANNING
+   ------------------------------------------------------------ */
+
+function observeElement(el) {
+  if (observedElements.has(el)) return;
+  observedElements.add(el);
+  globalObserver.observe(el);
+}
+
+/**
+ * Finds every element that should rise (hand-placed .rv elements plus
+ * auto-detected blocks inside [data-page]) and hands them to the observer.
+ * Safe to call repeatedly; already-registered elements are skipped.
  */
 export function scanAndRegisterElements(container = document.body) {
   if (typeof window === "undefined" || !container) return;
 
-  if (prefersReducedMotion()) {
-    // Reveal everything immediately if reduced motion is requested
-    const unrevealed = container.querySelectorAll(".rv:not(.on)");
-    unrevealed.forEach((el) => {
-      el.classList.add("on");
-      el.setAttribute("data-revealed", "true");
-    });
+  if (prefersReducedMotion() || !globalObserver) {
+    // Nothing will ever animate them, so make sure nothing stays hidden.
+    showAll(container);
     return;
   }
 
-  // 1. Register explicit .rv elements already placed in JSX
-  const explicitElements = container.querySelectorAll(".rv");
-  explicitElements.forEach((el) => {
-    if (isExcluded(el)) return;
-    registerElement(el);
+  const targets = new Set();
+
+  // 1. Hand-placed .rv elements (e.g. <Reveal>, About page).
+  container.querySelectorAll(".rv").forEach((el) => {
+    if (isStructurallyExcluded(el)) {
+      // e.g. an .rv inside the hero: never leave it stuck invisible.
+      forceShow(el);
+      return;
+    }
+    targets.add(el);
   });
 
-  // 2. Scan for candidate block roots (e.g. sections, article cards, heading rows)
-  const candidateSelectors = [
-    "[data-auto-rise='true']",
-    "[data-reveal='true']",
-    "section > h1:not(.rv)",
-    "section > h2:not(.rv)",
-    "section > h3:not(.rv)",
-    ".product-card:not(.rv)",
-    "[data-stagger-group] > *:not(.rv)",
-  ];
+  // 2. Auto-detected blocks inside each page wrapper.
+  const roots = [];
+  if (container.matches && container.matches("[data-page]")) roots.push(container);
+  container.querySelectorAll("[data-page]").forEach((root) => roots.push(root));
 
-  const candidates = container.querySelectorAll(candidateSelectors.join(","));
+  const units = [];
+  roots.forEach((root) => {
+    Array.from(root.children).filter(isUsable).forEach((kid) => consider(kid, 0, units));
+  });
 
-  candidates.forEach((el) => {
-    if (isExcluded(el)) return;
-    if (hasAnimatedAncestor(el)) return;
-
+  units.forEach((el) => {
     if (!el.classList.contains("rv")) {
       el.classList.add("rv");
+      autoMarked.add(el);
     }
-    registerElement(el);
+    targets.add(el);
   });
 
-  // 3. Coordinate stagger delays on grid children if container has data-stagger-group
-  const staggerGroups = container.querySelectorAll("[data-stagger-group]");
-  staggerGroups.forEach((group) => {
-    const children = Array.from(group.children).filter(
-      (c) => !isExcluded(c) && c.classList.contains("rv")
-    );
-    children.forEach((child, index) => {
-      const staggerClass = `d${Math.min((index % 6) + 1, 6)}`;
-      child.classList.add(staggerClass);
-    });
-  });
-
-  // Immediate sweep for elements already visible
-  scheduleSweep();
+  targets.forEach(observeElement);
 }
 
 /**
- * TIP: React can mount dozens of nodes in one commit (a product grid, a
- * whole page). Scanning the entire body once per mutation record is
- * wasted work, so all scan requests inside the same frame collapse into
- * one requestAnimationFrame callback.
+ * All scan requests inside one tick collapse into one microtask. It is a
+ * microtask (not requestAnimationFrame) on purpose: it runs BEFORE the
+ * browser paints the freshly mounted content, so newly added blocks are
+ * hidden from their very first frame instead of flashing visible and then
+ * fading out.
  */
 function scheduleScan() {
-  if (scanScheduled) return;
-  scanScheduled = true;
-  requestAnimationFrame(() => {
-    scanScheduled = false;
+  if (scanQueued) return;
+  scanQueued = true;
+  Promise.resolve().then(() => {
+    scanQueued = false;
+    // Torn down in the meantime (StrictMode / unmount): nothing to do.
+    if (!globalObserver) return;
     scanAndRegisterElements(document.body);
   });
 }
 
 /**
- * Registers an individual element into the IntersectionObserver
+ * Manual sweep: reveal anything currently inside the trigger band.
+ * (The observer normally does this by itself; kept for callers that
+ * want to force it, e.g. after a layout-changing action.)
  */
-function registerElement(el) {
-  if (!el || observedElements.has(el)) return;
-  observedElements.add(el);
+export function sweepVisibleElements() {
+  if (typeof window === "undefined") return;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  const bandBottom = viewportHeight * 0.92;
 
-  // If already scrolled past, reveal immediately
-  const rect = el.getBoundingClientRect();
-  const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-  if (rect.top <= windowHeight) {
-    revealElement(el);
-    return;
-  }
-
-  if (globalObserver) {
-    globalObserver.observe(el);
-  }
+  const items = [];
+  document.querySelectorAll(".rv:not(.on)").forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.height > 0 && rect.top < bandBottom && rect.bottom > 0) {
+      items.push({ el, top: rect.top, left: rect.left });
+    }
+  });
+  revealBatch(items);
 }
 
-/**
- * Initializes the global IntersectionObserver and MutationObserver
- */
+/* ------------------------------------------------------------
+   INIT
+   ------------------------------------------------------------ */
+
 export function initScrollReveal() {
   if (typeof window === "undefined") return () => {};
 
   if (!("IntersectionObserver" in window)) {
-    // Fallback for environments lacking IntersectionObserver
-    sweepVisibleElements();
+    // Very old browser: no animation, but never leave content hidden.
+    showAll(document.body);
     return () => {};
   }
 
-  // Create global IntersectionObserver with tuned threshold and margin
   if (!globalObserver) {
-    globalObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            revealElement(entry.target);
-          }
-        });
-      },
-      {
-        threshold: 0.08,
-        rootMargin: "0px 0px -40px 0px", // Snappy reveal right before entering eye level
-      }
-    );
+    globalObserver = new IntersectionObserver(onIntersect, {
+      // Several thresholds so we hear about tall blocks early and get a
+      // callback both when an element enters and when it fully leaves.
+      threshold: [0, 0.01, MIN_RATIO],
+      rootMargin: ROOT_MARGIN,
+    });
   }
 
-  // Attach passive scroll and resize listeners for fast-scroll sweeps
-  window.addEventListener("scroll", scheduleSweep, { passive: true });
-  window.addEventListener("resize", scheduleSweep, { passive: true });
-
-  // Initial scan
   scanAndRegisterElements(document.body);
 
-  // Set up MutationObserver to detect dynamically mounted nodes
+  // Pick up content React mounts later (route changes, fetched products).
   if (!globalMutationObserver && "MutationObserver" in window) {
     globalMutationObserver = new MutationObserver((mutations) => {
-      let needsScan = false;
       for (let i = 0; i < mutations.length; i++) {
         if (mutations[i].addedNodes.length > 0) {
-          needsScan = true;
-          break;
+          scheduleScan();
+          return;
         }
-      }
-      if (needsScan) {
-        scheduleScan();
       }
     });
 
@@ -369,10 +495,7 @@ export function initScrollReveal() {
     });
   }
 
-  // Return teardown function
   return () => {
-    window.removeEventListener("scroll", scheduleSweep);
-    window.removeEventListener("resize", scheduleSweep);
     if (globalObserver) {
       globalObserver.disconnect();
       globalObserver = null;

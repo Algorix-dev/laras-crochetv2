@@ -75,18 +75,22 @@ const SELECT_SPRING = {
   damping: 28,
 };
 
-// A model that has to leave one edge and re-enter at the other (the
-// loop-around when there are exactly 5 models) uses a timed path instead.
-const WRAP_DURATION_SECONDS = 0.7;
-// Fraction of that path spent leaving; the rest is spent re-entering.
-const WRAP_EXIT_FRACTION = 0.45;
+// A model that has to leave one edge and reappear at the other (the
+// loop-around when there are exactly 5 models) uses a timed path instead:
+// it slides out with the row while fading away, then FADES IN WHERE IT
+// BELONGS. It never travels across (or in from the side of) the screen.
+const WRAP_DURATION_SECONDS = 0.95;
+// Fraction of that path spent leaving; the rest is spent fading back in.
+const WRAP_EXIT_FRACTION = 0.4;
 
-// Name + price: fade OUT fast as the clicked model starts moving, then
-// fade IN after a short delay so it appears while the model is still
-// settling into the middle — never before it has started to arrive.
-const TEXT_OUT_SECONDS = 0.16;
-const TEXT_IN_SECONDS = 0.35;
-const TEXT_IN_DELAY_SECONDS = 0.14;
+// Name + price: fade OUT as the clicked model starts moving, then fade IN
+// after a short delay so it appears while the model is still settling into
+// the middle — never before it has started to arrive.
+// TIP: these were 0.16 / 0.35 / 0.14 — slowed down on purpose. Raise them
+// for an even calmer swap, lower them to speed it back up.
+const TEXT_OUT_SECONDS = 0.3;
+const TEXT_IN_SECONDS = 0.75;
+const TEXT_IN_DELAY_SECONDS = 0.2;
 
 // Podium ripple: how long after the click the rings start, and how far
 // they spread. Two rings, the second slightly behind the first.
@@ -368,6 +372,37 @@ function HeroModel({
     const beltOffset = prevOffset + shift;
     const looped = moveId > 0 && beltOffset !== offset;
 
+    // Was this model parked in the invisible waiting slot (only happens
+    // with more than 5 models) and is now coming into view?
+    const arriving =
+      moveId > 0 && Math.abs(prevOffset) > half && isShown;
+
+    /*
+      TIP — FADE IN PLACE (not slide in):
+      A model that has to (re)appear in the row does NOT glide in from the
+      side any more. It is placed straight into its final slot and only its
+      opacity animates, after the rest of the row has started to settle.
+      The tilt / size / blur are set at the same moment (duration 0) so
+      nothing visibly changes shape while it fades. Before this, clicking
+      two spots to the right made the two models that wrapped around run in
+      from the right-hand edge.
+    */
+    if (arriving && !looped) {
+      const settleDelay = 0.25;
+      return {
+        animate: { ...look, x: xFor(offset) },
+        transition: {
+          default: { duration: 0, delay: settleDelay },
+          x: { duration: 0 },
+          opacity: {
+            duration: 0.6,
+            delay: settleDelay,
+            ease: "easeOut",
+          },
+        },
+      };
+    }
+
     if (!looped) {
       return {
         animate: { ...look, x: xFor(offset) },
@@ -378,26 +413,23 @@ function HeroModel({
     /*
       TIP — THE LOOP-AROUND (only happens with a small model count):
       this model is being carried off one end of the row and has to
-      reappear at the other. Rather than letting it fly across the whole
-      screen, it takes a 4-stop path:
+      reappear at the other. 3-stop path:
         1. from where it is now …
         2. … on to the edge it was leaving, fading out
-        3. instantly to the mirrored spot beyond the OTHER edge (hidden)
-        4. … then slides in to its new slot, fading in
-      The "instant" step is 0.1% of the path (see the times array), so
-      it is never seen.
+        3. instantly (unseen, it is at opacity 0) to its FINAL slot, where
+           it fades in — no sliding in from the other side
+      The "instant" step is 0.1% of the path (see the times array).
+      Tilt / size / blur switch at the same unseen moment (duration 0 with a
+      delay), so the model reappears already in its new shape.
     */
     const times = [0, WRAP_EXIT_FRACTION, WRAP_EXIT_FRACTION + 0.001, 1];
+    const switchDelay = WRAP_DURATION_SECONDS * WRAP_EXIT_FRACTION;
+    const instantAtSwitch = { duration: 0, delay: switchDelay };
 
     return {
       animate: {
         ...look,
-        x: [
-          null,
-          xFor(beltOffset),
-          xFor(offset - shift),
-          xFor(offset),
-        ],
+        x: [null, xFor(beltOffset), xFor(offset), xFor(offset)],
         opacity: [null, 0, 0, look.opacity],
       },
       transition: {
@@ -405,13 +437,17 @@ function HeroModel({
         x: {
           duration: WRAP_DURATION_SECONDS,
           times,
-          ease: ["easeIn", "linear", "easeOut"],
+          ease: ["easeIn", "linear", "linear"],
         },
         opacity: {
           duration: WRAP_DURATION_SECONDS,
           times,
           ease: "linear",
         },
+        rotateY: instantAtSwitch,
+        scaleX: instantAtSwitch,
+        scaleY: instantAtSwitch,
+        filter: instantAtSwitch,
       },
     };
   }, [offset, prevOffset, shift, moveId, half, edge, slotWidth, reduceMotion]);
@@ -608,6 +644,7 @@ export default function Hero() {
       data-hero="true"
       data-no-rise="true"
       className="
+        overflow-x-clip
         pt-8
         md:pt-12
         lg:pt-14

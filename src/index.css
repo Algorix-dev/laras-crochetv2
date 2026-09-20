@@ -29,30 +29,46 @@
 }
 
 /* -----------------------------------------------------------
-   GLOBAL AUTO-RISE & SCROLL-TRIGGERED ANIMATIONS
-   Referenced from Emmanuel's Algorix Portfolio (algorix-portfolio.vercel.app):
-   - Fast, smooth rise from underneath (translateY(30px) -> 0)
-   - Soft ease-out cubic-bezier(.22, 1, .36, 1)
-   - Stagger classes (.d1 through .d6)
-   - Clean transition cleanup: [data-revealed="true"] clears
-     transform to 'none' and will-change to 'auto' so containing
-     block / stacking context bugs are prevented on fixed/sticky
-     descendants.
+   GLOBAL RISE-FROM-BELOW (driven by utils/scrollReveal.js)
+   Modelled on Emmanuel's Algorix Portfolio (algorix-portfolio.vercel.app):
+   - each element fades in while rising from underneath
+   - items that appear together are staggered one after another
+   - it REPLAYS: when an element has fully left the screen the engine
+     removes .on again, so it rises again on the next scroll past it
+   To tune how obvious it is, change --rise (distance) and the two
+   transition durations below.
 ----------------------------------------------------------- */
 .rv {
+  --rise: 56px;
   opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
+  transform: translate3d(0, var(--rise), 0);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.2s ease,
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease;
+  /* ^ the last four keep hover colour changes smooth on buttons/links that
+       the engine marks (this rule overrides Tailwind's transition-colors). */
+  /* TIP: no permanent will-change here on purpose. Hundreds of promoted
+     layers were part of the mobile lag; the browser promotes an element
+     for the length of its transition on its own. */
+}
+
+/* A slightly shorter rise on phones: fingers scroll fast, and a 56px
+   rise on a 390px-wide screen looks like a jump. */
+@media (max-width: 767px) {
+  .rv {
+    --rise: 44px;
+  }
 }
 
 .rv.on {
   opacity: 1;
-  transform: translateY(0);
+  transform: translate3d(0, 0, 0);
 }
 
-/* Stagger delay utilities */
+/* Optional hand-set stagger (the engine also staggers automatically). */
 .d1 { transition-delay: 0.06s; }
 .d2 { transition-delay: 0.12s; }
 .d3 { transition-delay: 0.18s; }
@@ -60,12 +76,31 @@
 .d5 { transition-delay: 0.30s; }
 .d6 { transition-delay: 0.36s; }
 
-/* CRITICAL: Once the reveal finishes, clear transform and will-change
-   so the element returns to normal document flow geometry.
-   This protects against position: fixed and sticky containing-block bugs! */
+/* CRITICAL: once a rise has settled the engine sets data-revealed, which
+   clears the transform so the element returns to plain document geometry.
+   This protects position: fixed / sticky descendants from a leftover
+   transform turning the element into their containing block. The engine
+   removes this attribute again when the element leaves the screen, which
+   is what lets it rise a second time. */
 .rv[data-revealed="true"] {
   transform: none !important;
-  will-change: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Catch-all for sideways overflow on phones. Any child that pokes past
+   the screen edge (off-screen carousel slots, photos parked 850px to the
+   side, etc.) is clipped instead of making the whole page pan sideways.
+   `clip` (unlike `hidden`) does NOT create a scroll container, so sticky
+   and position: fixed keep working. */
+[data-page] {
+  overflow-x: clip;
 }
 
 /* Hero supporting models glassy blur depth of field */

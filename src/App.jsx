@@ -140,41 +140,40 @@ function HomePage() {
               </Reveal>
             </section>
 
-      <CustomOrderBanner />
+      {/* TIP: data-auto-rise = "rise as ONE block". The banner layers a
+          wordmark behind the models, so it must not be split into pieces
+          (each piece would get its own transform + stacking context). */}
+      <div data-auto-rise="true">
+        <CustomOrderBanner />
+      </div>
       <Footer />
     </>
   );
 }
 
-// TIP — EVERY PAGE COMES UP FROM UNDERNEATH:
-// each route change re-mounts this wrapper (key={pathname}), which
-// replays a short rise + fade so every page enters the same way,
-// like the portfolio. Done as a plain CSS animation (not framer-
-// motion) on purpose:
-//   - it runs on the compositor, so it can't lag with the JS thread
-//   - `backwards` fill means that once it ends there is NO leftover
-//     transform on the wrapper. A leftover transform would break the
-//     `position: fixed` pin in LaraShowcase (fixed elements resolve
-//     against any transformed ancestor), so this has to stay `backwards`,
-//     never `forwards` / `both`.
-// Reduced-motion visitors get no animation.
-const PAGE_RISE_CSS = `
-@keyframes page-rise {
-  from { opacity: 0; transform: translateY(24px); }
-}
-.page-rise {
-  animation: page-rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-@media (prefers-reduced-motion: reduce) {
-  .page-rise { animation: none; }
-}
-`;
-
+// TIP — EVERY PAGE COMES UP FROM UNDERNEATH (element by element):
+// this wrapper used to replay one 24px CSS rise on the WHOLE page at every
+// route change. That was competing with the per-element rise (both moved at
+// once, so neither read clearly) and it only played on navigation, never
+// while scrolling. It's gone. Instead, `data-page` tells the scroll engine
+// (utils/scrollReveal.js) "this is a page: find its top-level blocks and
+// make each one rise, one after another, every time it scrolls into view".
+//
+// - key={pathname} still re-mounts the page on every route change (some
+//   pages rely on that to reset their state).
+// - /signin opts out: it has its own splash + step animations.
+// - index.css clips sideways overflow on [data-page] so nothing can make
+//   the page pan left/right on a phone.
 function PageOffset({ children }) {
   const { pathname } = useLocation();
+  const isSignIn = pathname === "/signin";
   return (
-    <div className={pathname === "/signin" ? "" : "pt-[66px]"}>
-      <div key={pathname} className="page-rise">
+    <div className={isSignIn ? "" : "pt-[66px]"}>
+      <div
+        key={pathname}
+        data-page={isSignIn ? undefined : "true"}
+        data-no-rise={isSignIn ? "true" : undefined}
+      >
         {children}
       </div>
     </div>
@@ -201,7 +200,6 @@ export default function App() {
           elements — which is why it wraps the routes AND the navbar
           (the navbar is safe: the engine skips anything inside <nav>). */}
       <AutoRiseProvider>
-      <style>{PAGE_RISE_CSS}</style>
       <ScrollToTop />
       <ConditionalNavbar />
       <BagDrawer open={isBagOpen} onClose={closeBag} />

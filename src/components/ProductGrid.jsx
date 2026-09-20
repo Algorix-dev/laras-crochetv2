@@ -51,12 +51,15 @@ export default function ProductGrid({ products, columns = 2, cardVariant = 'defa
         rowGap: "clamp(2.5rem, 5.21vw, 6.25rem)",
       }}
     >
-      {products.map((product, i) => (
-        // TIP: staggering the delay by index (i * 0.08) is what
-        // makes the cards feel like they're arriving one after
-        // another rather than all popping in at once — a small
-        // touch that reads as "designed," not just "animated."
-        <Reveal key={product.id} delay={(i % 3) * 0.05}>
+      {/* TIP: each card is wrapped in <Reveal>, which marks it for the
+          global rise engine (utils/scrollReveal.js). Cards that come into
+          view together are sorted row by row, left to right, and each one
+          starts a beat after the previous - so a row of cards rises one by
+          one, and it plays again every time the grid is scrolled back into
+          view. The old per-index delay is gone: the engine's stagger
+          already does it, and adding both made the last card wait too long. */}
+      {products.map((product) => (
+        <Reveal key={product.id}>
           <ProductCard product={product} variant={cardVariant} isPlaceholder={isPlaceholder} />
         </Reveal>
       ))}

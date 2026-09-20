@@ -82,6 +82,22 @@ import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
 const NAVBAR_HEIGHT_PX = 66;
 
 /*
+  TIP — svh, NOT vh (mobile fix):
+  On phones, 100vh is the height with the browser's address bar HIDDEN, so
+  a pinned box sized 100vh is taller than what you can actually see while
+  the bar is showing (its bottom - and whatever is centred in it - ends up
+  under the toolbar), and it jumps every time the bar slides away. 100svh
+  is the always-visible height and never changes while scrolling. Browsers
+  too old to know svh fall back to vh.
+*/
+const VH_UNIT =
+  typeof CSS !== "undefined" &&
+  typeof CSS.supports === "function" &&
+  CSS.supports("height", "100svh")
+    ? "svh"
+    : "vh";
+
+/*
   Scroll track for the WHOLE pinned sequence — wordmark, photos,
   paragraph, AND now the reviews (shown 3 at a time). Everything
   from Lara fading in to the last review batch fading out lives
@@ -311,6 +327,32 @@ function getReviewRowReveal(rowIndex, progress) {
   const y = lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(rowT));
 
   return { opacity: rowT, y };
+}
+
+/*
+  PHONES (below 640px): nine cards stacked in one column are ~1,900px tall,
+  but the pinned stage is only one screen high, so most of them ended up
+  off-screen and unreadable. On a narrow screen the reviews are therefore
+  shown ONE ROW OF 3 AT A TIME instead: each row fades/rises in, holds, and
+  fades out as the next row takes its place (the last row stays until the
+  whole grid fades out, like on desktop). Same scroll window as desktop
+  (REVIEWS_REVEAL_START -> REVIEWS_HOLD_END), just split into 3 turns.
+*/
+function getReviewRowRevealNarrow(rowIndex, progress) {
+  const span = (REVIEWS_HOLD_END - REVIEWS_REVEAL_START) / REVIEW_ROWS_COUNT;
+  const start = REVIEWS_REVEAL_START + rowIndex * span;
+  const end = start + span;
+  const fade = span * 0.18;
+
+  const inT = clamp01((progress - start) / fade);
+  const isLast = rowIndex === REVIEW_ROWS_COUNT - 1;
+  const outT = isLast ? 0 : clamp01((progress - (end - fade)) / fade);
+
+  const y =
+    lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(inT)) -
+    lerp(0, REVIEW_CARD_RISE_PX, easeInOutCubic(outT));
+
+  return { opacity: inT * (1 - outT), y };
 }
 
 /*
@@ -549,13 +591,41 @@ let showcaseCompletedThisPageVisit = false;
 */
 
 // Each LETTER animates over this fraction of the paragraph's scroll
-// window, so neighbouring letters overlap into a smooth wave.
+// window; neighbouring letters overlap into a wave.
 // TIP: this is the knob for how "wide" the wave feels. There are ~350
-// letters vs ~60 words, so at 0.12 roughly a line and a half of text is
-// mid-rise at any moment. Lower it (try 0.06) for a tighter, more
-// obviously letter-by-letter ripple; raise it for a softer fade.
-const LETTER_WINDOW = 0.12;
-const WORD_RISE_PX = 18; // how far below its resting spot each letter starts
+// letters, so at 0.10 roughly 35 letters (a line and a bit) are in flight
+// at any moment. Lower it (0.06) for a tighter, more obviously
+// letter-by-letter ripple; raise it (0.16) for a softer wave.
+const LETTER_WINDOW = 0.1;
+
+/*
+  TIP — WHERE EACH LETTER COMES FROM:
+  Every letter starts BELOW THE BOTTOM OF THE SCREEN and rises to its place.
+  (It used to start only 18px under its resting spot, so the whole
+  paragraph just looked like it was straightening out of a wobbly line.)
+  The start distance is measured from the paragraph's resting position,
+  which is roughly the middle of the screen, so
+      distance = LETTER_RISE_VH * screen height + LETTER_RISE_EXTRA_PX
+  puts every letter just past the bottom edge. Lower LETTER_RISE_VH (0.3)
+  and they start higher up the screen; 0.55 = from the very bottom.
+*/
+const LETTER_RISE_VH = 0.55;
+const LETTER_RISE_EXTRA_PX = 40;
+
+// A letter fades in over the first part of its own flight, so you SEE it
+// travelling instead of it appearing already in place.
+const LETTER_FADE_IN_FRACTION = 0.35;
+
+// Kept in a module variable (and refreshed on resize by the component) so
+// the ~350 letters don't each read window.innerHeight every frame.
+let letterRisePx = 640;
+
+function refreshLetterRise() {
+  if (typeof window === "undefined") return;
+  letterRisePx = Math.round(
+    window.innerHeight * LETTER_RISE_VH + LETTER_RISE_EXTRA_PX
+  );
+}
 
 function Letter({ progress, globalIndex, totalLetters, children }) {
   const t = useTransform(progress, (p) => {
@@ -566,15 +636,16 @@ function Letter({ progress, globalIndex, totalLetters, children }) {
     return clamp01((rangeT - start) / LETTER_WINDOW);
   });
 
-  // Rises up from underneath: starts WORD_RISE_PX below its resting spot
-  // and settles into place (same easing as the old word version).
-  const y = useTransform(t, (v) => (1 - easeOutCubic(v)) * WORD_RISE_PX);
+  // Rises up from below the screen and settles into place (ease-out, so it
+  // decelerates as it lands).
+  const y = useTransform(t, (v) => (1 - easeOutCubic(v)) * letterRisePx);
+  const opacity = useTransform(t, (v) => clamp01(v / LETTER_FADE_IN_FRACTION));
 
   // TIP: `inline-block`, NOT plain `inline`. CSS transforms (which is what
   // framer-motion's `y` becomes) are ignored on non-replaced inline
   // elements, so an `inline` letter would fade in but never actually rise.
   return (
-    <motion.span className="inline-block" style={{ opacity: t, y }}>
+    <motion.span className="inline-block" style={{ opacity, y }}>
       {children}
     </motion.span>
   );
@@ -659,7 +730,19 @@ function ReviewCard({ testimonial, rowIndex, progress }) {
       className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center"
       style={{ opacity, y }}
     >
-      <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
+      <ReviewCardBody testimonial={testimonial} />
+    </motion.div>
+  );
+}
+
+function ReviewCardBody({ testimonial, compact = false }) {
+  return (
+    <>
+      <p
+        className={`text-[var(--ink)] ${
+          compact ? "mb-3 text-[13.5px] leading-[1.55]" : "mb-5 text-[15px] leading-[1.65]"
+        }`}
+      >
         "{testimonial.quote}"
       </p>
 
@@ -674,8 +757,56 @@ function ReviewCard({ testimonial, rowIndex, progress }) {
       </p>
 
       <p className="mt-1 text-xs text-[var(--muted)]">Verified Customer</p>
+    </>
+  );
+}
+
+// PHONES ONLY: one row of 3 cards, stacked, shown on its own turn (see
+// getReviewRowRevealNarrow above). All three rows sit on top of each other
+// and cross-fade.
+function NarrowReviewRow({ row, rowIndex, progress }) {
+  const reveal = useTransform(progress, (p) =>
+    getReviewRowRevealNarrow(rowIndex, p)
+  );
+  const opacity = useTransform(reveal, (r) => r.opacity);
+  const y = useTransform(reveal, (r) => r.y);
+
+  return (
+    <motion.div
+      className="absolute inset-0 flex flex-col justify-center gap-3"
+      style={{ opacity, y }}
+    >
+      {row.map((testimonial) => (
+        <div
+          key={testimonial.name}
+          className="border border-[var(--line)] bg-[var(--cream)] p-4 text-center"
+        >
+          <ReviewCardBody testimonial={testimonial} compact />
+        </div>
+      ))}
     </motion.div>
   );
+}
+
+// Matches Tailwind's `sm` breakpoint (640px): below it the reviews grid is
+// one column.
+const NARROW_QUERY = "(max-width: 639px)";
+
+function useIsNarrow() {
+  const [isNarrow, setIsNarrow] = useState(
+    () =>
+      typeof window !== "undefined" && window.matchMedia(NARROW_QUERY).matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_QUERY);
+    const onChange = (event) => setIsNarrow(event.matches);
+    setIsNarrow(mq.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+
+  return isNarrow;
 }
 
 /* ============================================================
@@ -726,6 +857,16 @@ export default function LaraShowcase() {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+
+  const isNarrow = useIsNarrow();
+
+  // Letters start a screen-height below their spot (see LETTER_RISE_VH), so
+  // keep that distance in step with the screen size.
+  useEffect(() => {
+    refreshLetterRise();
+    window.addEventListener("resize", refreshLetterRise);
+    return () => window.removeEventListener("resize", refreshLetterRise);
+  }, []);
 
   const { result: letterParagraphs, totalLetters } = useMemo(
     () => buildLetterParagraphs(PARAGRAPHS),
@@ -1014,8 +1155,12 @@ export default function LaraShowcase() {
         {/* TIP: scrollReveal.js skips anything inside #lara-showcase (this
             section is pinned + scroll-scrubbed by its own code), but no
             element actually had that id, so the exclusion matched nothing.
-            The id makes it real, in both the static and animated markup. */}
-        <section id="lara-showcase" className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
+            The id makes it real for the ANIMATED markup below. The static
+            markup deliberately uses a DIFFERENT id (lara-showcase-static)
+            so the engine no longer skips it: once the pinned sequence is
+            done, the compact Lara / paragraph blocks rise like everything
+            else instead of just sitting there. */}
+        <section id="lara-showcase-static" className="w-full bg-[var(--cream)]">{laraAndParagraphStatic}</section>
         {reviewsStatic}
       </>
     );
@@ -1028,14 +1173,14 @@ export default function LaraShowcase() {
   let containerStyle;
 
   if (pinState === "before") {
-    containerStyle = { position: "relative", height: "100vh" };
+    containerStyle = { position: "relative", height: `100${VH_UNIT}` };
   } else if (pinState === "pinned") {
     containerStyle = {
       position: "fixed",
       top: NAVBAR_HEIGHT_PX,
       left: 0,
       right: 0,
-      height: `calc(100vh - ${NAVBAR_HEIGHT_PX}px)`,
+      height: `calc(100${VH_UNIT} - ${NAVBAR_HEIGHT_PX}px)`,
       zIndex: 10,
     };
   } else {
@@ -1044,7 +1189,7 @@ export default function LaraShowcase() {
       top: afterTopRef.current,
       left: 0,
       right: 0,
-      height: "100vh",
+      height: `100${VH_UNIT}`,
     };
   }
 
@@ -1055,8 +1200,8 @@ export default function LaraShowcase() {
       <section
         id="lara-showcase"
         ref={wrapperRef}
-        className="relative w-full bg-[var(--cream)]"
-        style={{ height: `${TRACK_VH}vh` }}
+        className="relative w-full overflow-x-clip bg-[var(--cream)]"
+        style={{ height: `${TRACK_VH}${VH_UNIT}` }}
       >
         <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
           <div className="relative h-full w-full">
@@ -1140,18 +1285,32 @@ export default function LaraShowcase() {
                 pointerEvents: "none",
               }}
             >
-              <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 sm:grid-cols-3">
-                {REVIEW_ROWS.map((row, rowIndex) =>
-                  row.map((testimonial) => (
-                    <ReviewCard
-                      key={testimonial.name}
-                      testimonial={testimonial}
+              {isNarrow ? (
+                // PHONES: one row of 3 at a time, cross-fading in place.
+                <div className="relative mx-auto h-full w-full max-w-md">
+                  {REVIEW_ROWS.map((row, rowIndex) => (
+                    <NarrowReviewRow
+                      key={rowIndex}
+                      row={row}
                       rowIndex={rowIndex}
                       progress={progress}
                     />
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 sm:grid-cols-3">
+                  {REVIEW_ROWS.map((row, rowIndex) =>
+                    row.map((testimonial) => (
+                      <ReviewCard
+                        key={testimonial.name}
+                        testimonial={testimonial}
+                        rowIndex={rowIndex}
+                        progress={progress}
+                      />
+                    ))
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         </div>

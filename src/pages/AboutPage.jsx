@@ -6,7 +6,18 @@ import Footer from "../components/Footer";
 export default function AboutPage() {
   return (
     <>
-      <main className="flex flex-col md:flex-row md:items-stretch">
+      {/* TIP — RIGHT COLUMN ALWAYS CENTRED:
+          from md up, <main> is now at least as tall as the space between
+          the navbar (66px) and the bottom of the screen, and the right
+          column below is a flex box with items-center. So the content sits
+          in the middle with EQUAL space above (down from the navbar) and
+          below (up from the bottom of the screen), on any screen height.
+          If the content is taller than that space (a short laptop) the
+          page simply scrolls, and the top and bottom padding are still
+          equal because the section's py-* is symmetrical.
+          100dvh (not 100vh) so it stays right when a phone/tablet browser
+          bar shows or hides; the 66px matches the fixed navbar height. */}
+      <main className="flex flex-col md:min-h-[calc(100dvh-66px)] md:flex-row md:items-stretch">
         {/* Left image — desktop only. On mobile, Figma wants the heading
             first and this photo second, so it's hidden here and a mobile-
             only copy is rendered inline below instead of restructuring the
