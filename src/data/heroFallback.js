@@ -26,10 +26,18 @@ import model5 from "../assets/model-images/model-sienna.webp";
 import model6 from "../assets/model-images/model-amber.webp";
 import heroCenter from "../assets/reina-front.webp";
 
+// FRONT-FACING photos (cut out, cropped head-to-toe like reina-front.webp).
+// These are what each model shows when it is in the MIDDLE of the hero;
+// the older model-*.webp photos above are the turned, side-of-the-row ones.
+import coralFront from "../assets/model-images/front-coral.webp";
+import amberFront from "../assets/model-images/front-amber.webp";
+import siennaFront from "../assets/model-images/front-sienna.webp";
+import marinaFront from "../assets/model-images/front-marina.webp";
+
 export const FALLBACK_HERO_MODELS = [
-  { id: "fallback-coral", name: "Coral", price: 70000, views: { front: null, left: model2, right: null } },
-  { id: "fallback-amber", name: "Amber", price: 70000, views: { front: null, left: model6, right: null } },
+  { id: "fallback-coral", name: "Coral", price: 70000, views: { front: coralFront, left: model2, right: null } },
+  { id: "fallback-amber", name: "Amber", price: 70000, views: { front: amberFront, left: model6, right: null } },
   { id: "fallback-reina", name: "Reina", price: 70000, views: { front: heroCenter, left: null, right: null } },
-  { id: "fallback-sienna", name: "Sienna", price: 70000, views: { front: null, left: null, right: model5 } },
-  { id: "fallback-marina", name: "Marina", price: 70000, views: { front: null, left: null, right: model3 } },
+  { id: "fallback-sienna", name: "Sienna", price: 70000, views: { front: siennaFront, left: null, right: model5 } },
+  { id: "fallback-marina", name: "Marina", price: 70000, views: { front: marinaFront, left: null, right: model3 } },
 ];
