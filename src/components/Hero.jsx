@@ -81,6 +81,14 @@ const WRAP_EXIT_FRACTION = 0.4;
 // front-facing photo as it arrives in / leaves the middle slot.
 const FACE_FADE_SECONDS = 0.5;
 
+// SWIPE (touch screens): a horizontal drag at least this many pixels long,
+// and clearly more sideways than up/down, counts as a swipe. Lower
+// SWIPE_MIN_PX to make it more sensitive, raise it to need a longer drag.
+const SWIPE_MIN_PX = 40;
+// "clearly more sideways": the sideways distance must be at least this
+// many times the up/down distance, so scrolling the page never triggers it.
+const SWIPE_SIDEWAYS_RATIO = 1.4;
+
 // Name + price: fade OUT as the clicked model starts moving, then fade IN
 // after a short delay so it appears while the model is still settling into
 // the middle — never before it has started to arrive.
@@ -338,11 +346,46 @@ function HeroModel({
   const edge = half + 1; // the invisible waiting slot
 
   const hasFront = Boolean(model.views.front);
+
+  // Is this model being carried off one end of the row to reappear at the
+  // other (the loop-around)? Same test the animation below uses.
+  const isLooped = moveId > 0 && prevOffset + shift !== offset;
+
+  /*
+    TIP — DON'T LET THE PHOTO FLIP WHILE YOU CAN SEE IT (loop-around):
+    a model that wraps from one edge to the other has to change from its
+    "facing left" photo to its "facing right" one (or the reverse). It used
+    to change the instant the click happened, while the model was still
+    half visible and only just starting to fade out, so you saw it turn
+    around. Now it keeps its OLD photo until it has faded out completely
+    (the same moment its tilt / size / blur are switched, see switchDelay
+    below), and only then takes the new one.
+  */
+  const [swappedFor, setSwappedFor] = useState(0); // moveId whose photo swap is done
+  useEffect(() => {
+    if (!isLooped || reduceMotion) return undefined;
+    const timer = window.setTimeout(
+      () => setSwappedFor(moveId),
+      // +30ms so we are safely past the fade-out (it ends at this moment)
+      WRAP_DURATION_SECONDS * WRAP_EXIT_FRACTION * 1000 + 30
+    );
+    return () => window.clearTimeout(timer);
+  }, [isLooped, moveId, reduceMotion]);
+  const viewOffset =
+    isLooped && !reduceMotion && swappedFor !== moveId ? prevOffset : offset;
+
   // With a front photo, the side photo fades out at the middle, so let it
   // keep the direction it arrived with. Without one, it must stay as-is.
-  const view = getViews(model, hasFront ? offset || prevOffset : offset);
+  const view = getViews(model, hasFront ? viewOffset || prevOffset : viewOffset);
   const fade = {
     duration: reduceMotion ? 0 : FACE_FADE_SECONDS,
+    ease: "easeInOut",
+  };
+  // How the side photo changes when its source changes. A looped model
+  // swaps while invisible, so it must be instant (its own fade-in is
+  // already handled by the row animation); anything else cross-fades.
+  const sideFade = {
+    duration: reduceMotion || isLooped ? 0 : FACE_FADE_SECONDS,
     ease: "easeInOut",
   };
 
@@ -488,18 +531,30 @@ function HeroModel({
       "
     >
       <div className={`relative w-full ${IMAGE_HEIGHT_SELECTED}`}>
-        <motion.img
-          src={view.side}
-          decoding="async"
-          draggable={false}
-          alt=""
-          initial={false}
-          animate={{ opacity: isSelected && hasFront ? 0 : 1 }}
-          transition={fade}
-          className={`absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2 select-none object-contain ${
-            view.mirror ? "-scale-x-100" : ""
-          }`}
-        />
+        {/* TIP — CROSS-FADE WHEN A VISIBLE MODEL CHANGES DIRECTION:
+            keyed by the photo (+ whether it is mirrored), so when the photo
+            changes React keeps the old <img> around while it fades out and
+            fades the new one in on top, instead of swapping them in one
+            frame. This is what a model does when a click carries it ACROSS
+            the middle (e.g. from the right side to the left side). */}
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={`${view.side}|${view.mirror}`}
+            src={view.side}
+            decoding="async"
+            draggable={false}
+            alt=""
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: isSelected && hasFront ? 0 : 1,
+              transition: sideFade,
+            }}
+            exit={{ opacity: 0, transition: sideFade }}
+            className={`absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2 select-none object-contain ${
+              view.mirror ? "-scale-x-100" : ""
+            }`}
+          />
+        </AnimatePresence>
 
         {hasFront && (
           <motion.img
@@ -625,6 +680,75 @@ function HeroCarousel({ models }) {
     });
   }
 
+  /* -------------------- swipe + arrow keys -------------------- */
+
+  /*
+    TIP — HOW SWIPING WORKS: it doesn't move anything by itself. A swipe
+    just works out which model is next door and "clicks" it, so it uses the
+    exact same glide, text swap and podium ripple as tapping that model.
+      swipe LEFT  (finger moves left)  -> the model on the RIGHT comes in
+      swipe RIGHT (finger moves right) -> the model on the LEFT comes in
+    The row has `touch-action: pan-y` (see below), which tells the browser
+    "you handle up/down scrolling, I'll handle sideways drags". Without it
+    the browser would cancel the gesture the moment a finger drifted, and
+    the page would try to pan sideways.
+  */
+  const swipeStart = useRef(null);
+  const justSwiped = useRef(false);
+
+  function goToNeighbour(direction) {
+    // direction: +1 = the model on the right, -1 = the one on the left
+    const at = (d) =>
+      models.find((_, index) => wrapOffset(index - nav.active, count) === d);
+    // with exactly two models the other one only exists on one side, so
+    // a swipe either way should bring it in
+    const target = at(direction) ?? (count === 2 ? at(-direction) : undefined);
+    if (target) handleSelect(target.id);
+  }
+
+  const swipeHandlers = {
+    onPointerDown: (event) => {
+      // touch / pen only: with a mouse, clicking a model already works and
+      // dragging would fight with selecting text
+      if (event.pointerType === "mouse" || !event.isPrimary) return;
+      swipeStart.current = { x: event.clientX, y: event.clientY };
+    },
+    onPointerUp: (event) => {
+      const start = swipeStart.current;
+      swipeStart.current = null;
+      if (!start) return;
+
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      if (Math.abs(dx) < SWIPE_MIN_PX) return;
+      if (Math.abs(dx) < Math.abs(dy) * SWIPE_SIDEWAYS_RATIO) return;
+
+      // a swipe that starts and ends on the same model would ALSO fire a
+      // click on it, moving the carousel twice; swallow that next click
+      justSwiped.current = true;
+      window.setTimeout(() => {
+        justSwiped.current = false;
+      }, 350);
+
+      goToNeighbour(dx < 0 ? 1 : -1);
+    },
+    onPointerCancel: () => {
+      swipeStart.current = null;
+    },
+    onClickCapture: (event) => {
+      if (justSwiped.current) {
+        event.preventDefault();
+        event.stopPropagation();
+        justSwiped.current = false;
+      }
+    },
+    // keyboard users: left / right arrows while a model is focused
+    onKeyDown: (event) => {
+      if (event.key === "ArrowRight") goToNeighbour(1);
+      else if (event.key === "ArrowLeft") goToNeighbour(-1);
+    },
+  };
+
   // Once a move has finished, forget it — otherwise a later window
   // resize would replay the loop-around path for models that wrapped.
   useEffect(() => {
@@ -684,6 +808,10 @@ function HeroCarousel({ models }) {
         <div
           ref={rowRef}
           className={`relative w-full ${IMAGE_HEIGHT_SELECTED}`}
+          // TIP: pan-y = vertical page scrolling stays with the browser,
+          // sideways drags come to us (see the swipe notes above)
+          style={{ touchAction: "pan-y" }}
+          {...swipeHandlers}
         >
 
           {/* ==============================================
