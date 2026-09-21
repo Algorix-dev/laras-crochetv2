@@ -1022,7 +1022,7 @@ function HeroCarousel({ models }) {
               "
               style={{
                 background:
-                  "radial-gradient(ellipse 70% 65% at 50% 45%, rgba(76,5,25,0.14), rgba(76,5,25,0.03) 60%, transparent 80%)",
+                  "radial-gradient(ellipse 70% 65% at 50% 45%, rgba(76,5,25,0.05), rgba(76,5,25,0.03) 60%, transparent 80%)",
                 filter: "blur(6px)",
               }}
             />
