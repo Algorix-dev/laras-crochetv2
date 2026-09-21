@@ -50,8 +50,10 @@ const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
   wide, where the content fills it; on a phone the content ends ~440px
   sooner, so that much empty space sat between the button and the footer.
   Now the minimum only applies from md (768px) up; on phones the section is
-  exactly as tall as its content plus pb-10 (40px) of breathing room. Change
-  pb-10 to taste.
+  exactly as tall as its content plus pb-[139px] of space under the button.
+  139 + the footer's own 24px top padding puts the newsletter heading about
+  171px under the button, which is the gap in Lara's phone footer design.
+  Lower the 139 for a tighter gap.
 */
 export default function CustomOrderBanner() {
   return (
@@ -60,7 +62,7 @@ export default function CustomOrderBanner() {
       className="
         relative
         min-h-0
-        pb-10
+        pb-[139px]
         md:min-h-[1098px]
         md:pb-0
         w-full
@@ -371,7 +373,8 @@ export default function CustomOrderBanner() {
             className="
               flex
               h-[46px]
-              w-[245px]
+              w-full
+              md:w-[245px]
               items-center
               justify-center
               gap-[10px]
@@ -379,6 +382,7 @@ export default function CustomOrderBanner() {
               px-[40px]
               text-[16px]
               font-bold
+              max-md:uppercase
               text-[#FAFAFA]
               transition-opacity
               duration-200
