@@ -1,0 +1,68 @@
+/*
+  LARA'S ADMIN — design tokens
+
+  TIP: every colour below was sampled from Lara's Figma (Dashboard and
+  Order Management, the two screens she already re-coloured). The screens
+  that still had the template's green / "Dealport" branding use the same
+  mapping:
+      template green (buttons, active menu item)  ->  --a-maroon
+      template pale green (table heads, tabs)     ->  --a-pink
+  Change a colour here and the whole admin follows.
+*/
+.admin-root {
+  --a-maroon: #412b2d;
+  --a-maroon-dark: #2f1f21;
+  --a-pink: #ffe4e6;
+  --a-ink: #023337; /* headings + big numbers */
+  --a-text: #23272e;
+  --a-muted: #6a717f;
+  --a-bg: #f9fafb;
+  --a-line: #e5e7eb;
+  --a-line-strong: #d1d5db;
+  --a-green: #21c45d;
+  --a-red: #ef4343;
+  --a-amber: #f59f0a;
+  --a-yellow: #f0d411;
+  --a-blue: #6366f1;
+  --a-chart: #4ea674;
+
+  font-family: "Lato", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--a-text);
+  background: var(--a-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.admin-root *,
+.admin-root *::before,
+.admin-root *::after {
+  letter-spacing: 0;
+}
+
+/* thin scrollbars inside the sidebar and wide tables */
+.admin-root .a-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.admin-root input::placeholder,
+.admin-root textarea::placeholder {
+  color: #8b909a;
+}
+
+.admin-root :focus-visible {
+  outline: 2px solid var(--a-maroon);
+  outline-offset: 2px;
+}
+
+/* the chart tooltip fades in when you move between days */
+@keyframes a-pop {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.admin-root .a-pop {
+  animation: a-pop 0.18s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-root .a-pop { animation: none; }
+}

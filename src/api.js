@@ -132,16 +132,66 @@ export function toHeroModel(product) {
 }
 
 /* ============================================================
-   ADMIN — used only by pages/AdminPage.jsx
+   ADMIN — used only by src/admin/*
    ============================================================ */
 
 const ADMIN_TOKEN_KEY = "laras-admin-token";
 
+const ADMIN_PROFILE_KEY = "laras-admin-profile";
+
 export const adminSession = {
   get: () => localStorage.getItem(ADMIN_TOKEN_KEY),
   set: (token) => localStorage.setItem(ADMIN_TOKEN_KEY, token),
-  clear: () => localStorage.removeItem(ADMIN_TOKEN_KEY),
+  clear: () => {
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    localStorage.removeItem(ADMIN_PROFILE_KEY);
+  },
+  // { name, email } from the login response — shown in the sidebar and on
+  // the Admin role page. (The login route already sends them back.)
+  profile: () => {
+    try {
+      return JSON.parse(localStorage.getItem(ADMIN_PROFILE_KEY)) || null;
+    } catch {
+      return null;
+    }
+  },
+  setProfile: (profile) => localStorage.setItem(ADMIN_PROFILE_KEY, JSON.stringify(profile)),
 };
+
+// one place for the "send the admin token, turn a 401 into SESSION_EXPIRED" dance
+async function adminRequest(path, options = {}) {
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${adminSession.get()}`,
+      ...options.headers,
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) throw new Error("SESSION_EXPIRED");
+  if (!res.ok) throw new Error(data.error || "Something went wrong");
+  return data;
+}
+
+// every order (newest first) — GET /api/orders is admin-only
+export const getAdminOrders = () => adminRequest("/api/orders");
+
+// e.g. updateOrderStatus(order._id, "shipped")
+export const updateOrderStatus = (id, status) =>
+  adminRequest(`/api/orders/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) });
+
+// visitor numbers for the dashboard (see server/routes/analytics.js)
+export const getAnalyticsSummary = () => adminRequest("/api/analytics/summary");
+
+// the signed-in admin changes their own password / display name
+export const changeAdminPassword = (currentPassword, newPassword) =>
+  adminRequest("/api/auth/password", { method: "PUT", body: JSON.stringify({ currentPassword, newPassword }) });
+export const updateAdminName = (name) =>
+  adminRequest("/api/auth/profile", { method: "PUT", body: JSON.stringify({ name }) });
+
+// "soft delete" on the server: the piece is hidden from the shop, not erased
+export const deleteProduct = (id) => adminRequest(`/api/products/${id}`, { method: "DELETE" });
 
 export async function adminLogin(email, password) {
   const res = await fetch(`${API_URL}/api/auth/login`, {

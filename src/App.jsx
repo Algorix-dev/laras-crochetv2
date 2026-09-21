@@ -21,7 +21,8 @@ import AccountPage from "./pages/AccountPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ShopPage from "./pages/ShopPage";
-import AdminPage from "./pages/AdminPage";
+import AdminApp from "./admin/AdminApp";
+import VisitorTracker from "./components/VisitorTracker";
 import ProductDetail from "./pages/ProductDetail";
 import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
@@ -45,7 +46,7 @@ function ScrollToTop() {
 // landing page, gets the normal site nav.
 function ConditionalNavbar() {
   const { pathname } = useLocation();
-  if (pathname === "/signin" || pathname === "/admin") return null;
+  if (pathname === "/signin" || pathname.startsWith("/admin")) return null;
   return <Navbar />;
 }
 
@@ -191,11 +192,11 @@ function HomePage() {
 function PageOffset({ children }) {
   const { pathname } = useLocation();
   // /signin and /admin are standalone screens: no navbar, no scroll-rise
-  const isSignIn = pathname === "/signin" || pathname === "/admin";
+  const isSignIn = pathname === "/signin" || pathname.startsWith("/admin");
   return (
     <div className={isSignIn ? "" : "pt-[66px]"}>
       <div
-        key={pathname}
+        key={pathname.startsWith("/admin") ? "admin" : pathname}
         data-page={isSignIn ? undefined : "true"}
         data-no-rise={isSignIn ? "true" : undefined}
       >
@@ -226,6 +227,7 @@ export default function App() {
           (the navbar is safe: the engine skips anything inside <nav>). */}
       <AutoRiseProvider>
       <ScrollToTop />
+      <VisitorTracker />
       <ConditionalNavbar />
       <BagDrawer open={isBagOpen} onClose={closeBag} />
       <PageOffset><Routes>
@@ -236,7 +238,7 @@ export default function App() {
         <Route path="/signin" element={<SignInPage />} />
         {/* Lara's page for adding / editing pieces — not linked anywhere;
             she signs in with the admin account from server/seedAdmin.js */}
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/*" element={<AdminApp />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/addresses" element={<AddressesPage />} />
 
