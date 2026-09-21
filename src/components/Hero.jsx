@@ -2,9 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
-  useMotionValue,
   useReducedMotion,
-  useSpring,
 } from "framer-motion";
 
 /* ============================================================
@@ -94,15 +92,6 @@ const SWIPE_MIN_PX = 40;
 // "clearly more sideways": the sideways distance must be at least this
 // many times the up/down distance, so scrolling the page never triggers it.
 const SWIPE_SIDEWAYS_RATIO = 1.4;
-
-// THE ASH DOT (the soft grey circle from Lara's reference video): it
-// follows the mouse over the models, grows over a model you can click,
-// squeezes when you press, and sends out a ripple on every click. On a
-// touch screen it appears under your finger for taps and swipes.
-const CURSOR_DOT_MOUSE_PX = 28;
-const CURSOR_DOT_TOUCH_PX = 44;
-// how "floaty" it follows the mouse: lower stiffness = more lag
-const CURSOR_SPRING = { stiffness: 650, damping: 42, mass: 0.6 };
 
 // Name + price: fade OUT as the clicked model starts moving, then fade IN
 // after a short delay so it appears while the model is still settling into
@@ -817,63 +806,6 @@ function HeroCarousel({ models }) {
   const swipeStart = useRef(null);
   const justSwiped = useRef(false);
 
-  /*
-    TIP — THE ASH DOT. Its position lives in motion values (updating those
-    never re-renders React, so following the mouse is free); React state only
-    holds the few things that change how it LOOKS: shown / pressed / over a
-    clickable model / touch or mouse. `springX/Y` trail the raw position a
-    little for the floaty mouse feel; a finger is followed exactly instead.
-  */
-  const cursorX = useMotionValue(0);
-  const cursorY = useMotionValue(0);
-  const springX = useSpring(cursorX, CURSOR_SPRING);
-  const springY = useSpring(cursorY, CURSOR_SPRING);
-  const [cursor, setCursor] = useState({
-    show: false,
-    touch: false,
-    pressed: false,
-    over: false,
-  });
-  const [ripples, setRipples] = useState([]);
-  const rippleCount = useRef(0);
-  const touching = useRef(false);
-  const hideTimer = useRef(null);
-
-  function patchCursor(patch) {
-    setCursor((current) =>
-      Object.keys(patch).every((key) => current[key] === patch[key])
-        ? current
-        : { ...current, ...patch }
-    );
-  }
-
-  function placeCursor(event, snap) {
-    const box = rowRef.current?.getBoundingClientRect();
-    if (!box) return;
-    const x = event.clientX - box.left;
-    const y = event.clientY - box.top;
-    cursorX.set(x);
-    cursorY.set(y);
-    if (snap) {
-      // appear exactly where the pointer is, instead of gliding in from
-      // wherever the dot was last seen
-      springX.jump(x);
-      springY.jump(y);
-    }
-  }
-
-  function addRipple(event) {
-    const box = rowRef.current?.getBoundingClientRect();
-    if (!box) return;
-    rippleCount.current += 1;
-    const ripple = {
-      id: rippleCount.current,
-      x: event.clientX - box.left,
-      y: event.clientY - box.top,
-    };
-    setRipples((list) => [...list, ripple]);
-  }
-
   function goToNeighbour(direction) {
     // direction: +1 = the model on the right, -1 = the one on the left
     const at = (d) =>
@@ -885,53 +817,13 @@ function HeroCarousel({ models }) {
   }
 
   const swipeHandlers = {
-    onPointerEnter: (event) => {
-      if (event.pointerType !== "mouse") return;
-      placeCursor(event, true);
-      patchCursor({ show: true, touch: false });
-    },
-    onPointerMove: (event) => {
-      if (event.pointerType === "mouse") {
-        placeCursor(event, false);
-        // grow the dot over a model you can click (not the middle one)
-        const overModel = Boolean(
-          event.target.closest?.('button[aria-pressed="false"]')
-        );
-        patchCursor({ show: true, touch: false, over: overModel });
-      } else if (touching.current) {
-        placeCursor(event, false); // a finger is followed exactly
-      }
-    },
-    onPointerLeave: (event) => {
-      if (event.pointerType === "mouse") patchCursor({ show: false, over: false });
-    },
     onPointerDown: (event) => {
-      window.clearTimeout(hideTimer.current);
-      placeCursor(event, event.pointerType !== "mouse");
-      addRipple(event);
-      if (event.pointerType === "mouse") {
-        patchCursor({ show: true, touch: false, pressed: true });
-      } else {
-        touching.current = true;
-        patchCursor({ show: true, touch: true, pressed: true });
-      }
-
       // touch / pen only: with a mouse, clicking a model already works and
       // dragging would fight with selecting text
       if (event.pointerType === "mouse" || !event.isPrimary) return;
       swipeStart.current = { x: event.clientX, y: event.clientY };
     },
     onPointerUp: (event) => {
-      patchCursor({ pressed: false });
-      if (event.pointerType !== "mouse") {
-        touching.current = false;
-        // let the dot linger for a beat after the finger lifts, then fade
-        hideTimer.current = window.setTimeout(
-          () => patchCursor({ show: false }),
-          160
-        );
-      }
-
       const start = swipeStart.current;
       swipeStart.current = null;
       if (!start) return;
@@ -952,8 +844,6 @@ function HeroCarousel({ models }) {
     },
     onPointerCancel: () => {
       swipeStart.current = null;
-      touching.current = false;
-      patchCursor({ show: false, pressed: false });
     },
     onClickCapture: (event) => {
       if (justSwiped.current) {
@@ -1027,84 +917,12 @@ function HeroCarousel({ models }) {
 
         <div
           ref={rowRef}
-          // TIP: `cursor-none` (mouse devices only, and only when animations
-          // are allowed) hides the system arrow over the models because the
-          // ash dot takes its place. Delete both cursor-none classes to bring
-          // the normal arrow back while keeping the dot.
-          className={`relative w-full ${IMAGE_HEIGHT_SELECTED} ${
-            reduceMotion
-              ? ""
-              : "[@media(hover:hover)_and_(pointer:fine)]:cursor-none [@media(hover:hover)_and_(pointer:fine)]:[&_button]:cursor-none"
-          }`}
+          className={`relative w-full ${IMAGE_HEIGHT_SELECTED}`}
           // TIP: pan-y = vertical page scrolling stays with the browser,
           // sideways drags come to us (see the swipe notes above)
           style={{ touchAction: "pan-y" }}
           {...swipeHandlers}
         >
-          {/* ==============================================
-              THE ASH DOT — follows the mouse / your finger
-              ============================================== */}
-          {!reduceMotion && (
-            <>
-              <motion.div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-0 top-0 z-30"
-                style={{
-                  x: cursor.touch ? cursorX : springX,
-                  y: cursor.touch ? cursorY : springY,
-                }}
-              >
-                <motion.div
-                  initial={false}
-                  animate={{
-                    scale: !cursor.show
-                      ? 0
-                      : cursor.pressed
-                        ? 0.78
-                        : cursor.over
-                          ? 1.7
-                          : 1,
-                    opacity: cursor.show ? 1 : 0,
-                  }}
-                  transition={{ type: "spring", stiffness: 520, damping: 30 }}
-                  style={{
-                    width: cursor.touch ? CURSOR_DOT_TOUCH_PX : CURSOR_DOT_MOUSE_PX,
-                    height: cursor.touch ? CURSOR_DOT_TOUCH_PX : CURSOR_DOT_MOUSE_PX,
-                    marginLeft: -(cursor.touch ? CURSOR_DOT_TOUCH_PX : CURSOR_DOT_MOUSE_PX) / 2,
-                    marginTop: -(cursor.touch ? CURSOR_DOT_TOUCH_PX : CURSOR_DOT_MOUSE_PX) / 2,
-                    borderRadius: "9999px",
-                    background:
-                      "radial-gradient(circle at 35% 30%, #e6e6e6 0%, #adadad 62%, #8f8f8f 100%)",
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
-                  }}
-                />
-              </motion.div>
-
-              {ripples.map((ripple) => (
-                <motion.span
-                  key={ripple.id}
-                  aria-hidden="true"
-                  className="pointer-events-none absolute z-30 rounded-full border border-[#8f8f8f]"
-                  style={{
-                    left: ripple.x,
-                    top: ripple.y,
-                    width: 28,
-                    height: 28,
-                    marginLeft: -14,
-                    marginTop: -14,
-                  }}
-                  initial={{ scale: 0.6, opacity: 0.6 }}
-                  animate={{ scale: 3.2, opacity: 0 }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  onAnimationComplete={() =>
-                    setRipples((list) => list.filter((item) => item.id !== ripple.id))
-                  }
-                />
-              ))}
-            </>
-          )}
-
-
           {/* ==============================================
               MODEL NAME — fades out, then the new one fades in
 
@@ -1193,7 +1011,9 @@ function HeroCarousel({ models }) {
             "
           >
 
-            {/* Soft floor glow */}
+            {/* Soft floor glow — TIP: the dark shadow under the podium.
+                Peak strength is the first alpha (0.14; it was 0.35).
+                Lower it for an even lighter shadow, raise it for darker. */}
             <div
               className="
                 absolute
@@ -1202,7 +1022,7 @@ function HeroCarousel({ models }) {
               "
               style={{
                 background:
-                  "radial-gradient(ellipse 70% 65% at 50% 45%, rgba(76,5,25,0.35), rgba(76,5,25,0.08) 60%, transparent 80%)",
+                  "radial-gradient(ellipse 70% 65% at 50% 45%, rgba(76,5,25,0.14), rgba(76,5,25,0.03) 60%, transparent 80%)",
                 filter: "blur(6px)",
               }}
             />
