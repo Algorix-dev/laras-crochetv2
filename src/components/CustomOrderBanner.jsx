@@ -44,13 +44,25 @@ const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
    CUSTOM ORDER BANNER
    ============================================================ */
 
+/*
+  TIP — THE BIG GAP ABOVE THE FOOTER ON PHONES: this section used to be
+  `min-h-[1098px]` at every size. 1098px is the Figma's height at 1920px
+  wide, where the content fills it; on a phone the content ends ~440px
+  sooner, so that much empty space sat between the button and the footer.
+  Now the minimum only applies from md (768px) up; on phones the section is
+  exactly as tall as its content plus pb-10 (40px) of breathing room. Change
+  pb-10 to taste.
+*/
 export default function CustomOrderBanner() {
   return (
     <section
       id="custom-orders"
       className="
         relative
-        min-h-[1098px]
+        min-h-0
+        pb-10
+        md:min-h-[1098px]
+        md:pb-0
         w-full
         overflow-hidden
         bg-[#FAFAFA]

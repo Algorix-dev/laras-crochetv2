@@ -161,7 +161,7 @@ export default function ProductCard({ product, variant = 'default', isPlaceholde
             aria-pressed={inWishlist}
             aria-disabled={isPlaceholder}
             onClick={handleToggleWishlist}
-            className={`absolute left-5 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-[#EFE7E7] ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}`}
+            className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#EFE7E7] md:left-5 md:top-5 md:h-7 md:w-7 ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}`}
           >
             <Heart
               size={14}

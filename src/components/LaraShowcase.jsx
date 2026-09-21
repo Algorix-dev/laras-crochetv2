@@ -179,6 +179,12 @@ const REVIEWS_HOLD_END = 0.70;
 // TIMELINE_END (100vh stage + 900vh-per-unit of progress).
 const TRACK_VH = Math.round(100 + 900 * TIMELINE_END);
 
+// PHONES: only ONE row of three reviews is shown (nine cards don't fit a
+// phone screen, and Lara only wants three there), so the pinned track ends
+// sooner instead of holding an empty stretch. Raise it for a longer read time.
+const TIMELINE_END_NARROW = 0.62;
+const TRACK_VH_NARROW = Math.round(100 + 900 * TIMELINE_END_NARROW);
+
 // Gap kept between the last review row and whatever comes next.
 const TAIL_BREATHING_PX = 56;
 
@@ -328,21 +334,14 @@ function getReviewRowReveal(rowIndex, progress) {
   whole grid fades out, like on desktop). Same scroll window as desktop
   (REVIEWS_REVEAL_START -> REVIEWS_HOLD_END), just split into 3 turns.
 */
-function getReviewRowRevealNarrow(rowIndex, progress) {
-  const span = (REVIEWS_HOLD_END - REVIEWS_REVEAL_START) / REVIEW_ROWS_COUNT;
-  const start = REVIEWS_REVEAL_START + rowIndex * span;
-  const end = start + span;
-  const fade = span * 0.18;
+function getReviewRowRevealNarrow(progress) {
+  // TIP: phones now show ONE row of 3 reviews only. It rises in over
+  // `fade` of progress (about 40vh of scrolling) and then simply stays
+  // until the pin lets go, with no turns and no fade-out.
+  const fade = 0.045;
+  const inT = clamp01((progress - REVIEWS_REVEAL_START) / fade);
 
-  const inT = clamp01((progress - start) / fade);
-  const isLast = rowIndex === REVIEW_ROWS_COUNT - 1;
-  const outT = isLast ? 0 : clamp01((progress - (end - fade)) / fade);
-
-  const y =
-    lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(inT)) -
-    lerp(0, REVIEW_CARD_RISE_PX, easeInOutCubic(outT));
-
-  return { opacity: inT * (1 - outT), y };
+  return { opacity: inT, y: lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(inT)) };
 }
 
 /*
@@ -701,10 +700,8 @@ function ReviewCardBody({ testimonial, compact = false }) {
 // PHONES ONLY: one row of 3 cards, stacked, shown on its own turn (see
 // getReviewRowRevealNarrow above). All three rows sit on top of each other
 // and cross-fade.
-function NarrowReviewRow({ row, rowIndex, progress, innerRef }) {
-  const reveal = useTransform(progress, (p) =>
-    getReviewRowRevealNarrow(rowIndex, p)
-  );
+function NarrowReviewRow({ row, progress, innerRef }) {
+  const reveal = useTransform(progress, (p) => getReviewRowRevealNarrow(p));
   const opacity = useTransform(reveal, (r) => r.opacity);
   const y = useTransform(reveal, (r) => r.y);
 
@@ -812,6 +809,10 @@ export default function LaraShowcase() {
   );
 
   const isNarrow = useIsNarrow();
+  // where the pinned sequence ends and how tall its scroll track is:
+  // shorter on phones (only one row of reviews to show)
+  const timelineEnd = isNarrow ? TIMELINE_END_NARROW : TIMELINE_END;
+  const trackVh = isNarrow ? TRACK_VH_NARROW : TRACK_VH;
 
   const { result: wordParagraphs, totalWords } = useMemo(
     () => buildWordParagraphs(PARAGRAPHS),
@@ -990,13 +991,13 @@ export default function LaraShowcase() {
         // the middle, and photo 1 is already flying in by then.
         const approachWindow =
           pinnableRange > 0
-            ? (PRE_ROLL_END * pinnableRange) / (TIMELINE_END - PRE_ROLL_END)
+            ? (PRE_ROLL_END * pinnableRange) / (timelineEnd - PRE_ROLL_END)
             : window.innerHeight * 0.8;
         const distanceToEngage = rect.top - NAVBAR_HEIGHT_PX;
         next = clamp01(1 - distanceToEngage / approachWindow) * PRE_ROLL_END;
       } else if (rect.bottom <= NAVBAR_HEIGHT_PX + contentHeight) {
         nextState = "after";
-        next = TIMELINE_END;
+        next = timelineEnd;
         afterTopRef.current = Math.max(0, rect.height - contentHeight);
       } else {
         nextState = "pinned";
@@ -1008,7 +1009,7 @@ export default function LaraShowcase() {
           pinnableRange > 0
             ? clamp01((NAVBAR_HEIGHT_PX - rect.top) / pinnableRange)
             : 1;
-        next = lerp(PRE_ROLL_END, TIMELINE_END, pinnedT);
+        next = lerp(PRE_ROLL_END, timelineEnd, pinnedT);
       }
 
       // Only re-renders React when the pin state really changes.
@@ -1072,7 +1073,7 @@ export default function LaraShowcase() {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("load", onResize);
     };
-  }, [renderCompactFromStart, reduceMotion, liveCompleted, progress]);
+  }, [renderCompactFromStart, reduceMotion, liveCompleted, progress, timelineEnd]);
 
   /* ============================================================
      NORMAL FLOW — pin already finished
@@ -1094,11 +1095,11 @@ export default function LaraShowcase() {
             <img
               src={laraWordmark}
               alt="Lara's Crochet"
-              className="relative z-10 block h-auto w-full select-none"
+              className="relative z-10 block h-auto w-full select-none max-sm:scale-[1.35]"
             />
 
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 z-20 [--photo-scale:0.55] sm:[--photo-scale:1]"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-20 max-sm:top-[calc(100%+3.25rem)] [--photo-scale:0.9] sm:[--photo-scale:1]"
               style={{
                 width: `${PHOTO_WIDTH_PX}px`,
                 height: "103.72863006591797px",
@@ -1128,9 +1129,9 @@ export default function LaraShowcase() {
         </div>
 
         <div className="flex items-center justify-center pb-16 pt-6 md:pb-20">
-          <div className="mx-auto max-w-2xl text-center text-[20px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
+          <div className="mx-auto max-w-2xl text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
             {PARAGRAPHS.map((paragraph, index) => (
-              <p key={index} className={index === PARAGRAPHS.length - 1 ? "mt-8" : "mb-6"}>
+              <p key={index} className={index === PARAGRAPHS.length - 1 ? "mt-5 sm:mt-8" : "mb-4 sm:mb-6"}>
                 {paragraph}
               </p>
             ))}
@@ -1151,7 +1152,9 @@ export default function LaraShowcase() {
   const reviewsStatic = (
     <section ref={staticBottomRef} className={`w-full bg-[var(--cream)] pb-0 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
       <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-3">
-        {TESTIMONIALS.map((testimonial, index) => (
+        {/* TIP: phones only get the first three reviews (Lara's request); the
+            nine-card grid is for tablets and desktops. */}
+        {(isNarrow ? TESTIMONIALS.slice(0, 3) : TESTIMONIALS).map((testimonial, index) => (
           <div
             key={`${testimonial.name}-${index}`}
             // TIP: the old `lg:-translate-y-5` lifted the MIDDLE card of each
@@ -1251,7 +1254,7 @@ export default function LaraShowcase() {
         id="lara-showcase"
         ref={wrapperRef}
         className="relative w-full overflow-x-clip bg-[var(--cream)]"
-        style={{ height: `${TRACK_VH}${VH_UNIT}`, marginBottom: -tailOverlap }}
+        style={{ height: `${trackVh}${VH_UNIT}`, marginBottom: -tailOverlap }}
       >
         <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
           <div className="relative h-full w-full">
@@ -1278,18 +1281,21 @@ export default function LaraShowcase() {
                   src={laraWordmark}
                   alt="Lara's Crochet"
                   decoding="async"
-                  className="relative z-10 block h-auto w-full select-none pointer-events-none"
+                  className="relative z-10 block h-auto w-full select-none pointer-events-none max-sm:scale-[1.35]"
                 />
 
                 <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible [--photo-scale:0.55] sm:[--photo-scale:1]"
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible max-sm:top-[calc(100%+3.25rem)] [--photo-scale:0.9] sm:[--photo-scale:1]"
                   style={{
                     width: `${PHOTO_WIDTH_PX}px`,
                     height: "103.72863006591797px",
-                    // TIP: --photo-scale shrinks the whole photo cluster on
-                    // phones (0.55) because the wordmark is only ~350px wide
-                    // there, so full-size photos covered it. Change 0.55 in
-                    // the class above to make phone photos bigger/smaller.
+                    // TIP — PHONES: the wordmark is only ~350px wide there, so
+                    // photos sitting ON it covered the letters. On phones the
+                    // wordmark is enlarged (max-sm:scale-[1.35] on it) and this
+                    // cluster is moved to sit UNDER it (max-sm:top-[calc(100%+3.25rem)]),
+                    // at 90% size (--photo-scale:0.9). Change 0.9 in the class
+                    // above for bigger/smaller phone photos, and 3.25rem for
+                    // more/less gap between the wordmark and the photos.
                     transform: "translate(-50%, -50%) scale(var(--photo-scale, 1))",
                   }}
                 >
@@ -1314,7 +1320,9 @@ export default function LaraShowcase() {
                 pointerEvents: "none",
               }}
             >
-              <div className="mx-auto max-w-2xl text-center text-[20px] leading-[1.7] text-[var(--ink)] md:max-w-3xl">
+              {/* TIP: 15px on phones (it was 20px, which filled the whole screen),
+                  18px from sm, 20px from md. Change the first number for phones. */}
+              <div className="mx-auto max-w-2xl px-1 text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
                 {wordParagraphs.map((words, paragraphIndex) => (
                   <WordParagraph
                     key={paragraphIndex}
@@ -1322,7 +1330,7 @@ export default function LaraShowcase() {
                     progress={progress}
                     totalWords={totalWords}
                     className={
-                      paragraphIndex === wordParagraphs.length - 1 ? "mt-8" : "mb-6"
+                      paragraphIndex === wordParagraphs.length - 1 ? "mt-5 sm:mt-8" : "mb-4 sm:mb-6"
                     }
                   />
                 ))}
@@ -1341,15 +1349,11 @@ export default function LaraShowcase() {
               {isNarrow ? (
                 // PHONES: one row of 3 at a time, cross-fading in place.
                 <div className="relative mx-auto h-full w-full max-w-md">
-                  {REVIEW_ROWS.map((row, rowIndex) => (
-                    <NarrowReviewRow
-                      key={rowIndex}
-                      row={row}
-                      rowIndex={rowIndex}
-                      progress={progress}
-                      innerRef={rowIndex === REVIEW_ROWS.length - 1 ? reviewsGridRef : undefined}
-                    />
-                  ))}
+                  <NarrowReviewRow
+                    row={REVIEW_ROWS[0]}
+                    progress={progress}
+                    innerRef={reviewsGridRef}
+                  />
                 </div>
               ) : (
                 <div
