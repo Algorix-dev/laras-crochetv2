@@ -998,7 +998,7 @@ function HeroCarousel({ models }) {
       data-no-rise="true"
       className="
         overflow-x-clip
-        pt-8
+        pt-12
         md:pt-12
         lg:pt-14
         pb-24
@@ -1107,6 +1107,14 @@ function HeroCarousel({ models }) {
 
           {/* ==============================================
               MODEL NAME — fades out, then the new one fades in
+
+              TIP — PHONES: `max-sm:bottom-[95%]` lifts the name a little
+              (the number is how far up the row its bottom edge sits;
+              87.9% is the desktop value) so the model's head covers less
+              of the letters. Raise 95 to lift it more, lower it to drop it.
+              The hero section's top padding is pt-12 (48px, it was 32px)
+              so the lifted name doesn't touch the navbar; if you raise the
+              95, raise that padding too.
               ============================================== */}
 
           <div
@@ -1116,6 +1124,7 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2
               bottom-[87.9%]
+              max-sm:bottom-[95%]
               z-0
             "
           >
@@ -1507,7 +1516,7 @@ export default function Hero({ models }) {
         id="hero"
         data-hero="true"
         data-no-rise="true"
-        className="pt-8 md:pt-12 lg:pt-14 pb-24 md:pb-32"
+        className="pt-12 md:pt-12 lg:pt-14 pb-24 md:pb-32"
       >
         <div className={`relative mx-auto ${PAGE_CONTAINER_PADDING}`}>
           <div className={`w-full ${IMAGE_HEIGHT_SELECTED}`} />

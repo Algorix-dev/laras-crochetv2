@@ -1099,7 +1099,7 @@ export default function LaraShowcase() {
             />
 
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 z-20 max-sm:top-[calc(100%+3.25rem)] [--photo-scale:0.9] sm:[--photo-scale:1]"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-20 [--photo-scale:0.4] sm:[--photo-scale:1]"
               style={{
                 width: `${PHOTO_WIDTH_PX}px`,
                 height: "103.72863006591797px",
@@ -1285,17 +1285,16 @@ export default function LaraShowcase() {
                 />
 
                 <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible max-sm:top-[calc(100%+3.25rem)] [--photo-scale:0.9] sm:[--photo-scale:1]"
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible [--photo-scale:0.4] sm:[--photo-scale:1]"
                   style={{
                     width: `${PHOTO_WIDTH_PX}px`,
                     height: "103.72863006591797px",
-                    // TIP — PHONES: the wordmark is only ~350px wide there, so
-                    // photos sitting ON it covered the letters. On phones the
-                    // wordmark is enlarged (max-sm:scale-[1.35] on it) and this
-                    // cluster is moved to sit UNDER it (max-sm:top-[calc(100%+3.25rem)]),
-                    // at 90% size (--photo-scale:0.9). Change 0.9 in the class
-                    // above for bigger/smaller phone photos, and 3.25rem for
-                    // more/less gap between the wordmark and the photos.
+                    // TIP — PHONES: the photos sit in the CENTRE of the wordmark
+                    // (like on desktop) but at 40% size (--photo-scale:0.4), and
+                    // the wordmark itself is enlarged (max-sm:scale-[1.35]), so
+                    // together they cover far less of the letters. Change 0.4 in
+                    // the class above for bigger/smaller phone photos (0.35 is
+                    // tiny, 0.6 is chunky).
                     transform: "translate(-50%, -50%) scale(var(--photo-scale, 1))",
                   }}
                 >
