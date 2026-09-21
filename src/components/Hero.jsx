@@ -108,7 +108,7 @@ const RIPPLE_DELAY_SECONDS = 0.28;
 const RIPPLE_DURATION_SECONDS = 1.1;
 const RIPPLE_END_SCALE = 1.9;
 const RIPPLE_PEAK_OPACITY = 0.55;
-
+const COMET_PEAK_OPACITY = 0.55;
 /* ============================================================
    MODELS — now DATA, not hardcoded
    ============================================================
@@ -276,7 +276,7 @@ const COMET_STOPS = [
   },
   {
     offset: "50%",
-    opacity: 1,
+    opacity: COMET_PEAK_OPACITY,
   },
   {
     offset: `${50 + COMET_BAND_WIDTH / 2}%`,
