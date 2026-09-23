@@ -66,9 +66,24 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  /* TIP: Shipping is a flat ₦10,000 fee (₦0 if the cart is empty).
-     The Figma shows ₦10,000 for shipping. */
-  const shipping = cartItems.length ? 10000 : 0;
+  // TIP — CHECKOUT METHOD (new, from the latest Figma): Standard vs
+  // Express shipping, each with its own price. These numbers
+  // (₦20,440 / ₦30,440) come straight from the Figma checkout
+  // screenshot — they're notably different from the flat ₦10,000
+  // shipping estimate used on the My Bag and Wishlist pages, so
+  // that flat number is now just an ESTIMATE shown before checkout;
+  // this is the real total once a method is picked. Worth deciding
+  // with Lara which number is the actual policy and keeping both
+  // pages in sync with it.
+  const SHIPPING_METHODS = {
+    standard: { label: 'Standard Checkout', eta: '10–14 business days', price: 20440 },
+    express: { label: 'Express Checkout', eta: '4–5 business days', price: 30440 },
+  };
+  const [shippingMethod, setShippingMethod] = useState('standard');
+
+  /* TIP: Shipping now comes from the selected Checkout Method above
+     (₦0 if the cart is empty) instead of a flat ₦10,000. */
+  const shipping = cartItems.length ? SHIPPING_METHODS[shippingMethod].price : 0;
 
   /* TIP: Total is subtotal + shipping. */
   const total = cartTotal + shipping;
@@ -91,6 +106,13 @@ export default function CheckoutPage() {
         customerName: `${form.firstName} ${form.lastName}`.trim(),
         customerEmail: form.email,
         customerPhone: `+234${form.phone}`,
+        // TIP: sending this so the backend CAN charge the right
+        // shipping cost — but check server/routes/payments.js
+        // actually reads it and adds SHIPPING_METHODS[shippingMethod]
+        // .price to the order total. If it doesn't yet, Paystack will
+        // charge whatever the backend currently hardcodes/computes,
+        // which may not match what's shown on this page.
+        shippingMethod,
         // TIP: server/models/Order.js stores shippingAddress as a plain
         // String field, not a nested object — so we format it into one
         // readable line here rather than sending the raw form object
@@ -274,6 +296,49 @@ export default function CheckoutPage() {
               </div>
             </section>
 
+            {/* ================================================================
+                CHECKOUT METHOD — Standard vs Express shipping
+                TIP: added from the latest Figma. Payment itself still
+                happens on Paystack's own hosted page after this form
+                submits (see the submit() function above) rather than
+                raw card fields on this page — collecting card numbers
+                in your own <input>s would put YOU in PCI-compliance
+                scope, whereas redirecting to Paystack (or using their
+                inline widget) keeps card data off your server
+                entirely. Ask me if you'd rather switch to Paystack's
+                inline popup so the payment step never leaves this
+                page — the visual result is close to the Figma's card
+                form without the compliance risk of DIY fields.
+                ================================================================ */}
+            <section className="mt-8">
+              <h2 className="text-sm font-semibold">Checkout Method</h2>
+              <div className="mt-3 divide-y divide-[var(--line)] border border-[var(--line)]">
+                {Object.entries(SHIPPING_METHODS).map(([key, method]) => (
+                  <label
+                    key={key}
+                    className={`flex cursor-pointer items-center justify-between gap-4 p-4 ${
+                      shippingMethod === key ? 'bg-[var(--sand,#F6F1F1)]' : ''
+                    }`}
+                  >
+                    <span className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="shippingMethod"
+                        checked={shippingMethod === key}
+                        onChange={() => setShippingMethod(key)}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold">{method.label}</span>
+                        <span className="block text-xs text-[var(--muted)]">{method.eta}</span>
+                      </span>
+                    </span>
+                    <span className="whitespace-nowrap text-sm">{formatPrice(method.price)}</span>
+                  </label>
+                ))}
+              </div>
+            </section>
+
             {submitError && (
               <p className="mt-4 text-xs text-red-500">{submitError}</p>
             )}
@@ -287,7 +352,7 @@ export default function CheckoutPage() {
               disabled={submitting || !cartItems.length}
               className="mt-8 w-full bg-[var(--ink)] py-4 text-xs font-bold tracking-widest text-white disabled:opacity-50"
             >
-                {submitting ? 'REDIRECTING TO PAYMENT…' : 'CONTINUE TO SHIPPING'}
+                {submitting ? 'REDIRECTING TO PAYMENT…' : 'CONTINUE TO PAYMENT'}
             </button>
           </form>
 

@@ -305,11 +305,20 @@ export default function CustomOrderBanner() {
             relative
             z-20
             mx-auto
-            mt-[-70px]
+            mt-[-40px]
             flex
             justify-center
           "
         >
+          {/* TIP — HEADS AT THE BOTTOM OF THE "C", NOT THE MIDDLE:
+              this negative margin is what pulls the models UP into
+              the wordmark above — it WAS -70px, which pulled them up
+              far enough that their heads landed around the middle of
+              the "C" swash. Making it less negative (-40px) means
+              less overlap, so only the very bottom of the wordmark
+              touches the tops of their heads instead. Nudge toward 0
+              for heads even lower/closer to the baseline, or more
+              negative (back toward -70px) to push them back up. */}
           {/* TIP: this inner wrapper is `inline-block` (shrinks to
               fit the image) rather than the outer flex row (which
               spans the full container width). That matters because

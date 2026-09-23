@@ -28,7 +28,7 @@
   to adjust or revert it if you want something different from the
   literal spec value.
 ----------------------------------------------------------- */
-import { Check, Star, Heart } from 'lucide-react';
+import { Check, Star, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getProduct, normalizeProduct } from '../api';
@@ -273,6 +273,9 @@ function FitScaleAggregate({ position = 'true' }) {
    Reviews section — structured to mirror the Figma review area.
 ----------------------------------------------------------- */
 function Reviews() {
+  // TIP: collapsed by default — see the Reviews Summary block below.
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
+
   const renderStars = (rating = 5, size = 14) => (
     <span className="flex items-center gap-1 text-[var(--ink-warm)]">
       {Array.from({ length: 5 }, (_, i) => (
@@ -324,8 +327,29 @@ function Reviews() {
       </div>
 
       <div className="mt-8">
-        <h3 className="text-base font-bold">Reviews Summary</h3>
-        <p className="mt-4 text-base leading-6 text-[var(--muted)]">
+        {/* TIP — COLLAPSIBLE SUMMARY: added a toggle (per the Figma's
+            "nav-arrow-down" icon next to this heading, which the site
+            didn't have before). Collapsed state clamps to 3 lines with
+            line-clamp-3; the chevron flips to point up when expanded.
+            Change the "3" below to clamp more/fewer lines by default. */}
+        <button
+          type="button"
+          onClick={() => setSummaryExpanded((v) => !v)}
+          aria-expanded={summaryExpanded}
+          className="flex w-full items-center justify-between gap-2 text-left"
+        >
+          <h3 className="text-base font-bold">Reviews Summary</h3>
+          {summaryExpanded ? (
+            <ChevronUp size={20} className="shrink-0" />
+          ) : (
+            <ChevronDown size={20} className="shrink-0" />
+          )}
+        </button>
+        <p
+          className={`mt-4 text-base leading-6 text-[var(--muted)] ${
+            summaryExpanded ? '' : 'line-clamp-3'
+          }`}
+        >
           Customers say this bra offers exceptional comfort for all-day wear,
           with many noting they forget they&apos;re wearing it. Many reviews mention
           the smooth fit under clothing and precise sizing when following the
@@ -407,7 +431,13 @@ function Reviews() {
                 <img
                   src={review.photo}
                   alt={`Customer photo for ${review.title}`}
-                  className="mt-6 h-[392px] w-full max-w-[359px] object-cover"
+                  // TIP — WAS DESKTOP-SIZED ON EVERY SCREEN: this had a
+                  // flat 392x359(max) size with no mobile override, so
+                  // phones got the same huge desktop photo instead of a
+                  // smaller one. h-[131px] w-[120px] below is the actual
+                  // Figma mobile size ("Rectangle 38"); md: restores the
+                  // original desktop size.
+                  className="mt-6 h-[131px] w-[120px] object-cover md:h-[392px] md:w-full md:max-w-[359px]"
                 />
               )}
 
@@ -421,6 +451,13 @@ function Reviews() {
             </time>
 
             <div className="mt-8 md:hidden">
+              {/* TIP — ARROW ADDED: on mobile this scale sits below the
+                  review it belongs to with no visual link, so it could
+                  read as belonging to the NEXT review instead. A small
+                  up-arrow ties it back to the content just above it. */}
+              <div className="mb-1 flex justify-center text-[var(--muted)]">
+                <ChevronUp size={14} aria-hidden="true" />
+              </div>
               <HorizontalFitScale fit={review.fit} />
               <time className="mt-5 block text-xs text-[var(--muted)]">
                 {review.date}
@@ -627,11 +664,19 @@ export default function ProductDetail() {
               {product && (
                 <div className="mt-3 flex items-center justify-center gap-[39px]">
                   {angleShots.map(({ key, label, src }, index) => {
+                    // TIP — 3 THUMBNAILS ON MOBILE, 4 ON DESKTOP: the
+                    // Figma mobile mockup only shows 3 (front/left/right);
+                    // "back" only appears once you're on a wide enough
+                    // screen to use the lg: two-column layout. Hiding the
+                    // 4th thumbnail (index 3) with max-md:hidden rather
+                    // than slicing the array keeps selectedImage/keyboard
+                    // nav simple — it's just not shown, not removed.
+                    const mobileHiddenClass = index === 3 ? 'max-md:hidden' : '';
                     if (!src) {
                       return (
                         <div
                           key={`placeholder-${index}`}
-                          className="aspect-[53/139] w-[52.96px] opacity-30"
+                          className={`aspect-[53/139] w-[52.96px] opacity-30 ${mobileHiddenClass}`}
                         >
                           <ProductPlaceholder className="h-full w-full" />
                         </div>
@@ -643,7 +688,7 @@ export default function ProductDetail() {
                         type="button"
                         aria-label={`View ${product.name} — ${label}`}
                         onClick={() => setSelectedImage(index)}
-                        className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${
+                        className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${mobileHiddenClass} ${
                           index === selectedImage ? 'opacity-100' : 'opacity-30'
                         }`}
                       >
@@ -658,7 +703,18 @@ export default function ProductDetail() {
           </section>
 
           {/* ---- RIGHT: Product Info & Purchase ---- */}
-          <section className="lg:pt-7">
+          {/* TIP — MISSING PADDING FIX: the outer grid wrapper above is
+              deliberately full-bleed (see the TIP above it) so the
+              gallery photo runs edge-to-edge, but that meant this info
+              column had NO side margin either below lg: — heading,
+              price, and the Add to Bag button all sat flush against
+              the phone's screen edges instead of Figma's 16-20px
+              inset. px-5 here restores that just for this column,
+              matching the same page margin used everywhere else; lg:px-0
+              hands spacing back to the grid's own gap-8 once the
+              two-column layout kicks in, matching Figma's dead-even
+              50/50 split. */}
+          <section className="px-5 lg:px-0 lg:pt-7">
             {/* TIP (bonus, same spec sheet as everything else on this
                 pass): the category label ("DRESS") is 16px regular,
                 color #564345 (Gray/600) in Figma — not a tiny muted
@@ -800,10 +856,16 @@ export default function ProductDetail() {
                 "ADD TO BAG" wrapped onto two lines. It is now full width up
                 to the Figma's 322px, with normal padding, and never wraps.
                 (tracking-[-4%] was also not a real Tailwind value, so it
-                did nothing; -0.04em is the same -4% and actually applies.) */}
+                did nothing; -0.04em is the same -4% and actually applies.)
+                TIP — NOT CENTERED: added `mx-auto`. w-full + max-w-[322px]
+                only caps how wide the button can GROW — on any screen
+                wider than 322px + this column's own padding, the button
+                still starts flush against the left edge with all the
+                slack on the right, since nothing was centering it within
+                the (now padded, see the section's own px-5 below) column. */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 w-full max-w-[322px] whitespace-nowrap bg-[#564345] px-6 py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mx-auto mt-8 block w-full max-w-[322px] whitespace-nowrap bg-[#564345] px-6 py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>

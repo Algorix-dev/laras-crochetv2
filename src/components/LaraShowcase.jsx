@@ -1088,15 +1088,16 @@ export default function LaraShowcase() {
               src={laraDecor}
               alt=""
               aria-hidden="true"
-              // TIP — MOBILE SIZE MATCH: the wordmark below is enlarged
-              // 1.35x on phones (max-sm:scale-[1.35]) but this decor layer
-              // used to stay at a flat 100vw regardless, so the circles
-              // behind the letters read as too small next to the bigger
-              // "LARA". Scaling it by the same 1.35x on phones keeps the
-              // two visually in proportion again. Raise/lower the 1.35 here
-              // (keep it matching the wordmark's own scale two lines down)
-              // to make the decor bigger/smaller relative to the letters.
-              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[1.35]"
+              // TIP — MOBILE SIZE, ROUND 2: 1.35x (matching the
+              // wordmark's own scale) still read as too small, so this
+              // now scales independently — 2.0x — since the decor
+              // apparently needs to grow faster than the letters do to
+              // look right, not just match them 1:1. This number is a
+              // reasonable guess, not measured off a real render — if
+              // it's still off, raise/lower the 2.0 here (it doesn't
+              // need to match the wordmark's max-sm:scale-[1.35] below
+              // anymore).
+              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[2.0]"
               style={{ width: "100vw" }}
             />
 
@@ -1281,10 +1282,9 @@ export default function LaraShowcase() {
                   alt=""
                   aria-hidden="true"
                   decoding="async"
-                  // TIP: same 1.35x match as the static version above —
-                  // keep this in sync with the wordmark's max-sm:scale
-                  // just below.
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[1.35]"
+                  // TIP: same 2.0x as the static version above — keep
+                  // both in sync when tuning.
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[2.0]"
                   style={{ width: "100vw" }}
                 />
 
