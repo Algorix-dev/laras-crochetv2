@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AnimatePresence,
   motion,
@@ -102,12 +103,15 @@ const TEXT_OUT_SECONDS = 0.3;
 const TEXT_IN_SECONDS = 0.75;
 const TEXT_IN_DELAY_SECONDS = 0.2;
 
-// Podium ripple: how long after the click the rings start, and how far
-// they spread. Two rings, the second slightly behind the first.
-const RIPPLE_DELAY_SECONDS = 0.28;
+// Podium ripple: the client wants this running constantly (like the
+// comet spin), not just after a click. Two rings, the second slightly
+// behind the first, looping forever with a short pause between pulses.
 const RIPPLE_DURATION_SECONDS = 1.1;
 const RIPPLE_END_SCALE = 1.9;
 const RIPPLE_PEAK_OPACITY = 0.55;
+// TIP: gap of silence between one ripple finishing and the next starting.
+// Lower it for a busier podium, raise it for a calmer one.
+const RIPPLE_REPEAT_GAP_SECONDS = 1.2;
 const COMET_PEAK_OPACITY = 0.55;
 /* ============================================================
    MODELS — now DATA, not hardcoded
@@ -428,6 +432,7 @@ function HeroModel({
   reduceMotion,
   onSelect,
 }) {
+  const navigate = useNavigate();
   const isSelected = offset === 0;
   const isShown = Math.abs(offset) <= half;
   const edge = half + 1; // the invisible waiting slot
@@ -590,8 +595,21 @@ function HeroModel({
   return (
     <motion.button
       type="button"
-      onClick={() => onSelect(model.id)}
-      aria-label={`Show ${model.name}`}
+      onClick={() => {
+        // TIP — CENTRED MODEL NOW OPENS ITS PRODUCT PAGE: clicking a side
+        // model still brings it to the middle as before, but clicking the
+        // one already in the middle used to do nothing (see the old
+        // pointerEvents note below). Per the client, that click should now
+        // take the shopper straight to that piece's own product-details
+        // page. Fallback/sample models (id starts with "fallback-") have
+        // no real product behind them, so they stay inert.
+        if (isSelected) {
+          if (!model.id.startsWith("fallback-")) navigate(`/product/${model.id}`);
+          return;
+        }
+        onSelect(model.id);
+      }}
+      aria-label={isSelected ? `View ${model.name}` : `Show ${model.name}`}
       aria-pressed={isSelected}
       aria-hidden={!isShown}
       tabIndex={isShown ? 0 : -1}
@@ -607,11 +625,11 @@ function HeroModel({
         // used to catch every tap over its own slot AND its hidden side photo
         // (invisible, but far wider than the slot), so once a model with a
         // side photo was in the middle, taps aimed at its neighbours landed
-        // on it and did nothing. Now the middle model ignores pointers
-        // entirely (tapping it does nothing anyway), and NO photo ever
-        // catches a pointer: only each neighbour's own slot can be tapped,
-        // however wide a photo somebody uploads.
-        pointerEvents: isShown && !isSelected ? "auto" : "none",
+        // on it and did nothing. That's still avoided (only the model's own
+        // slot is clickable, never its hidden wide side photo), but the
+        // middle slot itself is now clickable too, since it opens the
+        // product page instead of doing nothing.
+        pointerEvents: isShown ? "auto" : "none",
         transformOrigin: "50% 100%",
       }}
       className="
@@ -1166,18 +1184,21 @@ function HeroCarousel({ models }) {
             </svg>
 
             {/*
-              RIPPLE — TIP: `key={nav.moveId}` makes React throw the
-              old rings away and mount fresh ones on every click, which
-              is what restarts the animation. Each ring starts invisible
-              at the outer podium's size, fades up quickly, then grows
-              and fades out. vectorEffect="non-scaling-stroke" keeps the
-              line a constant thin width while the ring scales. To make
-              it subtler lower RIPPLE_PEAK_OPACITY or RIPPLE_END_SCALE;
-              for a wider spread raise RIPPLE_END_SCALE.
+              RIPPLE — now an always-on idle loop instead of a one-shot
+              triggered by clicks. `repeat: Infinity` + `repeatDelay`
+              makes each ring fade up, grow, fade out, pause, then do it
+              again forever, so the podium never sits still. Each ring
+              starts invisible at the outer podium's size, fades up
+              quickly, then grows and fades out.
+              vectorEffect="non-scaling-stroke" keeps the line a constant
+              thin width while the ring scales. To make it subtler lower
+              RIPPLE_PEAK_OPACITY or RIPPLE_END_SCALE; for a wider spread
+              raise RIPPLE_END_SCALE; for a busier/calmer rhythm adjust
+              RIPPLE_REPEAT_GAP_SECONDS.
             */}
-            {!reduceMotion && nav.moveId > 0 && [0, 1].map((ring) => (
+            {!reduceMotion && [0, 1].map((ring) => (
               <motion.svg
-                key={`${nav.moveId}-${ring}`}
+                key={`idle-ripple-${ring}`}
                 viewBox={PODIUM_VIEWBOX}
                 className="
                   absolute
@@ -1193,16 +1214,21 @@ function HeroCarousel({ models }) {
                   opacity: [0, RIPPLE_PEAK_OPACITY - ring * 0.2, 0],
                 }}
                 transition={{
-                  // opacity: 0 → peak (quickly) → 0; scale: just grows
+                  // opacity: 0 → peak (quickly) → 0; scale: just grows;
+                  // both loop forever with a short pause in between.
                   opacity: {
                     duration: RIPPLE_DURATION_SECONDS,
-                    delay: RIPPLE_DELAY_SECONDS + ring * 0.14,
+                    delay: ring * 0.14,
+                    repeat: Infinity,
+                    repeatDelay: RIPPLE_REPEAT_GAP_SECONDS,
                     times: [0, 0.18, 1],
                     ease: "easeOut",
                   },
                   scale: {
                     duration: RIPPLE_DURATION_SECONDS,
-                    delay: RIPPLE_DELAY_SECONDS + ring * 0.14,
+                    delay: ring * 0.14,
+                    repeat: Infinity,
+                    repeatDelay: RIPPLE_REPEAT_GAP_SECONDS,
                     ease: "easeOut",
                   },
                 }}
@@ -1255,7 +1281,7 @@ function HeroCarousel({ models }) {
               top-full
               z-10
 
-              mt-7
+              mt-14 md:mt-16
 
               w-[clamp(11rem,18.75vw,22.5rem)]
             "

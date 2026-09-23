@@ -123,11 +123,20 @@ export default function Navbar() {
   };
 
   /* Bag button with count badge */
-  const BagButton = () => (
+  const BagButton = ({ onNavigate }) => (
     <button
       type="button"
       aria-label={`Bag, ${cartCount} items`}
-      onClick={() => navigate("/bag")}
+      onClick={() => {
+        navigate("/bag");
+        // TIP: mobile menu bug fix — this button used to only navigate,
+        // so tapping it from the open hamburger menu left the menu
+        // sitting open on top of the Bag page (every other mobile-menu
+        // link already closed the menu on click; this one and
+        // WishlistButton below didn't). onNavigate is only passed when
+        // this button is rendered inside that mobile dropdown.
+        onNavigate?.();
+      }}
       className="relative hover:text-[var(--maroon)]"
     >
       <ShoppingBag size={18} />
@@ -140,11 +149,15 @@ export default function Navbar() {
   );
 
   /* Wishlist button with count badge */
-  const WishlistButton = () => (
+  const WishlistButton = ({ onNavigate }) => (
     <button
       type="button"
       aria-label={`Wishlist, ${wishlistCount} items`}
-      onClick={() => navigate("/wishlist")}
+      onClick={() => {
+        navigate("/wishlist");
+        // TIP: see the matching note in BagButton above — same fix.
+        onNavigate?.();
+      }}
       className="relative hover:text-[var(--maroon)]"
     >
       <Heart size={18} />
@@ -279,8 +292,8 @@ export default function Navbar() {
                 <Search size={18} />
               </button>
 
-              <WishlistButton />
-              <BagButton />
+              <WishlistButton onNavigate={() => setMenuOpen(false)} />
+              <BagButton onNavigate={() => setMenuOpen(false)} />
 
               <button
                 type="button"

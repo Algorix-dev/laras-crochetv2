@@ -43,6 +43,8 @@ import SizeGuideModal from '../components/SizeGuideModal';
 import reviewBeachPhoto from '../assets/reviews/review-restaurant.webp';
 import reviewRestaurantPhoto from '../assets/reviews/review-beach.webp';
 import BrandedLoader from '../components/BrandedLoader';
+import InlineLoader from '../components/InlineLoader';
+import { shouldShowSplash } from '../utils/splashOnce';
 // TIP: the source files on disk are mislabeled relative to what they
 // actually show — review-restaurant.webp is the beach photo, and
 // review-beach.webp is the restaurant photo. Rather than have every
@@ -456,6 +458,7 @@ export default function ProductDetail() {
      product up in a local array, we fetch it from the API, the same
      way ShopPage does. */
   const { id } = useParams();
+  const [showSplash] = useState(() => shouldShowSplash(`/product/${id}`));
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -526,7 +529,13 @@ export default function ProductDetail() {
   };
 
   if (loading) {
-    return <BrandedLoader />;
+    // TIP: the branded splash only shows here on an actual page
+    // reload (showSplash, from shouldShowSplash() — see
+    // utils/splashOnce.js). Clicking into a product from Shop/Home/a
+    // hero image now shows the plain "Loading product…" line instead,
+    // per Lara's feedback that the splash shouldn't take over every
+    // loading moment.
+    return showSplash ? <BrandedLoader /> : <InlineLoader text="Loading product…" minHeight="60vh" />;
   }
 
   if (error || !product) {

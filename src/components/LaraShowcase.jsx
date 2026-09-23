@@ -1088,7 +1088,15 @@ export default function LaraShowcase() {
               src={laraDecor}
               alt=""
               aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
+              // TIP — MOBILE SIZE MATCH: the wordmark below is enlarged
+              // 1.35x on phones (max-sm:scale-[1.35]) but this decor layer
+              // used to stay at a flat 100vw regardless, so the circles
+              // behind the letters read as too small next to the bigger
+              // "LARA". Scaling it by the same 1.35x on phones keeps the
+              // two visually in proportion again. Raise/lower the 1.35 here
+              // (keep it matching the wordmark's own scale two lines down)
+              // to make the decor bigger/smaller relative to the letters.
+              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[1.35]"
               style={{ width: "100vw" }}
             />
 
@@ -1273,7 +1281,10 @@ export default function LaraShowcase() {
                   alt=""
                   aria-hidden="true"
                   decoding="async"
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
+                  // TIP: same 1.35x match as the static version above —
+                  // keep this in sync with the wordmark's max-sm:scale
+                  // just below.
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[1.35]"
                   style={{ width: "100vw" }}
                 />
 

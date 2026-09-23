@@ -38,8 +38,10 @@ import { Search } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
 import { getProducts, normalizeProduct } from '../api';
 import ProductGrid from '../components/ProductGrid';
+import InlineLoader from '../components/InlineLoader';
 import Footer from '../components/Footer';
 import BrandedLoader from '../components/BrandedLoader';
+import { shouldShowSplash } from '../utils/splashOnce';
 
 // TIP: turns 'two-pieces' into 'Two Pieces' for display, so the data
 // file can stay in clean lowercase-hyphen slugs (good for URLs/code)
@@ -59,16 +61,17 @@ const formatLabel = (slug) =>
 // getProducts() instead — the button UI itself won't need to change.
 const PAGE_SIZE = 9;
 
-// TIP: mirrors the branded splash on /signin (logo fade-in + tagline),
-// per Lara's note that any loading moment should use it. This version
-// is CONTAINED to the content area, not full-screen — unlike /signin,
-// Shop always keeps the Navbar mounted above it (see ConditionalNavbar
-// in App.jsx), so a full-viewport takeover here would blank the nav
-// out on every visit. No artificial timer either — /signin holds its
-// splash for a fixed ~2.5s because "checking" there is instant and
-// needs padding to feel intentional; here the load time is real, so
-// this shows for exactly as long as the fetch actually takes.
+// TIP: mirrors the branded splash on /signin (logo fade-in + tagline)
+// — but only on an actual page reload, per Lara's feedback. Arriving
+// at Shop by clicking around the app (or switching a category tab)
+// now shows a plain "Loading products…" line instead: it stays inside
+// the section rather than taking over the page. `showSplash` is
+// decided once, at mount, from shouldShowSplash() (utils/splashOnce.js)
+// — it never flips mid-visit, so switching tabs afterwards always uses
+// the plain line even for the page that DID get the splash on its
+// first load.
 export default function ShopPage() {
+  const [showSplash] = useState(() => shouldShowSplash('/shop'));
   const [activeCategory, setActiveCategory] = useState('all');
   const [products, setProducts] = useState([]);
   const [error, setError] = useState(null);
@@ -164,7 +167,7 @@ export default function ShopPage() {
         
       </div>
       {loading ? (
-        <BrandedLoader />
+        showSplash ? <BrandedLoader /> : <InlineLoader text="Loading products…" />
       ) : error ? (
         <p className="px-5 md:px-8 lg:px-[15.83%] py-14 text-center text-sm text-[var(--muted)]">{error}</p>
       ) : (

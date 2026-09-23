@@ -6,18 +6,21 @@ import Footer from "../components/Footer";
 export default function AboutPage() {
   return (
     <>
-      {/* TIP — RIGHT COLUMN ALWAYS CENTRED:
-          from md up, <main> is now at least as tall as the space between
-          the navbar (66px) and the bottom of the screen, and the right
-          column below is a flex box with items-center. So the content sits
-          in the middle with EQUAL space above (down from the navbar) and
-          below (up from the bottom of the screen), on any screen height.
-          If the content is taller than that space (a short laptop) the
-          page simply scrolls, and the top and bottom padding are still
-          equal because the section's py-* is symmetrical.
+      {/* TIP — RIGHT COLUMN ALWAYS CENTRED (AND ALWAYS FULLY VISIBLE):
+          from md up, <main> is now EXACTLY as tall as the space between
+          the navbar (66px) and the bottom of the screen — a fixed
+          height, not just a minimum — so the row can never grow taller
+          than that and push the bottom of the right column (the
+          "Connect with Lara's Crochet" link) below the fold. The right
+          column below is a flex box with items-center, so its content
+          sits centred with equal space above and below inside that
+          fixed space. If the content still doesn't fit (a very short
+          laptop window), the right column scrolls WITHIN itself
+          (overflow-y-auto) instead of the whole layout growing past the
+          viewport, so the photo on the left still lines up with it.
           100dvh (not 100vh) so it stays right when a phone/tablet browser
           bar shows or hides; the 66px matches the fixed navbar height. */}
-      <main className="flex flex-col md:min-h-[calc(100dvh-66px)] md:flex-row md:items-stretch">
+      <main className="flex flex-col md:h-[calc(100dvh-66px)] md:flex-row md:items-stretch">
         {/* Left image — desktop only. On mobile, Figma wants the heading
             first and this photo second, so it's hidden here and a mobile-
             only copy is rendered inline below instead of restructuring the
@@ -38,7 +41,7 @@ export default function AboutPage() {
             keeps py-12; from md up the padding tightens (md:py-6 →
             lg:py-8 → 2xl:py-6). To give it more/less air, change the
             number after `py-` on the matching breakpoint below. */}
-        <section className="flex w-full items-center justify-center px-6 py-12 text-center sm:px-10 md:w-1/2 md:px-8 md:py-6 lg:px-12 lg:py-8 xl:px-16 2xl:py-6">
+        <section className="flex w-full items-center justify-center overflow-y-auto px-6 py-12 text-center sm:px-10 md:w-1/2 md:px-8 md:py-6 lg:px-12 lg:py-8 xl:px-16 2xl:py-6">
           <div className="flex w-full max-w-[560px] flex-col items-center">
             {/* Heading */}
             <img

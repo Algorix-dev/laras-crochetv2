@@ -222,7 +222,25 @@ export default function CustomOrderBanner() {
               28% of the asset and checking where its ink starts
               gives 30.8% down. That's what "top" is set to now.
               Nudge a few % either way if you want it sitting
-              deeper into/further off the "m". */}
+              deeper into/further off the "m".
+
+              TIP — WHY THIS DRIFTED ON PHONES: left/top are %, so
+              they always point at the same spot on the letters
+              regardless of size — that part was fine. The font-size
+              wasn't: `1.33vw` was tuned assuming this container is
+              ~28% of the viewport (true once it hits its 547px cap,
+              around 684px+ wide). Below that, `max-w-[80vw]` takes
+              over and the container is 80% of the viewport instead —
+              a much bigger fraction — so on a phone the OLD vw-based
+              size undershot badly and just sat at its 16px floor,
+              which is oversized for a ~300px-wide wordmark and reads
+              as floating up near the "t" instead of nested by the
+              letters. `max-sm:text-[...]` below uses the SAME ratio
+              (font-size ≈ 2.9% of container width) but scaled off
+              80vw instead of 1.33vw, so it shrinks with the
+              wordmark again on phones. Nudge the "2.4vw" (mid value)
+              or the two clamp ends if it still looks too big/small
+              on your phone. */}
           <span
             className="
               absolute
@@ -231,6 +249,7 @@ export default function CustomOrderBanner() {
               font-normal
               text-black
               text-[clamp(16px,1.33vw,25.47px)]
+              max-sm:text-[clamp(8px,2.4vw,16px)]
             "
             style={{
               left: "77.46%",

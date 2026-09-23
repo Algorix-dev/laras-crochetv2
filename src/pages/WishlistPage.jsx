@@ -14,10 +14,13 @@ import ProductGrid from '../components/ProductGrid';
 import RecommendedProducts from '../components/RecommendedProducts';
 import AccountSidebar from '../components/AccountSidebar';
 import BrandedLoader from '../components/BrandedLoader';
+import InlineLoader from '../components/InlineLoader';
 import Footer from '../components/Footer';
+import { shouldShowSplash } from '../utils/splashOnce';
 
 export default function WishlistPage() {
   const { wishlistItems } = useWishlist();
+  const [showSplash] = useState(() => shouldShowSplash('/wishlist'));
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,14 +38,15 @@ export default function WishlistPage() {
   const wishlistedProducts = allProducts.filter((p) => wishlistItems.includes(p.id));
 
   if (loading) {
-    // TIP: was a plain "Loading your wishlist..." line — swapped for
-    // the same branded splash Shop and Product Detail use, per the
-    // note that every loading moment should look the same. minHeight
-    // is shorter than those two pages' default 60vh since this sits
-    // below a page header rather than replacing the whole page.
+    // TIP: the branded splash only shows here on an actual page
+    // reload (showSplash, from shouldShowSplash() — see
+    // utils/splashOnce.js). Arriving via a normal in-app click (e.g.
+    // the navbar's wishlist icon) shows the plain "Loading…" line
+    // instead, per Lara's feedback that the splash shouldn't take
+    // over every section's loading moment.
     return (
       <section className="px-5 pt-10 pb-24 md:px-8 lg:px-[15.83%]">
-        <BrandedLoader minHeight="40vh" />
+        {showSplash ? <BrandedLoader minHeight="40vh" /> : <InlineLoader text="Loading your wishlist…" minHeight="40vh" />}
       </section>
     );
   }

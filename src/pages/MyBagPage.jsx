@@ -193,31 +193,37 @@ export default function MyBagPage() {
                       {item.selectedColor}
                     </span>
 
-                    {/* TIP: quantity control differs by breakpoint,
-                        matching the two different Figma screenshots
-                        exactly — mobile (My_Bag_Page mobile shots)
-                        shows a plain Minus/qty/Plus stepper with no
-                        way to fully remove an item; desktop (the
-                        "MY BAG (2)" table shot) replaces the minus
-                        with a Trash icon that removes the line
-                        outright, and never shows a minus at all.
-                        Both share the same 3-item cap on the plus
-                        button. This is its own grid cell (the Qty
+                    {/* TIP — MOBILE NOW MATCHES DESKTOP'S RULE: minus
+                        when there's more than 1, delete when there's
+                        exactly 1 — it used to always show Minus on
+                        mobile (just disabled at 1, with no way to
+                        remove the line), while desktop always showed
+                        Trash. Both share the same 3-item cap on the
+                        plus button. This is its own grid cell (the Qty
                         column) on desktop, stacked stepper-then-link
                         exactly like the Figma table row. */}
                     <div className="col-span-2 mt-3 flex items-center gap-4 md:col-span-1 md:mt-0 md:flex-col md:items-start md:gap-2">
-                      {/* Mobile stepper — Minus / qty / Plus */}
+                      {/* Mobile stepper — Minus (>1) or Trash (=1) / qty / Plus */}
                       <div className="flex items-center border border-[var(--line)] md:hidden">
-                        <button
-                          className="p-2 disabled:opacity-30"
-                          aria-label="Decrease quantity"
-                          disabled={item.quantity <= 1}
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
-                        >
-                          <Minus size={12} />
-                        </button>
+                        {item.quantity > 1 ? (
+                          <button
+                            className="p-2"
+                            aria-label="Decrease quantity"
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
+                          >
+                            <Minus size={12} />
+                          </button>
+                        ) : (
+                          <button
+                            className="p-2 text-[var(--muted)] hover:text-[var(--ink)]"
+                            aria-label={`Remove ${item.product.name}`}
+                            onClick={() => removeFromBag(item.id)}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
                         <span className="flex-1 text-center text-xs">
                           {item.quantity}
                         </span>
@@ -233,15 +239,30 @@ export default function MyBagPage() {
                         </button>
                       </div>
 
-                      {/* Desktop stepper — Trash / qty / Plus */}
+                      {/* Desktop stepper — same minus(>1)/delete(=1) rule
+                          as mobile above. This used to always show Trash,
+                          which deleted the WHOLE line even at quantity 2+
+                          instead of just decrementing by one. */}
                       <div className="hidden w-full items-center justify-between border border-[var(--line)] md:flex">
-                        <button
-                          className="p-2 text-[var(--muted)] hover:text-[var(--ink)]"
-                          aria-label={`Remove ${item.product.name}`}
-                          onClick={() => removeFromBag(item.id)}
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        {item.quantity > 1 ? (
+                          <button
+                            className="p-2"
+                            aria-label="Decrease quantity"
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
+                          >
+                            <Minus size={12} />
+                          </button>
+                        ) : (
+                          <button
+                            className="p-2 text-[var(--muted)] hover:text-[var(--ink)]"
+                            aria-label={`Remove ${item.product.name}`}
+                            onClick={() => removeFromBag(item.id)}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
                         <span className="flex-1 text-center text-xs">
                           {item.quantity}
                         </span>
