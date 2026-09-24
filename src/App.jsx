@@ -152,7 +152,7 @@ function HomePage() {
 
       <Reveal>
         <div className="text-center pt-2 pb-2 md:pb-14">
-          <Link to="/shop" className="hidden md:inline-block lg:inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
+          <Link to="/shop" className="sm:hidden md:inline-block lg:inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
             Go to Shop
           </Link>
         </div>
@@ -177,8 +177,8 @@ function HomePage() {
                   the original 4. Change the 6 / 4 here to adjust. */}
               <ProductGrid products={liveProducts.slice(0, isPhone ? 6 : 4)} isPlaceholder={!isLive} />
               <Reveal>
-                <div className="text-center mt-10">
-                  <Link to="/shop" className="sm:w-full sm:block inline-block bg-[var(--maroon)] px-8 py-3.5 sm:text-[14px] text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
+                <div className="text-center mt-10 w-screen">
+                  <Link to="/shop" className="sm:w-full md:inline-block lg:inline-block bg-[var(--maroon)] px-8 py-3.5 sm:text-[14px] text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
                     Go to Shop
                   </Link>
                 </div>
