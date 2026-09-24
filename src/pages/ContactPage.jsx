@@ -14,7 +14,7 @@
 */
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Check, HelpCircle, UploadCloud, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, HelpCircle, UploadCloud, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import Footer from "../components/Footer";
 
@@ -121,11 +121,7 @@ function PillButton({ active, children, className = "", ...props }) {
   return (
     <button
       {...props}
-<<<<<<< ours
-      className={`border py-3 px-4 text-sm font-medium transition-all text-center cursor-pointer ${
-=======
       className={`border py-3 px-4 text-base font-medium transition-all text-center cursor-pointer ${
->>>>>>> theirs
         active
           ? "border-[var(--ink)] bg-[var(--ink)] text-white"
           : "border-[var(--line)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)]"
@@ -136,11 +132,21 @@ function PillButton({ active, children, className = "", ...props }) {
   );
 }
 
-function PrimaryButton({ children, className = "", ...props }) {
+// TIP: <main> below carries data-no-rise on purpose: the scroll-rise engine
+// leaves an identity `transform` on the blocks it marks, and any transform
+// turns `position: fixed` into "fixed inside that block", which pushed this
+// button off the bottom edge.
+// TIP: on phones the wizard is one unscrollable screen (Figma), so the main
+// button is pinned to the bottom edge, full width. Pass `pinned={false}` for
+// a button that lives inside a pop-up and should stay where it is.
+function PrimaryButton({ children, className = "", pinned = true, ...props }) {
+  const pin = pinned
+    ? "max-md:fixed max-md:bottom-5 max-md:left-5 max-md:right-5 max-md:z-30 max-md:w-auto max-md:max-w-none max-md:mx-0 max-md:mt-0"
+    : "";
   return (
     <button
       {...props}
-      className={`w-full bg-[var(--ink)] text-white text-base font-bold uppercase tracking-widest py-3.5 md:py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`${pin} w-full bg-[var(--ink)] text-white text-base font-bold uppercase tracking-widest py-3.5 md:py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
     >
       {children}
     </button>
@@ -189,8 +195,8 @@ function StepShell({
   children,
 }) {
   return (
-    <div className="relative max-w-lg w-full">
-      <div className="min-h-8 mb-3">
+    <div className="relative max-w-lg w-full max-md:max-w-none">
+      <div className="min-h-8 mb-3 max-md:mb-2">
         {onBack && (
           <button
             onClick={onBack}
@@ -201,14 +207,10 @@ function StepShell({
           </button>
         )}
       </div>
-      <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040]">
+      <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040] max-md:border-0 max-md:shadow-none max-md:p-0 max-md:pb-24">
         {showHeader && (
           <div className="text-center mb-6">
-<<<<<<< ours
-            <p className="text-[13px] tracking-[0.2em] font-semibold text-[var(--muted)] uppercase mb-2">
-=======
             <p className="text-base tracking-[0.2em] font-semibold text-[var(--muted)] uppercase mb-2">
->>>>>>> theirs
               Step {stepNumber} of {totalSteps}
             </p>
             <div
@@ -440,7 +442,7 @@ function SizePopup({ size, onClose }) {
             </div>
           ))}
         </dl>
-        <PrimaryButton className="mt-5" onClick={onClose}>
+        <PrimaryButton pinned={false} className="mt-5" onClick={onClose}>
           Got it
         </PrimaryButton>
       </div>
@@ -703,7 +705,7 @@ export default function ContactPage() {
           64px navbar) and the page itself doesn't scroll, as in the client's
           Figma (no footer on these pages). If a step is taller than the
           screen, only the area inside scrolls. Desktop is unchanged. */}
-      <main className="min-h-[calc(100vh-64px)] max-md:h-[calc(100dvh-64px)] max-md:min-h-0 max-md:overflow-y-auto w-full flex items-center justify-center py-12 max-md:py-4 px-5 bg-[var(--cream)]">
+      <main data-no-rise="true" className="min-h-[calc(100vh-64px)] max-md:h-[calc(100dvh-134px)] max-md:min-h-0 max-md:overflow-y-auto w-full flex items-center justify-center max-md:items-start py-12 max-md:py-2 px-5 bg-[var(--cream)]">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={`${flow}-${phase}`}
@@ -1152,7 +1154,26 @@ export default function ContactPage() {
                       <span className="text-base font-semibold text-[var(--ink)]">
                         See full size chart
                       </span>
-                      <div className="flex gap-3 text-base">
+                      {/* Phones (Figma): one chevron that opens/closes the chart */}
+                      <button
+                        type="button"
+                        aria-label="Show or hide the full size chart"
+                        aria-expanded={formData.showSizeChart === "yes"}
+                        onClick={() =>
+                          updateField(
+                            "showSizeChart",
+                            formData.showSizeChart === "yes" ? "no" : "yes",
+                          )
+                        }
+                        className="md:hidden cursor-pointer text-[var(--ink)]"
+                      >
+                        {formData.showSizeChart === "yes" ? (
+                          <ChevronUp size={20} />
+                        ) : (
+                          <ChevronDown size={20} />
+                        )}
+                      </button>
+                      <div className="hidden md:flex gap-3 text-base">
                         <button
                           onClick={() => updateField("showSizeChart", "yes")}
                           className={`cursor-pointer ${
@@ -1320,18 +1341,8 @@ export default function ContactPage() {
                         accept="image/jpeg,image/png"
                         multiple
                         className="sr-only"
-<<<<<<< ours
-                        onChange={(e) => {
-                          const newFiles = Array.from(e.target.files || []);
-                          const combined = [...formData.photos, ...newFiles].slice(0, 4);
-                          updateField("photos", combined);
-                          // Reset the input so re-selecting the same file triggers onChange again
-                          e.target.value = "";
-                        }}
-=======
                         disabled={formData.photos.length >= MAX_PHOTOS}
                         onChange={(e) => addPhotos(e.target.files)}
->>>>>>> theirs
                       />
                     </label>
 
@@ -1345,13 +1356,8 @@ export default function ContactPage() {
                       <div className="grid grid-cols-2 gap-3 mt-4">
                         {formData.photos.map((file, i) => (
                           <div
-<<<<<<< ours
-                            key={i}
-                            className="relative aspect-square overflow-hidden border border-[var(--line)] group"
-=======
                             key={`${file.name}-${file.size}-${file.lastModified}`}
                             className="relative aspect-square overflow-hidden border border-[var(--line)]"
->>>>>>> theirs
                           >
                             <img
                               src={photoUrls[i]}
@@ -1360,22 +1366,11 @@ export default function ContactPage() {
                             />
                             <button
                               type="button"
-<<<<<<< ours
-                              aria-label="Remove photo"
-                              onClick={() => {
-                                const updated = formData.photos.filter((_, idx) => idx !== i);
-                                updateField("photos", updated);
-                              }}
-                              className="absolute top-1 right-1 bg-white/80 hover:bg-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                            >
-                              <X size={14} strokeWidth={2.5} className="text-[var(--ink)]" />
-=======
                               aria-label="Remove this picture"
                               onClick={() => removePhoto(i)}
                               className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[var(--ink)] shadow hover:bg-white cursor-pointer"
                             >
                               <X size={16} />
->>>>>>> theirs
                             </button>
                           </div>
                         ))}

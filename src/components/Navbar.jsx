@@ -80,6 +80,15 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // TIP: the phone search bar that sits under the header on Shop/Contact
+  // (see MobileSearchBar in App.jsx) can't reach this component's state,
+  // so it fires a window event and we open the overlay from here.
+  useEffect(() => {
+    const open = () => setSearchOpen(true);
+    window.addEventListener("laras:open-search", open);
+    return () => window.removeEventListener("laras:open-search", open);
+  }, []);
+
   /* -------------------- visibility + dim/hover state -------------------- */
 
   const { hidden } = useNavbarVisibility();
@@ -139,11 +148,8 @@ export default function Navbar() {
       }}
       className="relative hover:text-[var(--maroon)]"
     >
-<<<<<<< ours
-=======
       {/* TIP: fill="currentColor" makes the bag icon solid once something is
           in it (client request). Empty bag = outline only. */}
->>>>>>> theirs
       <ShoppingBag size={18} fill={cartCount > 0 ? 'currentColor' : 'none'} />
       {cartCount > 0 && (
         <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
@@ -256,20 +262,25 @@ export default function Navbar() {
             <CountrySelectorModal />
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            type="button"
-            className="justify-self-end md:hidden"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? <X /> : <Menu />}
-          </button>
+          {/* Mobile cluster — heart, bag, hamburger, as in the Figma
+              mobile header. TIP: the menu below no longer repeats the
+              heart and bag. */}
+          <div className="flex items-center gap-4 justify-self-end md:hidden">
+            <WishlistButton />
+            <BagButton />
+            <button
+              type="button"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile menu dropdown */}
         {menuOpen && (
-          <nav className="flex flex-col gap-4 px-5 pb-6 text-sm uppercase md:hidden">
+          <nav className="flex flex-col gap-4 px-5 pb-6 text-base uppercase md:hidden">
             {LINKS.map((link) => (
               <Link
                 key={link.label}
@@ -296,9 +307,6 @@ export default function Navbar() {
               >
                 <Search size={18} />
               </button>
-
-              <WishlistButton onNavigate={() => setMenuOpen(false)} />
-              <BagButton onNavigate={() => setMenuOpen(false)} />
 
               <button
                 type="button"

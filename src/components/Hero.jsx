@@ -1,5 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ChevronUp, ShoppingBag } from "lucide-react";
+
+const isSampleModel = (model) => String(model.id).startsWith("fallback-");
 import {
   AnimatePresence,
   motion,
@@ -38,6 +41,14 @@ const SELECTED_SCALE_Y = 1.0;
   heights. Lower it to make the side models smaller.
 */
 const SUPPORT_HEIGHT_RATIO = 0.88;
+// TIP — PHONES: Lara's mobile design has the two side models clearly smaller
+// than the middle one (about 70%), so the middle model reads as big. Raise
+// this to make the phone side models bigger again.
+const SUPPORT_HEIGHT_RATIO_PHONE = 0.7;
+const supportRatio = () =>
+  typeof window !== "undefined" && window.innerWidth < 640
+    ? SUPPORT_HEIGHT_RATIO_PHONE
+    : SUPPORT_HEIGHT_RATIO;
 
 /*
   Side models: 3D glassy depth-of-field blur & opacity, matching the
@@ -181,7 +192,7 @@ function useIsWide() {
 */
 
 const IMAGE_HEIGHT_SELECTED =
-  "h-[clamp(25rem,34vw,42rem)]";
+  "h-[clamp(25rem,34vw,42rem)] max-sm:h-[27rem]";
 
 /* ============================================================
    CAROUSEL MATH
@@ -219,10 +230,10 @@ function getSlotLook(offset, half) {
     rotateY: isCenter ? 0 : Math.sign(offset) * SIDE_TILT_DEGREES,
     scaleX: isCenter
       ? SELECTED_SCALE_X
-      : SUPPORT_SCALE_X * SUPPORT_HEIGHT_RATIO,
+      : SUPPORT_SCALE_X * supportRatio(),
     scaleY: isCenter
       ? SELECTED_SCALE_Y
-      : SUPPORT_SCALE_Y * SUPPORT_HEIGHT_RATIO,
+      : SUPPORT_SCALE_Y * supportRatio(),
     filter: isCenter
       ? "blur(0px) brightness(1)"
       : `blur(${SIDE_MODEL_BLUR_PX}px) brightness(0.95)`,
@@ -1288,8 +1299,11 @@ function HeroCarousel({ models }) {
               z-10
 
               mt-14 md:mt-16
+              max-sm:mt-6
 
               w-[clamp(11rem,18.75vw,22.5rem)]
+              max-sm:w-full
+              max-sm:px-1
             "
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -1322,10 +1336,15 @@ function HeroCarousel({ models }) {
                   text-xl
                 "
               >
+                {/* TIP — PHONES (Figma): the name is already the big word
+                    behind the model, so the row is price on the left, a
+                    little chevron stack in the middle and a bag button on
+                    the right. From sm up it is the original name + price. */}
                 <span
                   className="
                     uppercase
                     tracking-wide
+                    max-sm:hidden
                   "
                 >
                   {activeModel.name}
@@ -1341,6 +1360,26 @@ function HeroCarousel({ models }) {
                     activeModel.price
                   )}
                 </span>
+
+                <span aria-hidden="true" className="sm:hidden -space-y-2.5 flex flex-col items-center text-[var(--muted)]">
+                  <ChevronUp size={18} strokeWidth={1.5} className="opacity-100" />
+                  <ChevronUp size={18} strokeWidth={1.5} className="opacity-60" />
+                  <ChevronUp size={18} strokeWidth={1.5} className="opacity-30" />
+                </span>
+
+                <Link
+                  to={
+                    activeModel.productId
+                      ? `/product/${activeModel.productId}`
+                      : isSampleModel(activeModel)
+                        ? "/shop"
+                        : `/product/${activeModel.id}`
+                  }
+                  aria-label={`Choose a size and add ${activeModel.name} to your bag`}
+                  className="sm:hidden pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-[var(--mauve-light)] text-[var(--ink)]"
+                >
+                  <ShoppingBag size={20} strokeWidth={1.5} />
+                </Link>
               </motion.div>
             </AnimatePresence>
           </div>

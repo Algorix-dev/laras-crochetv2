@@ -28,15 +28,9 @@
   to adjust or revert it if you want something different from the
   literal spec value.
 ----------------------------------------------------------- */
-<<<<<<< ours
-import { Check, Star, Heart, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-=======
 import { ArrowLeft, Check, Star, Heart, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
->>>>>>> theirs
 import { getProduct, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
 import RecommendedProducts from '../components/RecommendedProducts';

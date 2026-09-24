@@ -183,7 +183,7 @@ const TRACK_VH = Math.round(100 + 900 * TIMELINE_END);
 // PHONES: only ONE row of three reviews is shown (nine cards don't fit a
 // phone screen, and Lara only wants three there), so the pinned track ends
 // sooner instead of holding an empty stretch. Raise it for a longer read time.
-const TIMELINE_END_NARROW = 0.62;
+const TIMELINE_END_NARROW = 0.75;
 const TRACK_VH_NARROW = Math.round(100 + 900 * TIMELINE_END_NARROW);
 
 // Gap kept between the last review row and whatever comes next.
@@ -359,13 +359,26 @@ function getReviewRowReveal(rowIndex, progress) {
   whole grid fades out, like on desktop). Same scroll window as desktop
   (REVIEWS_REVEAL_START -> REVIEWS_HOLD_END), just split into 3 turns.
 */
-function getReviewRowRevealNarrow(progress) {
-  // TIP: phones now show ONE row of 3 reviews only. It rises in over
-  // `fade` of progress (about 40vh of scrolling) and then simply stays
-  // until the pin lets go, with no turns and no fade-out.
+function getReviewRowRevealNarrow(progress, rowIndex = 0) {
+  // TIP: phones show SIX reviews (client request) as TWO turns of 3.
+  // Turn 1 rises in, holds, then fades while turn 2 rises in over it;
+  // turn 2 then stays until the pin lets go.
+  //   turn 1: in  REVIEWS_REVEAL_START -> +0.045, out at PHONE_TURN_AT
+  //   turn 2: in  at PHONE_TURN_AT, then stays
+  // Change PHONE_TURN_AT to give the first three more/less reading time.
   const fade = 0.045;
-  const inT = clamp01((progress - REVIEWS_REVEAL_START) / fade);
+  const PHONE_TURN_AT = REVIEWS_REVEAL_START + 0.11;
 
+  if (rowIndex === 0) {
+    const inT = clamp01((progress - REVIEWS_REVEAL_START) / fade);
+    const outT = clamp01((progress - PHONE_TURN_AT) / fade);
+    return {
+      opacity: inT * (1 - outT),
+      y: lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(inT)) - 10 * outT,
+    };
+  }
+
+  const inT = clamp01((progress - PHONE_TURN_AT) / fade);
   return { opacity: inT, y: lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(inT)) };
 }
 
@@ -725,8 +738,8 @@ function ReviewCardBody({ testimonial, compact = false }) {
 // PHONES ONLY: one row of 3 cards, stacked, shown on its own turn (see
 // getReviewRowRevealNarrow above). All three rows sit on top of each other
 // and cross-fade.
-function NarrowReviewRow({ row, progress, innerRef }) {
-  const reveal = useTransform(progress, (p) => getReviewRowRevealNarrow(p));
+function NarrowReviewRow({ row, rowIndex = 0, progress, innerRef }) {
+  const reveal = useTransform(progress, (p) => getReviewRowRevealNarrow(p, rowIndex));
   const opacity = useTransform(reveal, (r) => r.opacity);
   const y = useTransform(reveal, (r) => r.y);
 
@@ -1120,7 +1133,7 @@ export default function LaraShowcase() {
               // look right, not just match them 1:1. This number is a
               // reasonable guess, not measured off a real render — if
               // it's still off, raise/lower the 2.0 here (it doesn't
-              // need to match the wordmark's max-sm:scale-[1.35] below
+              // need to match the wordmark's max-sm:scale-[1.75] below
               // anymore).
               className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[2.0]"
               style={{ width: "100vw" }}
@@ -1129,11 +1142,11 @@ export default function LaraShowcase() {
             <img
               src={laraWordmark}
               alt="Lara's Crochet"
-              className="relative z-10 block h-auto w-full select-none max-sm:scale-[1.35]"
+              className="relative z-10 block h-auto w-full select-none max-sm:scale-[1.75]"
             />
 
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 z-20 [--photo-scale:0.4] sm:[--photo-scale:1]"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-20 [--photo-scale:0.5] sm:[--photo-scale:1]"
               style={{
                 width: `${PHOTO_WIDTH_PX}px`,
                 height: "103.72863006591797px",
@@ -1317,17 +1330,17 @@ export default function LaraShowcase() {
                   src={laraWordmark}
                   alt="Lara's Crochet"
                   decoding="async"
-                  className="relative z-10 block h-auto w-full select-none pointer-events-none max-sm:scale-[1.35]"
+                  className="relative z-10 block h-auto w-full select-none pointer-events-none max-sm:scale-[1.75]"
                 />
 
                 <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible [--photo-scale:0.4] sm:[--photo-scale:1]"
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible [--photo-scale:0.5] sm:[--photo-scale:1]"
                   style={{
                     width: `${PHOTO_WIDTH_PX}px`,
                     height: "103.72863006591797px",
                     // TIP — PHONES: the photos sit in the CENTRE of the wordmark
                     // (like on desktop) but at 40% size (--photo-scale:0.4), and
-                    // the wordmark itself is enlarged (max-sm:scale-[1.35]), so
+                    // the wordmark itself is enlarged (max-sm:scale-[1.75]), so
                     // together they cover far less of the letters. Change 0.4 in
                     // the class above for bigger/smaller phone photos (0.35 is
                     // tiny, 0.6 is chunky).
@@ -1386,6 +1399,12 @@ export default function LaraShowcase() {
                 <div className="relative mx-auto h-full w-full max-w-md">
                   <NarrowReviewRow
                     row={REVIEW_ROWS[0]}
+                    rowIndex={0}
+                    progress={progress}
+                  />
+                  <NarrowReviewRow
+                    row={REVIEW_ROWS[1]}
+                    rowIndex={1}
                     progress={progress}
                     innerRef={reviewsGridRef}
                   />

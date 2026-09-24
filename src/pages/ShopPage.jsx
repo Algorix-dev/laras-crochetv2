@@ -109,16 +109,12 @@ export default function ShopPage() {
     <section className="pt-10">
       <div className="px-5 md:px-8 lg:px-[15.83%]">
         {/* Header row: title/subtitle on the left, search on the right */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+        <div className="flex flex-col-reverse md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-[36px] md:text-[36px] leading-[1.05] font-bold uppercase tracking-[-2%] text-[var(--ink)] mb-2">
+            <h1 className="text-[24px] leading-[1.05] md:text-[36px] font-bold uppercase tracking-[-2%] text-[var(--ink)] mb-2">
               Shop Lara's Crochet
             </h1>
-<<<<<<< ours
-            <p className="text-base text-[var(--muted)]">
-=======
             <p className="text-base md:text-lg text-[var(--muted)]">
->>>>>>> theirs
               Shop the latest pieces and must-haves from Lara's Crochet
             </p>
           </div>
@@ -130,7 +126,7 @@ export default function ShopPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search"
-              className="w-full rounded-md border border-[var(--line)] bg-white py-2.5 pl-4 pr-10 text-sm outline-none focus-visible:border-[var(--ink)]"
+              className="w-full rounded-full border border-[var(--line)] bg-[#F5F5F5] py-2.5 pl-4 pr-10 text-base shadow-sm md:rounded-md md:bg-white md:shadow-none outline-none focus-visible:border-[var(--ink)]"
             />
             <Search
               size={16}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NavbarVisibilityProvider } from "./context/NavbarVisibilityContext";
@@ -150,13 +151,8 @@ function HomePage() {
       <LaraShowcase />
 
       <Reveal>
-<<<<<<< ours
-        <div className="text-center pt-2 pb-10 md:pb-14">
-          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
-=======
         <div className="text-center pt-2 pb-2 md:pb-14">
-          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
->>>>>>> theirs
+          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
             Go to Shop
           </Link>
         </div>
@@ -172,11 +168,7 @@ function HomePage() {
                   <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                     Shop Our Pieces
                   </h2>
-<<<<<<< ours
-                  <Link to="/shop" className="pr-3 text-base font-medium underline underline-offset-2 hover:text-[var(--maroon)] transition-colors">
-=======
                   <Link to="/shop" className="pr-3 text-base underline underline-offset-2 hover:text-[var(--maroon)]">
->>>>>>> theirs
                     Go to shop
                   </Link>
                 </div>
@@ -186,11 +178,7 @@ function HomePage() {
               <ProductGrid products={liveProducts.slice(0, isPhone ? 6 : 4)} isPlaceholder={!isLive} />
               <Reveal>
                 <div className="text-center mt-10">
-<<<<<<< ours
                   <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
-=======
-                  <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
->>>>>>> theirs
                     Go to Shop
                   </Link>
                 </div>
@@ -221,8 +209,28 @@ function HomePage() {
 // - /signin opts out: it has its own splash + step animations.
 // - index.css clips sideways overflow on [data-page] so nothing can make
 //   the page pan left/right on a phone.
+// TIP: Lara's mobile Figma puts a full-width "Search" bar directly under the
+// header on the Shop and Custom Orders/Contact screens (and only there).
+// Phones only; tapping it opens the same search overlay the navbar uses.
+function MobileSearchBar() {
+  return (
+    <div className="px-5 pb-3 pt-3 md:hidden">
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event("laras:open-search"))}
+        className="flex h-11 w-full items-center gap-2 rounded-full border border-[var(--line)] bg-[#F5F5F5] px-4 text-left text-base text-[var(--muted)] shadow-sm"
+      >
+        <Search size={18} />
+        Search
+      </button>
+    </div>
+  );
+}
+
 function PageOffset({ children }) {
   const { pathname } = useLocation();
+  // /shop has its own search box (it filters the grid), styled like Figma
+  const showMobileSearch = pathname === "/contact";
   // /signin and /admin are standalone screens: no navbar, no scroll-rise
   const isSignIn = pathname === "/signin" || pathname.startsWith("/admin");
   return (
@@ -232,6 +240,7 @@ function PageOffset({ children }) {
         data-page={isSignIn ? undefined : "true"}
         data-no-rise={isSignIn ? "true" : undefined}
       >
+        {showMobileSearch && <MobileSearchBar />}
         {children}
       </div>
     </div>
