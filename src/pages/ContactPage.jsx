@@ -146,7 +146,7 @@ function PrimaryButton({ children, className = "", pinned = true, ...props }) {
   return (
     <button
       {...props}
-      className={`${pin} w-full bg-[var(--ink)] text-white text-base font-bold uppercase tracking-widest py-3.5 md:py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`${pin} w-full hover:bg-[#412B2D] text-white text-base font-bold uppercase tracking-widest py-3.5 md:py-4 transition-colors bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
     >
       {children}
     </button>
@@ -248,18 +248,8 @@ function SuccessCard({
 }) {
   return (
     <div className="text-center max-w-md mx-auto">
-      <div className="bg-[#FAFAFA] border border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 sm:p-10">
-        <div
-          className="flex items-center justify-center gap-1.5 mb-6"
-          aria-hidden="true"
-        >
-          {Array.from({ length: TOTAL_STEPS }).map((_, idx) => (
-            <div
-              key={idx}
-              className="w-1.5 h-1.5 rounded-full bg-[var(--mauve)]"
-            />
-          ))}
-        </div>
+      <div className="bg-[#FAFAFA] border border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 sm:p-10 sm:border-none">
+        
         <h2 className="font-display text-2xl text-[var(--ink)] font-bold mb-1">
           {heading}
         </h2>
