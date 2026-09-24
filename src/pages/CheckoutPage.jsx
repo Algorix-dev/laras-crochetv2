@@ -10,12 +10,13 @@
   that was added as an extra feature. The Figma design is clean
   with just the form fields and order summary.
 */
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { AlertTriangle, MessageCircleQuestion } from 'lucide-react';
+import { AlertTriangle, Lock, MessageCircleQuestion, ShieldCheck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { initializePayment } from '../api';
+import { openPaystackPopup } from '../utils/paystack';
 import Footer from '../components/Footer';
 import laraCrochetLogo from '../assets/lara-crochet-logo.png';
 
@@ -38,6 +39,7 @@ const Field = ({ label, value, onChange, ...props }) => (
 );
 
 export default function CheckoutPage() {
+  const navigate = useNavigate();
   const { cartItems, cartTotal } = useCart();
   const { formatPrice } = useCurrency();
   const [code, setCode] = useState('');
@@ -98,20 +100,16 @@ export default function CheckoutPage() {
      after Paystack redirects back. */
   const submit = async (e) => {
     e.preventDefault();
-    if (!cartItems.length) return;
+    if (!cartItems.length || submitting) return;
     setSubmitError(null);
     setSubmitting(true);
     try {
-      const { authorizationUrl } = await initializePayment({
+      const { authorizationUrl, accessCode } = await initializePayment({
         customerName: `${form.firstName} ${form.lastName}`.trim(),
         customerEmail: form.email,
         customerPhone: `+234${form.phone}`,
-        // TIP: sending this so the backend CAN charge the right
-        // shipping cost — but check server/routes/payments.js
-        // actually reads it and adds SHIPPING_METHODS[shippingMethod]
-        // .price to the order total. If it doesn't yet, Paystack will
-        // charge whatever the backend currently hardcodes/computes,
-        // which may not match what's shown on this page.
+        // The backend looks the shipping PRICE up itself from this name
+        // (server/routes/payments.js) and adds it to what Paystack charges.
         shippingMethod,
         // TIP: server/models/Order.js stores shippingAddress as a plain
         // String field, not a nested object — so we format it into one
@@ -134,7 +132,32 @@ export default function CheckoutPage() {
           quantity: item.quantity,
         })),
       });
-      window.location.href = authorizationUrl;
+
+      /* TIP — THE PAYMENT BLOCK'S "PAY NOW": opens Paystack's secure
+         window on top of this page. When it reports success we go to
+         /order-confirmation?reference=…, which asks the backend to
+         double-check the payment with Paystack before showing "Thank
+         you". If the popup can't open (script blocked, no access code
+         from an older backend) we fall back to the full-page Paystack
+         checkout, so paying always still works. */
+      if (!accessCode) {
+        window.location.href = authorizationUrl;
+        return;
+      }
+      try {
+        await openPaystackPopup(accessCode, {
+          onSuccess: (transaction) => {
+            navigate(`/order-confirmation?reference=${encodeURIComponent(transaction.reference)}`);
+          },
+          onCancel: () => setSubmitting(false), // closed the window: let them press Pay now again
+          onError: (error) => {
+            setSubmitError(error?.message || 'Payment could not be completed. Please try again.');
+            setSubmitting(false);
+          },
+        });
+      } catch {
+        window.location.href = authorizationUrl;
+      }
     } catch (err) {
       setSubmitError(err.message || 'Something went wrong starting payment. Please try again.');
       setSubmitting(false);
@@ -174,9 +197,9 @@ export default function CheckoutPage() {
               <img src={laraCrochetLogo} alt="Lara's Crochet" className="h-14 w-auto" />
             </Link>
 
-            {/* TIP: Breadcrumb-style step indicator. This form covers
-                Information + Shipping (address) in one step — Paystack
-                itself handles the Payment step once we redirect there. */}
+            {/* TIP: Breadcrumb-style step indicator. Information +
+                Shipping (address) + Payment are all on this one page:
+                fill the form, pick a Checkout Method, then Pay now. */}
             <p className="mt-6 text-xs">
               <b>Information</b>{' '}
               <span className="mx-2 text-[var(--muted)]">
@@ -298,17 +321,9 @@ export default function CheckoutPage() {
 
             {/* ================================================================
                 CHECKOUT METHOD — Standard vs Express shipping
-                TIP: added from the latest Figma. Payment itself still
-                happens on Paystack's own hosted page after this form
-                submits (see the submit() function above) rather than
-                raw card fields on this page — collecting card numbers
-                in your own <input>s would put YOU in PCI-compliance
-                scope, whereas redirecting to Paystack (or using their
-                inline widget) keeps card data off your server
-                entirely. Ask me if you'd rather switch to Paystack's
-                inline popup so the payment step never leaves this
-                page — the visual result is close to the Figma's card
-                form without the compliance risk of DIY fields.
+                TIP: added from the latest Figma. The prices are repeated
+                on the server (server/routes/payments.js) — that copy is
+                the one Paystack actually charges.
                 ================================================================ */}
             <section className="mt-8">
               <h2 className="text-sm font-semibold">Checkout Method</h2>
@@ -339,20 +354,64 @@ export default function CheckoutPage() {
               </div>
             </section>
 
+            {/* ================================================================
+                PAYMENT BLOCK
+                TIP: no card <input>s here on purpose. "Pay now" opens
+                Paystack's secure window (card, bank transfer or USSD)
+                on top of this page, so card numbers are typed into
+                Paystack's window and never touch this site or our
+                server. Building our own card fields would make the site
+                responsible for PCI compliance.
+                ================================================================ */}
+            <section className="mt-8" data-auto-rise="true">
+              <h2 className="text-sm font-semibold">Payment</h2>
+              <p className="mt-1 flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
+                <Lock size={12} aria-hidden="true" />
+                All transactions are secure and encrypted.
+              </p>
+
+              <div className="mt-3 border border-[var(--line)]">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-[var(--sand,#F6F1F1)] p-4">
+                  <span className="flex items-center gap-3">
+                    <input type="radio" name="paymentMethod" checked readOnly aria-label="Pay with Paystack" />
+                    <span className="text-sm font-semibold">Card, Bank Transfer or USSD</span>
+                  </span>
+                  <span className="flex items-center gap-1.5" aria-label="Accepted cards: Visa, Mastercard, Verve">
+                    {['VISA', 'MASTERCARD', 'VERVE'].map((brand) => (
+                      <span
+                        key={brand}
+                        className="border border-[var(--line-2)] bg-white px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-[var(--muted)]"
+                      >
+                        {brand}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+                <div className="flex items-start gap-3 border-t border-[var(--line)] p-4 text-xs leading-5 text-[var(--muted)]">
+                  <ShieldCheck size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[var(--mauve-muted)]" aria-hidden="true" />
+                  <p>
+                    When you press <b className="text-[var(--ink)]">Pay now</b>, a secure Paystack window opens
+                    on this page where you enter your card details or choose bank transfer / USSD.
+                    Your card details go straight to Paystack &mdash; we never see or store them.
+                  </p>
+                </div>
+              </div>
+            </section>
+
             {submitError && (
-              <p className="mt-4 text-xs text-red-500">{submitError}</p>
+              <p role="alert" className="mt-4 text-xs text-red-500">{submitError}</p>
             )}
 
-            {/* TIP: Submit button — dark, full-width, uppercase.
-                Disabled while the payment request is in flight, and
-                whenever the bag is empty, so a person can't start
-                checkout on nothing. */}
+            {/* TIP: Pay button — dark, full-width, uppercase. Disabled
+                while the payment window is opening/open, and whenever
+                the bag is empty, so a person can't start checkout on
+                nothing. */}
             <button
               type="submit"
               disabled={submitting || !cartItems.length}
               className="mt-8 w-full bg-[var(--ink)] py-4 text-xs font-bold tracking-widest text-white disabled:opacity-50"
             >
-                {submitting ? 'REDIRECTING TO PAYMENT…' : 'CONTINUE TO PAYMENT'}
+              {submitting ? 'OPENING SECURE PAYMENT…' : 'PAY NOW'}
             </button>
           </form>
 

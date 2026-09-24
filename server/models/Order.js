@@ -45,6 +45,10 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     totalAmount: { type: Number, required: true },
+    // TIP: which Checkout Method the customer picked and what it cost.
+    // totalAmount above already INCLUDES shippingFee.
+    shippingMethod: { type: String, enum: ['standard', 'express'], default: 'standard' },
+    shippingFee: { type: Number, default: 0 },
     // TIP: Paystack's own transaction reference — this is what you use
     // later to look up or verify a payment, and what powers order tracking.
     paystackReference: { type: String, required: true, unique: true },

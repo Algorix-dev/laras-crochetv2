@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { LogOut, X } from 'lucide-react';
 
 /*
@@ -8,10 +9,31 @@ import { LogOut, X } from 'lucide-react';
   stays dumb and reusable, the decision logic stays with whoever
   uses it.
 */
-export default function LogoutModal({ open, onCancel, onConfirm }) {
-  if (!open) return null;
+/*
+  TIP — WHY THIS IS RENDERED THROUGH A PORTAL (the "little box" bug):
+  `position: fixed` normally means "relative to the screen". But if ANY
+  parent has a CSS `transform` (even an invisible one), the browser
+  treats that parent as the reference instead. The account pages are
+  wrapped by the scroll-rise animation, which puts a transform on the
+  sidebar column — so the modal used to be fixed to THAT small column:
+  the dark overlay only covered the sidebar, the card was squeezed to
+  ~190px, and it visibly drifted upward while the rise animation
+  finished before settling into its "normal look".
 
-  return (
+  createPortal(..., document.body) moves the modal's DOM node out to
+  the end of <body>, above every transformed parent, so `fixed inset-0`
+  really is the whole screen from the very first frame. React still
+  treats it as a child of AccountSidebar, so state/props work as before.
+
+  SIZE: the card is exactly 322px wide from the md breakpoint (768px)
+  up, and full width of the screen (minus the px-5 side gutter on the
+  overlay) on phones. For truly edge-to-edge on phones, change the
+  overlay's `px-5` to `max-md:px-0`.
+*/
+export default function LogoutModal({ open, onCancel, onConfirm }) {
+  if (!open || typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -20,7 +42,7 @@ export default function LogoutModal({ open, onCancel, onConfirm }) {
     >
       <div
         onClick={(e) => e.stopPropagation()} // stop clicks INSIDE the card from bubbling up and closing it
-        className="w-full max-w-xs bg-white p-6 text-center shadow-xl"
+        className="w-full bg-white p-6 text-center shadow-xl md:w-[322px]"
       >
         <div className="mb-3 flex items-start justify-between">
           <span
@@ -50,6 +72,7 @@ export default function LogoutModal({ open, onCancel, onConfirm }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

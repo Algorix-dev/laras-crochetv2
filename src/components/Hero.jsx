@@ -596,15 +596,21 @@ function HeroModel({
     <motion.button
       type="button"
       onClick={() => {
-        // TIP — CENTRED MODEL NOW OPENS ITS PRODUCT PAGE: clicking a side
-        // model still brings it to the middle as before, but clicking the
-        // one already in the middle used to do nothing (see the old
-        // pointerEvents note below). Per the client, that click should now
-        // take the shopper straight to that piece's own product-details
-        // page. Fallback/sample models (id starts with "fallback-") have
-        // no real product behind them, so they stay inert.
+        // TIP — CENTRED MODEL OPENS ITS PRODUCT PAGE: clicking a side
+        // model brings it to the middle; clicking the one already in the
+        // middle takes the shopper to that piece's own product-details page.
+        //
+        // The sample models shown while NO piece is marked "Hero" in the
+        // admin page (ids start with "fallback-") used to do nothing when
+        // clicked, which looked like a broken link. Now:
+        //   - if App.jsx found a real piece with the same name, it set
+        //     `productId` on the model and we open that piece;
+        //   - otherwise the shopper goes to the Shop instead of nowhere.
         if (isSelected) {
-          if (!model.id.startsWith("fallback-")) navigate(`/product/${model.id}`);
+          const isSample = String(model.id).startsWith("fallback-");
+          if (model.productId) navigate(`/product/${model.productId}`);
+          else if (isSample) navigate("/shop");
+          else navigate(`/product/${model.id}`);
           return;
         }
         onSelect(model.id);

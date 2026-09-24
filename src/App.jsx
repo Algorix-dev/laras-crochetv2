@@ -96,7 +96,16 @@ function HomePage() {
         const onHero = live
           .filter((product) => product.placements.includes("hero"))
           .map(toHeroModel);
-        setHeroModels(onHero.length > 0 ? onHero : FALLBACK_HERO_MODELS);
+        // TIP: with nothing marked "Hero" yet, the sample models are shown.
+        // Link each one to the real piece of the same name (if the shop has
+        // it) so clicking it in the middle opens a real product page.
+        const linkedSamples = FALLBACK_HERO_MODELS.map((sample) => {
+          const match = live.find(
+            (product) => product.name?.trim().toLowerCase() === sample.name.toLowerCase()
+          );
+          return match ? { ...sample, productId: match.id } : sample;
+        });
+        setHeroModels(onHero.length > 0 ? onHero : linkedSamples);
 
         if (live.length > 0) {
           // "Shop Our Pieces" shows the first four: pieces marked

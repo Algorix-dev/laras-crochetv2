@@ -31,10 +31,25 @@ function paymentInfo(data = {}) {
 // Your secret key (PAYSTACK_SECRET_KEY) must never be sent to the
 // browser — that's why both calls below happen here on the server.
 
+// TIP: shipping prices live HERE on the server (same numbers as the
+// Checkout Method section in src/pages/CheckoutPage.jsx). The browser
+// only sends the NAME of the method ("standard" / "express"); the price
+// is looked up here, so nobody can change what they pay for shipping by
+// editing the request. If you change a price, change it in both files.
+const SHIPPING_METHODS = {
+  standard: 20440,
+  express: 30440,
+};
+
 // POST /api/payments/initialize
-// body: { customerName, customerEmail, customerPhone, shippingAddress, items: [{productId, color, size, quantity}] }
+// body: { customerName, customerEmail, customerPhone, shippingAddress, shippingMethod, items: [{productId, color, size, quantity}] }
 router.post('/initialize', async (req, res) => {
   const { customerName, customerEmail, customerPhone, shippingAddress, items } = req.body;
+  const shippingMethod = SHIPPING_METHODS[req.body.shippingMethod] ? req.body.shippingMethod : 'standard';
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Your bag is empty' });
+  }
 
   // TIP: recalculate the total from the DATABASE price, not whatever
   // the frontend sends. Never trust a price coming from the browser —
@@ -54,6 +69,12 @@ router.post('/initialize', async (req, res) => {
       quantity: item.quantity,
     });
   }
+
+  // TIP: the checkout page shows "Total = items + shipping", so Paystack
+  // must charge that same number. Before this, shipping was shown on the
+  // page but never added here, so customers were charged items only.
+  const shippingFee = SHIPPING_METHODS[shippingMethod];
+  totalAmount += shippingFee;
 
   const paystackRes = await fetch(`${PAYSTACK_BASE}/transaction/initialize`, {
     method: 'POST',
@@ -80,11 +101,19 @@ router.post('/initialize', async (req, res) => {
     customerPhone,
     shippingAddress,
     items: orderItems,
+    shippingMethod,
+    shippingFee,
     totalAmount,
     paystackReference: paystackData.data.reference,
   });
 
-  res.json({ authorizationUrl: paystackData.data.authorization_url });
+  // TIP: authorizationUrl = the full-page Paystack checkout (fallback);
+  // accessCode = what the in-page Payment popup on the checkout page uses.
+  res.json({
+    authorizationUrl: paystackData.data.authorization_url,
+    accessCode: paystackData.data.access_code,
+    reference: paystackData.data.reference,
+  });
 });
 
 // GET /api/payments/verify/:reference
