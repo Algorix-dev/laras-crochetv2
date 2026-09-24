@@ -129,7 +129,8 @@ const VH_UNIT =
 // continues" instead of starting from zero at the pin.
 const PRE_ROLL_END = 0.05;
 
-const WORDMARK_FADE_IN_END = 0.012;
+const WORDMARK_FADE_IN_START = 0.06;
+const WORDMARK_FADE_IN_END = 0.09;
 
 const PHOTO_RANGES = [
   { start: 0.008, end: 0.116 }, // back   (comes from bottom) — starts during the approach
@@ -238,8 +239,32 @@ function easeInOutCubic(t) {
   before the paragraph takes over.
 */
 function sceneOpacity(progress) {
+  // TIP — "SHIFTED DOWN" PER FEEDBACK: this used to fade in from
+  // progress 0 (the very start of the pre-roll — see PRE_ROLL_END
+  // above), finishing at just 0.012, so LARA was already fully
+  // visible while the previous section (the Hero models) was likely
+  // still on screen. It now stays invisible until
+  // WORDMARK_FADE_IN_START (just after the 0.05 pre-roll ends, so
+  // it can't appear before the section has actually started
+  // pinning), then fades in over a short window to
+  // WORDMARK_FADE_IN_END. Push WORDMARK_FADE_IN_START later still if
+  // it's still visible too soon; pull it earlier if there's now an
+  // awkward empty gap after the models before LARA appears.
+  // NOTE: PHOTO_RANGES[0] (the first scattered photo) still starts
+  // flying in at 0.008, unchanged — the original design had it
+  // already mid-flight by the time LARA finished fading in. Delaying
+  // only the wordmark may leave that first photo animating a beat
+  // before LARA appears; nudge PHOTO_RANGES[0].start later too if
+  // that now looks out of sync.
+  if (progress <= WORDMARK_FADE_IN_START) {
+    return 0;
+  }
+
   if (progress <= WORDMARK_FADE_IN_END) {
-    return clamp01(progress / WORDMARK_FADE_IN_END);
+    return clamp01(
+      (progress - WORDMARK_FADE_IN_START) /
+        (WORDMARK_FADE_IN_END - WORDMARK_FADE_IN_START)
+    );
   }
 
   if (progress >= LARA_HOLD_END && progress <= LARA_EXIT_END) {

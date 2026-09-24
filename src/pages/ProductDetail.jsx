@@ -314,6 +314,41 @@ function Reviews() {
     );
   };
 
+  // TIP — REAL ARROW ASSET (Figma "Frame 94"): 6 chevrons stacked
+  // vertically, each pointing up, fading from solid at the bottom to
+  // almost invisible at the top — this is what ties a mobile review's
+  // fit scale back to the review above it, replacing a plain single
+  // ChevronUp icon. Built as inline SVGs (not an imported image) so
+  // the color always matches the site's palette; change `color` below
+  // to recolor it, or the `opacities` array to fade faster/slower.
+  const ReviewFitArrow = () => {
+    const opacities = [0.12, 0.24, 0.38, 0.54, 0.72, 0.9]; // top -> bottom
+    const color = 'var(--maroon)';
+    return (
+      <div className="flex flex-col items-center" aria-hidden="true">
+        {opacities.map((o, i) => (
+          <svg
+            key={i}
+            width="16"
+            height="7"
+            viewBox="0 0 16 7"
+            className={i > 0 ? '-mt-[3px]' : ''}
+            style={{ opacity: o }}
+          >
+            <path
+              d="M1 6L8 1L15 6"
+              stroke={color}
+              strokeWidth="1.5"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <section className="mt-16 px-5 md:px-8 lg:px-[15.83%] md:mt-20" data-auto-rise="true">
       <h2 className="font-display text-3xl md:text-4xl">Reviews</h2>
@@ -389,16 +424,22 @@ function Reviews() {
       {/* Mobile Figma layout */}
       <div className="mt-8 md:hidden">
         <HorizontalFitScale fit="true" />
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        {/* TIP — WAS BIGGER THAN THE REVIEW PHOTOS BELOW: these used
+            aspect-[359/392] w-full, stretching each photo to fill half
+            the row (~160px+ wide) — much bigger than the 120×131
+            individual review photos further down. Same fixed 120×131
+            size here now, so the summary photos and the per-review
+            photos read as one consistent size. */}
+        <div className="mt-6 flex gap-3">
           <img
             src={reviewRestaurantPhoto}
             alt="Customer wearing The Reina Dress at a restaurant"
-            className="aspect-[359/392] w-full object-cover"
+            className="h-[131px] w-[120px] object-cover"
           />
           <img
             src={reviewBeachPhoto}
             alt="Customer wearing The Reina Dress at the beach"
-            className="aspect-[359/392] w-full object-cover"
+            className="h-[131px] w-[120px] object-cover"
           />
         </div>
       </div>
@@ -453,10 +494,11 @@ function Reviews() {
             <div className="mt-8 md:hidden">
               {/* TIP — ARROW ADDED: on mobile this scale sits below the
                   review it belongs to with no visual link, so it could
-                  read as belonging to the NEXT review instead. A small
-                  up-arrow ties it back to the content just above it. */}
-              <div className="mb-1 flex justify-center text-[var(--muted)]">
-                <ChevronUp size={14} aria-hidden="true" />
+                  read as belonging to the NEXT review instead. The
+                  stacked-chevron arrow (ReviewFitArrow, above) ties it
+                  back to the content just above it. */}
+              <div className="mb-1 flex justify-center">
+                <ReviewFitArrow />
               </div>
               <HorizontalFitScale fit={review.fit} />
               <time className="mt-5 block text-xs text-[var(--muted)]">
@@ -803,7 +845,7 @@ export default function ProductDetail() {
 
               {/* Size */}
               <div>
-                <div className="mb-3 flex max-w-[339px] items-center justify-between">
+                <div className="mb-3 flex items-center justify-between md:max-w-[339px]">
                   <p className="text-sm font-semibold">Size</p>
                   <button
                     type="button"
@@ -820,15 +862,21 @@ export default function ProductDetail() {
                     border. Switching grid -> flex lets each button
                     size itself to its own label (XS vs XXL end up
                     different widths, same as Figma) instead of
-                    stretching everything to fill the card. */}
-                <div className="flex max-w-[339px] flex-wrap">
+                    stretching everything to fill the card.
+                    TIP — MOBILE IS DIFFERENT: the separate MOBILE Figma
+                    frame has these 6 boxes as equal-width flex-grow
+                    columns filling the full row edge to edge (57.17px
+                    × 6 ≈ 343px, no gaps) — the opposite of desktop's
+                    auto-width/wrap. flex-1 below does that; md: turns
+                    it back into the auto-width wrapping row. */}
+                <div className="flex md:max-w-[339px] md:flex-wrap">
                   {FIGMA_SIZES.map((s) => (
                     <button
                       key={s}
                       type="button"
                       aria-pressed={size === s}
                       onClick={() => setSize(s)}
-                      className={`border border-[var(--line)] px-5 py-1 text-sm transition-colors ${
+                      className={`flex-1 border border-[var(--line)] px-5 py-1 text-sm transition-colors md:flex-none ${
                         size === s
                           ? 'bg-[var(--ink)] text-white'
                           : 'text-[var(--ink)] hover:bg-[#f4eeee]'
@@ -843,29 +891,16 @@ export default function ProductDetail() {
 
             {/* TIP: spec sets this label at 20px Bold, letter-spacing
                 -0.04em, on a #564345 background — a big jump up from
-                the old 10px tracked-out label. I kept `w-full` since
-                that's a sensible default for a PDP call-to-action, but
-                the dev-mode export literally measures this button at a
-                fixed 322px wide — worth a quick check with Teniayo or
-                the client on which is actually intended. If it should
-                be fixed-width, swap `w-full` for `w-[322px]` (you may
-                also want to center the button in that case, e.g. wrap
-                it or add `mx-auto`). */}
-            {/* TIP - PHONE FIX: the button used to have px-26 (104px padding each
-                side) inside a 322px cap, leaving ~114px for the label, so
-                "ADD TO BAG" wrapped onto two lines. It is now full width up
-                to the Figma's 322px, with normal padding, and never wraps.
-                (tracking-[-4%] was also not a real Tailwind value, so it
-                did nothing; -0.04em is the same -4% and actually applies.)
-                TIP — NOT CENTERED: added `mx-auto`. w-full + max-w-[322px]
-                only caps how wide the button can GROW — on any screen
-                wider than 322px + this column's own padding, the button
-                still starts flush against the left edge with all the
-                slack on the right, since nothing was centering it within
-                the (now padded, see the section's own px-5 below) column. */}
+                the old 10px tracked-out label.
+                TIP — FULL WIDTH, NOT CENTERED: per the client, this
+                should fill the entire width of the column (same left/
+                right edges as the heading/price above it), not sit as
+                a smaller centered box. Plain w-full does that now —
+                no max-w cap, no mx-auto needed once nothing is capping
+                its growth. */}
             <button
               onClick={handleAddToBag}
-              className="mx-auto mt-8 block w-full max-w-[322px] whitespace-nowrap bg-[#564345] px-6 py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-8 block w-full whitespace-nowrap bg-[#564345] px-6 py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)]"
             >
               Add to Bag
             </button>
