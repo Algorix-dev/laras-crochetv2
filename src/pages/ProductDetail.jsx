@@ -736,16 +736,6 @@ export default function ProductDetail() {
             (shop, homepage, wishlist...). If someone opened this product
             straight from a link there's no previous page, so we send them
             to /shop instead of leaving the site. */}
-        <div className="px-5 py-4">
-          <button
-            type="button"
-            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/shop'))}
-            className="inline-flex items-center gap-2 text-base text-[var(--ink)] hover:text-[var(--maroon)] cursor-pointer"
-          >
-            <ArrowLeft size={18} /> Back
-          </button>
-        </div>
-
         <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-7.5">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
