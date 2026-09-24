@@ -397,12 +397,12 @@ function Reviews() {
 
   return (
     <section className="mt-16 px-5 md:px-8 lg:px-[15.83%] md:mt-20" data-auto-rise="true">
-      <h2 className="font-display text-3xl md:text-4xl">Reviews</h2>
+      <h2 className="font-bold font-display text-3xl md:text-4xl">Reviews</h2>
 
       <div className="mt-5 flex items-center gap-3">
         <strong className="text-base font-medium">4.5</strong>
         {renderStars(4, 14)}
-        <span className="text-[10px] text-[var(--muted)]">
+        <span className="sm:block text-[10px] text-[var(--muted)]">
           Based on 18 reviews
         </span>
       </div>
@@ -490,6 +490,11 @@ function Reviews() {
             alt="Customer wearing The Reina Dress at the beach"
             className="h-[110px] w-[100px] object-cover"
           />
+          <ZoomImage
+            src={reviewBeachPhoto}
+            alt="Customer wearing The Reina Dress at the beach"
+            className="h-[110px] w-[100px] object-cover"
+          />
         </div>
       </div>
 
@@ -506,8 +511,8 @@ function Reviews() {
 
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <p className="text-xl font-bold">{review.name}</p>
-                <span className="flex items-center gap-1 text-xl text-[var(--ink-warm)]">
+                <p className="sm:text-[14px] text-xl font-bold">{review.name}</p>
+                <span className="sm:text-[14px] flex items-center gap-1 text-xl text-[var(--ink-warm)]">
                   Verified Buyer
                   <Check size={17} strokeWidth={3} />
                 </span>
@@ -515,7 +520,7 @@ function Reviews() {
 
               <div className="mt-5">{renderStars(review.rating, 24)}</div>
 
-              <h3 className="mt-5 text-xl font-bold">{review.title}</h3>
+              <h3 className="sm:text-[14px] mt-5 text-xl font-bold">{review.title}</h3>
 
               {review.photo && (
                 <ZoomImage
@@ -531,12 +536,12 @@ function Reviews() {
                 />
               )}
 
-              <p className="mt-6 text-base leading-6 text-[var(--muted)]">
+              <p className="sm:text-[14px] mt-6 text-base leading-6 text-[var(--muted)]">
                 {review.text}
               </p>
             </div>
 
-            <time className="mt-2 hidden justify-self-end text-base text-[var(--ink-warm)] md:block">
+            <time className="mt-2 justify-self-end text-base text-[var(--ink-warm)] md:block">
               {review.date}
             </time>
 
@@ -550,9 +555,6 @@ function Reviews() {
                 <ReviewFitArrow />
               </div>
               <HorizontalFitScale fit={review.fit} />
-              <time className="mt-5 block text-xs text-[var(--muted)]">
-                {review.date}
-              </time>
             </div>
           </article>
         ))}
@@ -685,7 +687,7 @@ export default function ProductDetail() {
           position there. navigate(-1) follows the browser history stack
           rather than hard-coding /shop, so it works regardless of entry
           point. */}
-      <div className="px-5 md:px-8 lg:px-[15.83%] pt-4 pb-2">
+      <div className="px-5 md:px-8 pt-4 pb-2">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -990,7 +992,7 @@ export default function ProductDetail() {
             className here ever became dynamic, React would overwrite the
             .rv/.on classes the engine adds. */}
         <div className="mt-16 mb-12 px-5 md:px-8 lg:px-[15.83%]" data-auto-rise="true">
-          <div className="flex gap-6 border-b border-[var(--line)]">
+          <div className="flex sm:justify-between gap-6 border-b border-[var(--line)]">
             {Object.keys(tabs).map((tabName) => (
               <button
                 key={tabName}
@@ -1010,6 +1012,12 @@ export default function ProductDetail() {
           </p>
         </div>
 
+        <RecommendedProducts
+          category={product.category}
+          excludeId={product.id}
+          className="mt-20 px-5 md:px-8 lg:px-[15.83%]"
+        />
+
         {/* ============================
             REVIEWS
             ============================ */}
@@ -1018,11 +1026,6 @@ export default function ProductDetail() {
         {/* ============================
             RECOMMENDATIONS
             ============================ */}
-        <RecommendedProducts
-          category={product.category}
-          excludeId={product.id}
-          className="mt-20 px-5 md:px-8 lg:px-[15.83%]"
-        />
       </main>
 
       <Footer />

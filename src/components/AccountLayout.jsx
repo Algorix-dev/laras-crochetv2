@@ -50,7 +50,7 @@ export default function AccountLayout({ active, title, headerAction, children })
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 md:col-start-2 md:row-start-1">
-            <h1 className="text-2xl font-bold uppercase tracking-wide text-[var(--ink)] md:text-3xl">
+            <h1 className="sm:text-[20px] lg:text-[36px] md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)]">
               {title}
             </h1>
             {headerAction}

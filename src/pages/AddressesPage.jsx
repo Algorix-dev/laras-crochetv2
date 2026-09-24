@@ -117,7 +117,7 @@ export default function AddressesPage() {
         setEditingId(null);
         setFormOpen(true);
       }}
-      className="bg-[var(--ink)] px-5 py-3 text-base font-semibold uppercase tracking-wide text-white hover:bg-[var(--maroon)]"
+      className="bg-[var(--ink)] sm:w-full sm:block px-5 py-3 text-base font-semibold uppercase tracking-wide text-white hover:bg-[var(--maroon)]"
     >
       {addresses.length > 0 ? 'Add a New Address' : 'Add Address'}
     </button>
@@ -268,11 +268,11 @@ export default function AddressesPage() {
                   Set as default address
                 </label>
 
-                <div className="mt-5 flex gap-3">
+                <div className="mt-5 flex sm:flex-col gap-3">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="bg-[var(--ink)] px-6 py-2.5 text-base uppercase tracking-wide text-white hover:bg-[var(--maroon)] disabled:opacity-50"
+                    className="bg-[var(--ink)] sm:w-full px-6 py-2.5 text-base uppercase tracking-wide text-white hover:bg-[var(--maroon)] disabled:opacity-50"
                   >
                     {saving ? 'Saving...' : 'Add Address'}
                   </button>

@@ -268,7 +268,7 @@ export default function CheckoutPage() {
                 </label>
 
                 {/* TIP: First name and last name side by side. */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="sm:grid-cols-1 grid grid-cols-2 gap-3">
                   <Field placeholder="First name" value={form.firstName} onChange={updateField('firstName')} />
                   <Field placeholder="Last name" value={form.lastName} onChange={updateField('lastName')} />
                 </div>
@@ -283,7 +283,7 @@ export default function CheckoutPage() {
 
                 {/* TIP: City, State, and Postal Code — three columns.
                     State shows "Lagos" as default, matching the Figma. */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="sm:grid-cols-1 grid grid-cols-3 gap-3">
                   <Field placeholder="City" value={form.city} onChange={updateField('city')} />
                   <Field label="State" value={form.state} onChange={updateField('state')} />
                   <Field placeholder="Postal Code (Optional)" optional value={form.postalCode} onChange={updateField('postalCode')} />
@@ -421,7 +421,7 @@ export default function CheckoutPage() {
             <button
               type="submit"
               disabled={submitting || !cartItems.length}
-              className="mt-8 w-full bg-[var(--ink)] py-4 text-base font-bold tracking-widest text-white disabled:opacity-50"
+              className="mt-8 w-full bg-[#412B2D] py-4 text-base font-bold tracking-widest text-white disabled:opacity-50"
             >
               {submitting ? 'OPENING SECURE PAYMENT…' : 'PAY NOW'}
             </button>

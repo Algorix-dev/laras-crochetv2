@@ -40,13 +40,13 @@ export default function AccountSidebar({ active }) {
         <button
           onClick={() => setMobileOpen((open) => !open)}
           aria-expanded={mobileOpen}
-          className="flex w-full items-center justify-between border border-[var(--line)] px-4 py-3 text-base font-bold uppercase tracking-wide text-[var(--ink)]"
+          className="flex w-full items-center justify-between border border-[var(--line)] px-4 py-3 sm:text-[12px] text-base font-bold uppercase tracking-wide text-[var(--ink)]"
         >
           {activeLabel}
           <ChevronDown size={16} className={mobileOpen ? 'rotate-180' : ''} />
         </button>
         {mobileOpen && (
-          <div className="border border-t-0 border-[var(--line)] text-[18px] uppercase tracking-wide">
+          <div className="border border-t-0 border-[var(--line)] sm:text-[12px] uppercase tracking-wide">
             {LINKS.filter((link) => link.key !== active).map((link) => (
               <Link
                 key={link.key}
@@ -62,7 +62,7 @@ export default function AccountSidebar({ active }) {
                 setMobileOpen(false);
                 setConfirmOpen(true);
               }}
-              className="block w-full px-4 py-3 text-left uppercase text-[var(--muted)] hover:text-[var(--ink)] font-bold"
+              className="sm:text-[12px] block w-full px-4 py-3 text-left uppercase text-[var(--muted)] hover:text-[var(--ink)] font-bold"
             >
               LOGOUT
             </button>

@@ -1135,14 +1135,14 @@ export default function LaraShowcase() {
               // it's still off, raise/lower the 2.0 here (it doesn't
               // need to match the wordmark's max-sm:scale-[1.75] below
               // anymore).
-              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[2.0]"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[2.5]"
               style={{ width: "100vw" }}
             />
 
             <img
               src={laraWordmark}
               alt="Lara's Crochet"
-              className="relative z-10 block h-auto w-full select-none max-sm:scale-[1.75]"
+              className="relative z-10 block h-auto w-full select-none max-sm:scale-[1.5]"
             />
 
             <div

@@ -146,7 +146,7 @@ function PrimaryButton({ children, className = "", pinned = true, ...props }) {
   return (
     <button
       {...props}
-      className={`${pin} w-full hover:bg-[#412B2D] text-white text-base font-bold uppercase tracking-widest py-3.5 md:py-4 transition-colors bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`${pin} w-full hover:bg-[#412B2D] text-white text-base font-bold uppercase tracking-widest sm:py-0.5 md:py-4 transition-colors bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
     >
       {children}
     </button>
@@ -258,12 +258,13 @@ function SuccessCard({
           <Check size={26} />
         </div>
       </div>
-      <Link
+      <div className="mt-6"><Link
         to={linkTo}
-        className="inline-flex items-center gap-1 mt-6 text-base font-semibold text-[var(--ink)] underline underline-offset-2 hover:text-[var(--maroon)] transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1 text-base underline underline-offset-2 text-[var(--ink)] hover:text-[var(--maroon)] transition-colors cursor-pointer"
       >
-        {linkLabel} <span aria-hidden="true">→</span>
+        {linkLabel} 
       </Link>
+        <span aria-hidden="true">→</span></div>
     </div>
   );
 }
@@ -911,17 +912,17 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: order status → tracker (self-serve, no email) ============ */}
                 {phase === "os-tracker" && (
                   <div>
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
+                    <h2 className="text-[16px] font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
                       Here is the status of your order
                     </h2>
                     <div className="flex items-center justify-between mb-10 px-1">
                       {ORDER_STATUSES.map((status, idx) => (
                         <div
                           key={status}
-                          className="flex items-center flex-1 last:flex-none"
+                          className="sm:flex-col flex items-center flex-1 last:flex-none"
                         >
                           <div className="flex flex-col items-center gap-2 relative">
-                            <span className="text-base text-[var(--muted)] uppercase tracking-wide absolute -top-5 whitespace-nowrap">
+                            <span className="text-[14px] text-[var(--muted)] uppercase tracking-wide absolute -top-5 whitespace-nowrap">
                               {status}
                             </span>
                             <div
@@ -942,7 +943,7 @@ export default function ContactPage() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-lg text-[var(--ink)] leading-relaxed">
+                    <p className="sm:text-[14px] text-base text-[#404040] leading-relaxed">
                       Your order (#{formData.orderRef}) has been received on{" "}
                       {today} and{" "}
                       {currentStatus === "Order received" &&
@@ -954,10 +955,10 @@ export default function ContactPage() {
                       {currentStatus === "Delivery" &&
                         "is finally on its way to you!"}
                     </p>
-                    <p className="text-lg text-[var(--ink)] mt-4">
+                    <p className="sm:text-[14px] text-base text-[#404040] mt-4">
                       Thank you for choosing Lara&apos;s Crochet.
                     </p>
-                    <p className="text-lg text-[var(--ink)] mt-4">
+                    <p className="sm:text-[14px] text-base text-[#404040] mt-4">
                       Yours in love,
                       <br />
                       <span className="font-logo text-base">Lara</span>

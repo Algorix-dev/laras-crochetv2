@@ -1034,8 +1034,8 @@ function HeroCarousel({ models }) {
               pointer-events-none
               absolute
               left-1/2
-              -translate-x-1/2
-
+              -translate-x-1/2 sm:mb-4
+                
               bottom-[-7.2%]
 
               z-0
