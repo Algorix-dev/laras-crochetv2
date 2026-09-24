@@ -152,7 +152,7 @@ function HomePage() {
 
       <Reveal>
         <div className="text-center pt-2 pb-2 md:pb-14">
-          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
+          <Link to="/shop" className="sm:w-full inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
             Go to Shop
           </Link>
         </div>
