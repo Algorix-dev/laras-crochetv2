@@ -165,10 +165,10 @@ function HomePage() {
                   lines up with the product grid directly below it. */}
               <Reveal>
                 <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
+                  <h2 className="sm:text-[16px] text-2xl md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                     Shop Our Pieces
                   </h2>
-                  <Link to="/shop" className="pr-3 text-base underline underline-offset-2 hover:text-[var(--maroon)]">
+                  <Link to="/shop" className="sm:text-[14px] pr-3 text-base underline underline-offset-2 hover:text-[var(--maroon)]">
                     Go to shop
                   </Link>
                 </div>
