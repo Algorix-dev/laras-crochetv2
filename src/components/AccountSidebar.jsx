@@ -40,7 +40,7 @@ export default function AccountSidebar({ active }) {
         <button
           onClick={() => setMobileOpen((open) => !open)}
           aria-expanded={mobileOpen}
-          className="flex w-full items-center justify-between border border-[var(--line)] px-4 py-3 text-xs font-bold uppercase tracking-wide text-[var(--ink)]"
+          className="flex w-full items-center justify-between border border-[var(--line)] px-4 py-3 text-base font-bold uppercase tracking-wide text-[var(--ink)]"
         >
           {activeLabel}
           <ChevronDown size={16} className={mobileOpen ? 'rotate-180' : ''} />

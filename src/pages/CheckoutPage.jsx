@@ -12,11 +12,13 @@
 */
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { AlertTriangle, Lock, MessageCircleQuestion, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Lock, MessageCircleQuestion, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { initializePayment } from '../api';
 import { openPaystackPopup } from '../utils/paystack';
+import { countries } from '../data/countries';
+import { formatBusinessDays, formatDeliveryRange } from '../utils/delivery';
 import Footer from '../components/Footer';
 import laraCrochetLogo from '../assets/lara-crochet-logo.png';
 
@@ -26,22 +28,27 @@ import laraCrochetLogo from '../assets/lara-crochet-logo.png';
    Now a controlled input (value + onChange) instead of defaultValue,
    since we need the actual values at submit time to send to the API. */
 const Field = ({ label, value, onChange, ...props }) => (
-  <label className="block text-xs">
+  <label className="block text-base">
     {label && <span className="mb-1 block text-[var(--muted)]">{label}</span>}
     <input
       {...props}
       value={value}
       onChange={onChange}
       required={!props.optional}
-      className="w-full border border-[var(--line)] bg-white px-3 py-3 text-sm"
+      className="w-full border border-[var(--line)] bg-white px-3 py-3 text-base"
     />
   </label>
 );
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { cartItems, cartTotal } = useCart();
-  const { formatPrice } = useCurrency();
+  const { cartItems, cartTotal, removeFromBag } = useCart();
+  /* TIP: `country` + `setCountry` come from the SAME currency context the
+     navbar selector uses. The checkout dropdown used to be its own
+     separate state, so picking "United States" here never switched the
+     prices to $. Now both places share one source of truth. */
+  const { formatPrice, country, setCountry } = useCurrency();
+  const selectedCountry = countries.find((c) => c.code === country) || countries[0];
   const [code, setCode] = useState('');
 
   // TIP: one state object for every field the backend actually
@@ -52,7 +59,6 @@ export default function CheckoutPage() {
   const [form, setForm] = useState({
     email: '',
     newsletterOptIn: false,
-    country: 'Nigeria',
     firstName: '',
     lastName: '',
     address: '',
@@ -77,9 +83,11 @@ export default function CheckoutPage() {
   // this is the real total once a method is picked. Worth deciding
   // with Lara which number is the actual policy and keeping both
   // pages in sync with it.
+  /* TIP: `base` = business days for ONE piece. The window shown to the
+     customer grows with the number of pieces (see utils/delivery.js). */
   const SHIPPING_METHODS = {
-    standard: { label: 'Standard Checkout', eta: '10–14 business days', price: 20440 },
-    express: { label: 'Express Checkout', eta: '4–5 business days', price: 30440 },
+    standard: { label: 'Standard Checkout', base: { min: 10, max: 14 }, price: 20440 },
+    express: { label: 'Express Checkout', base: { min: 4, max: 5 }, price: 30440 },
   };
   const [shippingMethod, setShippingMethod] = useState('standard');
 
@@ -107,7 +115,7 @@ export default function CheckoutPage() {
       const { authorizationUrl, accessCode } = await initializePayment({
         customerName: `${form.firstName} ${form.lastName}`.trim(),
         customerEmail: form.email,
-        customerPhone: `+234${form.phone}`,
+        customerPhone: `${selectedCountry.dial}${form.phone}`,
         // The backend looks the shipping PRICE up itself from this name
         // (server/routes/payments.js) and adds it to what Paystack charges.
         shippingMethod,
@@ -121,7 +129,7 @@ export default function CheckoutPage() {
           form.city,
           form.state,
           form.postalCode,
-          form.country,
+          selectedCountry.name,
         ]
           .filter(Boolean)
           .join(', '),
@@ -200,7 +208,7 @@ export default function CheckoutPage() {
             {/* TIP: Breadcrumb-style step indicator. Information +
                 Shipping (address) + Payment are all on this one page:
                 fill the form, pick a Checkout Method, then Pay now. */}
-            <p className="mt-6 text-xs">
+            <p className="mt-6 text-base">
               <b>Information</b>{' '}
               <span className="mx-2 text-[var(--muted)]">
                 {'>'} Shipping {'>'} Payment
@@ -209,7 +217,7 @@ export default function CheckoutPage() {
 
             {/* TIP: Contact section — email field and newsletter opt-in. */}
             <section className="mt-8" data-auto-rise="true">
-              <h2 className="text-sm font-semibold">Contact</h2>
+              <h2 className="text-base font-semibold">Contact</h2>
 
               <div className="mt-3 relative">
                 <Field type="email" placeholder="Email" value={form.email} onChange={updateField('email')} />
@@ -230,7 +238,7 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              <label className="mt-3 flex gap-2 text-xs">
+              <label className="mt-3 flex gap-2 text-base">
                 <input type="checkbox" className="rounded-sm" checked={form.newsletterOptIn} onChange={updateField('newsletterOptIn')} />
                 Email me with news and offers
               </label>
@@ -238,26 +246,24 @@ export default function CheckoutPage() {
 
             {/* TIP: Shipping address section — matches the Figma exactly. */}
             <section className="mt-8" data-auto-rise="true">
-              <h2 className="text-sm font-semibold">Shipping Address</h2>
-              <p className="mt-1 text-[11px] text-[var(--muted)]">
+              <h2 className="text-base font-semibold">Shipping Address</h2>
+              <p className="mt-1 text-base text-[var(--muted)]">
                 Please ensure your address is correct. We cannot change addresses after checkout.
               </p>
 
               <div className="mt-3 space-y-3">
 
                 {/* TIP: Country/Region dropdown — label above value, matching Figma. */}
-                <label className="block text-xs">
+                <label className="block text-base">
                   <span className="mb-1 block text-[var(--muted)]">Country/Region</span>
                   <select
-                    className="w-full border border-[var(--line)] p-3 text-sm"
-                    value={form.country}
-                    onChange={updateField('country')}
+                    className="w-full border border-[var(--line)] p-3 text-base"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
                   >
-                    <option>Nigeria</option>
-                    <option>United States</option>
-                    <option>United Kingdom</option>
-                    <option>Canada</option>
-                    <option>South Africa</option>
+                    {countries.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
                   </select>
                 </label>
 
@@ -285,20 +291,24 @@ export default function CheckoutPage() {
 
                 {/* TIP: Phone number with Nigerian flag + country code. */}
                 <div className="flex border border-[var(--line)]">
-                  <span className="flex items-center gap-1.5 p-3 text-sm">
-                    {/* Nigeria flag SVG */}
-                    <svg viewBox="0 0 30 20" className="h-3.5 w-5 shrink-0" aria-hidden="true">
-                      <path fill="#008751" d="M0 0h10v20H0zm20 0h10v20H20z" />
-                      <path fill="#fff" d="M10 0h10v20H10z" />
-                    </svg>
-                    +234
+                  <span className="flex items-center gap-1.5 p-3 text-base">
+                    {/* TIP: flag emojis show as plain letters ("NG") on
+                        Windows, so only Nigeria gets a drawn SVG flag;
+                        every other country just shows its dial code. */}
+                    {selectedCountry.code === 'NG' && (
+                      <svg viewBox="0 0 30 20" className="h-3.5 w-5 shrink-0" aria-hidden="true">
+                        <path fill="#008751" d="M0 0h10v20H0zm20 0h10v20H20z" />
+                        <path fill="#fff" d="M10 0h10v20H10z" />
+                      </svg>
+                    )}
+                    {selectedCountry.dial}
                   </span>
                   <input
                     required
                     placeholder="Phone number"
                     value={form.phone}
                     onChange={updateField('phone')}
-                    className="min-w-0 flex-1 p-3 text-sm"
+                    className="min-w-0 flex-1 p-3 text-base"
                   />
                   {/* TIP: Help icon inside the phone field */}
                   <button
@@ -308,7 +318,7 @@ export default function CheckoutPage() {
                     onClick={() =>
                       window.dispatchEvent(
                         new CustomEvent('lara-toast', {
-                          detail: 'Include your country code if different from +234.',
+                          detail: `Your number will be saved as ${selectedCountry.dial} followed by what you type.`,
                         })
                       )
                     }
@@ -326,7 +336,7 @@ export default function CheckoutPage() {
                 the one Paystack actually charges.
                 ================================================================ */}
             <section className="mt-8">
-              <h2 className="text-sm font-semibold">Checkout Method</h2>
+              <h2 className="text-base font-semibold">Checkout Method</h2>
               <div className="mt-3 divide-y divide-[var(--line)] border border-[var(--line)]">
                 {Object.entries(SHIPPING_METHODS).map(([key, method]) => (
                   <label
@@ -344,11 +354,13 @@ export default function CheckoutPage() {
                         className="mt-1"
                       />
                       <span>
-                        <span className="block text-sm font-semibold">{method.label}</span>
-                        <span className="block text-xs text-[var(--muted)]">{method.eta}</span>
+                        <span className="block text-base font-semibold">{method.label}</span>
+                        <span className="block text-base text-[var(--muted)]">
+                          {formatBusinessDays(method.base, totalItems)} · est. {formatDeliveryRange(method.base, totalItems)}
+                        </span>
                       </span>
                     </span>
-                    <span className="whitespace-nowrap text-sm">{formatPrice(method.price)}</span>
+                    <span className="whitespace-nowrap text-base">{formatPrice(method.price)}</span>
                   </label>
                 ))}
               </div>
@@ -364,8 +376,8 @@ export default function CheckoutPage() {
                 responsible for PCI compliance.
                 ================================================================ */}
             <section className="mt-8" data-auto-rise="true">
-              <h2 className="text-sm font-semibold">Payment</h2>
-              <p className="mt-1 flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
+              <h2 className="text-base font-semibold">Payment</h2>
+              <p className="mt-1 flex items-center gap-1.5 text-base text-[var(--muted)]">
                 <Lock size={12} aria-hidden="true" />
                 All transactions are secure and encrypted.
               </p>
@@ -374,20 +386,20 @@ export default function CheckoutPage() {
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-[var(--sand,#F6F1F1)] p-4">
                   <span className="flex items-center gap-3">
                     <input type="radio" name="paymentMethod" checked readOnly aria-label="Pay with Paystack" />
-                    <span className="text-sm font-semibold">Card, Bank Transfer or USSD</span>
+                    <span className="text-base font-semibold">Card, Bank Transfer or USSD</span>
                   </span>
                   <span className="flex items-center gap-1.5" aria-label="Accepted cards: Visa, Mastercard, Verve">
                     {['VISA', 'MASTERCARD', 'VERVE'].map((brand) => (
                       <span
                         key={brand}
-                        className="border border-[var(--line-2)] bg-white px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-[var(--muted)]"
+                        className="border border-[var(--line-2)] bg-white px-1.5 py-0.5 text-base font-bold tracking-wide text-[var(--muted)]"
                       >
                         {brand}
                       </span>
                     ))}
                   </span>
                 </div>
-                <div className="flex items-start gap-3 border-t border-[var(--line)] p-4 text-xs leading-5 text-[var(--muted)]">
+                <div className="flex items-start gap-3 border-t border-[var(--line)] p-4 text-base leading-5 text-[var(--muted)]">
                   <ShieldCheck size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[var(--mauve-muted)]" aria-hidden="true" />
                   <p>
                     When you press <b className="text-[var(--ink)]">Pay now</b>, a secure Paystack window opens
@@ -399,7 +411,7 @@ export default function CheckoutPage() {
             </section>
 
             {submitError && (
-              <p role="alert" className="mt-4 text-xs text-red-500">{submitError}</p>
+              <p role="alert" className="mt-4 text-base text-red-500">{submitError}</p>
             )}
 
             {/* TIP: Pay button — dark, full-width, uppercase. Disabled
@@ -409,7 +421,7 @@ export default function CheckoutPage() {
             <button
               type="submit"
               disabled={submitting || !cartItems.length}
-              className="mt-8 w-full bg-[var(--ink)] py-4 text-xs font-bold tracking-widest text-white disabled:opacity-50"
+              className="mt-8 w-full bg-[var(--ink)] py-4 text-base font-bold tracking-widest text-white disabled:opacity-50"
             >
               {submitting ? 'OPENING SECURE PAYMENT…' : 'PAY NOW'}
             </button>
@@ -418,14 +430,18 @@ export default function CheckoutPage() {
           {/* ================================================================
               RIGHT COLUMN — Order summary sidebar
               ================================================================ */}
-          <aside className="py-8">
+          {/* TIP: sticky + self-start keeps the summary pinned while the form
+              scrolls. `self-start` matters: without it the grid stretches the
+              aside to the full column height and there's nothing to stick. To
+              change the gap from the top of the screen, edit lg:top-6. */}
+          <aside className="py-8 lg:sticky lg:top-6 lg:self-start">
 
             {/* TIP: Section header — "Order Summary" in bold. */}
-            <h2 className="text-sm font-semibold">Order Summary</h2>
+            <h2 className="text-base font-semibold">Order Summary</h2>
 
             {/* TIP: Cart items list — each item shows thumbnail, name,
                 variant details (color/size), quantity, and line price. */}
-            <div className="mt-4 divide-y divide-[var(--line)]">
+            <div className="mt-4 divide-y divide-[var(--line)] lg:max-h-[42vh] lg:overflow-y-auto lg:pr-1">
               {cartItems.length ? (
                 cartItems.map((item) => (
                   <article key={item.id} className="flex gap-3 py-5">
@@ -434,27 +450,38 @@ export default function CheckoutPage() {
                       alt=""
                       className="h-20 w-16 bg-white object-contain"
                     />
-                    <div className="flex-1 text-sm">
+                    <div className="flex-1 text-base">
                       <b className="uppercase tracking-wide">
                         The {item.product.name}
                         {item.product.category === 'dresses' ? ' Dress' : ''}
                       </b>
-                      <p className="mt-1 text-xs uppercase text-[var(--mauve-muted)]">
+                      <p className="mt-1 text-base uppercase text-[var(--mauve-muted)]">
                         {[item.selectedColor, item.selectedSize, item.selectedShade]
                           .filter(Boolean)
                           .join(' / ')}
                       </p>
-                      <p className="text-xs uppercase text-[var(--mauve-muted)]">
+                      <p className="text-base uppercase text-[var(--mauve-muted)]">
                         {item.quantity} {item.quantity === 1 ? 'piece' : 'pieces'}
                       </p>
                     </div>
-                    <b className="text-sm">
-                      {formatPrice(item.product.price * item.quantity)}
-                    </b>
+                    <div className="flex flex-col items-end justify-between">
+                      <b className="text-base">
+                        {formatPrice(item.product.price * item.quantity)}
+                      </b>
+                      {/* TIP: removes the whole line (all pieces of this variant). */}
+                      <button
+                        type="button"
+                        aria-label={`Remove ${item.product.name} from order`}
+                        onClick={() => removeFromBag(item.id)}
+                        className="p-1 text-[var(--muted)] hover:text-[var(--ink)]"
+                      >
+                        <Trash2 size={18} strokeWidth={1.5} />
+                      </button>
+                    </div>
                   </article>
                 ))
               ) : (
-                <p className="py-6 text-sm text-[var(--muted)]">
+                <p className="py-6 text-base text-[var(--muted)]">
                   Your bag is empty.{' '}
                   <Link className="underline" to="/">
                     Shop pieces
@@ -469,7 +496,7 @@ export default function CheckoutPage() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Gift card or discount code"
-                className="min-w-0 flex-1 border border-[var(--line)] p-3 text-sm"
+                className="min-w-0 flex-1 border border-[var(--line)] p-3 text-base"
               />
               <button
                 onClick={() =>
@@ -481,14 +508,14 @@ export default function CheckoutPage() {
                     })
                   )
                 }
-                className="bg-[var(--ink)] px-4 text-xs uppercase text-white"
+                className="bg-[var(--ink)] px-4 text-base uppercase text-white"
               >
                 Apply
               </button>
             </div>
 
             {/* TIP: Price breakdown — subtotal (with item count), shipping, total. */}
-            <div className="mt-6 space-y-3 border-y border-[var(--line)] py-5 text-sm">
+            <div className="mt-6 space-y-3 border-y border-[var(--line)] py-5 text-base">
               <p className="flex justify-between">
                 <span>Subtotal · {totalItems} {totalItems === 1 ? 'item' : 'items'}</span>
                 <span>{formatPrice(cartTotal)}</span>
@@ -512,6 +539,10 @@ export default function CheckoutPage() {
                 </span>
                 <span>{formatPrice(shipping)}</span>
               </p>
+              <p className="flex justify-between">
+                <span>Est. delivery</span>
+                <span>{formatDeliveryRange(SHIPPING_METHODS[shippingMethod].base, totalItems)}</span>
+              </p>
               <p className="flex justify-between text-base font-bold">
                 <span>Total</span>
                 <span>{formatPrice(total)}</span>
@@ -520,22 +551,27 @@ export default function CheckoutPage() {
 
             {/* TIP: Tax/duties warning banner — light gray box with
                 warning triangle icon, matching the Figma exactly. */}
-            <div className="mt-5 flex items-start gap-2 rounded bg-[#f0ebe5] p-3 text-xs text-[var(--muted)]">
+            <div className="mt-5 flex items-start gap-2 rounded bg-[#f0ebe5] p-3 text-base text-[var(--muted)]">
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               <p>Local taxes, duties or customs clearance fees may apply</p>
             </div>
 
             {/* TIP: Policy notices — these match the Figma wording exactly. */}
-            <div className="mt-5 space-y-3 text-xs leading-6 text-[var(--muted)]">
-              <p>Limit 3 items per order.</p>
+            <div className="mt-5 space-y-3 text-base leading-6 text-[var(--muted)]">
               <p>
                 Check that the item(s) in your cart are correct. Orders cannot
                 be changed or cancelled once placed.
               </p>
-              <p>
-                Please expect a processing time of 1-2 business days for orders
-                placed with standard shipping.
-              </p>
+              {cartItems.length > 0 && (
+                <p>
+                  Every piece is handmade, so delivery time grows with the number of
+                  pieces. With {totalItems} {totalItems === 1 ? 'piece' : 'pieces'} in
+                  your order, we estimate delivery between{' '}
+                  <b className="text-[var(--ink)]">
+                    {formatDeliveryRange(SHIPPING_METHODS[shippingMethod].base, totalItems)}
+                  </b>.
+                </p>
+              )}
               <p>We appreciate your patience.</p>
             </div>
           </aside>

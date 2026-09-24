@@ -50,7 +50,8 @@ export default function RecommendedProducts({
   className = 'mt-16',
   enabled = true,
   columns = 4,
-  headingClassName = 'text-[24px] font-bold leading-[30px] tracking-[-0.48px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]',
+  /* TIP: heading is 18px on phones (client request) and 36px from md up. */
+  headingClassName = 'text-[18px] font-bold leading-[26px] tracking-[-0.36px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]',
   onProductClick,
 }) {
   const [products, setProducts] = useState([]);
@@ -99,6 +100,7 @@ export default function RecommendedProducts({
           columns={columns}
           cardVariant="recommendation"
           wrapInSection={false}
+          scrollOnMobile={columns === 4}
         />
       </div>
     </section>

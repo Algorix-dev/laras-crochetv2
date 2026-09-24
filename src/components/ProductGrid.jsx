@@ -15,7 +15,7 @@ const GRID_COLS = {
   4: "grid-cols-2 lg:grid-cols-4",
 };
 
-export default function ProductGrid({ products, columns = 2, cardVariant = 'default', isPlaceholder = false, wrapInSection = true }) {
+export default function ProductGrid({ products, columns = 2, cardVariant = 'default', isPlaceholder = false, wrapInSection = true, scrollOnMobile = false }) {
   /*
     Figma's "Content" wrapper: 1920px frame, padding: 0 304px 77px,
     row-gap 100px, bg #FAFAFA, exactly 2 cards per row (Frame 34 is
@@ -45,7 +45,14 @@ export default function ProductGrid({ products, columns = 2, cardVariant = 'defa
   */
   const grid = (
     <div
-      className={`grid ${GRID_COLS[columns] || GRID_COLS[2]}`}
+      /* TIP: scrollOnMobile turns the grid into ONE horizontally-scrolling
+         row on phones/tablets (swipe sideways), and it goes back to the normal
+         grid from lg up. Used by "Lara Thinks You'd Love These Too". */
+      className={
+        scrollOnMobile
+          ? `flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 lg:grid ${(GRID_COLS[columns] || GRID_COLS[2]).replace('grid-cols-2 ', '')} lg:overflow-visible`
+          : `grid ${GRID_COLS[columns] || GRID_COLS[2]}`
+      }
       style={{
         columnGap: "clamp(1rem, 1.67vw, 2rem)",
         rowGap: "clamp(2.5rem, 5.21vw, 6.25rem)",
@@ -59,7 +66,10 @@ export default function ProductGrid({ products, columns = 2, cardVariant = 'defa
           view. The old per-index delay is gone: the engine's stagger
           already does it, and adding both made the last card wait too long. */}
       {products.map((product) => (
-        <Reveal key={product.id}>
+        <Reveal
+          key={product.id}
+          className={scrollOnMobile ? 'w-[62%] max-w-[260px] shrink-0 snap-start lg:w-auto lg:max-w-none' : ''}
+        >
           <ProductCard product={product} variant={cardVariant} isPlaceholder={isPlaceholder} />
         </Reveal>
       ))}

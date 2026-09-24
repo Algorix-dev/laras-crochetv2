@@ -117,7 +117,7 @@ export default function AddressesPage() {
         setEditingId(null);
         setFormOpen(true);
       }}
-      className="bg-[var(--ink)] px-4 py-2.5 text-xs uppercase tracking-wide text-white hover:bg-[var(--maroon)]"
+      className="bg-[var(--ink)] px-5 py-3 text-base font-semibold uppercase tracking-wide text-white hover:bg-[var(--maroon)]"
     >
       {addresses.length > 0 ? 'Add a New Address' : 'Add Address'}
     </button>
@@ -139,7 +139,7 @@ export default function AddressesPage() {
             {!formOpen && addresses.length > 0 && (
               <div className="space-y-4">
                 {addresses.map((a) => (
-                  <div key={a._id} className="max-w-sm border border-[var(--line)] p-4 text-sm">
+                  <div key={a._id} className="max-w-sm border border-[var(--line)] p-4 text-base">
                     <p className="font-bold">{a.firstName} {a.lastName}</p>
                     <p className="text-[var(--muted)]">
                       {a.addressLine1}, {a.city}
@@ -150,11 +150,11 @@ export default function AddressesPage() {
                     </p>
                     <div className="mt-3 flex items-center justify-between">
                       {a.isDefault && (
-                        <span className="flex items-center gap-1 text-xs">
+                        <span className="flex items-center gap-1 text-base">
                           <input type="checkbox" checked readOnly /> Default
                         </span>
                       )}
-                      <div className="ml-auto flex gap-3 text-xs">
+                      <div className="ml-auto flex gap-3 text-base">
                         <button onClick={() => startEdit(a)} className="underline hover:text-[var(--maroon)]">
                           Edit
                         </button>
@@ -170,7 +170,7 @@ export default function AddressesPage() {
 
             {/* Empty state — no addresses, form not open yet */}
             {!formOpen && addresses.length === 0 && (
-              <p className="text-sm text-[var(--muted)]">No addresses saved yet.</p>
+              <p className="text-base text-[var(--muted)]">No addresses saved yet.</p>
             )}
 
             {/* Add/edit form */}
@@ -182,54 +182,54 @@ export default function AddressesPage() {
                     placeholder="First Name"
                     value={form.firstName}
                     onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                    className="border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)]"
                   />
                   <input
                     required
                     placeholder="Last Name"
                     value={form.lastName}
                     onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                    className="border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)]"
                   />
                   <input
                     placeholder="Company (optional)"
                     value={form.company}
                     onChange={(e) => setForm({ ...form, company: e.target.value })}
-                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
+                    className="border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)] sm:col-span-2"
                   />
                   <input
                     required
                     placeholder="Address Line 1"
                     value={form.addressLine1}
                     onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
-                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
+                    className="border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)] sm:col-span-2"
                   />
                   <input
                     placeholder="Address Line 2 (Optional)"
                     value={form.addressLine2}
                     onChange={(e) => setForm({ ...form, addressLine2: e.target.value })}
-                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)] sm:col-span-2"
+                    className="border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)] sm:col-span-2"
                   />
                   <input
                     required
                     placeholder="City"
                     value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })}
-                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                    className="border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)]"
                   />
                   <input
                     required
                     placeholder="State/Province"
                     value={form.state}
                     onChange={(e) => setForm({ ...form, state: e.target.value })}
-                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                    className="border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)]"
                   />
                   <input
                     required
                     placeholder="Postal/Zip Code"
                     value={form.postalCode}
                     onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-                    className="border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                    className="border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)]"
                   />
                   <CountryDropdown
                     value={form.country}
@@ -240,23 +240,26 @@ export default function AddressesPage() {
                       country selection above, matching her design's
                       combined flag+code+number field */}
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-xs text-[var(--muted)]">Phone</label>
+                    <label className="mb-1 block text-base text-[var(--muted)]">Phone</label>
                     <div className="flex border border-[var(--line)]">
-                      <span className="flex items-center gap-1 border-r border-[var(--line)] px-3 text-sm text-[var(--muted)]">
-                        {form.country.flag} {form.country.dial}
+                      <span className="flex items-center gap-1 border-r border-[var(--line)] px-3 text-base text-[var(--muted)]">
+                        {/* TIP: the emoji flag was removed on purpose. Windows has
+                            no flag emojis, so it drew the two letters "NG" stacked
+                            on top of "+234". Now it's just the dial code. */}
+                        {form.country.dial}
                       </span>
                       <input
                         required
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         placeholder="Phone number"
-                        className="w-full px-3 py-2.5 text-sm outline-none"
+                        className="w-full px-3 py-2.5 text-base outline-none"
                       />
                     </div>
                   </div>
                 </div>
 
-                <label className="mt-4 flex items-center gap-2 text-xs">
+                <label className="mt-4 flex items-center gap-2 text-base">
                   <input
                     type="checkbox"
                     checked={form.setDefault}
@@ -269,7 +272,7 @@ export default function AddressesPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="bg-[var(--ink)] px-6 py-2.5 text-xs uppercase tracking-wide text-white hover:bg-[var(--maroon)] disabled:opacity-50"
+                    className="bg-[var(--ink)] px-6 py-2.5 text-base uppercase tracking-wide text-white hover:bg-[var(--maroon)] disabled:opacity-50"
                   >
                     {saving ? 'Saving...' : 'Add Address'}
                   </button>
@@ -279,7 +282,7 @@ export default function AddressesPage() {
                       setFormOpen(false);
                       setEditingId(null);
                     }}
-                    className="px-6 py-2.5 text-xs uppercase tracking-wide text-[var(--muted)] hover:text-[var(--ink)]"
+                    className="px-6 py-2.5 text-base uppercase tracking-wide text-[var(--muted)] hover:text-[var(--ink)]"
                   >
                     Cancel
                   </button>
@@ -312,18 +315,18 @@ export default function AddressesPage() {
                 <X size={16} />
               </button>
             </div>
-            <h2 className="mb-1 text-sm font-bold">Remove Address</h2>
-            <p className="mb-5 text-xs text-[var(--muted)]">Are you sure you want to remove this address?</p>
+            <h2 className="mb-1 text-base font-bold">Remove Address</h2>
+            <p className="mb-5 text-base text-[var(--muted)]">Are you sure you want to remove this address?</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmRemoveId(null)}
-                className="flex-1 border border-[var(--line-2)] py-2.5 text-xs uppercase tracking-wide hover:bg-black/[0.02]"
+                className="flex-1 border border-[var(--line-2)] py-2.5 text-base uppercase tracking-wide hover:bg-black/[0.02]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleRemove(confirmRemoveId)}
-                className="flex-1 bg-[var(--maroon)] py-2.5 text-xs uppercase tracking-wide text-white hover:bg-[var(--maroon-dark)]"
+                className="flex-1 bg-[var(--maroon)] py-2.5 text-base uppercase tracking-wide text-white hover:bg-[var(--maroon-dark)]"
               >
                 Remove
               </button>

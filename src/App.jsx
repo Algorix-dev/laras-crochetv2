@@ -73,6 +73,14 @@ function RequireAuth({ children }) {
 
 /* Home page is its own component so the route stays clean */
 function HomePage() {
+  // TIP: true on phone-sized screens (under 768px). Updates if the window is resized.
+  const [isPhone, setIsPhone] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const onChange = (e) => setIsPhone(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
   const [liveProducts, setLiveProducts] = useState(products); // instant first paint, then swapped for live data
   // TIP: tracks whether `liveProducts` above is still the static
   // fallback (fake ids like "wisteria") or real data from the API.
@@ -142,15 +150,20 @@ function HomePage() {
       <LaraShowcase />
 
       <Reveal>
+<<<<<<< ours
         <div className="text-center pt-2 pb-10 md:pb-14">
           <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
+=======
+        <div className="text-center pt-2 pb-2 md:pb-14">
+          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+>>>>>>> theirs
             Go to Shop
           </Link>
         </div>
       </Reveal>
 
             {/* Shop Our Pieces — a curated 4-item taste of the catalog, not the full grid */}
-            <section className="py-10 md:py-16">
+            <section className="pt-4 pb-10 md:py-16">
               {/* TIP — 304px shared margin, matching Navbar/Hero/
                   ProductGrid/Footer, so this heading row's left edge
                   lines up with the product grid directly below it. */}
@@ -159,15 +172,25 @@ function HomePage() {
                   <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                     Shop Our Pieces
                   </h2>
+<<<<<<< ours
                   <Link to="/shop" className="pr-3 text-base font-medium underline underline-offset-2 hover:text-[var(--maroon)] transition-colors">
+=======
+                  <Link to="/shop" className="pr-3 text-base underline underline-offset-2 hover:text-[var(--maroon)]">
+>>>>>>> theirs
                     Go to shop
                   </Link>
                 </div>
               </Reveal>
-              <ProductGrid products={liveProducts.slice(0, 4)} isPlaceholder={!isLive} />
+              {/* TIP: 6 pieces on phones = 3 rows of 2 (client request); desktop keeps
+                  the original 4. Change the 6 / 4 here to adjust. */}
+              <ProductGrid products={liveProducts.slice(0, isPhone ? 6 : 4)} isPlaceholder={!isLive} />
               <Reveal>
                 <div className="text-center mt-10">
+<<<<<<< ours
                   <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
+=======
+                  <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+>>>>>>> theirs
                     Go to Shop
                   </Link>
                 </div>

@@ -63,9 +63,15 @@ export default function CustomOrderBanner() {
       className="
         relative
         min-h-0
+<<<<<<< ours
         pb-[100px]
         md:min-h-[800px]
         md:pb-12
+=======
+        pb-[139px]
+        md:min-h-[860px]
+        md:pb-0
+>>>>>>> theirs
         w-full
         overflow-hidden
         bg-[#FAFAFA]
@@ -360,7 +366,13 @@ export default function CustomOrderBanner() {
               object-contain
             "
             style={{
+<<<<<<< ours
               width: "clamp(260px, 24vw, 420px)",
+=======
+              /* TIP: smaller models. Was clamp(360px, 34vw, 650px). Raise the
+                 middle/right numbers to make them bigger again. */
+              width: "clamp(300px, 26vw, 500px)",
+>>>>>>> theirs
             }}
           />
           </div>
@@ -397,6 +409,12 @@ export default function CustomOrderBanner() {
             smallest details.
           </p>
 
+<<<<<<< ours
+=======
+          {/* TIP: was a <button> that did nothing. Now a Link to the custom
+              order wizard. Always ALL CAPS (the old max-md:uppercase only
+              did it on phones). */}
+>>>>>>> theirs
           <Link
             to="/contact?flow=custom"
             className="
@@ -412,14 +430,21 @@ export default function CustomOrderBanner() {
               text-[16px]
               font-bold
               uppercase
+<<<<<<< ours
               tracking-wider
+=======
+>>>>>>> theirs
               text-[#FAFAFA]
               transition-opacity
               duration-200
               hover:opacity-90
             "
           >
+<<<<<<< ours
             MAKE A CUSTOM ORDER
+=======
+            Make a Custom Order
+>>>>>>> theirs
           </Link>
         </div>
       </div>

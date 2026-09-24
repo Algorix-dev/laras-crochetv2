@@ -15,6 +15,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
 import RecommendedProducts from '../components/RecommendedProducts';
 import Footer from '../components/Footer';
+import { formatDeliveryRange } from '../utils/delivery';
 
 export default function MyBagPage() {
   const {
@@ -37,32 +38,29 @@ export default function MyBagPage() {
   const shipping = cartItems.length ? 10000 : 0;
   const total = cartTotal + shipping;
 
-  // TIP: "Limit 3 items per order" is stated as real policy copy on
-  // the Checkout page, so it's enforced here too — total quantity
-  // across the whole bag, not per line item. Same sum-of-quantities
-  // calc as Checkout's totalItems, kept local since CartContext
-  // doesn't expose this directly.
+  // TIP: the old "Limit 3 items per order" cap was removed at the
+  // client's request. Delivery time now grows with the number of pieces
+  // instead (see utils/delivery.js), because everything is handmade.
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const atLimit = totalItems >= 3;
 
   if (!cartItems.length) {
     return (
       <>
         <main className="min-h-screen">
           <section className="mx-auto max-w-[984px] px-5 py-16 text-center md:px-0">
-            <p className="mb-4 text-xs text-[var(--muted)]">
+            <p className="mb-4 text-base text-[var(--muted)]">
               <Link to="/" className="hover:underline">Home</Link> /{' '}
               <Link to="/shop" className="hover:underline">Shop</Link> / Bag
             </p>
             <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-3">
               My Bag
             </h1>
-            <p className="text-sm text-[var(--muted)] mb-8">
+            <p className="text-base text-[var(--muted)] mb-8">
               Your bag is empty — start shopping to add items.
             </p>
             <Link
               to="/shop"
-              className="inline-block bg-[var(--ink)] text-white text-xs uppercase tracking-widest px-8 py-3.5 hover:bg-[var(--maroon)] transition-colors font-bold"
+              className="inline-block bg-[var(--ink)] text-white text-base uppercase tracking-widest px-8 py-3.5 hover:bg-[var(--maroon)] transition-colors font-bold"
             >
               Continue Shopping
             </Link>
@@ -78,7 +76,7 @@ export default function MyBagPage() {
       <main className="min-h-screen">
         <section className="px-5 md:px-8 lg:px-[15.83%] pt-8 pb-16 md:pt-10">
           {/* Breadcrumb */}
-          <p className="mb-4 text-xs text-[var(--muted)]">
+          <p className="mb-4 text-base text-[var(--muted)]">
             <Link to="/" className="hover:underline">Home</Link> /{' '}
             <Link to="/shop" className="hover:underline">Shop</Link> / Bag
           </p>
@@ -87,7 +85,7 @@ export default function MyBagPage() {
           <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
             My Bag ({cartCount})
           </h1>
-          <p className="text-xs text-[var(--muted)] mb-10">
+          <p className="text-base text-[var(--muted)] mb-10">
             Enjoy international shipping rates and pre-pay duties &amp; taxes at checkout.
           </p>
 
@@ -105,7 +103,7 @@ export default function MyBagPage() {
                   line up in the same columns, instead of the item
                   row just approximating the header's widths inside a
                   separate flex layout. */}
-              <div className="hidden md:grid md:grid-cols-[1fr_68px_88px_120px] gap-3 border-b border-[var(--line)] pb-2 text-[11px] uppercase tracking-wider text-[var(--muted)]">
+              <div className="hidden md:grid md:grid-cols-[1fr_96px_120px_140px] gap-3 border-b border-[var(--line)] pb-2 text-base uppercase tracking-wider text-[var(--muted)]">
                 <span>Item</span>
                 <span>Size</span>
                 <span>Color</span>
@@ -116,7 +114,7 @@ export default function MyBagPage() {
                 {cartItems.map((item) => (
                   <article
                     key={item.id}
-                    className="grid grid-cols-[5.5rem_1fr] gap-4 border-b border-[var(--line)] py-5 first:pt-0 md:grid-cols-[6rem_1fr_68px_88px_120px] md:items-center md:gap-3"
+                    className="grid grid-cols-[5.5rem_1fr] gap-4 border-b border-[var(--line)] py-5 first:pt-0 md:grid-cols-[6rem_1fr_96px_120px_140px] md:items-center md:gap-3"
                   >
                     {/* Product image */}
                     <Link
@@ -135,7 +133,7 @@ export default function MyBagPage() {
                       {/* TIP: category sits as its own muted uppercase
                           line above the bold name — Figma shows these
                           stacked, not run together on one line. */}
-                      <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+                      <p className="text-base uppercase tracking-wider text-[var(--muted)]">
                         {item.product.category === 'two-pieces'
                           ? 'Two-Piece'
                           : item.product.category === 'bikinis'
@@ -148,11 +146,11 @@ export default function MyBagPage() {
                       </p>
                       <Link
                         to={`/product/${item.product.id}`}
-                        className="text-sm font-bold uppercase tracking-wide hover:underline"
+                        className="text-base font-bold uppercase tracking-wide hover:underline"
                       >
                         {item.product.name}
                       </Link>
-                      <p className="mt-1 text-sm">
+                      <p className="mt-1 text-base">
                         {formatPrice(item.product.price)}
                       </p>
 
@@ -161,7 +159,7 @@ export default function MyBagPage() {
                           Figma has Size on its own line, then Color with
                           "Move to wishlist" inline at the end of that same
                           line — not paired with Size like the old version. */}
-                      <div className="mt-2 space-y-0.5 text-xs text-[var(--muted)] md:hidden">
+                      <div className="mt-2 space-y-0.5 text-base text-[var(--muted)] md:hidden">
                         <p>
                           Size{' '}
                           <span className="font-bold text-[var(--ink)]">
@@ -177,7 +175,7 @@ export default function MyBagPage() {
                               toggleWishlist(item.product.id);
                               removeFromBag(item.id);
                             }}
-                            className="shrink-0 text-[10px] uppercase tracking-wider text-[var(--muted)] underline"
+                            className="shrink-0 text-base uppercase tracking-wider text-[var(--muted)] underline"
                           >
                             Move to wishlist
                           </button>
@@ -186,10 +184,10 @@ export default function MyBagPage() {
                     </div>
 
                     {/* Desktop: size and color as real grid columns, aligned to the header */}
-                    <span className="hidden md:block md:text-xs md:text-[var(--muted)]">
+                    <span className="hidden md:block md:text-base md:text-[var(--muted)]">
                       {item.selectedSize}
                     </span>
-                    <span className="hidden md:block md:text-xs md:text-[var(--muted)]">
+                    <span className="hidden md:block md:text-base md:text-[var(--muted)]">
                       {item.selectedColor}
                     </span>
 
@@ -224,13 +222,12 @@ export default function MyBagPage() {
                             <Trash2 size={12} />
                           </button>
                         )}
-                        <span className="flex-1 text-center text-xs">
+                        <span className="flex-1 text-center text-base">
                           {item.quantity}
                         </span>
                         <button
-                          className="p-2 disabled:opacity-30"
+                          className="p-2"
                           aria-label="Increase quantity"
-                          disabled={atLimit}
                           onClick={() =>
                             updateQuantity(item.id, item.quantity + 1)
                           }
@@ -263,13 +260,12 @@ export default function MyBagPage() {
                             <Trash2 size={12} />
                           </button>
                         )}
-                        <span className="flex-1 text-center text-xs">
+                        <span className="flex-1 text-center text-base">
                           {item.quantity}
                         </span>
                         <button
-                          className="p-2 disabled:opacity-30"
+                          className="p-2"
                           aria-label="Increase quantity"
-                          disabled={atLimit}
                           onClick={() =>
                             updateQuantity(item.id, item.quantity + 1)
                           }
@@ -283,7 +279,7 @@ export default function MyBagPage() {
                           toggleWishlist(item.product.id);
                           removeFromBag(item.id);
                         }}
-                        className="hidden text-[10px] uppercase tracking-wider text-[var(--muted)] underline md:block"
+                        className="hidden text-base uppercase tracking-wider text-[var(--muted)] underline md:block"
                       >
                         Move to wishlist
                       </button>
@@ -292,13 +288,6 @@ export default function MyBagPage() {
                 ))}
               </div>
 
-              {/* TIP: only shows once the cap is actually hit, so it
-                  doesn't clutter the page for every normal order. */}
-              {atLimit && (
-                <p className="mt-4 text-xs text-[var(--muted)]">
-                  Limit 3 items per order.
-                </p>
-              )}
             </div>
 
             {/* ---- RIGHT: Order Summary ---- */}
@@ -306,7 +295,7 @@ export default function MyBagPage() {
               {/* Promo code accordion */}
               <div className="border-b border-[var(--line)]">
                 <button
-                  className="flex w-full items-center justify-between py-4 text-sm"
+                  className="flex w-full items-center justify-between py-4 text-base"
                   onClick={() => setPromoOpen(!promoOpen)}
                   aria-expanded={promoOpen}
                 >
@@ -321,9 +310,9 @@ export default function MyBagPage() {
                     <input
                       aria-label="Promo code"
                       placeholder="Enter code"
-                      className="min-w-0 flex-1 border border-[var(--line)] px-3 py-2.5 text-sm outline-none focus:border-[var(--ink)]"
+                      className="min-w-0 flex-1 border border-[var(--line)] px-3 py-2.5 text-base outline-none focus:border-[var(--ink)]"
                     />
-                    <button className="bg-[var(--ink)] px-4 text-xs uppercase text-white hover:bg-[var(--maroon)]">
+                    <button className="bg-[var(--ink)] px-4 text-base uppercase text-white hover:bg-[var(--maroon)]">
                       Apply
                     </button>
                   </div>
@@ -332,7 +321,7 @@ export default function MyBagPage() {
 
               {/* Total box */}
               <div className="bg-[#f0ebe5] px-5 py-4">
-                <div className="flex items-center justify-between text-sm font-bold">
+                <div className="flex items-center justify-between text-base font-bold">
                   <span>TOTAL</span>
                   <span>{formatPrice(total)}</span>
                 </div>
@@ -341,7 +330,7 @@ export default function MyBagPage() {
               {/* Checkout button */}
               <Link
                 to="/checkout"
-                className="block w-full bg-[var(--ink)] py-4 text-center text-xs font-bold tracking-widest text-white hover:bg-[var(--maroon)] transition-colors"
+                className="block w-full bg-[var(--ink)] py-4 text-center text-base font-bold tracking-widest text-white hover:bg-[var(--maroon)] transition-colors"
               >
                 CHECKOUT
               </Link>
@@ -349,7 +338,7 @@ export default function MyBagPage() {
               {/* Terms & Conditions accordion */}
               <div className="mt-4 border-b border-[var(--line)]">
                 <button
-                  className="flex w-full items-center justify-between py-4 text-sm"
+                  className="flex w-full items-center justify-between py-4 text-base"
                   onClick={() => setTermsOpen(!termsOpen)}
                   aria-expanded={termsOpen}
                 >
@@ -360,7 +349,7 @@ export default function MyBagPage() {
                   />
                 </button>
                 {termsOpen && (
-                  <div className="pb-4 text-xs leading-relaxed text-[var(--muted)]">
+                  <div className="pb-4 text-base leading-relaxed text-[var(--muted)]">
                     <p>
                       By placing an order, you agree that each item is made to
                       order and cannot be returned for change of mind. If you
@@ -374,7 +363,7 @@ export default function MyBagPage() {
               {/* Delivery accordion */}
               <div className="border-b border-[var(--line)]">
                 <button
-                  className="flex w-full items-center justify-between py-4 text-sm"
+                  className="flex w-full items-center justify-between py-4 text-base"
                   onClick={() => setDeliveryOpen(!deliveryOpen)}
                   aria-expanded={deliveryOpen}
                 >
@@ -385,12 +374,16 @@ export default function MyBagPage() {
                   />
                 </button>
                 {deliveryOpen && (
-                  <div className="pb-4 text-xs leading-relaxed text-[var(--muted)]">
+                  <div className="pb-4 text-base leading-relaxed text-[var(--muted)]">
                     <p>
-                      Each piece is handmade to order from Lagos, Nigeria.
-                      Production time is 2-3 weeks. Shipping within Nigeria
-                      takes 3-5 business days. International shipping rates
-                      vary by destination.
+                      Each piece is handmade to order from Lagos, Nigeria, so
+                      the more pieces in your bag, the longer it takes. With{' '}
+                      {totalItems} {totalItems === 1 ? 'piece' : 'pieces'},
+                      standard delivery is estimated between{' '}
+                      <b className="text-[var(--ink)]">
+                        {formatDeliveryRange({ min: 10, max: 14 }, totalItems)}
+                      </b>
+                      . International shipping rates vary by destination.
                     </p>
                   </div>
                 )}

@@ -35,7 +35,7 @@ export default function AccountLayout({ active, title, headerAction, children })
   return (
     <>
       <section className="px-5 py-10 md:px-8 lg:px-[15.83%]">
-        <p className="mb-6 text-xs text-[var(--muted)]">
+        <p className="mb-6 text-base text-[var(--muted)]">
           <Link to="/" className="hover:underline">
             Home
           </Link>{' '}

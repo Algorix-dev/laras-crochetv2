@@ -59,7 +59,7 @@ export default function AboutPage() {
             <img
               src={laraSunglasses}
               alt="Lara — founder of Lara's Crochet"
-              className="rv d1 mt-8 block h-auto w-full max-w-[420px] object-cover md:hidden"
+              className="rv d1 mt-2.5 block h-auto w-full max-w-[420px] object-cover md:hidden"
             />
 
             {/* Meet Lara + portrait */}
@@ -71,7 +71,7 @@ export default function AboutPage() {
                 double-rises. Portrait max-w: 416px → 380px, and 360px at
                 2xl (≥1536px) so it stops pushing the Instagram link off
                 screen — edit those two numbers to resize it. */}
-            <div className="rv d1 relative mt-10 w-full max-w-[380px] 2xl:max-w-[360px]">
+            <div className="rv d1 relative mt-2.5 md:mt-10 w-full max-w-[380px] 2xl:max-w-[360px]">
               {/* Desktop: rotated caption running up the left edge */}
               <p
                 className="absolute bottom-0 right-full hidden whitespace-nowrap text-base font-bold md:block"

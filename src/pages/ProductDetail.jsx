@@ -28,9 +28,15 @@
   to adjust or revert it if you want something different from the
   literal spec value.
 ----------------------------------------------------------- */
+<<<<<<< ours
 import { Check, Star, Heart, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+=======
+import { ArrowLeft, Check, Star, Heart, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+>>>>>>> theirs
 import { getProduct, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
 import RecommendedProducts from '../components/RecommendedProducts';
@@ -166,7 +172,7 @@ function ColorSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} color`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[49px] w-[61px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
+      className={`h-[32px] w-[40px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -187,7 +193,7 @@ function ShadeSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} shade`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[49px] w-[61px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
+      className={`h-[32px] w-[40px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -272,6 +278,52 @@ function FitScaleAggregate({ position = 'true' }) {
 /* -----------------------------------------------------------
    Reviews section — structured to mirror the Figma review area.
 ----------------------------------------------------------- */
+/* TIP: click any review photo to see it bigger. This is a tiny self-contained
+   lightbox: click the picture -> full-screen dark overlay with the large
+   image; click anywhere, press Esc or hit the X to close. Use it anywhere
+   with <ZoomImage src=... alt=... className=... /> (className styles the
+   small thumbnail, exactly like a normal <img>). */
+function ZoomImage({ src, alt, className }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={`Enlarge photo: ${alt}`}
+        className="block cursor-zoom-in"
+      >
+        <img src={src} alt={alt} className={className} />
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={alt}
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/80 p-5"
+        >
+          <button
+            type="button"
+            aria-label="Close photo"
+            onClick={() => setOpen(false)}
+            className="absolute right-5 top-5 text-white"
+          >
+            <X size={28} />
+          </button>
+          <img src={src} alt={alt} className="max-h-[90vh] max-w-full object-contain" />
+        </div>
+      )}
+    </>
+  );
+}
+
 function Reviews() {
   // TIP: collapsed by default — see the Reviews Summary block below.
   const [summaryExpanded, setSummaryExpanded] = useState(false);
@@ -381,7 +433,10 @@ function Reviews() {
           )}
         </button>
         <p
-          className={`mt-4 text-base leading-6 text-[var(--muted)] ${
+          // TIP: max-w-[64ch] keeps each line to roughly 66-75 characters (1ch is
+          // the width of a "0", and average letters are a bit narrower). To
+          // change the line length, edit the 64 here.
+          className={`mt-4 max-w-[64ch] text-base leading-6 text-[var(--muted)] ${
             summaryExpanded ? '' : 'line-clamp-3'
           }`}
         >
@@ -407,16 +462,16 @@ function Reviews() {
             making the visual gap look far bigger than 32px. Explicit
             359px columns size each track to the image itself, so the
             only space between them is the actual 32px gap. */}
-        <div className="grid grid-cols-[359px_359px] gap-8">
-          <img
+        <div className="grid grid-cols-[220px_220px] gap-8">
+          <ZoomImage
             src={reviewRestaurantPhoto}
             alt="Customer wearing The Reina Dress at a restaurant"
-            className="h-[392px] w-full max-w-[359px] object-cover"
+            className="h-[240px] w-[220px] object-cover"
           />
-          <img
+          <ZoomImage
             src={reviewBeachPhoto}
             alt="Customer wearing The Reina Dress at the beach"
-            className="h-[392px] w-full max-w-[359px] object-cover"
+            className="h-[240px] w-[220px] object-cover"
           />
         </div>
       </div>
@@ -431,15 +486,15 @@ function Reviews() {
             size here now, so the summary photos and the per-review
             photos read as one consistent size. */}
         <div className="mt-6 flex gap-3">
-          <img
+          <ZoomImage
             src={reviewRestaurantPhoto}
             alt="Customer wearing The Reina Dress at a restaurant"
-            className="h-[131px] w-[120px] object-cover"
+            className="h-[110px] w-[100px] object-cover"
           />
-          <img
+          <ZoomImage
             src={reviewBeachPhoto}
             alt="Customer wearing The Reina Dress at the beach"
-            className="h-[131px] w-[120px] object-cover"
+            className="h-[110px] w-[100px] object-cover"
           />
         </div>
       </div>
@@ -469,7 +524,7 @@ function Reviews() {
               <h3 className="mt-5 text-xl font-bold">{review.title}</h3>
 
               {review.photo && (
-                <img
+                <ZoomImage
                   src={review.photo}
                   alt={`Customer photo for ${review.title}`}
                   // TIP — WAS DESKTOP-SIZED ON EVERY SCREEN: this had a
@@ -478,7 +533,7 @@ function Reviews() {
                   // smaller one. h-[131px] w-[120px] below is the actual
                   // Figma mobile size ("Rectangle 38"); md: restores the
                   // original desktop size.
-                  className="mt-6 h-[131px] w-[120px] object-cover md:h-[392px] md:w-full md:max-w-[359px]"
+                  className="mt-6 h-[110px] w-[100px] object-cover md:h-[240px] md:w-[220px]"
                 />
               )}
 
@@ -683,6 +738,20 @@ export default function ProductDetail() {
             dead evenly — 945px / 945px out of a 1920px frame (minus
             the 30px gap), i.e. a true 50/50 split, not the previous
             1.18/.82 (~59/41) ratio. */}
+        {/* TIP: Back button. navigate(-1) = "go to the page I came from"
+            (shop, homepage, wishlist...). If someone opened this product
+            straight from a link there's no previous page, so we send them
+            to /shop instead of leaving the site. */}
+        <div className="px-5 py-4 md:px-8 lg:px-[15.83%]">
+          <button
+            type="button"
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/shop'))}
+            className="inline-flex items-center gap-2 text-base text-[var(--ink)] hover:text-[var(--maroon)] cursor-pointer"
+          >
+            <ArrowLeft size={18} /> Back
+          </button>
+        </div>
+
         <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:gap-7.5">
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
@@ -779,7 +848,7 @@ export default function ProductDetail() {
                 color #564345 (Gray/600) in Figma — not a tiny muted
                 uppercase caption. Dropped the `uppercase` class since
                 categoryLabel() already returns properly-cased text. */}
-            <p className="text-base text-[#564345] underline">
+            <p className="text-base uppercase tracking-wider text-[#564345] underline">
               {categoryLabel(product.category)}
             </p>
             {/* TIP: spec measures this heading at 36px/44px line-height,
@@ -917,7 +986,7 @@ export default function ProductDetail() {
                 its growth. */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 block w-full whitespace-nowrap bg-[#564345] px-6 py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[322px]"
+              className="mt-8 block w-full whitespace-nowrap bg-[#564345] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[322px]"
             >
               Add to Bag
             </button>
@@ -936,7 +1005,7 @@ export default function ProductDetail() {
             when it scrolls into view". Static className on purpose — if a
             className here ever became dynamic, React would overwrite the
             .rv/.on classes the engine adds. */}
-        <div className="mt-16 px-5 md:px-8 lg:px-[15.83%]" data-auto-rise="true">
+        <div className="mt-16 mb-12 px-5 md:px-8 lg:px-[15.83%]" data-auto-rise="true">
           <div className="flex gap-6 border-b border-[var(--line)]">
             {Object.keys(tabs).map((tabName) => (
               <button

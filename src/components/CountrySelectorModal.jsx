@@ -346,7 +346,7 @@ export default function CountrySelector({
 
       {open && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#241719]/80 p-4"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-[#241719]/80 p-0 sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Select Your Country"
@@ -354,9 +354,12 @@ export default function CountrySelector({
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div className="w-full max-w-[480px] max-h-[calc(100vh-32px)] bg-[#FFFCFC] shadow-[0px_8px_30px_rgba(0,0,0,0.25)] p-7 sm:p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#404040] m-0">Select Your Country</h2>
+          {/* TIP: on phones this is a bottom sheet (full width, hugging the bottom,
+              smaller padding + heading). From the sm breakpoint (640px) up it is
+              the original centered 480px card. Edit the max-sm: values to tweak. */}
+          <div className="w-full max-w-none sm:max-w-[480px] max-h-[88dvh] sm:max-h-[calc(100vh-32px)] overflow-y-auto bg-[#FFFCFC] shadow-[0px_8px_30px_rgba(0,0,0,0.25)] p-5 sm:p-8">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-2xl font-bold text-[#404040] m-0">Select Your Country</h2>
               <button
                 type="button"
                 onClick={closeModal}
@@ -377,12 +380,12 @@ export default function CountrySelector({
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search for a country..."
-                    className="w-full h-[52px] border border-[#404040] bg-transparent pl-4 pr-11 text-sm outline-none placeholder:text-[#A3A3A3]"
+                    className="w-full h-11 sm:h-[52px] border border-[#404040] bg-transparent pl-4 pr-11 text-base outline-none placeholder:text-[#A3A3A3]"
                   />
                   <Search size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#777]" aria-hidden="true" />
                 </div>
 
-                <div className="max-h-[330px] overflow-y-auto pr-1" role="listbox">
+                <div className="max-h-[45dvh] sm:max-h-[330px] overflow-y-auto pr-1" role="listbox">
                   {filteredCountries.length > 0 ? (
                     filteredCountries.map((country) => {
                       const active = country.code === activeCode;

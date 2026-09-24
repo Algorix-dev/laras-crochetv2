@@ -46,7 +46,7 @@ export default function AccountPage() {
     <AccountLayout active="about" title="About You">
       {/* About You content */}
       <div className="mb-8 max-w-sm">
-        <span className="text-sm font-bold text-[var(--ink)]">Username</span>
+        <span className="text-base font-bold text-[var(--ink)]">Username</span>
         <div className="mt-1 flex items-center justify-between gap-2">
           {editingUsername ? (
             <input
@@ -54,10 +54,10 @@ export default function AccountPage() {
               value={usernameInput}
               onChange={(e) => setUsernameInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSaveUsername()}
-              className="w-full border-b border-[var(--line)] bg-transparent text-sm outline-none"
+              className="w-full border-b border-[var(--line)] bg-transparent text-base outline-none"
             />
           ) : (
-            <span className="text-sm text-[var(--muted)]">
+            <span className="text-base text-[var(--muted)]">
               {user?.username || "–"}
             </span>
           )}
@@ -79,20 +79,20 @@ export default function AccountPage() {
       </div>
 
       <div className="mb-8 max-w-sm">
-        <span className="text-sm font-bold text-[var(--ink)]">Email</span>
-        <p className="mt-1 text-sm text-[var(--muted)]">{user?.email}</p>
+        <span className="text-base font-bold text-[var(--ink)]">Email</span>
+        <p className="mt-1 text-base text-[var(--muted)]">{user?.email}</p>
       </div>
 
       <div className="mb-8">
-        <span className="text-sm font-bold text-[var(--ink)]">Preferences</span>
-        <p className="mt-1 text-sm text-[var(--muted)] underline underline-offset-2">
+        <span className="text-base font-bold text-[var(--ink)]">Preferences</span>
+        <p className="mt-1 text-base text-[var(--muted)] underline underline-offset-2">
           Unsubscribe from marketing emails
         </p>
       </div>
 
       <div>
-        <span className="text-sm font-bold text-[var(--ink)]">Loyalty Status</span>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+        <span className="text-base font-bold text-[var(--ink)]">Loyalty Status</span>
+        <p className="mt-1 text-base text-[var(--muted)]">
           {user?.loyaltyStatus || "Guest"}
         </p>
       </div>

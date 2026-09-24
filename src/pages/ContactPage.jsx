@@ -12,7 +12,7 @@
   "Step X of 6" label is looked up per-phase from STEP_META below —
   see the note above STEP_META for why the numbers aren't 1,2,3....
 */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, HelpCircle, UploadCloud, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -25,6 +25,9 @@ const stepVariants = {
 };
 
 const TOTAL_STEPS = 6;
+
+// TIP: change this one number to change how many pictures people can upload.
+const MAX_PHOTOS = 4;
 
 // TIP: per the Figma export, "Step X of 6" is NOT simply the position
 // in each screen's own path — e.g. Payment's "Tell Lara the issue" is
@@ -118,7 +121,11 @@ function PillButton({ active, children, className = "", ...props }) {
   return (
     <button
       {...props}
+<<<<<<< ours
       className={`border py-3 px-4 text-sm font-medium transition-all text-center cursor-pointer ${
+=======
+      className={`border py-3 px-4 text-base font-medium transition-all text-center cursor-pointer ${
+>>>>>>> theirs
         active
           ? "border-[var(--ink)] bg-[var(--ink)] text-white"
           : "border-[var(--line)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)]"
@@ -133,7 +140,7 @@ function PrimaryButton({ children, className = "", ...props }) {
   return (
     <button
       {...props}
-      className={`w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 md:py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`w-full bg-[var(--ink)] text-white text-base font-bold uppercase tracking-widest py-3.5 md:py-4 transition-colors hover:bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
     >
       {children}
     </button>
@@ -156,7 +163,7 @@ function TextField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full border pl-4 pr-11 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] ${
+          className={`w-full border pl-4 pr-11 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-base outline-none transition-all focus:border-[var(--ink)] ${
             error ? "border-red-500" : "border-[var(--line)]"
           }`}
         />
@@ -169,7 +176,7 @@ function TextField({
           </div>
         )}
       </div>
-      {error && <p className="text-xs text-red-500 mt-1.5">{error}</p>}
+      {error && <p className="text-base text-red-500 mt-1.5">{error}</p>}
     </div>
   );
 }
@@ -197,7 +204,11 @@ function StepShell({
       <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040]">
         {showHeader && (
           <div className="text-center mb-6">
+<<<<<<< ours
             <p className="text-[13px] tracking-[0.2em] font-semibold text-[var(--muted)] uppercase mb-2">
+=======
+            <p className="text-base tracking-[0.2em] font-semibold text-[var(--muted)] uppercase mb-2">
+>>>>>>> theirs
               Step {stepNumber} of {totalSteps}
             </p>
             <div
@@ -250,14 +261,14 @@ function SuccessCard({
         <h2 className="font-display text-2xl text-[var(--ink)] font-bold mb-1">
           {heading}
         </h2>
-        <p className="text-sm text-[var(--muted)]">{subtext}</p>
+        <p className="text-base text-[var(--muted)]">{subtext}</p>
         <div className="mx-auto mt-6 flex items-center justify-center w-14 h-14 rounded-full bg-[#10B981] text-white">
           <Check size={26} />
         </div>
       </div>
       <Link
         to={linkTo}
-        className="inline-flex items-center gap-1 mt-6 text-xs font-semibold text-[var(--ink)] underline underline-offset-2 hover:text-[var(--maroon)] transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1 mt-6 text-base font-semibold text-[var(--ink)] underline underline-offset-2 hover:text-[var(--maroon)] transition-colors cursor-pointer"
       >
         {linkLabel} <span aria-hidden="true">→</span>
       </Link>
@@ -275,18 +286,34 @@ function TerminalActions({
   primaryLabel,
   secondaryTo = "/contact",
   secondaryLabel = "Back to Contact Page",
+  onSecondary,
 }) {
   return (
     <div className="flex flex-col gap-3 mt-8">
-      <Link
-        to={secondaryTo}
-        className="w-full border border-[var(--line)] text-[var(--ink)] text-xs font-bold uppercase tracking-widest py-3.5 text-center transition-colors hover:border-[var(--ink)] cursor-pointer"
-      >
-        {secondaryLabel}
-      </Link>
+      {/* TIP: when `onSecondary` is passed we render a real button that
+          runs it (used to reset the wizard back to the very first screen).
+          A <Link to="/contact"> can't do that: we're ALREADY on /contact,
+          so React Router treats the click as "nothing changed" and the
+          wizard just stays on the last step. */}
+      {onSecondary ? (
+        <button
+          type="button"
+          onClick={onSecondary}
+          className="w-full border border-[var(--line)] text-[var(--ink)] text-base font-bold uppercase tracking-widest py-3.5 text-center transition-colors hover:border-[var(--ink)] cursor-pointer"
+        >
+          {secondaryLabel}
+        </button>
+      ) : (
+        <Link
+          to={secondaryTo}
+          className="w-full border border-[var(--line)] text-[var(--ink)] text-base font-bold uppercase tracking-widest py-3.5 text-center transition-colors hover:border-[var(--ink)] cursor-pointer"
+        >
+          {secondaryLabel}
+        </Link>
+      )}
       <Link
         to={primaryTo}
-        className="w-full bg-[var(--ink)] text-white text-xs font-bold uppercase tracking-widest py-3.5 text-center transition-colors hover:bg-[var(--maroon)] cursor-pointer"
+        className="w-full bg-[var(--ink)] text-white text-base font-bold uppercase tracking-widest py-3.5 text-center transition-colors hover:bg-[var(--maroon)] cursor-pointer"
       >
         {primaryLabel}
       </Link>
@@ -297,7 +324,7 @@ function TerminalActions({
 function SizeChartTable() {
   return (
     <div className="border border-[var(--line)] mt-4">
-      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
+      <div className="grid grid-cols-4 bg-white text-base uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
         <span className="px-3 py-2">Size</span>
         <span className="px-3 py-2 border-l border-[var(--line)]">Bust</span>
         <span className="px-3 py-2 border-l border-[var(--line)]">Waist</span>
@@ -306,7 +333,7 @@ function SizeChartTable() {
       {SIZE_CHART_ROWS.map((row) => (
         <div
           key={row.size}
-          className="grid grid-cols-4 text-sm border-b border-[var(--line)] last:border-b-0 bg-[var(--cream)]/40"
+          className="grid grid-cols-4 text-base border-b border-[var(--line)] last:border-b-0 bg-[var(--cream)]/40"
         >
           <span className="px-3 py-2">{row.size}</span>
           <span className="px-3 py-2 border-l border-[var(--line)]">
@@ -333,7 +360,7 @@ function MeasurementRow({ values, onChange }) {
   ];
   return (
     <div className="border border-[var(--line)] mt-4">
-      <div className="grid grid-cols-4 bg-white text-[11px] uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
+      <div className="grid grid-cols-4 bg-white text-base uppercase tracking-wide text-[var(--muted)] border-b border-[var(--line)]">
         {fields.map(([, label], idx) => (
           <span
             key={label}
@@ -357,11 +384,65 @@ function MeasurementRow({ values, onChange }) {
               onChange(key, cleaned);
             }}
             inputMode={key === "size" ? "text" : "numeric"}
-            className={`w-full text-center text-sm px-2 py-2.5 outline-none bg-[var(--cream)]/40 focus:bg-white focus:border-[var(--ink)] border-[var(--line)] ${
+            className={`w-full text-left text-base px-3 py-2.5 outline-none bg-[var(--cream)]/40 focus:bg-white focus:border-[var(--ink)] border-[var(--line)] ${
               idx > 0 ? "border-l" : ""
             }`}
           />
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Size pop-up ----------
+   TIP: shows the exact measurements for the size someone just tapped.
+   The numbers come from SIZE_CHART_ROWS at the top of this file. Those are
+   PLACEHOLDERS until the client sends her exact measurements. When she
+   does, only edit SIZE_CHART_ROWS and this pop-up updates by itself. */
+const SIZE_LABEL_TO_CHART = {
+  Small: "S",
+  Large: "L",
+  "Extra Large": "XL",
+  XXL: "XXL",
+};
+
+function SizePopup({ size, onClose }) {
+  const row = SIZE_CHART_ROWS.find((r) => r.size === SIZE_LABEL_TO_CHART[size]);
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  if (!row) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${size} measurements`}
+        className="w-full max-w-xs bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between">
+          <h3 className="font-display text-xl font-bold text-[var(--ink)]">{size}</h3>
+          <button aria-label="Close" onClick={onClose} className="cursor-pointer text-[var(--muted)] hover:text-[var(--ink)]">
+            <X size={20} />
+          </button>
+        </div>
+        <dl className="mt-4 divide-y divide-[var(--line)] text-base">
+          {[["Bust", row.bust], ["Waist", row.waist], ["Hip", row.hip]].map(([label, val]) => (
+            <div key={label} className="flex justify-between py-2">
+              <dt className="text-[var(--muted)]">{label}</dt>
+              <dd className="text-[var(--ink)]">{val}&quot;</dd>
+            </div>
+          ))}
+        </dl>
+        <PrimaryButton className="mt-5" onClick={onClose}>
+          Got it
+        </PrimaryButton>
       </div>
     </div>
   );
@@ -441,6 +522,58 @@ export default function ContactPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
+
+  /* ---------- Picture upload helpers ----------
+     TIP: the old code did `updateField("photos", newFiles)`, which REPLACED
+     the array every time, so picking one more picture wiped the earlier ones.
+     Now we APPEND to what's already there, skip duplicates, and stop at
+     MAX_PHOTOS. */
+  const [photoNotice, setPhotoNotice] = useState("");
+
+  const addPhotos = (fileList) => {
+    const incoming = Array.from(fileList || []);
+    if (!incoming.length) return;
+    const existing = formData.photos;
+    const isSame = (a, b) =>
+      a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+    const fresh = incoming.filter((f) => !existing.some((e) => isSame(e, f)));
+    const room = MAX_PHOTOS - existing.length;
+    const accepted = fresh.slice(0, Math.max(0, room));
+    if (accepted.length) updateField("photos", [...existing, ...accepted]);
+    if (fresh.length > room) {
+      setPhotoNotice(
+        `Only ${MAX_PHOTOS} pictures allowed, so we kept the first ${MAX_PHOTOS}. Remove one to swap it.`,
+      );
+    } else {
+      setPhotoNotice("");
+    }
+    // reset the input so picking the same file again later still fires onChange
+    const input = document.getElementById("photo-upload");
+    if (input) input.value = "";
+  };
+
+  const removePhoto = (index) => {
+    updateField(
+      "photos",
+      formData.photos.filter((_, i) => i !== index),
+    );
+    setPhotoNotice("");
+  };
+
+  // TIP: createObjectURL used to run on EVERY render (a slow memory leak).
+  // useMemo makes the preview URLs only when the list changes, and the
+  // cleanup frees them.
+  const photoUrls = useMemo(
+    () => formData.photos.map((f) => URL.createObjectURL(f)),
+    [formData.photos],
+  );
+  useEffect(() => {
+    return () => photoUrls.forEach((u) => URL.revokeObjectURL(u));
+  }, [photoUrls]);
+
+  /* ---------- Size pop-up ----------
+     TIP: which size (if any) the pop-up is showing. See SizePopup below. */
+  const [sizePopup, setSizePopup] = useState(null);
 
   const goTo = (nextPhase) => {
     setHistory((h) => [...h, phase]);
@@ -566,7 +699,11 @@ export default function ContactPage() {
 
   return (
     <>
-      <main className="min-h-[calc(100vh-64px)] w-full flex items-center justify-center py-12 px-5 bg-[var(--cream)]">
+      {/* TIP: on phones this page is exactly one screen tall (100dvh minus the
+          64px navbar) and the page itself doesn't scroll, as in the client's
+          Figma (no footer on these pages). If a step is taller than the
+          screen, only the area inside scrolls. Desktop is unchanged. */}
+      <main className="min-h-[calc(100vh-64px)] max-md:h-[calc(100dvh-64px)] max-md:min-h-0 max-md:overflow-y-auto w-full flex items-center justify-center py-12 max-md:py-4 px-5 bg-[var(--cream)]">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={`${flow}-${phase}`}
@@ -609,7 +746,7 @@ export default function ContactPage() {
                           switchFlow("custom");
                           goTo("garment");
                         }}
-                        className="w-full border border-[var(--line)] py-4 px-6 text-sm font-semibold tracking-wide bg-white text-[var(--ink)] transition-all hover:border-[var(--ink)] focus-visible:border-[var(--ink)] cursor-pointer"
+                        className="w-full border border-[var(--line)] py-4 px-6 text-base font-semibold tracking-wide bg-white text-[var(--ink)] transition-all hover:border-[var(--ink)] focus-visible:border-[var(--ink)] cursor-pointer"
                       >
                         Make a custom order
                       </button>
@@ -618,7 +755,7 @@ export default function ContactPage() {
                           switchFlow("enquiry");
                           goTo("topic");
                         }}
-                        className="w-full border border-[var(--ink)] py-4 px-6 text-sm font-semibold tracking-wide bg-[var(--ink)] text-white transition-all hover:bg-[var(--maroon)] hover:border-[var(--maroon)] cursor-pointer"
+                        className="w-full border border-[var(--ink)] py-4 px-6 text-base font-semibold tracking-wide bg-[var(--ink)] text-white transition-all hover:bg-[var(--maroon)] hover:border-[var(--maroon)] cursor-pointer"
                       >
                         Make an enquiry
                       </button>
@@ -678,10 +815,10 @@ export default function ContactPage() {
                     </h2>
                     <SizeChartTable />
                     <div className="flex items-center justify-between mt-5">
-                      <span className="text-sm font-semibold text-[var(--ink)]">
+                      <span className="text-base font-semibold text-[var(--ink)]">
                         Do you want custom sizing?
                       </span>
-                      <div className="flex gap-3 text-sm">
+                      <div className="flex gap-3 text-base">
                         <button
                           onClick={() => updateField("wantsSizeHelp", "yes")}
                           className={`cursor-pointer ${
@@ -710,7 +847,7 @@ export default function ContactPage() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                       >
-                        <p className="text-xs text-[var(--muted)] mt-4 mb-1">
+                        <p className="text-base text-[var(--muted)] mt-4 mb-1">
                           Fill in your measurements
                         </p>
                         <MeasurementRow
@@ -747,6 +884,7 @@ export default function ContactPage() {
                     <TerminalActions
                       primaryTo="/shop"
                       primaryLabel="Back to shop"
+                      onSecondary={resetAll}
                     />
                   </div>
                 )}
@@ -791,7 +929,7 @@ export default function ContactPage() {
                           className="flex items-center flex-1 last:flex-none"
                         >
                           <div className="flex flex-col items-center gap-2 relative">
-                            <span className="text-[9px] text-[var(--muted)] uppercase tracking-wide absolute -top-5 whitespace-nowrap">
+                            <span className="text-base text-[var(--muted)] uppercase tracking-wide absolute -top-5 whitespace-nowrap">
                               {status}
                             </span>
                             <div
@@ -835,6 +973,7 @@ export default function ContactPage() {
                     <TerminalActions
                       primaryTo="/shop"
                       primaryLabel="Back to shop"
+                      onSecondary={currentStatus === "Delivery" ? undefined : resetAll}
                       secondaryTo={
                         currentStatus === "Delivery"
                           ? "/account/orders"
@@ -864,9 +1003,9 @@ export default function ContactPage() {
                             updateField("issueDetails", e.target.value)
                           }
                           placeholder="Speak, Lara is listening..."
-                          className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
+                          className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-base outline-none transition-all focus:border-[var(--ink)] resize-none"
                         />
-                        <p className="text-xs text-[var(--muted)] mt-1.5">
+                        <p className="text-base text-[var(--muted)] mt-1.5">
                           This might help Lara understand you better.
                         </p>
                       </div>
@@ -895,9 +1034,9 @@ export default function ContactPage() {
                             updateField("issueDetails", e.target.value)
                           }
                           placeholder="Speak, Lara is listening..."
-                          className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
+                          className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-base outline-none transition-all focus:border-[var(--ink)] resize-none"
                         />
-                        <p className="text-xs text-[var(--muted)] mt-1.5">
+                        <p className="text-base text-[var(--muted)] mt-1.5">
                           This might help Lara resolve it faster.
                         </p>
                       </div>
@@ -971,9 +1110,9 @@ export default function ContactPage() {
                           updateField("otherFitDetails", e.target.value)
                         }
                         placeholder="Speak Lara's listening 😅..."
-                        className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
+                        className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-base outline-none transition-all focus:border-[var(--ink)] resize-none"
                       />
-                      <p className="text-xs text-[var(--muted)] -mt-2.5">
+                      <p className="text-base text-[var(--muted)] -mt-2.5">
                         This might help Lara nail your vision faster.
                       </p>
                       <PrimaryButton
@@ -1001,6 +1140,7 @@ export default function ContactPage() {
                             updateField("sizeChoice", size);
                             if (size === "Custom sizing")
                               goTo("custom-measurements");
+                            else setSizePopup(size);
                           }}
                         >
                           {size}
@@ -1009,10 +1149,10 @@ export default function ContactPage() {
                     </div>
 
                     <div className="flex items-center justify-between mt-6 max-w-sm mx-auto">
-                      <span className="text-sm font-semibold text-[var(--ink)]">
+                      <span className="text-base font-semibold text-[var(--ink)]">
                         See full size chart
                       </span>
-                      <div className="flex gap-3 text-sm">
+                      <div className="flex gap-3 text-base">
                         <button
                           onClick={() => updateField("showSizeChart", "yes")}
                           className={`cursor-pointer ${
@@ -1112,7 +1252,7 @@ export default function ContactPage() {
 
                     <div className="flex items-center gap-3 my-5 max-w-xs mx-auto">
                       <div className="h-px flex-1 bg-[var(--line)]" />
-                      <span className="text-[10px] uppercase tracking-widest text-[var(--muted)]">
+                      <span className="text-base uppercase tracking-widest text-[var(--muted)]">
                         Or
                       </span>
                       <div className="h-px flex-1 bg-[var(--line)]" />
@@ -1123,9 +1263,9 @@ export default function ContactPage() {
                       value={formData.colorNote}
                       onChange={(e) => updateField("colorNote", e.target.value)}
                       placeholder="Magenta and turquoise etc..."
-                      className="w-full border border-[var(--line)] px-4 py-3 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
+                      className="w-full border border-[var(--line)] px-4 py-3 bg-[var(--cream)]/40 focus:bg-white text-base outline-none transition-all focus:border-[var(--ink)] resize-none"
                     />
-                    <p className="text-xs text-[var(--muted)] mt-1.5">
+                    <p className="text-base text-[var(--muted)] mt-1.5">
                       Write the specific colors you want.
                     </p>
 
@@ -1150,15 +1290,29 @@ export default function ContactPage() {
 
                     <label
                       htmlFor="photo-upload"
-                      className="flex flex-col items-center justify-center gap-2 rounded-none border-2 border-dashed border-[var(--line)] py-10 px-4 cursor-pointer hover:border-[var(--ink)] transition-colors text-center"
+                      className={`flex flex-col items-center justify-center gap-2 rounded-none border-2 border-dashed border-[var(--line)] py-10 px-4 text-center transition-colors ${
+                        formData.photos.length >= MAX_PHOTOS
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer hover:border-[var(--ink)]"
+                      }`}
+                      onClick={(e) => {
+                        // TIP: at the max, stop the file picker from opening and tell
+                        // the person to delete one first instead.
+                        if (formData.photos.length >= MAX_PHOTOS) {
+                          e.preventDefault();
+                          setPhotoNotice(
+                            `You've added ${MAX_PHOTOS} pictures, which is the max. Remove one to add another.`,
+                          );
+                        }
+                      }}
                     >
                       <UploadCloud size={22} className="text-[var(--muted)]" />
                       <span className="text-lg text-[var(--ink)]">
                         Drop your image here or{" "}
                         <span className="text-blue-600 underline">browse</span>
                       </span>
-                      <span className="text-xs text-[var(--muted)]">
-                        Supports JPG &amp; PNG (4 images max)
+                      <span className="text-base text-[var(--muted)]">
+                        Supports JPG &amp; PNG ({formData.photos.length}/{MAX_PHOTOS} images)
                       </span>
                       <input
                         id="photo-upload"
@@ -1166,6 +1320,7 @@ export default function ContactPage() {
                         accept="image/jpeg,image/png"
                         multiple
                         className="sr-only"
+<<<<<<< ours
                         onChange={(e) => {
                           const newFiles = Array.from(e.target.files || []);
                           const combined = [...formData.photos, ...newFiles].slice(0, 4);
@@ -1173,23 +1328,39 @@ export default function ContactPage() {
                           // Reset the input so re-selecting the same file triggers onChange again
                           e.target.value = "";
                         }}
+=======
+                        disabled={formData.photos.length >= MAX_PHOTOS}
+                        onChange={(e) => addPhotos(e.target.files)}
+>>>>>>> theirs
                       />
                     </label>
+
+                    {photoNotice && (
+                      <p role="alert" className="mt-3 text-base text-red-500">
+                        {photoNotice}
+                      </p>
+                    )}
 
                     {formData.photos.length > 0 && (
                       <div className="grid grid-cols-2 gap-3 mt-4">
                         {formData.photos.map((file, i) => (
                           <div
+<<<<<<< ours
                             key={i}
                             className="relative aspect-square overflow-hidden border border-[var(--line)] group"
+=======
+                            key={`${file.name}-${file.size}-${file.lastModified}`}
+                            className="relative aspect-square overflow-hidden border border-[var(--line)]"
+>>>>>>> theirs
                           >
                             <img
-                              src={URL.createObjectURL(file)}
+                              src={photoUrls[i]}
                               alt=""
                               className="w-full h-full object-cover"
                             />
                             <button
                               type="button"
+<<<<<<< ours
                               aria-label="Remove photo"
                               onClick={() => {
                                 const updated = formData.photos.filter((_, idx) => idx !== i);
@@ -1198,14 +1369,24 @@ export default function ContactPage() {
                               className="absolute top-1 right-1 bg-white/80 hover:bg-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             >
                               <X size={14} strokeWidth={2.5} className="text-[var(--ink)]" />
+=======
+                              aria-label="Remove this picture"
+                              onClick={() => removePhoto(i)}
+                              className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[var(--ink)] shadow hover:bg-white cursor-pointer"
+                            >
+                              <X size={16} />
+>>>>>>> theirs
                             </button>
                           </div>
                         ))}
                       </div>
                     )}
 
+                    {/* TIP: the picture step is compulsory now, so Next stays
+                        disabled until at least one picture has been added. */}
                     <PrimaryButton
                       className="mt-6"
+                      disabled={formData.photos.length === 0}
                       onClick={() => goTo("more")}
                     >
                       Next
@@ -1216,12 +1397,9 @@ export default function ContactPage() {
                 {/* ============ CUSTOM: anything else ============ */}
                 {phase === "more" && (
                   <div className="max-w-md mx-auto">
-                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-2 font-bold">
+                    <h2 className="font-display text-2xl text-center text-[var(--ink)] mb-6 font-bold">
                       Anything else you&apos;d like to mention?
                     </h2>
-                    <p className="text-center text-lg text-[var(--muted)] mb-6">
-                      This might help Lara nail your vision faster.
-                    </p>
                     <div className="space-y-4">
                       <textarea
                         rows={4}
@@ -1229,8 +1407,8 @@ export default function ContactPage() {
                         onChange={(e) =>
                           updateField("customDetails", e.target.value)
                         }
-                        placeholder="And for the lady, perhaps a matching bag 😉?"
-                        className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-sm outline-none transition-all focus:border-[var(--ink)] resize-none"
+                        placeholder="This might help Lara nail your vision faster. E.g. and for the lady, perhaps a matching bag 😉?"
+                        className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-base outline-none transition-all focus:border-[var(--ink)] resize-none"
                       />
                       <PrimaryButton onClick={() => goTo("email")}>
                         {formData.customDetails.trim() ? "Next" : "No"}
@@ -1270,18 +1448,25 @@ export default function ContactPage() {
         </AnimatePresence>
       </main>
 
+      {sizePopup && (
+        <SizePopup size={sizePopup} onClose={() => setSizePopup(null)} />
+      )}
+
       {phase === "success" && (
         <div className="text-center pb-4">
           <button
             onClick={resetAll}
-            className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--ink)] transition-colors py-2 cursor-pointer"
+            className="text-base font-semibold text-[var(--muted)] hover:text-[var(--ink)] transition-colors py-2 cursor-pointer"
           >
             Start another request
           </button>
         </div>
       )}
 
-      <Footer />
+      {/* TIP: footer hidden on phones — see the note on <main> above. */}
+      <div className="max-md:hidden">
+        <Footer />
+      </div>
     </>
   );
 }
