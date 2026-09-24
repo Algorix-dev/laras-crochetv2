@@ -75,11 +75,6 @@ export default function MyBagPage() {
     <>
       <main className="min-h-screen">
         <section className="px-5 md:px-8 lg:px-[15.83%] pt-8 pb-16 md:pt-10">
-          {/* Breadcrumb */}
-          <p className="mb-4 text-base text-[var(--muted)]">
-            <Link to="/" className="hover:underline">Home</Link> /{' '}
-            <Link to="/shop" className="hover:underline">Shop</Link> / Bag
-          </p>
 
           {/* Page header */}
           <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
@@ -87,6 +82,12 @@ export default function MyBagPage() {
           </h1>
           <p className="text-base text-[var(--muted)] mb-10">
             Enjoy international shipping rates and pre-pay duties &amp; taxes at checkout.
+          </p>
+
+          {/* Breadcrumb */}
+          <p className="sm:hidden mb-4 text-base text-[var(--muted)]">
+            <Link to="/" className="hover:underline">Home</Link> /{' '}
+            <Link to="/shop" className="hover:underline">Shop</Link> / Bag
           </p>
 
           {/* ================================================================
