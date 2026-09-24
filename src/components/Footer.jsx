@@ -168,7 +168,7 @@ export default function Footer() {
           monogram; -mb-[5px] (on the image) crops 5px off the bottom of the
           lettering (the image has empty space at the top, so this leaves the
           same amount of lettering showing as the phone design). */}
-      <div className="w-full overflow-hidden flex justify-center max-md:mt-[33px]">
+      <div className="w-full overflow-hidden flex justify-center mt-10 md:mt-16 max-md:mt-[33px]">
         <img
           src={lacMonogram}
           alt="Lara's Crochet Monogram"

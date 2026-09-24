@@ -114,7 +114,7 @@ export default function ShopPage() {
             <h1 className="text-[36px] md:text-[36px] font-bold uppercase tracking-[-2%] text-[var(--ink)] mb-2">
               Shop Lara's Crochet
             </h1>
-            <p className="text-sm text-[var(--muted)]">
+            <p className="text-base text-[var(--muted)]">
               Shop the latest pieces and must-haves from Lara's Crochet
             </p>
           </div>

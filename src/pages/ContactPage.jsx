@@ -14,7 +14,7 @@
 */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Check, HelpCircle, UploadCloud } from "lucide-react";
+import { ArrowLeft, Check, HelpCircle, UploadCloud, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import Footer from "../components/Footer";
 
@@ -118,7 +118,7 @@ function PillButton({ active, children, className = "", ...props }) {
   return (
     <button
       {...props}
-      className={`border py-3 px-4 text-xs font-medium transition-all text-center cursor-pointer ${
+      className={`border py-3 px-4 text-sm font-medium transition-all text-center cursor-pointer ${
         active
           ? "border-[var(--ink)] bg-[var(--ink)] text-white"
           : "border-[var(--line)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)]"
@@ -197,7 +197,7 @@ function StepShell({
       <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040]">
         {showHeader && (
           <div className="text-center mb-6">
-            <p className="text-[10px] tracking-[0.2em] font-semibold text-[var(--muted)] uppercase mb-2">
+            <p className="text-[13px] tracking-[0.2em] font-semibold text-[var(--muted)] uppercase mb-2">
               Step {stepNumber} of {totalSteps}
             </p>
             <div
@@ -1167,11 +1167,11 @@ export default function ContactPage() {
                         multiple
                         className="sr-only"
                         onChange={(e) => {
-                          const files = Array.from(e.target.files || []).slice(
-                            0,
-                            4,
-                          );
-                          updateField("photos", files);
+                          const newFiles = Array.from(e.target.files || []);
+                          const combined = [...formData.photos, ...newFiles].slice(0, 4);
+                          updateField("photos", combined);
+                          // Reset the input so re-selecting the same file triggers onChange again
+                          e.target.value = "";
                         }}
                       />
                     </label>
@@ -1181,13 +1181,24 @@ export default function ContactPage() {
                         {formData.photos.map((file, i) => (
                           <div
                             key={i}
-                            className="relative aspect-square overflow-hidden border border-[var(--line)]"
+                            className="relative aspect-square overflow-hidden border border-[var(--line)] group"
                           >
                             <img
                               src={URL.createObjectURL(file)}
                               alt=""
                               className="w-full h-full object-cover"
                             />
+                            <button
+                              type="button"
+                              aria-label="Remove photo"
+                              onClick={() => {
+                                const updated = formData.photos.filter((_, idx) => idx !== i);
+                                updateField("photos", updated);
+                              }}
+                              className="absolute top-1 right-1 bg-white/80 hover:bg-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            >
+                              <X size={14} strokeWidth={2.5} className="text-[var(--ink)]" />
+                            </button>
                           </div>
                         ))}
                       </div>

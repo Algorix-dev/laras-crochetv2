@@ -73,4 +73,10 @@ export const defaultCountry = countries[0];
 export const countryToCurrency = {
   NG: "NGN",
   GB: "GBP",
+  US: "USD",
+  CA: "USD",  // CAD — shown as USD for simplicity
+  AU: "USD",  // AUD — shown as USD for simplicity
+  FR: "EUR",
+  DE: "EUR",
+  IE: "EUR",
 };

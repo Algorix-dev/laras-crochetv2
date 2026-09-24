@@ -912,9 +912,9 @@ function HeroCarousel({ models }) {
       data-no-rise="true"
       className="
         overflow-x-clip
-        pt-12
-        md:pt-12
-        lg:pt-14
+        pt-16
+        md:pt-20
+        lg:pt-24
         pb-24
         md:pb-32
         text-center

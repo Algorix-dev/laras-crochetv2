@@ -143,7 +143,7 @@ function HomePage() {
 
       <Reveal>
         <div className="text-center pt-2 pb-10 md:pb-14">
-          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+          <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
             Go to Shop
           </Link>
         </div>
@@ -159,7 +159,7 @@ function HomePage() {
                   <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                     Shop Our Pieces
                   </h2>
-                  <Link to="/shop" className="pr-3 text-xs underline underline-offset-2 hover:text-[var(--maroon)]">
+                  <Link to="/shop" className="pr-3 text-base font-medium underline underline-offset-2 hover:text-[var(--maroon)] transition-colors">
                     Go to shop
                   </Link>
                 </div>
@@ -167,7 +167,7 @@ function HomePage() {
               <ProductGrid products={liveProducts.slice(0, 4)} isPlaceholder={!isLive} />
               <Reveal>
                 <div className="text-center mt-10">
-                  <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-xs font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)]">
+                  <Link to="/shop" className="inline-block bg-[var(--maroon)] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
                     Go to Shop
                   </Link>
                 </div>

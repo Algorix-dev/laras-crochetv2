@@ -20,6 +20,7 @@ export const currencies = {
       NGN rate is 1 because it's the base currency (no conversion needed). */
   USD: { rate: 1550, locale: 'en-US', label: 'USD' },
   GBP: { rate: 1950, locale: 'en-GB', label: 'GBP' },
+  EUR: { rate: 1680, locale: 'en-DE', label: 'EUR' },
 };
 
 /* TIP: The Provider wraps your app and makes the currency context available
@@ -81,19 +82,23 @@ export function CurrencyProvider({ children }) {
          
          Example: formatPrice(15500) with USD selected → "$10.00"
                   formatPrice(15500) with NGN selected → "₦15,500" */
-      formatPrice: (ngn) =>
-        new Intl.NumberFormat(currencies[currency].locale, {
+      formatPrice: (ngn) => {
+        const curr = currencies[currency] || currencies['USD'];
+        return new Intl.NumberFormat(curr.locale, {
           style: 'currency',
-          currency,
+          currency: currencies[currency] ? currency : 'USD',
           /* TIP: NGN doesn't use kobo in everyday pricing, so we show 0
              decimal places. USD and GBP show 2 decimals for cents/pence. */
           maximumFractionDigits: currency === 'NGN' ? 0 : 2,
-        }).format(ngn / currencies[currency].rate),
+        }).format(ngn / curr.rate);
+      },
 
-      formatPriceNumber: (ngn) =>
-        new Intl.NumberFormat(currencies[currency].locale, {
+      formatPriceNumber: (ngn) => {
+        const curr = currencies[currency] || currencies['USD'];
+        return new Intl.NumberFormat(curr.locale, {
           maximumFractionDigits: currency === 'NGN' ? 0 : 2,
-        }).format(ngn / currencies[currency].rate),
+        }).format(ngn / curr.rate);
+      },
     }),
     [currency, country],
   );

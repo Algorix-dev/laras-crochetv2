@@ -139,7 +139,7 @@ export default function Navbar() {
       }}
       className="relative hover:text-[var(--maroon)]"
     >
-      <ShoppingBag size={18} />
+      <ShoppingBag size={18} fill={cartCount > 0 ? 'currentColor' : 'none'} />
       {cartCount > 0 && (
         <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
           {cartCount}

@@ -28,9 +28,9 @@
   to adjust or revert it if you want something different from the
   literal spec value.
 ----------------------------------------------------------- */
-import { Check, Star, Heart, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Star, Heart, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getProduct, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
 import RecommendedProducts from '../components/RecommendedProducts';
@@ -537,6 +537,7 @@ export default function ProductDetail() {
      product up in a local array, we fetch it from the API, the same
      way ShopPage does. */
   const { id } = useParams();
+  const navigate = useNavigate();
   const [showSplash] = useState(() => shouldShowSplash(`/product/${id}`));
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
@@ -630,6 +631,22 @@ export default function ProductDetail() {
 
   return (
     <>
+      {/* Back button — floats above the gallery, lets users return to the
+          previous page (shop, homepage hero, etc.) without losing scroll
+          position there. navigate(-1) follows the browser history stack
+          rather than hard-coding /shop, so it works regardless of entry
+          point. */}
+      <div className="px-5 md:px-8 lg:px-[15.83%] pt-4 pb-2">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--ink)] transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={16} strokeWidth={2} />
+          Back
+        </button>
+      </div>
       <main className="mx-auto pb-8 md:pb-12">
         {/* TIP: py-8/py-12 changed to pb-only — the raw Figma export
             shows this gallery+purchase row sitting flush under the

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import customTrio from "../assets/model-images/custom-orders-trio.webp";
 import customWordmark from "../assets/custom-orders-wordmark.png";
 import arcSwirl from "../assets/decor/arc-swirl.png";
@@ -62,9 +63,9 @@ export default function CustomOrderBanner() {
       className="
         relative
         min-h-0
-        pb-[139px]
-        md:min-h-[1098px]
-        md:pb-0
+        pb-[100px]
+        md:min-h-[800px]
+        md:pb-12
         w-full
         overflow-hidden
         bg-[#FAFAFA]
@@ -335,7 +336,7 @@ export default function CustomOrderBanner() {
                 top-[98%]
                 z-10
                 w-[75%]
-                max-w-[640px]
+                max-w-[420px]
                 -translate-x-1/2
                 -translate-y-1/2
                 rounded-[50%]
@@ -359,7 +360,7 @@ export default function CustomOrderBanner() {
               object-contain
             "
             style={{
-              width: "clamp(360px, 34vw, 650px)",
+              width: "clamp(260px, 24vw, 420px)",
             }}
           />
           </div>
@@ -374,7 +375,7 @@ export default function CustomOrderBanner() {
             relative
             z-20
             mx-auto
-            mt-[45px]
+            mt-[36px]
             flex
             max-w-[617px]
             flex-col
@@ -396,29 +397,30 @@ export default function CustomOrderBanner() {
             smallest details.
           </p>
 
-          <button
-            type="button"
+          <Link
+            to="/contact?flow=custom"
             className="
               flex
               h-[46px]
               w-full
-              md:w-[245px]
+              md:w-[280px]
               items-center
               justify-center
               gap-[10px]
               bg-[#564345]
-              px-[40px]
+              px-[32px]
               text-[16px]
               font-bold
-              max-md:uppercase
+              uppercase
+              tracking-wider
               text-[#FAFAFA]
               transition-opacity
               duration-200
               hover:opacity-90
             "
           >
-            Make a Custom Order
-          </button>
+            MAKE A CUSTOM ORDER
+          </Link>
         </div>
       </div>
     </section>
