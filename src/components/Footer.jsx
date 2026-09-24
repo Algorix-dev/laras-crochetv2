@@ -30,7 +30,7 @@ const columns = [
   },
   {
     title: "Socials",
-    links: [{ label: "Instagram", href: "https://instagram.com" }],
+    links: [{ label: "Instagram", href: "https://www.instagram.com/_larascrochet/" }],
   },
 ];
 
