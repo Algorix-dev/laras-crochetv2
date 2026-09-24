@@ -900,7 +900,7 @@ export default function ProductDetail() {
                 its growth. */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 block w-full whitespace-nowrap bg-[#564345] px-6 py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)]"
+              className="mt-8 block w-full whitespace-nowrap bg-[#564345] px-6 py-4 text-[20px] font-bold uppercase tracking-[-0.04em] text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[322px]"
             >
               Add to Bag
             </button>
