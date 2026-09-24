@@ -146,7 +146,7 @@ function PrimaryButton({ children, className = "", pinned = true, ...props }) {
   return (
     <button
       {...props}
-      className={`${pin} w-full hover:bg-[#412B2D] text-white text-base font-bold uppercase tracking-widest sm:py-0.5 md:py-4 transition-colors bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`${pin} w-full hover:bg-[#412B2D] text-white text-base font-bold uppercase tracking-widest sm:py-3.5 md:py-4 transition-colors bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
     >
       {children}
     </button>
