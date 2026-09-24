@@ -736,7 +736,7 @@ export default function ProductDetail() {
             (shop, homepage, wishlist...). If someone opened this product
             straight from a link there's no previous page, so we send them
             to /shop instead of leaving the site. */}
-        <div className="px-5 py-4 md:px-8 lg:px-[15.83%]">
+        <div className="px-5 py-4">
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/shop'))}
