@@ -11,11 +11,11 @@ import ProductCard from './ProductCard';
 // so none of these should start at grid-cols-1.
 const GRID_COLS = {
   2: "grid-cols-2",
-  3: "grid-cols-2 lg:grid-cols-3",
-  4: "grid-cols-2 lg:grid-cols-4",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
 };
 
-export default function ProductGrid({ products, columns = 2, cardVariant = 'default', isPlaceholder = false, wrapInSection = true, scrollOnMobile = false }) {
+export default function ProductGrid({ products, columns = 3, cardVariant = 'default', isPlaceholder = false, wrapInSection = true, scrollOnMobile = false }) {
   /*
     Figma's "Content" wrapper: 1920px frame, padding: 0 304px 77px,
     row-gap 100px, bg #FAFAFA, exactly 2 cards per row (Frame 34 is
