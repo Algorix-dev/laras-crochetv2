@@ -1142,7 +1142,7 @@ export default function LaraShowcase() {
             <img
               src={laraWordmark}
               alt="Lara's Crochet"
-              className="relative z-10 block h-auto w-full select-none max-sm:scale-[0.5]"
+              className="relative z-10 block h-auto w-full select-none max-sm:scale-[1]"
             />
 
             <div
