@@ -251,7 +251,6 @@ export default function CustomOrderBanner() {
               text-black
               text-[clamp(16px,1.33vw,25.47px)]
               max-sm:text-[clamp(11px,3.3vw,14px)]
-              max-sm:[--orders-top:-3%]
               max-sm:[--orders-left:76%]
             "
             style={{
