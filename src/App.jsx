@@ -164,7 +164,7 @@ function HomePage() {
                   ProductGrid/Footer, so this heading row's left edge
                   lines up with the product grid directly below it. */}
               <Reveal>
-                <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-8">
+                <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-4">
                   <h2 className="sm:text-[16px] lg:text-[32px] md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                     Shop Our Pieces
                   </h2>
@@ -177,11 +177,8 @@ function HomePage() {
                   the original 4. Change the 6 / 4 here to adjust. */}
               <ProductGrid products={liveProducts.slice(0, isPhone ? 6 : 4)} isPlaceholder={!isLive} />
               <Reveal>
-                <div className="px-5 text-center md:px-0">
-                  <Link
-                    to="/shop"
-                    className="block w-full md:w-auto md:inline-block bg-[var(--maroon)] px-8 py-3.5 text-[14px] md:text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors"
-                  >
+                <div className="px-5 text-center md:px-0 mb-8 md:mb-16">
+                  <Link to="/shop" className="text-[14px] sm:text-[13px] md:text-base pr-3 underline underline-offset-2 hover:text-[var(--maroon)]">
                     Go to Shop
                   </Link>
                 </div>
