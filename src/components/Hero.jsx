@@ -31,10 +31,17 @@ const SELECTED_SCALE_Y = 1.0;
 
 // TIP — MOBILE CENTER MODEL SIZE: used for BOTH scaleX and scaleY on phones
 // so the model grows bigger while staying proportional (never stretched).
-// Raise this if Lara wants it even bigger; the row height is now dynamic
-// (see IMAGE_HEIGHT_SELECTED below) so a bigger scale won't get clipped —
-// the button/image wrapper is overflow-visible.
-const SELECTED_SCALE_PHONE = 1.5;
+// KEEP THIS MODEST — the dvh-based row (see IMAGE_HEIGHT_SELECTED below)
+// already fills nearly the entire screen height, so this scale stacks ON
+// TOP of an already-tall image. Anything much above ~1.2 pushes the
+// model's top edge (the head) above the visible viewport — it renders
+// behind the fixed navbar and behind the name text (which sits at a
+// lower z-index than the model), so both the head and the name
+// effectively disappear. If Lara wants it bigger, it's safer to trim
+// --hero-navbar-offset/--hero-price-offset in index.css (grows the row
+// itself, which the layout already accounts for) than to push this much
+// higher.
+const SELECTED_SCALE_PHONE = 1.15;
 
 /*
   TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
@@ -992,7 +999,7 @@ function HeroCarousel({ models }) {
         max-sm:pt-[calc(var(--hero-navbar-offset,67px)+34px)]
         pb-24
         md:pb-32
-        max-sm:pb-0
+        max-sm:pb-[var(--hero-price-offset,140px)]
         text-center
       "
       /* TIP — MOBILE TOP OFFSET: on desktop, pt-16/20/24 does double
@@ -1003,7 +1010,21 @@ function HeroCarousel({ models }) {
          PLUS the ~34px gap to the name text — not just the 34px
          alone. Reads the same CSS variable as IMAGE_HEIGHT_SELECTED's
          calc above, so both stay in sync automatically if
-         --hero-navbar-offset is ever updated in index.css. */
+         --hero-navbar-offset is ever updated in index.css.
+
+         TIP — MOBILE BOTTOM PADDING (max-sm:pb): the podium and price
+         row are position: absolute, so they do NOT add to this
+         section's own box height — normal document flow ends right at
+         the row's bottom edge regardless of them. Without real pb
+         here to reserve that space, whatever section comes after Hero
+         renders directly on top of the row's bottom edge, painting
+         over (hiding) the podium/price completely, even though
+         they're still technically "there". This pb must be at least
+         --hero-price-offset so they have room to actually be seen —
+         it is NOT a leftover gap to trim; it's required space. (The
+         old fixed-height mobile gap complaint is instead fixed by the
+         dvh-based row height above, which now hugs the screen with no
+         slack of its own.) */
       style={{
         perspective: "1800px",
       }}
@@ -1060,8 +1081,14 @@ function HeroCarousel({ models }) {
               max-sm:bottom-auto
               max-sm:top-0
               z-0
+              max-sm:z-20
             "
           >
+            {/* TIP: model images are z-10 (z-12 for the selected one) —
+                bumped to z-20 on mobile so the name always paints on top
+                of the model instead of being covered by it if the model
+                ever runs taller than expected (see the head-crop /
+                hidden-name bug this fixed). */}
             <AnimatePresence mode="wait" initial={false}>
               <motion.h1
                 key={activeModel.id}
