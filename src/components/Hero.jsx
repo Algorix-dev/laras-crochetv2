@@ -456,6 +456,8 @@ function HeroModel({
   onSelect,
 }) {
   const navigate = useNavigate();
+  const frontImageRef = useRef(null);
+  const [frontImageWidth, setFrontImageWidth] = useState(0);
   const isSelected = offset === 0;
   const isShown = Math.abs(offset) <= half;
   const edge = half + 1; // the invisible waiting slot
@@ -494,6 +496,27 @@ function HeroModel({
   // With a front photo, the side photo fades out at the middle, so let it
   // keep the direction it arrived with. Without one, it must stay as-is.
   const view = getViews(model, hasFront ? viewOffset || prevOffset : viewOffset);
+  useLayoutEffect(() => {
+    const image = frontImageRef.current;
+    if (!image) return;
+
+    const measure = () => {
+      setFrontImageWidth(image.getBoundingClientRect().width);
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(image);
+
+    return () => observer.disconnect();
+  }, [view?.front, isSelected]);
+
+  const feetCorrection =
+    isSelected && frontFeet !== null && frontImageWidth > 0
+      ? -(frontFeet - 0.5) * frontImageWidth
+      : 0;
+      
   const fade = {
     duration: reduceMotion ? 0 : FACE_FADE_SECONDS,
     ease: "easeInOut",
@@ -709,6 +732,7 @@ function HeroModel({
 
         {hasFront && (
           <motion.img
+            ref={frontImageRef}
             src={view.front}
             decoding="async"
             draggable={false}
@@ -720,10 +744,7 @@ function HeroModel({
             // photo left by "feet position" so the feet, not the picture's
             // middle, sit on the podium. 0.5 = the old centred behaviour.
             style={{
-              translate:
-                typeof window !== "undefined" && window.innerWidth < 640
-                  ? "-50% 0"
-                  : `${-(frontFeet ?? 0.5) * 100}% 0`,
+              translate: `calc(-50% + ${feetCorrection}px) 0`,
               pointerEvents: "none",
             }}
             className="absolute bottom-0 left-1/2 h-full w-auto max-w-none select-none object-contain"
