@@ -365,9 +365,7 @@ export default function CustomOrderBanner() {
               object-contain
             "
             style={{
-              /* TIP: smaller models. Was clamp(360px, 34vw, 650px). Raise the
-                 middle/right numbers to make them bigger again. */
-              width: "clamp(300px, 26vw, 500px)",
+              width: "clamp(480px, 41.95vw, 805px)",
             }}
           />
           </div>
