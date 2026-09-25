@@ -249,7 +249,7 @@ export default function CustomOrderBanner() {
               font-sans
               font-normal
               text-black
-              text-[clamp(16px,1.33vw,25.47px)]
+              text-[clamp(16px,1.5vw,25.47px)]
               max-sm:text-[clamp(11px,3.3vw,14px)]
               max-sm:[--orders-left:76%]
             "
@@ -258,7 +258,7 @@ export default function CustomOrderBanner() {
               // the top-right of the "m". Nudge --orders-top / --orders-left in
               // the classes above to move it.
               left: "var(--orders-left, 77.46%)",
-              top: "var(--orders-top, 5%)",
+              top: "var(--orders-top, 8%)",
             }}
           >
             ORDERS
