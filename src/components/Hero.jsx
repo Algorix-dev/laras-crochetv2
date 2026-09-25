@@ -44,7 +44,7 @@ const SUPPORT_HEIGHT_RATIO = 0.88;
 // TIP — PHONES: Lara's mobile design has the two side models clearly smaller
 // than the middle one (about 70%), so the middle model reads as big. Raise
 // this to make the phone side models bigger again.
-const SUPPORT_HEIGHT_RATIO_PHONE = 0.5;
+const SUPPORT_HEIGHT_RATIO_PHONE = 0.7;
 const supportRatio = () =>
   typeof window !== "undefined" && window.innerWidth < 640
     ? SUPPORT_HEIGHT_RATIO_PHONE
@@ -923,14 +923,11 @@ function HeroCarousel({ models }) {
       data-no-rise="true"
       className="
         overflow-x-clip
-        min-h-[100svh]
-        flex
-        flex-col
-        justify-center
-        pt-20
-        md:pt-24
-        pb-8
-        md:pb-12
+        pt-16
+        md:pt-20
+        lg:pt-24
+        pb-24
+        md:pb-32
         text-center
       "
       style={{
@@ -979,8 +976,8 @@ function HeroCarousel({ models }) {
               absolute
               left-1/2
               -translate-x-1/2
-              bottom-[58%]
-              max-sm:bottom-[64%]
+              bottom-[87.9%]
+              max-sm:bottom-[95%]
               z-0
             "
           >
@@ -1301,8 +1298,8 @@ function HeroCarousel({ models }) {
               top-full
               z-10
 
-              mt-2 md:mt-3
-              max-sm:mt-1
+              mt-16 md:mt-18
+              max-sm:mt-12
 
               w-[clamp(11rem,18.75vw,22.5rem)]
               max-sm:w-full
@@ -1405,7 +1402,7 @@ export default function Hero({ models }) {
         id="hero"
         data-hero="true"
         data-no-rise="true"
-        className="min-h-[100svh] flex flex-col justify-center pt-20 md:pt-24 pb-8 md:pb-12"
+        className="pt-12 md:pt-12 lg:pt-14 pb-24 md:pb-32"
       >
         <div className={`relative mx-auto ${PAGE_CONTAINER_PADDING}`}>
           <div className={`w-full ${IMAGE_HEIGHT_SELECTED}`} />
