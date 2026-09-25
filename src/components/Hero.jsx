@@ -1054,7 +1054,7 @@ function HeroCarousel({ models }) {
               z-0
 
               w-[clamp(8rem,12.7vw,15.24rem)]
-              max-sm:w-[52vw]
+              max-sm:w-[45vw]
 
               aspect-[243.81/116.05]
             "
