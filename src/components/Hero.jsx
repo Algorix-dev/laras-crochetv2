@@ -236,7 +236,7 @@ function getSlotLook(offset, half) {
 
     // Center model slightly bigger on mobile
     scaleX: isCenter
-      ? (isPhone ? 1.08 : SELECTED_SCALE_X)
+      ? (isPhone ? 1.5 : SELECTED_SCALE_X)
       : SUPPORT_SCALE_X * supportRatio(),
 
     scaleY: isCenter
@@ -1014,7 +1014,7 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2
               bottom-[87.9%]
-              max-sm:bottom-[95%]
+              max-sm:bottom-[100%]
               z-0
             "
           >
