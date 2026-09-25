@@ -65,7 +65,6 @@ export default function CustomOrderBanner() {
         min-h-0
         pb-[139px]
         md:min-h-[860px]
-        md:pb-0
         w-full
         overflow-hidden
         bg-[#FAFAFA]
