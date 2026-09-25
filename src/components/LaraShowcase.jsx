@@ -1118,7 +1118,7 @@ export default function LaraShowcase() {
      ============================================================ */
 
   const laraAndParagraphStatic = (
-    <div className={`w-full ${PAGE_CONTAINER_PADDING}`}>
+    <div className={`w-full pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
       <div className="mx-auto w-full max-w-[1080px]">
         <div className="relative flex items-center justify-center pb-10 pt-8 md:pb-14">
           <div className="relative w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
