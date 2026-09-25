@@ -1348,6 +1348,7 @@ function HeroCarousel({ models }) {
                   className="
                     font-bold
                     tracking-[-0.04em]
+                    max-sm:justify-self-start
                   "
                 >
                   {formatNaira(
@@ -1355,7 +1356,7 @@ function HeroCarousel({ models }) {
                   )}
                 </span>
 
-                <span aria-hidden="true" className="sm:hidden -space-y-2.5 flex flex-col items-center text-[var(--muted)]">
+                <span aria-hidden="true" className="sm:hidden -space-y-2.5 flex flex-col max-sm:justify-self-center items-center text-[var(--muted)]">
                   <ChevronUp size={18} strokeWidth={1.5} className="opacity-100" />
                   <ChevronUp size={18} strokeWidth={1.5} className="opacity-60" />
                   <ChevronUp size={18} strokeWidth={1.5} className="opacity-30" />
@@ -1370,7 +1371,7 @@ function HeroCarousel({ models }) {
                         : `/product/${activeModel.id}`
                   }
                   aria-label={`Choose a size and add ${activeModel.name} to your bag`}
-                  className="sm:hidden pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-[var(--mauve-light)] text-[var(--ink)]"
+                  className="sm:hidden pointer-events-auto flex h-11 w-11 items-center justify-center max-sm:justify-self-end rounded-full bg-[var(--mauve-light)] text-[var(--ink)]"
                 >
                   <ShoppingBag size={20} strokeWidth={1.5} />
                 </Link>
