@@ -177,7 +177,7 @@ function HomePage() {
                   the original 4. Change the 6 / 4 here to adjust. */}
               <ProductGrid products={liveProducts.slice(0, isPhone ? 6 : 4)} isPlaceholder={!isLive} />
               <Reveal>
-                <div className="text-center">
+                <div className="px-5 text-center md:px-0">
                   <Link
                     to="/shop"
                     className="block w-full md:w-auto md:inline-block bg-[var(--maroon)] px-8 py-3.5 text-[14px] md:text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors"
