@@ -720,7 +720,10 @@ function HeroModel({
             // photo left by "feet position" so the feet, not the picture's
             // middle, sit on the podium. 0.5 = the old centred behaviour.
             style={{
-              translate: `${-(frontFeet ?? 0.5) * 100}% 0`,
+              translate:
+                typeof window !== "undefined" && window.innerWidth < 640
+                  ? "-50% 0"
+                  : `${-(frontFeet ?? 0.5) * 100}% 0`,
               pointerEvents: "none",
             }}
             className="absolute bottom-0 left-1/2 h-full w-auto max-w-none select-none object-contain"
