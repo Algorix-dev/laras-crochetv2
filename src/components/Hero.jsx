@@ -20,14 +20,14 @@ const SIDE_TILT_DEGREES = 18;
   Supporting models need to feel substantial like the Figma,
   but they must NOT be stretched vertically.
 */
-const SUPPORT_SCALE_X = 0.92;
+const SUPPORT_SCALE_X = 1.12;
 const SUPPORT_SCALE_Y = 1.0;
 
 /*
   The selected model is intentionally larger.
 */
-const SELECTED_SCALE_X = 1.18;
-const SELECTED_SCALE_Y = 1.32;
+const SELECTED_SCALE_X = 1.0;
+const SELECTED_SCALE_Y = 1.0;
 
 /*
   TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
