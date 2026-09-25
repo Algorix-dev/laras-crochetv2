@@ -164,7 +164,7 @@ function HomePage() {
                   ProductGrid/Footer, so this heading row's left edge
                   lines up with the product grid directly below it. */}
               <Reveal>
-                <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-2 md:mb-15">
+                <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-0 md:mb-15">
                   <h2 className="sm:text-[16px] lg:text-[32px] md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                     Shop Our Pieces
                   </h2>
