@@ -77,15 +77,15 @@ export default function MyBagPage() {
         <section className="px-5 md:px-8 lg:px-[15.83%] pt-8 pb-16 md:pt-10">
 
           {/* Page header */}
-          <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
+          <h1 className="sm:text-[24px] lg:text-[36px] md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
             My Bag ({cartCount})
           </h1>
-          <p className="text-base text-[var(--muted)] mb-10">
+          <p className="sm:text-[14px] text-base text-[var(--muted)] mb-10">
             Enjoy international shipping rates and pre-pay duties &amp; taxes at checkout.
           </p>
 
           {/* Breadcrumb */}
-          <p className="sm:hidden mb-4 text-base text-[var(--muted)]">
+          <p className="sm:text-[14px] mb-4 text-base text-[var(--muted)]">
             <Link to="/" className="hover:underline">Home</Link> /{' '}
             <Link to="/shop" className="hover:underline">Shop</Link> / Bag
           </p>
@@ -134,7 +134,7 @@ export default function MyBagPage() {
                       {/* TIP: category sits as its own muted uppercase
                           line above the bold name — Figma shows these
                           stacked, not run together on one line. */}
-                      <p className="text-base uppercase tracking-wider text-[var(--muted)]">
+                      <p className="sm:text-[12px] text-base uppercase tracking-wider text-[var(--muted)]">
                         {item.product.category === 'two-pieces'
                           ? 'Two-Piece'
                           : item.product.category === 'bikinis'
@@ -147,11 +147,11 @@ export default function MyBagPage() {
                       </p>
                       <Link
                         to={`/product/${item.product.id}`}
-                        className="text-base font-bold uppercase tracking-wide hover:underline"
+                        className="sm:text-[14px] text-base font-bold uppercase tracking-wide hover:underline"
                       >
                         {item.product.name}
                       </Link>
-                      <p className="mt-1 text-base">
+                      <p className="mt-1 sm:text-[14px] text-base">
                         {formatPrice(item.product.price)}
                       </p>
 
@@ -160,7 +160,7 @@ export default function MyBagPage() {
                           Figma has Size on its own line, then Color with
                           "Move to wishlist" inline at the end of that same
                           line — not paired with Size like the old version. */}
-                      <div className="mt-2 space-y-0.5 text-base text-[var(--muted)] md:hidden">
+                      <div className="mt-2 space-y-0.5 sm:text-[14px] text-base text-[var(--muted)] md:hidden">
                         <p>
                           Size{' '}
                           <span className="font-bold text-[var(--ink)]">
@@ -176,7 +176,7 @@ export default function MyBagPage() {
                               toggleWishlist(item.product.id);
                               removeFromBag(item.id);
                             }}
-                            className="shrink-0 text-base uppercase tracking-wider text-[var(--muted)] underline"
+                            className="shrink-0 sm:text-[12px] text-base uppercase tracking-wider text-[var(--muted)] underline"
                           >
                             Move to wishlist
                           </button>
