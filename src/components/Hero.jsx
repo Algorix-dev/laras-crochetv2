@@ -244,7 +244,7 @@ function getSlotLook(offset, half) {
       : SUPPORT_SCALE_Y * supportRatio(),
 
     // ONLY the side models move upward on mobile
-    y: !isCenter && isPhone ? -45 : 0,
+    y: !isCenter && isPhone ? -60 : 0,
 
     filter: isCenter
       ? "blur(0px) brightness(1)"
