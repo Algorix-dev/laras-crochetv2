@@ -143,7 +143,6 @@ export default function ProductCard({
                   ? 'currentColor'
                   : HEART_UNFILLED
               }
-              className="text-[#412B2D]"
             />
           </button>
         )}
