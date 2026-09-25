@@ -236,11 +236,11 @@ function getSlotLook(offset, half) {
 
     // Center model slightly bigger on mobile
     scaleX: isCenter
-      ? (isPhone ? 1.5 : SELECTED_SCALE_X)
+      ? (isPhone ? 1.2 : SELECTED_SCALE_X)
       : SUPPORT_SCALE_X * supportRatio(),
 
     scaleY: isCenter
-      ? (isPhone ? 1.08 : SELECTED_SCALE_Y)
+      ? (isPhone ? 1.2 : SELECTED_SCALE_Y)
       : SUPPORT_SCALE_Y * supportRatio(),
 
     // ONLY the side models move upward on mobile
