@@ -1199,9 +1199,11 @@ export default function LaraShowcase() {
   const reviewsStatic = (
     <section ref={staticBottomRef} className={`w-full bg-[var(--cream)] pb-0 pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
       <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-5 pb-16 sm:grid-cols-2 lg:grid-cols-3">
-        {/* TIP: phones only get the first three reviews (Lara's request); the
+        {/* TIP: phones get the first six reviews (Lara's request — the
+            animated pinned path above already shows 6 via REVIEW_ROWS[0]
+            and [1], this static fallback just needed to match); the
             nine-card grid is for tablets and desktops. */}
-        {(isNarrow ? TESTIMONIALS.slice(0, 3) : TESTIMONIALS).map((testimonial, index) => (
+        {(isNarrow ? TESTIMONIALS.slice(0, 6) : TESTIMONIALS).map((testimonial, index) => (
           <div
             key={`${testimonial.name}-${index}`}
             // TIP: the old `lg:-translate-y-5` lifted the MIDDLE card of each

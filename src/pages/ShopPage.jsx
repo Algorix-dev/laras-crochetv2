@@ -111,10 +111,10 @@ export default function ShopPage() {
         {/* Header row: title/subtitle on the left, search on the right */}
         <div className="flex flex-col-reverse md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="sm:pt-[7.5px] text-[24px] leading-[1.05] md:text-[36px] font-bold uppercase tracking-[-2%] text-[var(--ink)] mb-2">
+            <h1 className="sm:pt-[7.5px] text-[24px] leading-[1.05] md:text-[36px] font-bold uppercase tracking-[-2%] text-[var(--ink-warm)] mb-2">
               Shop Lara's Crochet
             </h1>
-            <p className="text-base md:text-lg text-[var(--muted)]">
+            <p className="text-sm md:text-lg text-[var(--ink-warm)]">
               Shop the latest pieces and must-haves from Lara's Crochet
             </p>
           </div>
