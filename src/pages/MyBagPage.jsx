@@ -157,7 +157,15 @@ export default function MyBagPage() {
                     ========================== */}
                     <div className="flex min-w-0 flex-col py-1 md:py-0">
                       <p className="text-[12px] uppercase tracking-wider text-[#564345] md:text-sm">
-                        category mapping
+                        {item.product.category === 'two-pieces'
+                          ? 'Two-Piece'
+                          : item.product.category === 'bikinis'
+                            ? 'Bikini'
+                            : item.product.category === 'skirts'
+                              ? 'Skirt'
+                              : item.product.category === 'shirts'
+                                ? 'Shirt'
+                                : 'Dress'}
                       </p>
 
                       <Link
