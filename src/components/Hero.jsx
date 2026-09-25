@@ -224,16 +224,28 @@ function clamp(value, min, max) {
 function getSlotLook(offset, half) {
   const isCenter = offset === 0;
   const isShown = Math.abs(offset) <= half;
+  const isPhone =
+    typeof window !== "undefined" && window.innerWidth < 640;
 
   return {
     opacity: isCenter ? 1 : isShown ? SIDE_MODEL_OPACITY : 0,
-    rotateY: isCenter ? 0 : Math.sign(offset) * SIDE_TILT_DEGREES,
+
+    rotateY: isCenter
+      ? 0
+      : Math.sign(offset) * SIDE_TILT_DEGREES,
+
+    // Center model slightly bigger on mobile
     scaleX: isCenter
-      ? SELECTED_SCALE_X
+      ? (isPhone ? 1.08 : SELECTED_SCALE_X)
       : SUPPORT_SCALE_X * supportRatio(),
+
     scaleY: isCenter
-      ? SELECTED_SCALE_Y
+      ? (isPhone ? 1.08 : SELECTED_SCALE_Y)
       : SUPPORT_SCALE_Y * supportRatio(),
+
+    // ONLY the side models move upward on mobile
+    y: !isCenter && isPhone ? -45 : 0,
+
     filter: isCenter
       ? "blur(0px) brightness(1)"
       : `blur(${SIDE_MODEL_BLUR_PX}px) brightness(0.95)`,
@@ -652,6 +664,7 @@ function HeroModel({
       className="
         absolute
         bottom-0
+        max-sm:-bottom-6
         left-1/2
         flex
         items-end
@@ -977,7 +990,7 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2
               bottom-[87.9%]
-              max-sm:bottom-[95%]
+              max-sm:bottom-[84%]
               z-0
             "
           >
