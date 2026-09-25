@@ -1332,7 +1332,7 @@ export default function LaraShowcase() {
                   src={laraWordmark}
                   alt="Lara's Crochet"
                   decoding="async"
-                  className="relative z-10 block h-auto w-full select-none pointer-events-none max-sm:scale-[1.75]"
+                  className="relative z-10 block h-auto w-full select-none pointer-events-none max-sm:scale-[1.5]"
                 />
 
                 <div
