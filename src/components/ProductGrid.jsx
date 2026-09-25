@@ -79,7 +79,7 @@ export default function ProductGrid({ products, columns = 2, cardVariant = 'defa
   if (!wrapInSection) return grid;
 
   return (
-    <section className="px-5 md:px-8 lg:px-[15.83%] sm:pb-10 pb-16 md:pb-24">
+    <section className="px-5 md:px-8 lg:px-[15.83%] sm:pb-5 pb-16 md:pb-24">
       {grid}
     </section>
   );
