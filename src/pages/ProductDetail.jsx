@@ -742,7 +742,7 @@ export default function ProductDetail() {
           {/* ---- LEFT: Image Gallery ---- */}
           <section>
             {/* Figma treats the main image and four thumbnails as one gallery container. */}
-            <div className="bg-[#E5E5E5] sm:bg-[#FAFAFA]">
+            <div className="md:bg-[#E5E5E5] sm:bg-[#FAFAFA]">
               {/* TIP: fixed — this container previously had no width
                   constraint (only a height), so object-cover stretched
                   the image across the FULL column width instead of the
