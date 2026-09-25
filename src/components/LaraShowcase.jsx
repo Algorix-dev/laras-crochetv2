@@ -701,7 +701,7 @@ function ReviewCard({ testimonial, rowIndex, progress }) {
 
   return (
     <motion.div
-      className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
+      className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5  max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
       style={{ opacity, y }}
     >
       <ReviewCardBody testimonial={testimonial} />
@@ -720,11 +720,11 @@ function ReviewCardBody({ testimonial, compact = false }) {
         "{testimonial.quote}"
       </p>
 
-      <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
+      <p className="flex items-center gap-1 text-sm font-bold text-[var(--ink)]">
         {testimonial.name}
         <span
           aria-hidden="true"
-          className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
+          className="inline-flex h-3.5 w-3.5 items-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
         >
           ✓
         </span>
@@ -754,7 +754,7 @@ function NarrowReviewRow({ row, rowIndex = 0, progress, innerRef }) {
         {row.map((testimonial) => (
           <div
             key={testimonial.name}
-            className="border border-[var(--line)] bg-[var(--cream)] p-4 text-center max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
+            className="border border-[var(--line)] bg-[var(--cream)] p-4 max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
           >
             <ReviewCardBody testimonial={testimonial} compact />
           </div>
