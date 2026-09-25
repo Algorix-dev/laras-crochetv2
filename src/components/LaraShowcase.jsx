@@ -1216,11 +1216,11 @@ export default function LaraShowcase() {
               "{testimonial.quote}"
             </p>
 
-            <p className="flex items-center justify-center gap-1 text-sm font-bold text-[var(--ink)]">
+            <p className="flex items-center  gap-1 text-sm font-bold text-[var(--ink)]">
               {testimonial.name}
               <span
                 aria-hidden="true"
-                className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
+                className="inline-flex h-3.5 w-3.5 items-center  rounded-full bg-[var(--maroon)] text-[9px] text-white"
               >
                 ✓
               </span>
