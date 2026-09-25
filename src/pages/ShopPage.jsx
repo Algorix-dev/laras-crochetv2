@@ -70,7 +70,7 @@ export default function ShopPage() {
             <div className="flex flex-col gap-8 md:gap-2">
               <div>
                 <h1 className="text-[24px] font-bold leading-[32px] tracking-[-0.48px] text-[#564345] md:text-[36px] md:leading-[1.05] md:tracking-[-2%]">
-                  Shop Lara's Crochet
+                  SHOP LARA'S CROCHET
                 </h1>
 
                 <p className="mt-0 text-[14px] leading-[20px] text-[#564345] md:mt-2 md:text-lg">
