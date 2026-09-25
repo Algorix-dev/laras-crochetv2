@@ -21,10 +21,13 @@ export default function ProductGrid({
         scrollOnMobile
           ? `
               flex
+              w-full
+              flex-nowrap
               snap-x
               snap-mandatory
               gap-[10px]
               overflow-x-auto
+              overflow-y-hidden
               pb-2
 
               lg:grid
@@ -53,12 +56,12 @@ export default function ProductGrid({
             scrollOnMobile
               ? `
                   w-[196px]
-                  max-w-[196px]
+                  min-w-[196px]
                   shrink-0
                   snap-start
 
                   lg:w-auto
-                  lg:max-w-none
+                  lg:min-w-0
                 `
               : 'min-w-0'
           }
@@ -81,12 +84,12 @@ export default function ProductGrid({
     <section
       className="
         px-4
-        pb-[49px]
         pt-[49px]
+        pb-[49px]
 
         md:px-8
-        md:pb-24
         md:pt-0
+        md:pb-24
 
         lg:px-[15.83%]
       "

@@ -7,9 +7,6 @@ import { useCurrency } from '../context/CurrencyContext';
 
 const HEART_UNFILLED = 'rgba(64, 64, 64, 0.15)';
 
-const DEFAULT_IMAGE_INSET = '4.24% 10.45% 4.44%';
-const RECOMMENDATION_IMAGE_INSET = '7.89% 8.79%';
-
 export default function ProductCard({
   product,
   variant = 'default',
@@ -56,12 +53,13 @@ export default function ProductCard({
       className={`
         group
         w-full
-        ${isRecommendation ? 'max-w-[196px]' : 'max-w-[164px]'}
+        ${isRecommendation ? 'w-[196px]' : 'w-[164px]'}
+        lg:w-auto
         lg:max-w-none
       `}
     >
       {/* ==========================================================
-          IMAGE
+          PRODUCT IMAGE
       =========================================================== */}
       <CardLink
         {...cardLinkProps}
@@ -79,19 +77,10 @@ export default function ProductCard({
           }
         `}
       >
-        <div
-          className="
-            absolute
-            inset-0
-
-            lg:[padding:4.24%_10.45%_4.44%]
-          "
-          style={{
-            padding: isRecommendation
-              ? RECOMMENDATION_IMAGE_INSET
-              : DEFAULT_IMAGE_INSET,
-          }}
-        >
+        {/* The mobile Figma defines the image frame itself.
+            The product image fills the frame without an additional
+            percentage inset, so the actual garment appears larger. */}
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
           {product.image ? (
             <img
               src={product.image}
@@ -112,11 +101,6 @@ export default function ProductCard({
 
         {/* ========================================================
             DEFAULT CARD WISHLIST BADGE
-
-            Mobile Figma:
-            20 × 20
-            left 16
-            top 6
         ========================================================= */}
         {!isRecommendation && (
           <button
@@ -166,7 +150,7 @@ export default function ProductCard({
       </CardLink>
 
       {/* ==========================================================
-          PRODUCT INFO
+          PRODUCT INFORMATION
       =========================================================== */}
       <div
         className={`
@@ -181,8 +165,8 @@ export default function ProductCard({
                 w-[196px]
                 gap-[3.25px]
                 px-[10px]
-                pt-[0px]
-                mt-[18px]
+                pt-0
+                mt-[10px]
               `
               : `
                 h-[61.25px]
@@ -222,7 +206,6 @@ export default function ProductCard({
                 font-normal
                 leading-[18px]
                 text-[#737373]
-
                 lg:text-xs
               "
             >

@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, Minus, Plus, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  Minus,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -42,7 +47,21 @@ export default function MyBagPage() {
 
             <Link
               to="/shop"
-              className="mt-8 inline-flex h-[42px] items-center justify-center bg-[var(--ink)] px-8 text-sm font-bold tracking-widest text-white transition-colors hover:bg-[var(--maroon)]"
+              className="
+                mt-8
+                inline-flex
+                h-[42px]
+                items-center
+                justify-center
+                bg-[var(--ink)]
+                px-8
+                text-sm
+                font-bold
+                tracking-widest
+                text-white
+                transition-colors
+                hover:bg-[var(--maroon)]
+              "
             >
               CONTINUE SHOPPING
             </Link>
@@ -111,6 +130,7 @@ export default function MyBagPage() {
                       gap-[14px]
                       border-b
                       border-[#D4D4D4]
+
                       md:min-h-0
                       md:grid-cols-[6rem_1fr_96px_120px_140px]
                       md:items-center
@@ -132,7 +152,8 @@ export default function MyBagPage() {
                         justify-center
                         bg-[#FAFAFA]
                         px-4
-                        py-[7px]
+                        py-[5px]
+
                         md:h-24
                         md:w-24
                         md:bg-white
@@ -143,9 +164,10 @@ export default function MyBagPage() {
                         src={item.product.image}
                         alt={item.product.name}
                         className="
-                          h-[186px]
-                          w-[71px]
+                          h-[190px]
+                          w-[91px]
                           object-contain
+
                           md:h-24
                           md:w-full
                         "
@@ -202,7 +224,19 @@ export default function MyBagPage() {
                       <button
                         type="button"
                         onClick={() => toggleWishlist(item.product)}
-                        className="mt-2 w-fit text-left text-[12px] font-bold uppercase tracking-wide text-[#564345] underline underline-offset-2 md:hidden"
+                        className="
+                          mt-2
+                          w-fit
+                          text-left
+                          text-[12px]
+                          font-bold
+                          uppercase
+                          tracking-wide
+                          text-[#564345]
+                          underline
+                          underline-offset-2
+                          md:hidden
+                        "
                       >
                         Move to wishlist
                       </button>
@@ -230,9 +264,15 @@ export default function MyBagPage() {
                             }
                           >
                             {item.quantity > 1 ? (
-                              <Minus size={14} strokeWidth={1.5} />
+                              <Minus
+                                size={14}
+                                strokeWidth={1.5}
+                              />
                             ) : (
-                              <Trash2 size={14} strokeWidth={1.5} />
+                              <Trash2
+                                size={14}
+                                strokeWidth={1.5}
+                              />
                             )}
                           </button>
 
@@ -251,7 +291,10 @@ export default function MyBagPage() {
                             className="flex h-full w-10 items-center justify-center"
                             aria-label="Increase quantity"
                           >
-                            <Plus size={14} strokeWidth={1.5} />
+                            <Plus
+                              size={14}
+                              strokeWidth={1.5}
+                            />
                           </button>
                         </div>
                       </div>
@@ -296,9 +339,15 @@ export default function MyBagPage() {
                           }
                         >
                           {item.quantity > 1 ? (
-                            <Minus size={14} strokeWidth={1.5} />
+                            <Minus
+                              size={14}
+                              strokeWidth={1.5}
+                            />
                           ) : (
-                            <Trash2 size={14} strokeWidth={1.5} />
+                            <Trash2
+                              size={14}
+                              strokeWidth={1.5}
+                            />
                           )}
                         </button>
 
@@ -317,13 +366,18 @@ export default function MyBagPage() {
                           className="flex h-9 w-9 items-center justify-center"
                           aria-label="Increase quantity"
                         >
-                          <Plus size={14} strokeWidth={1.5} />
+                          <Plus
+                            size={14}
+                            strokeWidth={1.5}
+                          />
                         </button>
                       </div>
 
                       <button
                         type="button"
-                        onClick={() => toggleWishlist(item.product)}
+                        onClick={() =>
+                          toggleWishlist(item.product)
+                        }
                         className="text-sm font-bold uppercase tracking-wide text-[#564345] underline underline-offset-2"
                       >
                         Move to wishlist
@@ -342,7 +396,9 @@ export default function MyBagPage() {
               <div className="border-b border-[#EFE7E7] pb-0">
                 <button
                   type="button"
-                  onClick={() => setPromoOpen((open) => !open)}
+                  onClick={() =>
+                    setPromoOpen((open) => !open)
+                  }
                   className="flex h-[28px] w-full items-center justify-between text-[14px] font-bold text-[#564345]"
                 >
                   <span>Promo Code or Gift Card?</span>
@@ -408,7 +464,9 @@ export default function MyBagPage() {
               <div className="mt-4">
                 <button
                   type="button"
-                  onClick={() => setTermsOpen((open) => !open)}
+                  onClick={() =>
+                    setTermsOpen((open) => !open)
+                  }
                   className="flex h-[45px] w-full items-center justify-between border-b border-[#EFE7E7] text-[14px] font-bold text-[#564345]"
                 >
                   <span>Terms & Conditions</span>
@@ -433,7 +491,9 @@ export default function MyBagPage() {
               <div>
                 <button
                   type="button"
-                  onClick={() => setDeliveryOpen((open) => !open)}
+                  onClick={() =>
+                    setDeliveryOpen((open) => !open)
+                  }
                   className="flex h-[45px] w-full items-center justify-between border-b border-[#EFE7E7] text-[14px] font-bold text-[#564345]"
                 >
                   <span>Delivery</span>
@@ -461,7 +521,9 @@ export default function MyBagPage() {
         ========================== */}
         <section className="border-t border-[var(--line)] bg-[#FAFAFA] px-4 pt-20 pb-10 md:px-8 md:py-16 lg:px-[15.83%]">
           <RecommendedProducts
-            excludeId={cartItems.map((item) => item.product.id)}
+            excludeId={cartItems.map(
+              (item) => item.product.id
+            )}
             className=""
           />
         </section>
