@@ -159,7 +159,7 @@ function HomePage() {
       </Reveal>
 
             {/* Shop Our Pieces — a curated 4-item taste of the catalog, not the full grid */}
-            <section className="pt-4 pb-10 md:py-16">
+            <section className="pt-4 pb-20 md:pt-16 md:pb-32">
               {/* TIP — 304px shared margin, matching Navbar/Hero/
                   ProductGrid/Footer, so this heading row's left edge
                   lines up with the product grid directly below it. */}
