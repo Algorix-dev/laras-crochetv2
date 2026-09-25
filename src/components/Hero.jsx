@@ -26,7 +26,7 @@ const SUPPORT_SCALE_Y = 1.0;
 /*
   The selected model is intentionally larger.
 */
-const SELECTED_SCALE_X = 1.0;
+const SELECTED_SCALE_X = 1.12;
 const SELECTED_SCALE_Y = 1.0;
 
 /*
