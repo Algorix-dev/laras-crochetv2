@@ -360,13 +360,11 @@ export default function CustomOrderBanner() {
               relative
               z-20
               h-auto
-              max-w-[90vw]
+              w-[94vw]
+              md:w-[clamp(480px,41.95vw,805px)]
               select-none
               object-contain
             "
-            style={{
-              width: "clamp(480px, 41.95vw, 805px)",
-            }}
           />
           </div>
         </div>
