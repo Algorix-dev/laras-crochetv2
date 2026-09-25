@@ -428,7 +428,7 @@ export default function CustomOrderBanner() {
               hover:opacity-90
             "
           >
-            Make a Custom Order
+            MAKE A CUSTOM ORDER
           </Link>
         </div>
       </div>
