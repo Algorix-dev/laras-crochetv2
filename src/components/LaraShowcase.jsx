@@ -1175,7 +1175,7 @@ export default function LaraShowcase() {
           </div>
         </div>
 
-        <div className="flex items-center justify-center pb-16 pt-6 md:pb-20 md:pt-10">
+        <div className="flex items-center justify-center pb-16 pt-6 md:pb-20 md:pt-10 mt-5">
           <div className="mx-auto max-w-2xl text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
             {PARAGRAPHS.map((paragraph, index) => (
               <p key={index} className={index === PARAGRAPHS.length - 1 ? "mt-5 sm:mt-8" : "mb-4 sm:mb-6"}>
