@@ -155,7 +155,7 @@ export default function ShopPage() {
               wraps
               20px gaps
         ========================================================== */}
-          <div className="mt-5 flex w-full flex-wrap gap-[20px] md:mt-6 md:gap-3">
+          <div className="mt-5 flex w-full flex-wrap gap-[20px] md:mt-6 md:gap-5 md:mb-20">
             {CATEGORIES.map((cat) => {
               const active = activeCategory === cat;
 
