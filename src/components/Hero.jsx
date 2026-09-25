@@ -44,7 +44,7 @@ const SUPPORT_HEIGHT_RATIO = 0.88;
 // TIP — PHONES: Lara's mobile design has the two side models clearly smaller
 // than the middle one (about 70%), so the middle model reads as big. Raise
 // this to make the phone side models bigger again.
-const SUPPORT_HEIGHT_RATIO_PHONE = 0.7;
+const SUPPORT_HEIGHT_RATIO_PHONE = 0.5;
 const supportRatio = () =>
   typeof window !== "undefined" && window.innerWidth < 640
     ? SUPPORT_HEIGHT_RATIO_PHONE
