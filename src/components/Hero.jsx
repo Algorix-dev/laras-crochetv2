@@ -565,7 +565,8 @@ function HeroModel({
 
   const [frontImageWidth, setFrontImageWidth] =
     useState(0);
-
+  const [alignmentReady, setAlignmentReady] =
+    useState(false);
   const [frontImageRect, setFrontImageRect] =
     useState(null);
 
@@ -596,8 +597,7 @@ function HeroModel({
     if (!image) return;
 
     const measure = () => {
-      const rect =
-        image.getBoundingClientRect();
+      const rect = image.getBoundingClientRect();
 
       setFrontImageWidth(rect.width);
 
@@ -605,19 +605,23 @@ function HeroModel({
         top: rect.top,
         height: rect.height,
       });
+
+      if (
+        podiumCenterY !== null &&
+        frontFeetBottom !== null &&
+        rect.height > 0
+      ) {
+        setAlignmentReady(true);
+      }
     };
 
     measure();
 
-    const observer =
-      new ResizeObserver(measure);
+    const observer = new ResizeObserver(measure);
 
     observer.observe(image);
 
-    window.addEventListener(
-      "resize",
-      measure
-    );
+    window.addEventListener("resize", measure);
 
     return () => {
       observer.disconnect();
@@ -627,7 +631,12 @@ function HeroModel({
         measure
       );
     };
-  }, [model.views.front, isSelected]);
+  }, [
+    model.views.front,
+    isSelected,
+    podiumCenterY,
+    frontFeetBottom,
+  ]);
 
   /* -------------------- horizontal correction -------------------- */
 
@@ -946,17 +955,18 @@ function HeroModel({
         width: slotWidth,
         marginLeft: -slotWidth / 2,
 
-        zIndex: isSelected
-          ? 12
-          : 10,
+        zIndex: isSelected ? 12 : 10,
 
         pointerEvents:
-          isShown
-            ? "auto"
-            : "none",
+          isShown ? "auto" : "none",
 
-        transformOrigin:
-          "50% 100%",
+        transformOrigin: "50% 100%",
+
+        opacity:
+          isSelected &&
+          !alignmentReady
+            ? 0
+            : undefined,
       }}
       className="
         absolute
