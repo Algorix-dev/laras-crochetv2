@@ -79,7 +79,7 @@ export default function ShopPage() {
               </div>
 
               {/* Breadcrumb */}
-              <p className="text-[14px] leading-[20px] text-[#564345]">
+              <p className="md:mt-8 text-[14px] leading-[20px] text-[#564345]">
                 <Link
                   to="/"
                   className="hover:text-[var(--ink)]"
