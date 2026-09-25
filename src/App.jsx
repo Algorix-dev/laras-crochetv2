@@ -178,7 +178,7 @@ function HomePage() {
               <ProductGrid products={liveProducts.slice(0, isPhone ? 6 : 4)} isPlaceholder={!isLive} />
               <Reveal>
                 <div className="text-center mt-10">
-                  <Link to="/shop" className="sm:w-full md:inline-block lg:inline-block bg-[var(--maroon)] px-8 py-3.5 sm:text-[14px] text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
+                  <Link to="/shop" className="md:inline-block lg:inline-block bg-[var(--maroon)] px-8 py-3.5 sm:text-[14px] text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors">
                     Go to Shop
                   </Link>
                 </div>
