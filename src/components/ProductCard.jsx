@@ -116,8 +116,8 @@ export default function ProductCard({
               left-[16px]
               top-[6px]
               flex
-              h-[20px]
-              w-[20px]
+              h-[28px]
+              w-[28px]
               items-center
               justify-center
               rounded-full
