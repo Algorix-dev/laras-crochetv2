@@ -1210,7 +1210,7 @@ export default function LaraShowcase() {
             // row 20px. The animated version never did that, so the two
             // versions didn't match (Lara flagged it). Removed: every card
             // now sits on the same line in both.
-            className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 text-center max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
+            className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
           >
             <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
               "{testimonial.quote}"
