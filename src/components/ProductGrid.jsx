@@ -28,7 +28,9 @@ export default function ProductGrid({
               gap-[10px]
               overflow-x-auto
               overflow-y-hidden
-              scrollbar-width: none
+              [scrollbar-width:none]
+              [-ms-overflow-style:none]
+              [&::-webkit-scrollbar]:hidden
               pb-2
 
               lg:grid

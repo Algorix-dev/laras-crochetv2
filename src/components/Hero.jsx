@@ -1298,8 +1298,8 @@ function HeroCarousel({ models }) {
               top-full
               z-10
 
-              mt-14 md:mt-16
-              max-sm:mt-6
+              mt-16 md:mt-18
+              max-sm:mt-12
 
               w-[clamp(11rem,18.75vw,22.5rem)]
               max-sm:w-full
@@ -1328,13 +1328,7 @@ function HeroCarousel({ models }) {
                     duration: reduceMotion ? 0 : TEXT_OUT_SECONDS,
                   },
                 }}
-                className="
-                  flex
-                  items-center
-                  justify-between
-
-                  text-xl
-                "
+                className="grid grid-cols-3 items-center text-xl max-sm:grid-cols-[1fr_auto_1fr] sm:flex sm:justify-between"
               >
                 {/* TIP — PHONES (Figma): the name is already the big word
                     behind the model, so the row is price on the left, a
