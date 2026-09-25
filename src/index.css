@@ -23,6 +23,25 @@
   /* TIP: Scalable wordmark-to-model overlap for CustomOrderBanner.
      Scales with viewport from -20px on small mobile up to -52px on desktop. */
   --wordmark-model-overlap: clamp(-52px, -3.8vw, -20px);
+
+  /* TIP — HERO MOBILE LAYOUT (Hero.jsx):
+     Used by IMAGE_HEIGHT_SELECTED to size the mobile model row as
+     100dvh minus the space taken above it (navbar) and below it
+     (podium + price row), so there's never a leftover gap at the
+     bottom of the hero on any phone.
+       --hero-navbar-offset: Navbar's fixed header height (66px,
+         see Navbar.jsx's `h-[66px]`) + its 1px bottom border = 67px.
+         This is ALSO what Hero's `max-sm:pt-[101px]` is built from
+         (67px navbar + 34px gap to the name text) — if the navbar's
+         height ever changes, update both this variable and that
+         padding value together.
+       --hero-price-offset: the podium + price block's height below
+         the model row (mt-24 gap [96px] + the h-11 bag button [44px]
+         that sets the price row's height) = 140px.
+     Re-measure both in DevTools mobile view if Navbar.jsx or the
+     Hero price row's markup changes. */
+  --hero-navbar-offset: 67px;
+  --hero-price-offset: 140px;
 }
 * {
   box-sizing: border-box;

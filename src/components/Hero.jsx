@@ -29,6 +29,13 @@ const SUPPORT_SCALE_Y = 1.0;
 const SELECTED_SCALE_X = 1.0;
 const SELECTED_SCALE_Y = 1.0;
 
+// TIP — MOBILE CENTER MODEL SIZE: used for BOTH scaleX and scaleY on phones
+// so the model grows bigger while staying proportional (never stretched).
+// Raise this if Lara wants it even bigger; the row height is now dynamic
+// (see IMAGE_HEIGHT_SELECTED below) so a bigger scale won't get clipped —
+// the button/image wrapper is overflow-visible.
+const SELECTED_SCALE_PHONE = 1.5;
+
 /*
   TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
   Every model image is now rendered at the SELECTED height and the
@@ -189,10 +196,28 @@ function useIsWide() {
    SUPPORT_HEIGHT_RATIO).
 
    At 1920px: selected ≈ 650px tall, supporting ≈ 570px.
-*/
 
+   TIP — MOBILE HEIGHT IS NOW DYNAMIC (dvh, not a fixed rem number):
+   the old `max-sm:h-[27rem]` left a leftover gap at the bottom on
+   phones where 27rem didn't happen to fill the screen. Instead the
+   row now claims 100% of the *dynamic* viewport height (dvh accounts
+   for the mobile browser's address bar, unlike plain vh) minus the
+   navbar-and-gap above it and the podium+price block below it — so
+   there is never dead space, on any phone.
+
+   The two pieces this is built from are set once in index.css's
+   :root (see the matching TIP there):
+     --hero-navbar-offset: 67px   // Navbar's h-[66px] + 1px border
+     --hero-price-offset:  140px  // podium/price block's height
+
+   --hero-navbar-offset is ALSO what this section's own
+   `max-sm:pt-[101px]` below is built from (67px navbar + 34px gap
+   to the name) — the fallback numbers in the two var() calls here
+   must stay in sync with index.css and with that padding value if
+   Navbar.jsx's height, or the gap, ever changes.
+*/
 const IMAGE_HEIGHT_SELECTED =
-  "h-[clamp(25rem,34vw,42rem)] max-sm:h-[27rem]";
+  "h-[clamp(25rem,34vw,42rem)] max-sm:h-[calc(100dvh-var(--hero-navbar-offset,67px)-34px-var(--hero-price-offset,140px))]";
 
 /* ============================================================
    CAROUSEL MATH
@@ -234,13 +259,14 @@ function getSlotLook(offset, half) {
       ? 0
       : Math.sign(offset) * SIDE_TILT_DEGREES,
 
-    // Center model slightly bigger on mobile
+    // Center model bigger on mobile — same factor on X and Y so it
+    // scales up proportionally instead of stretching.
     scaleX: isCenter
-      ? (isPhone ? 1.2 : SELECTED_SCALE_X)
+      ? (isPhone ? SELECTED_SCALE_PHONE : SELECTED_SCALE_X)
       : SUPPORT_SCALE_X * supportRatio(),
 
     scaleY: isCenter
-      ? (isPhone ? 1.2 : SELECTED_SCALE_Y)
+      ? (isPhone ? SELECTED_SCALE_PHONE : SELECTED_SCALE_Y)
       : SUPPORT_SCALE_Y * supportRatio(),
 
     // ONLY the side models move upward on mobile
@@ -963,10 +989,21 @@ function HeroCarousel({ models }) {
         pt-16
         md:pt-20
         lg:pt-24
+        max-sm:pt-[calc(var(--hero-navbar-offset,67px)+34px)]
         pb-24
         md:pb-32
+        max-sm:pb-0
         text-center
       "
+      /* TIP — MOBILE TOP OFFSET: on desktop, pt-16/20/24 does double
+         duty — it's what pushes content below the fixed Navbar
+         (position: fixed, so nothing pushes it out of the way
+         automatically) AND sets the gap above the content. Mobile
+         needs the same: Navbar height (--hero-navbar-offset, 67px)
+         PLUS the ~34px gap to the name text — not just the 34px
+         alone. Reads the same CSS variable as IMAGE_HEIGHT_SELECTED's
+         calc above, so both stay in sync automatically if
+         --hero-navbar-offset is ever updated in index.css. */
       style={{
         perspective: "1800px",
       }}
@@ -998,13 +1035,19 @@ function HeroCarousel({ models }) {
           {/* ==============================================
               MODEL NAME — fades out, then the new one fades in
 
-              TIP — PHONES: `max-sm:bottom-[95%]` lifts the name a little
-              (the number is how far up the row its bottom edge sits;
-              87.9% is the desktop value) so the model's head covers less
-              of the letters. Raise 95 to lift it more, lower it to drop it.
-              The hero section's top padding is pt-12 (48px, it was 32px)
-              so the lifted name doesn't touch the navbar; if you raise the
-              95, raise that padding too.
+              TIP — PHONES: the name used to be anchored to the row's
+              BOTTOM edge (a % of a fixed row height), which meant it
+              moved every time the row height changed. Now that the row
+              height is dynamic (dvh-based, see IMAGE_HEIGHT_SELECTED),
+              the name is anchored to the row's TOP edge instead
+              (`max-sm:top-0`), which sits a fixed 34px under the navbar
+              (the section's `max-sm:pt-[...]` covers navbar height +
+              that 34px gap). That keeps it in a stable spot regardless
+              of screen height, and is what makes the model's (now
+              bigger) head land through the middle of the letters —
+              check against the real photos and nudge
+              SELECTED_SCALE_PHONE or the --hero-price-offset variable
+              if a particular model's head sits a bit high or low.
               ============================================== */}
 
           <div
@@ -1014,7 +1057,8 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2
               bottom-[87.9%]
-              max-sm:bottom-[100%]
+              max-sm:bottom-auto
+              max-sm:top-0
               z-0
             "
           >
@@ -1325,6 +1369,13 @@ function HeroCarousel({ models }) {
 
           {/* ==============================================
               PRICE ROW — same fade-out / fade-in as the name
+
+              TIP — MOBILE: pushed further down (max-sm:mt-24, was
+              max-sm:mt-12) so it sits clear of the podium instead of
+              crowding it, now that the row above it is taller. This is
+              also the block --hero-price-offset (in IMAGE_HEIGHT_SELECTED
+              above) needs to roughly match, so the row height calc stays
+              accurate.
               ============================================== */}
 
           <div
@@ -1337,7 +1388,7 @@ function HeroCarousel({ models }) {
               z-10
 
               mt-16 md:mt-18
-              max-sm:mt-12
+              max-sm:mt-24
 
               w-[clamp(11rem,18.75vw,22.5rem)]
               max-sm:w-full
