@@ -20,8 +20,8 @@ const SIDE_TILT_DEGREES = 18;
   Supporting models need to feel substantial like the Figma,
   but they must NOT be stretched vertically.
 */
-const SUPPORT_SCALE_X = 0.92;
-const SUPPORT_SCALE_Y = 0.80;
+const SUPPORT_SCALE_X = 1.12;
+const SUPPORT_SCALE_Y = 1.0;
 
 /*
   The selected model is intentionally larger.
