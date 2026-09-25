@@ -40,7 +40,7 @@ const SELECTED_SCALE_Y = 1.0;
   0.88 = the old 22rem/25rem (and 37rem/42rem) ratio between the two
   heights. Lower it to make the side models smaller.
 */
-const SUPPORT_HEIGHT_RATIO = 0.88;
+const SUPPORT_HEIGHT_RATIO = 1;
 // TIP — PHONES: Lara's mobile design has the two side models clearly smaller
 // than the middle one (about 70%), so the middle model reads as big. Raise
 // this to make the phone side models bigger again.
