@@ -66,7 +66,7 @@ const SIDE_MODEL_BLUR_PX = 4.5;
   Below 1 pulls them closer together (0.9 = 10% tighter), above 1
   spreads them out. Only the spacing changes, not the sizes.
 */
-const SLOT_SPACING = 1;
+const SLOT_SPACING = 1.2;
 
 /*
   Keep the hero from becoming too wide on very large screens.
