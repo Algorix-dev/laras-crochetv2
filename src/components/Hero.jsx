@@ -1073,7 +1073,7 @@ function HeroCarousel({ models }) {
               absolute
               left-1/2
               -translate-x-1/2 sm:mb-4
-                
+              bottom-0  
               max-sm:bottom-[-12%]
 
               z-0
