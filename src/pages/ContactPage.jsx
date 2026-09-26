@@ -984,14 +984,14 @@ export default function ContactPage() {
 
                     {/* ---- DESKTOP: horizontal stepper, description below the whole row ---- */}
                     <div className="hidden md:block">
-                      <div className="flex items-center justify-between mb-10 px-1">
+                      <div className="flex items-center justify-between mb-10 px-6">
                         {ORDER_STATUSES.map((status, idx) => (
                           <div
                             key={status}
                             className="flex items-center flex-1 last:flex-none"
                           >
-                            <div className="flex flex-col items-center gap-2 relative">
-                              <span className="text-[14px] text-[var(--muted)] uppercase tracking-wide absolute -top-5 whitespace-nowrap">
+                            <div className="relative flex flex-col items-center">
+                              <span className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap text-sm text-[var(--muted)]">
                                 {status}
                               </span>
                               <div
