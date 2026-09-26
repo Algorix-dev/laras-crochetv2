@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCart } from "../context/CartContext";
 import { ChevronUp, ShoppingBag } from "lucide-react";
 
-const isSampleModel = (model) => String(model.id).startsWith("fallback-");
 import {
   AnimatePresence,
   motion,
@@ -18,148 +17,208 @@ import {
 const SPIN_DURATION_SECONDS = 6;
 const SIDE_TILT_DEGREES = 18;
 
-/*
-  Supporting models need to feel substantial like the Figma,
-  but they must NOT be stretched vertically.
-*/
 const SUPPORT_SCALE_X = 1.12;
 const SUPPORT_SCALE_Y = 1.0;
 
-/*
-  The selected model is intentionally larger.
-*/
 const SELECTED_SCALE_X = 1.0;
 const SELECTED_SCALE_Y = 1.0;
 
-/*
-  TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
-  Every model image is now rendered at the SELECTED height and the
-  supporting ones are simply scaled down to this fraction of it. The old
-  code swapped a CSS height class when a model was selected, which can't
-  be animated (it snapped, and framer's `layout` had to fake the
-  transition). A scale CAN be animated, so a model now grows/shrinks
-  smoothly as it travels between slots.
-  0.88 = the old 22rem/25rem (and 37rem/42rem) ratio between the two
-  heights. Lower it to make the side models smaller.
-*/
 const SUPPORT_HEIGHT_RATIO = 0.88;
-// TIP — PHONES: Lara's mobile design has the two side models clearly smaller
-// than the middle one (about 70%), so the middle model reads as big. Raise
-// this to make the phone side models bigger again.
 const SUPPORT_HEIGHT_RATIO_PHONE = 0.5;
+
 const supportRatio = () =>
   typeof window !== "undefined" && window.innerWidth < 640
     ? SUPPORT_HEIGHT_RATIO_PHONE
     : SUPPORT_HEIGHT_RATIO;
 
-/*
-  Side models: 3D glassy depth-of-field blur & opacity, matching the
-  client's luxury reference image (SSENSE/Gucci sneakers showcase).
-  Center active model stays crisp and sharp (blur: 0px, opacity: 1),
-  while supporting models have soft blur and lower opacity so the
-  eye naturally locks onto the center product.
-*/
-const SIDE_MODEL_OPACITY = 0.50;
+const SIDE_MODEL_OPACITY = 0.5;
 const SIDE_MODEL_BLUR_PX = 4.5;
 
-/*
-  TIP — HOW CLOSE THE MODELS SIT (replaces the old MODEL_OVERLAP margin):
-  1 = the five models are spaced exactly one fifth of the row apart.
-  Below 1 pulls them closer together (0.9 = 10% tighter), above 1
-  spreads them out. Only the spacing changes, not the sizes.
-*/
 const SLOT_SPACING = 1.2;
 
-/*
-  Keep the hero from becoming too wide on very large screens.
-*/
 const PAGE_CONTAINER_PADDING =
   "px-5 md:px-8 lg:px-[10%]";
+
+/* ============================================================
+   AUTOMATIC MODEL NORMALIZATION
+   ============================================================
+
+   Uploaded model images can have different amounts of transparent
+   space around the actual person.
+
+   We measure the alpha bounding box and scale each model so the
+   ACTUAL visible person occupies roughly the same height.
+
+   0.90 = target visible model height as a fraction of the image stage.
+*/
+const TARGET_VISIBLE_HEIGHT = 0.9;
+
+const MIN_VISUAL_SCALE = 0.75;
+const MAX_VISUAL_SCALE = 1.6;
+
+const visualBoundsCache = new Map();
+
+function measureVisualBounds(image) {
+  const width = 180;
+
+  const height = Math.max(
+    1,
+    Math.round(
+      (image.naturalHeight * width) /
+        image.naturalWidth
+    )
+  );
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d", {
+    willReadFrequently: true,
+  });
+
+  if (!context) return null;
+
+  context.drawImage(
+    image,
+    0,
+    0,
+    width,
+    height
+  );
+
+  const { data } = context.getImageData(
+    0,
+    0,
+    width,
+    height
+  );
+
+  let top = height;
+  let bottom = -1;
+  let left = width;
+  let right = -1;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const alpha =
+        data[(y * width + x) * 4 + 3];
+
+      if (alpha > 40) {
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+        if (x < left) left = x;
+        if (x > right) right = x;
+      }
+    }
+  }
+
+  if (bottom < 0 || top >= height) {
+    return null;
+  }
+
+  return {
+    topRatio: top / height,
+    bottomRatio: bottom / height,
+    leftRatio: left / width,
+    rightRatio: right / width,
+    heightRatio:
+      (bottom - top + 1) / height,
+    widthRatio:
+      (right - left + 1) / width,
+  };
+}
+
+function useVisualModelBounds(src) {
+  const [bounds, setBounds] = useState(() =>
+    src
+      ? visualBoundsCache.get(src) ?? null
+      : null
+  );
+
+  useEffect(() => {
+    if (!src) {
+      setBounds(null);
+      return undefined;
+    }
+
+    if (visualBoundsCache.has(src)) {
+      setBounds(visualBoundsCache.get(src));
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const image = new Image();
+
+    image.crossOrigin = "anonymous";
+
+    image.onload = () => {
+      let measured = null;
+
+      try {
+        measured = measureVisualBounds(image);
+      } catch {
+        measured = null;
+      }
+
+      visualBoundsCache.set(src, measured);
+
+      if (!cancelled) {
+        setBounds(measured);
+      }
+    };
+
+    image.onerror = () => {
+      visualBoundsCache.set(src, null);
+
+      if (!cancelled) {
+        setBounds(null);
+      }
+    };
+
+    image.src = src;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  return bounds;
+}
 
 /* ============================================================
    ANIMATION
    ============================================================ */
 
-// How a model glides from one slot to another.
 const SELECT_SPRING = {
   type: "spring",
   stiffness: 240,
   damping: 28,
 };
 
-// A model that has to leave one edge and reappear at the other (the
-// loop-around when there are exactly 5 models) uses a timed path instead:
-// it slides out with the row while fading away, then FADES IN WHERE IT
-// BELONGS. It never travels across (or in from the side of) the screen.
 const WRAP_DURATION_SECONDS = 0.95;
-// Fraction of that path spent leaving; the rest is spent fading back in.
 const WRAP_EXIT_FRACTION = 0.4;
 
-// How long a model takes to swap between its side-facing photo and its
-// front-facing photo as it arrives in / leaves the middle slot.
 const FACE_FADE_SECONDS = 0.5;
 
-// SWIPE (touch screens): a horizontal drag at least this many pixels long,
-// and clearly more sideways than up/down, counts as a swipe. Lower
-// SWIPE_MIN_PX to make it more sensitive, raise it to need a longer drag.
 const SWIPE_MIN_PX = 40;
-// "clearly more sideways": the sideways distance must be at least this
-// many times the up/down distance, so scrolling the page never triggers it.
 const SWIPE_SIDEWAYS_RATIO = 1.4;
 
-// Name + price: fade OUT as the clicked model starts moving, then fade IN
-// after a short delay so it appears while the model is still settling into
-// the middle — never before it has started to arrive.
-// TIP: these were 0.16 / 0.35 / 0.14 — slowed down on purpose. Raise them
-// for an even calmer swap, lower them to speed it back up.
 const TEXT_OUT_SECONDS = 0.3;
 const TEXT_IN_SECONDS = 0.75;
 const TEXT_IN_DELAY_SECONDS = 0.2;
 
-// Podium ripple: the client wants this running constantly (like the
-// comet spin), not just after a click. Two rings, the second slightly
-// behind the first, looping forever with a short pause between pulses.
 const RIPPLE_DURATION_SECONDS = 1.1;
 const RIPPLE_END_SCALE = 1.9;
 const RIPPLE_PEAK_OPACITY = 0.55;
-// TIP: gap of silence between one ripple finishing and the next starting.
-// Lower it for a busier podium, raise it for a calmer one.
 const RIPPLE_REPEAT_GAP_SECONDS = 1.2;
 const COMET_PEAK_OPACITY = 0.55;
-/* ============================================================
-   MODELS — now DATA, not hardcoded
-   ============================================================
-
-   Hero receives its models as a prop (see HomePage in App.jsx): every
-   piece Lara marks "Hero" in the admin page, in the shape
-
-     { id, name, price, views: { front, left, right } }
-
-   TIP — HOW MANY MODELS:
-   The carousel adapts to however many there are. Five (or three on a
-   narrow screen) are shown at once; any beyond that wait invisibly at
-   the edges and slide in as you click toward them. Use an ODD count
-   where you can (3, 5, 7…) so the middle is always a single model — with
-   only one or two pieces on the hero, just one or two models are shown.
-*/
 
 /* ============================================================
    RESPONSIVE MODEL COUNT
-   ============================================================
+   ============================================================ */
 
-   >= 1440px CSS width : all FIVE models (the Figma layout)
-   <  1440px CSS width : only THREE models — the selected one plus
-                         one on each side, with the exact same
-                         tilt + slightly-transparent side effect.
-
-   NOTE: this is CSS pixels, not screen resolution. A laptop set
-   to 1920x1080 with Windows display scaling at 125% is really
-   ~1536px wide to the browser (150% = ~1280px), which is why it
-   can look different from a 1920px responsive-viewer preview.
-
-   The initial value is read synchronously (not in an effect) so
-   the page never flashes 5 models and then drops to 3 on load.
-*/
 const WIDE_QUERY = "(min-width: 1440px)";
 
 function useIsWide() {
@@ -171,12 +230,22 @@ function useIsWide() {
 
   useEffect(() => {
     const mq = window.matchMedia(WIDE_QUERY);
-    const onChange = (event) => setIsWide(event.matches);
+
+    const onChange = (event) =>
+      setIsWide(event.matches);
 
     setIsWide(mq.matches);
-    mq.addEventListener("change", onChange);
 
-    return () => mq.removeEventListener("change", onChange);
+    mq.addEventListener(
+      "change",
+      onChange
+    );
+
+    return () =>
+      mq.removeEventListener(
+        "change",
+        onChange
+      );
   }, []);
 
   return isWide;
@@ -184,69 +253,85 @@ function useIsWide() {
 
 /* ============================================================
    IMAGE SIZE
-   ============================================================
-
-   The row is exactly as tall as the SELECTED model, and every model
-   image uses this same height (supporting ones are scaled down, see
-   SUPPORT_HEIGHT_RATIO).
-
-   At 1920px: selected ≈ 650px tall, supporting ≈ 570px.
-*/
+   ============================================================ */
 
 const IMAGE_HEIGHT_SELECTED =
   "h-[clamp(25rem,34vw,42rem)] max-sm:h-[27rem]";
 
 /* ============================================================
    CAROUSEL MATH
-   ============================================================
+   ============================================================ */
 
-   Every model has an OFFSET from the middle:
-     0 = the selected one, -1 / +1 = its neighbours, -2 / +2 = the edges…
-   Offsets wrap around like a loop of models, so with 5 models they are
-   always -2..2 and with 7 they are -3..3.
-
-   wrapOffset() maps any whole number back into that loop's range.
-*/
 function wrapOffset(value, count) {
   const lowest = -Math.floor(count / 2);
-  return ((((value - lowest) % count) + count) % count) + lowest;
+
+  return (
+    ((((value - lowest) % count) + count) %
+      count) +
+    lowest
+  );
 }
 
 function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
+  return Math.min(
+    max,
+    Math.max(min, value)
+  );
 }
 
-/*
-  What a model looks like at a given offset. `half` is how many slots
-  sit on each side of the middle that are actually SHOWN (2 wide, 1
-  narrow). One slot further out than that is the invisible "waiting"
-  slot — same tilt/blur, opacity 0 — so a model fades in as it slides
-  into view instead of popping.
-*/
-function getSlotLook(offset, half) {
+function getSlotLook(
+  offset,
+  half,
+  visualScale = 1
+) {
   const isCenter = offset === 0;
-  const isShown = Math.abs(offset) <= half;
+  const isShown =
+    Math.abs(offset) <= half;
+
   const isPhone =
-    typeof window !== "undefined" && window.innerWidth < 640;
+    typeof window !== "undefined" &&
+    window.innerWidth < 640;
+
+  const centerScaleX = isPhone
+    ? 1.12
+    : SELECTED_SCALE_X;
+
+  const centerScaleY = isPhone
+    ? 1.12
+    : SELECTED_SCALE_Y;
+
+  const sideScale =
+    SUPPORT_SCALE_X *
+    supportRatio();
+
+  const sideScaleY =
+    SUPPORT_SCALE_Y *
+    supportRatio();
 
   return {
-    opacity: isCenter ? 1 : isShown ? SIDE_MODEL_OPACITY : 0,
+    opacity: isCenter
+      ? 1
+      : isShown
+        ? SIDE_MODEL_OPACITY
+        : 0,
 
     rotateY: isCenter
       ? 0
-      : Math.sign(offset) * SIDE_TILT_DEGREES,
+      : Math.sign(offset) *
+        SIDE_TILT_DEGREES,
 
-    // Center model slightly bigger on mobile
     scaleX: isCenter
-      ? (isPhone ? 1.12 : SELECTED_SCALE_X)
-      : SUPPORT_SCALE_X * supportRatio(),
+      ? centerScaleX * visualScale
+      : sideScale * visualScale,
 
     scaleY: isCenter
-      ? (isPhone ? 1.12 : SELECTED_SCALE_Y)
-      : SUPPORT_SCALE_Y * supportRatio(),
+      ? centerScaleY * visualScale
+      : sideScaleY * visualScale,
 
-    // ONLY the side models move upward on mobile
-    y: !isCenter && isPhone ? -80 : 0,
+    y:
+      !isCenter && isPhone
+        ? -80
+        : 0,
 
     filter: isCenter
       ? "blur(0px) brightness(1)"
@@ -258,7 +343,8 @@ function getSlotLook(offset, half) {
    PODIUM
    ============================================================ */
 
-const PODIUM_VIEWBOX = "0 0 243.81 116.05";
+const PODIUM_VIEWBOX =
+  "0 0 243.81 116.05";
 
 const PODIUM_RINGS = [
   {
@@ -284,6 +370,7 @@ const PODIUM_RINGS = [
 const PODIUM_STROKE_WIDTH = 2.5;
 const PODIUM_DASH_LENGTH = 4;
 const PODIUM_DASH_GAP = 3;
+
 const PODIUM_DASH =
   `${PODIUM_DASH_LENGTH} ${PODIUM_DASH_GAP}`;
 
@@ -300,7 +387,8 @@ const COMET_STOPS = [
     opacity: 0,
   },
   {
-    offset: `${50 - COMET_BAND_WIDTH / 2}%`,
+    offset:
+      `${50 - COMET_BAND_WIDTH / 2}%`,
     opacity: 0,
   },
   {
@@ -308,7 +396,8 @@ const COMET_STOPS = [
     opacity: COMET_PEAK_OPACITY,
   },
   {
-    offset: `${50 + COMET_BAND_WIDTH / 2}%`,
+    offset:
+      `${50 + COMET_BAND_WIDTH / 2}%`,
     opacity: 0,
   },
   {
@@ -329,106 +418,208 @@ function getPodiumAnimationDelay() {
       : 0;
 
   const elapsedSeconds =
-    (now - PODIUM_SPIN_START) / 1000;
+    (now - PODIUM_SPIN_START) /
+    1000;
 
   const phase =
-    elapsedSeconds % SPIN_DURATION_SECONDS;
+    elapsedSeconds %
+    SPIN_DURATION_SECONDS;
 
   return `-${phase.toFixed(3)}s`;
 }
 
+/* ============================================================
+   MODEL VIEWS
+   ============================================================ */
 
-/*
-  Which photo(s) does this model show at this offset?
-  Returns { front, side, mirror }.
-*/
 function getViews(model, offset) {
-  const { front, left, right } = model.views;
-  const native = left ?? right ?? front;
+  const {
+    front,
+    left,
+    right,
+  } = model.views;
 
-  if (offset === 0) return { front: front ?? native, side: native, mirror: false };
+  const native =
+    left ?? right ?? front;
 
-  const want = offset < 0 ? left : right;
-  const other = offset < 0 ? right : left;
+  if (offset === 0) {
+    return {
+      front: front ?? native,
+      side: native,
+      mirror: false,
+    };
+  }
 
-  if (want) return { front: front ?? want, side: want, mirror: false };
-  if (other) return { front: front ?? other, side: other, mirror: true };
-  return { front, side: front, mirror: false };
+  const want =
+    offset < 0
+      ? left
+      : right;
+
+  const other =
+    offset < 0
+      ? right
+      : left;
+
+  if (want) {
+    return {
+      front: front ?? want,
+      side: want,
+      mirror: false,
+    };
+  }
+
+  if (other) {
+    return {
+      front: front ?? other,
+      side: other,
+      mirror: true,
+    };
+  }
+
+  return {
+    front,
+    side: front,
+    mirror: false,
+  };
 }
 
 /* ============================================================
    FEET ALIGNMENT
-   ============================================================
+   ============================================================ */
 
-   TIP — WHY THE PODIUM DIDN'T MATCH EVERY MODEL: every photo is centred
-   on the podium by the CENTRE OF THE IMAGE. That is only right if the
-   model's FEET happen to be in the middle of her photo, and they usually
-   aren't (an arm held out, a wide stance and the middle of the picture
-   is no longer between the feet). Reina's photo was cropped so that they
-   line up; the others weren't.
-
-   So instead of trusting the crop, we measure it: draw the photo small,
-   look at the bottom few percent (where the feet are), find the middle of
-   the leftmost and rightmost foot pixel, and shift the photo sideways by
-   exactly that much so those feet land on the podium. It works for every
-   photo, including the ones Lara uploads later, with no editing.
-   (If a photo can't be read, e.g. the image host doesn't allow it, it just
-   stays centred like before.)
-*/
-const feetCache = new Map(); // photo url -> 0..1 across the photo, or null
+const feetCache = new Map();
 
 function measureFeetCenter(image) {
   const width = 160;
+
   const height = Math.max(
     1,
-    Math.round((image.naturalHeight * width) / image.naturalWidth)
+    Math.round(
+      (image.naturalHeight * width) /
+        image.naturalWidth
+    )
   );
-  const canvas = document.createElement("canvas");
+
+  const canvas =
+    document.createElement("canvas");
+
   canvas.width = width;
   canvas.height = height;
-  const context = canvas.getContext("2d", { willReadFrequently: true });
-  context.drawImage(image, 0, 0, width, height);
 
-  const bandTop = Math.floor(height * 0.94); // the bottom 6% = the feet
-  const { data } = context.getImageData(0, bandTop, width, height - bandTop);
+  const context =
+    canvas.getContext("2d", {
+      willReadFrequently: true,
+    });
+
+  if (!context) return null;
+
+  context.drawImage(
+    image,
+    0,
+    0,
+    width,
+    height
+  );
+
+  const bandTop = Math.floor(
+    height * 0.94
+  );
+
+  const { data } =
+    context.getImageData(
+      0,
+      bandTop,
+      width,
+      height - bandTop
+    );
 
   let leftmost = width;
   let rightmost = -1;
-  for (let row = 0; row < height - bandTop; row += 1) {
-    for (let col = 0; col < width; col += 1) {
-      if (data[(row * width + col) * 4 + 3] > 40) {
-        if (col < leftmost) leftmost = col;
-        if (col > rightmost) rightmost = col;
+
+  for (
+    let row = 0;
+    row < height - bandTop;
+    row += 1
+  ) {
+    for (
+      let col = 0;
+      col < width;
+      col += 1
+    ) {
+      const alpha =
+        data[
+          (row * width + col) * 4 + 3
+        ];
+
+      if (alpha > 40) {
+        if (col < leftmost) {
+          leftmost = col;
+        }
+
+        if (col > rightmost) {
+          rightmost = col;
+        }
       }
     }
   }
-  return rightmost < 0 ? null : (leftmost + rightmost) / 2 / width;
+
+  return rightmost < 0
+    ? null
+    : (leftmost + rightmost) /
+        2 /
+        width;
 }
 
 function useFeetCenter(src) {
-  const [feet, setFeet] = useState(() => (src ? feetCache.get(src) ?? null : null));
+  const [feet, setFeet] =
+    useState(() =>
+      src
+        ? feetCache.get(src) ?? null
+        : null
+    );
 
   useEffect(() => {
-    if (!src) return undefined;
+    if (!src) {
+      setFeet(null);
+      return undefined;
+    }
+
     if (feetCache.has(src)) {
       setFeet(feetCache.get(src));
       return undefined;
     }
 
     let cancelled = false;
+
     const image = new Image();
-    image.crossOrigin = "anonymous"; // lets us read the pixels of a hosted photo
+
+    image.crossOrigin = "anonymous";
+
     image.onload = () => {
       let measured = null;
+
       try {
-        measured = measureFeetCenter(image);
+        measured =
+          measureFeetCenter(image);
       } catch {
-        measured = null; // the host didn't allow reading it: stay centred
+        measured = null;
       }
+
       feetCache.set(src, measured);
-      if (!cancelled) setFeet(measured);
+
+      if (!cancelled) {
+        setFeet(measured);
+      }
     };
-    image.onerror = () => feetCache.set(src, null);
+
+    image.onerror = () => {
+      feetCache.set(src, null);
+
+      if (!cancelled) {
+        setFeet(null);
+      }
+    };
+
     image.src = src;
 
     return () => {
@@ -440,7 +631,7 @@ function useFeetCenter(src) {
 }
 
 /* ============================================================
-   ONE MODEL IN THE ROW
+   ONE MODEL
    ============================================================ */
 
 function HeroModel({
@@ -455,120 +646,232 @@ function HeroModel({
   onSelect,
 }) {
   const navigate = useNavigate();
-  const frontImageRef = useRef(null);
-  const [frontImageWidth, setFrontImageWidth] = useState(0);
-  const isSelected = offset === 0;
-  const isShown = Math.abs(offset) <= half;
-  const edge = half + 1; // the invisible waiting slot
 
-  const hasFront = Boolean(model.views.front);
-  // where the front photo's feet are, across its width (0.5 = dead centre)
-  const frontFeet = useFeetCenter(hasFront ? model.views.front : null);
+  const frontImageRef =
+    useRef(null);
 
-  // Is this model being carried off one end of the row to reappear at the
-  // other (the loop-around)? Same test the animation below uses.
-  const isLooped = moveId > 0 && prevOffset + shift !== offset;
+  const [
+    frontImageWidth,
+    setFrontImageWidth,
+  ] = useState(0);
+
+  const isSelected =
+    offset === 0;
+
+  const isShown =
+    Math.abs(offset) <= half;
+
+  const edge = half + 1;
+
+  const hasFront =
+    Boolean(model.views.front);
+
+  const frontFeet =
+    useFeetCenter(
+      hasFront
+        ? model.views.front
+        : null
+    );
+
+  const isLooped =
+    moveId > 0 &&
+    prevOffset + shift !== offset;
+
+  const [
+    swappedFor,
+    setSwappedFor,
+  ] = useState(0);
+
+  useEffect(() => {
+    if (
+      !isLooped ||
+      reduceMotion
+    ) {
+      return undefined;
+    }
+
+    const timer =
+      window.setTimeout(
+        () =>
+          setSwappedFor(moveId),
+        WRAP_DURATION_SECONDS *
+          WRAP_EXIT_FRACTION *
+          1000 +
+          30
+      );
+
+    return () =>
+      window.clearTimeout(timer);
+  }, [
+    isLooped,
+    moveId,
+    reduceMotion,
+  ]);
+
+  const viewOffset =
+    isLooped &&
+    !reduceMotion &&
+    swappedFor !== moveId
+      ? prevOffset
+      : offset;
+
+  const view = getViews(
+    model,
+    hasFront
+      ? viewOffset || prevOffset
+      : viewOffset
+  );
 
   /*
-    TIP — DON'T LET THE PHOTO FLIP WHILE YOU CAN SEE IT (loop-around):
-    a model that wraps from one edge to the other has to change from its
-    "facing left" photo to its "facing right" one (or the reverse). It used
-    to change the instant the click happened, while the model was still
-    half visible and only just starting to fade out, so you saw it turn
-    around. Now it keeps its OLD photo until it has faded out completely
-    (the same moment its tilt / size / blur are switched, see switchDelay
-    below), and only then takes the new one.
-  */
-  const [swappedFor, setSwappedFor] = useState(0); // moveId whose photo swap is done
-  useEffect(() => {
-    if (!isLooped || reduceMotion) return undefined;
-    const timer = window.setTimeout(
-      () => setSwappedFor(moveId),
-      // +30ms so we are safely past the fade-out (it ends at this moment)
-      WRAP_DURATION_SECONDS * WRAP_EXIT_FRACTION * 1000 + 30
-    );
-    return () => window.clearTimeout(timer);
-  }, [isLooped, moveId, reduceMotion]);
-  const viewOffset =
-    isLooped && !reduceMotion && swappedFor !== moveId ? prevOffset : offset;
+    IMPORTANT:
+    We use the model's FRONT image as the normalization reference.
 
-  // With a front photo, the side photo fades out at the middle, so let it
-  // keep the direction it arrived with. Without one, it must stay as-is.
-  const view = getViews(model, hasFront ? viewOffset || prevOffset : viewOffset);
+    That means the same person stays visually consistent as they move
+    from side -> centre -> side instead of changing size because their
+    left/right photo has a different amount of transparent padding.
+  */
+  const visualBounds =
+    useVisualModelBounds(
+      hasFront
+        ? model.views.front
+        : view?.side
+    );
+
+  const visualScale =
+    visualBounds
+      ? clamp(
+          TARGET_VISIBLE_HEIGHT /
+            visualBounds.heightRatio,
+          MIN_VISUAL_SCALE,
+          MAX_VISUAL_SCALE
+        )
+      : 1;
+
+  /*
+    If there is transparent space below the visible model, move the
+    image itself upward so the visible bottom stays on the same
+    baseline.
+
+    Example:
+      bottomRatio = 0.95
+      means 5% of the image is transparent underneath.
+  */
+  const visualBottom =
+    visualBounds
+      ? `${(visualBounds.bottomRatio - 1) * 100}%`
+      : "0%";
+
   useLayoutEffect(() => {
-    const image = frontImageRef.current;
+    const image =
+      frontImageRef.current;
+
     if (!image) return;
 
     const measure = () => {
-      setFrontImageWidth(image.getBoundingClientRect().width);
+      setFrontImageWidth(
+        image.getBoundingClientRect()
+          .width
+      );
     };
 
     measure();
 
-    const observer = new ResizeObserver(measure);
+    const observer =
+      new ResizeObserver(measure);
+
     observer.observe(image);
 
-    return () => observer.disconnect();
-  }, [view?.front, isSelected]);
+    return () =>
+      observer.disconnect();
+  }, [
+    view?.front,
+    isSelected,
+    visualScale,
+  ]);
 
   const feetCorrection =
-    isSelected && frontFeet !== null && frontImageWidth > 0
-      ? -(frontFeet - 0.5) * frontImageWidth
+    isSelected &&
+    frontFeet !== null &&
+    frontImageWidth > 0
+      ? -(frontFeet - 0.5) *
+        frontImageWidth
       : 0;
-      
+
   const fade = {
-    duration: reduceMotion ? 0 : FACE_FADE_SECONDS,
+    duration: reduceMotion
+      ? 0
+      : FACE_FADE_SECONDS,
     ease: "easeInOut",
   };
-  // TIP: a looped model swaps its photo while it is INVISIBLE, so the new
-  // photo must simply be there (no fade of its own; the row animation is
-  // already fading the whole model in). But that must NOT make the normal
-  // front <-> side fade instant: a model that loops away from the middle
-  // (only happens with two models) is still on screen while its front photo
-  // fades out and its side photo fades in.
-  const swapInstantly = isLooped || reduceMotion;
 
-  const { animate, transition } = useMemo(() => {
-    const look = getSlotLook(offset, half);
+  const swapInstantly =
+    isLooped || reduceMotion;
 
-    // Horizontal position of a slot, capped at the waiting slot so
-    // nothing is ever parked far off screen.
+  const {
+    animate,
+    transition,
+  } = useMemo(() => {
+    const look = getSlotLook(
+      offset,
+      half,
+      visualScale
+    );
+
     const xFor = (slot) =>
-      clamp(slot, -edge, edge) * slotWidth * SLOT_SPACING;
+      clamp(
+        slot,
+        -edge,
+        edge
+      ) *
+      slotWidth *
+      SLOT_SPACING;
 
     if (reduceMotion) {
       return {
-        animate: { ...look, x: xFor(offset) },
-        transition: { duration: 0 },
+        animate: {
+          ...look,
+          x: xFor(offset),
+        },
+        transition: {
+          duration: 0,
+        },
       };
     }
 
-    // Where this model WOULD be if the row were an endless belt.
-    const beltOffset = prevOffset + shift;
-    const looped = moveId > 0 && beltOffset !== offset;
+    const beltOffset =
+      prevOffset + shift;
 
-    // Was this model parked in the invisible waiting slot (only happens
-    // with more than 5 models) and is now coming into view?
+    const looped =
+      moveId > 0 &&
+      beltOffset !== offset;
+
     const arriving =
-      moveId > 0 && Math.abs(prevOffset) > half && isShown;
+      moveId > 0 &&
+      Math.abs(prevOffset) > half &&
+      isShown;
 
-    /*
-      TIP — FADE IN PLACE (not slide in):
-      A model that has to (re)appear in the row does NOT glide in from the
-      side any more. It is placed straight into its final slot and only its
-      opacity animates, after the rest of the row has started to settle.
-      The tilt / size / blur are set at the same moment (duration 0) so
-      nothing visibly changes shape while it fades. Before this, clicking
-      two spots to the right made the two models that wrapped around run in
-      from the right-hand edge.
-    */
-    if (arriving && !looped) {
+    if (
+      arriving &&
+      !looped
+    ) {
       const settleDelay = 0.25;
+
       return {
-        animate: { ...look, x: xFor(offset) },
+        animate: {
+          ...look,
+          x: xFor(offset),
+        },
+
         transition: {
-          default: { duration: 0, delay: settleDelay },
-          x: { duration: 0 },
+          default: {
+            duration: 0,
+            delay: settleDelay,
+          },
+
+          x: {
+            duration: 0,
+          },
+
           opacity: {
             duration: 0.6,
             delay: settleDelay,
@@ -580,59 +883,118 @@ function HeroModel({
 
     if (!looped) {
       return {
-        animate: { ...look, x: xFor(offset) },
-        transition: SELECT_SPRING,
+        animate: {
+          ...look,
+          x: xFor(offset),
+        },
+
+        transition:
+          SELECT_SPRING,
       };
     }
 
-    /*
-      TIP — THE LOOP-AROUND (only happens with a small model count):
-      this model is being carried off one end of the row and has to
-      reappear at the other. 3-stop path:
-        1. from where it is now …
-        2. … on to the edge it was leaving, fading out
-        3. instantly (unseen, it is at opacity 0) to its FINAL slot, where
-           it fades in — no sliding in from the other side
-      The "instant" step is 0.1% of the path (see the times array).
-      Tilt / size / blur switch at the same unseen moment (duration 0 with a
-      delay), so the model reappears already in its new shape.
-    */
-    const times = [0, WRAP_EXIT_FRACTION, WRAP_EXIT_FRACTION + 0.001, 1];
-    const switchDelay = WRAP_DURATION_SECONDS * WRAP_EXIT_FRACTION;
-    const instantAtSwitch = { duration: 0, delay: switchDelay };
+    const times = [
+      0,
+      WRAP_EXIT_FRACTION,
+      WRAP_EXIT_FRACTION +
+        0.001,
+      1,
+    ];
+
+    const switchDelay =
+      WRAP_DURATION_SECONDS *
+      WRAP_EXIT_FRACTION;
+
+    const instantAtSwitch = {
+      duration: 0,
+      delay: switchDelay,
+    };
 
     return {
       animate: {
         ...look,
-        x: [null, xFor(beltOffset), xFor(offset), xFor(offset)],
-        opacity: [null, 0, 0, look.opacity],
+
+        x: [
+          null,
+          xFor(beltOffset),
+          xFor(offset),
+          xFor(offset),
+        ],
+
+        opacity: [
+          null,
+          0,
+          0,
+          look.opacity,
+        ],
       },
+
       transition: {
-        default: SELECT_SPRING,
+        default:
+          SELECT_SPRING,
+
         x: {
-          duration: WRAP_DURATION_SECONDS,
+          duration:
+            WRAP_DURATION_SECONDS,
           times,
-          ease: ["easeIn", "linear", "linear"],
+          ease: [
+            "easeIn",
+            "linear",
+            "linear",
+          ],
         },
+
         opacity: {
-          duration: WRAP_DURATION_SECONDS,
+          duration:
+            WRAP_DURATION_SECONDS,
           times,
           ease: "linear",
         },
-        rotateY: instantAtSwitch,
-        scaleX: instantAtSwitch,
-        scaleY: instantAtSwitch,
-        filter: instantAtSwitch,
+
+        rotateY:
+          instantAtSwitch,
+
+        scaleX:
+          instantAtSwitch,
+
+        scaleY:
+          instantAtSwitch,
+
+        filter:
+          instantAtSwitch,
       },
     };
-  }, [offset, prevOffset, shift, moveId, half, edge, slotWidth, reduceMotion]);
+  }, [
+    offset,
+    prevOffset,
+    shift,
+    moveId,
+    half,
+    edge,
+    slotWidth,
+    reduceMotion,
+    visualScale,
+    isShown,
+  ]);
 
   const initial = useMemo(
     () => ({
-      ...getSlotLook(offset, half),
-      x: clamp(offset, -edge, edge) * slotWidth * SLOT_SPACING,
+      ...getSlotLook(
+        offset,
+        half,
+        visualScale
+      ),
+
+      x:
+        clamp(
+          offset,
+          -edge,
+          edge
+        ) *
+        slotWidth *
+        SLOT_SPACING,
     }),
-    // first render only — later changes go through `animate`
+    // Initial position only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
@@ -641,47 +1003,61 @@ function HeroModel({
     <motion.button
       type="button"
       onClick={() => {
-        // TIP — CENTRED MODEL OPENS ITS PRODUCT PAGE: clicking a side
-        // model brings it to the middle; clicking the one already in the
-        // middle takes the shopper to that piece's own product-details page.
-        //
-        // The sample models shown while NO piece is marked "Hero" in the
-        // admin page (ids start with "fallback-") used to do nothing when
-        // clicked, which looked like a broken link. Now:
-        //   - if App.jsx found a real piece with the same name, it set
-        //     `productId` on the model and we open that piece;
-        //   - otherwise the shopper goes to the Shop instead of nowhere.
         if (isSelected) {
-          const isSample = String(model.id).startsWith("fallback-");
-          if (model.productId) navigate(`/product/${model.productId}`);
-          else if (isSample) navigate("/shop");
-          else navigate(`/product/${model.id}`);
+          const isSample =
+            String(
+              model.id
+            ).startsWith(
+              "fallback-"
+            );
+
+          if (model.productId) {
+            navigate(
+              `/product/${model.productId}`
+            );
+          } else if (
+            isSample
+          ) {
+            navigate("/shop");
+          } else {
+            navigate(
+              `/product/${model.id}`
+            );
+          }
+
           return;
         }
+
         onSelect(model.id);
       }}
-      aria-label={isSelected ? `View ${model.name}` : `Show ${model.name}`}
+      aria-label={
+        isSelected
+          ? `View ${model.name}`
+          : `Show ${model.name}`
+      }
       aria-pressed={isSelected}
       aria-hidden={!isShown}
-      tabIndex={isShown ? 0 : -1}
+      tabIndex={
+        isShown ? 0 : -1
+      }
       initial={initial}
       animate={animate}
       transition={transition}
       style={{
         width: slotWidth,
-        marginLeft: -slotWidth / 2,
-        // the middle model sits in front of its overlapping neighbours
-        zIndex: isSelected ? 12 : 10,
-        // TIP — WHY TAPS STOPPED WORKING ON PHONES: the model in the middle
-        // used to catch every tap over its own slot AND its hidden side photo
-        // (invisible, but far wider than the slot), so once a model with a
-        // side photo was in the middle, taps aimed at its neighbours landed
-        // on it and did nothing. That's still avoided (only the model's own
-        // slot is clickable, never its hidden wide side photo), but the
-        // middle slot itself is now clickable too, since it opens the
-        // product page instead of doing nothing.
-        pointerEvents: isShown ? "auto" : "none",
-        transformOrigin: "50% 100%",
+        marginLeft:
+          -slotWidth / 2,
+
+        zIndex: isSelected
+          ? 12
+          : 10,
+
+        pointerEvents: isShown
+          ? "auto"
+          : "none",
+
+        transformOrigin:
+          "50% 100%",
       }}
       className="
         absolute
@@ -697,14 +1073,16 @@ function HeroModel({
         overflow-visible
       "
     >
-      <div className={`relative w-full ${IMAGE_HEIGHT_SELECTED}`}>
-        {/* TIP — CROSS-FADE WHEN A VISIBLE MODEL CHANGES DIRECTION:
-            keyed by the photo (+ whether it is mirrored), so when the photo
-            changes React keeps the old <img> around while it fades out and
-            fades the new one in on top, instead of swapping them in one
-            frame. This is what a model does when a click carries it ACROSS
-            the middle (e.g. from the right side to the left side). */}
-        <AnimatePresence initial={false}>
+      <div
+        className={`
+          relative
+          w-full
+          ${IMAGE_HEIGHT_SELECTED}
+        `}
+      >
+        <AnimatePresence
+          initial={false}
+        >
           <motion.img
             key={`${view.side}|${view.mirror}`}
             src={view.side}
@@ -712,20 +1090,51 @@ function HeroModel({
             draggable={false}
             alt=""
             initial={{
-              opacity: swapInstantly ? (isSelected && hasFront ? 0 : 1) : 0,
+              opacity:
+                swapInstantly
+                  ? isSelected &&
+                    hasFront
+                    ? 0
+                    : 1
+                  : 0,
             }}
             animate={{
-              opacity: isSelected && hasFront ? 0 : 1,
+              opacity:
+                isSelected &&
+                hasFront
+                  ? 0
+                  : 1,
+
               transition: fade,
             }}
             exit={{
               opacity: 0,
-              transition: swapInstantly ? { duration: 0 } : fade,
+
+              transition:
+                swapInstantly
+                  ? { duration: 0 }
+                  : fade,
             }}
-            style={{ pointerEvents: "none" }}
-            className={`absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2 select-none object-contain ${
-              view.mirror ? "-scale-x-100" : ""
-            }`}
+            style={{
+              pointerEvents: "none",
+              bottom:
+                visualBottom,
+            }}
+            className={`
+              absolute
+              left-1/2
+              h-full
+              w-auto
+              max-w-none
+              -translate-x-1/2
+              select-none
+              object-contain
+              ${
+                view.mirror
+                  ? "-scale-x-100"
+                  : ""
+              }
+            `}
           />
         </AnimatePresence>
 
@@ -735,18 +1144,36 @@ function HeroModel({
             src={view.front}
             decoding="async"
             draggable={false}
-            alt={isSelected ? model.name : ""}
+            alt={
+              isSelected
+                ? model.name
+                : ""
+            }
             initial={false}
-            animate={{ opacity: isSelected ? 1 : 0 }}
-            transition={fade}
-            // `translate` (a percentage of the photo's OWN width) slides the
-            // photo left by "feet position" so the feet, not the picture's
-            // middle, sit on the podium. 0.5 = the old centred behaviour.
-            style={{
-              translate: `calc(-50% + ${feetCorrection}px) 0`,
-              pointerEvents: "none",
+            animate={{
+              opacity:
+                isSelected ? 1 : 0,
             }}
-            className="absolute bottom-0 left-1/2 h-full w-auto max-w-none select-none object-contain"
+            transition={fade}
+            style={{
+              bottom:
+                visualBottom,
+
+              translate:
+                `calc(-50% + ${feetCorrection}px) 0`,
+
+              pointerEvents:
+                "none",
+            }}
+            className="
+              absolute
+              left-1/2
+              h-full
+              w-auto
+              max-w-none
+              select-none
+              object-contain
+            "
           />
         )}
       </div>
@@ -755,218 +1182,358 @@ function HeroModel({
 }
 
 /* ============================================================
-   HERO
+   HERO CAROUSEL
    ============================================================ */
 
 function HeroCarousel({ models }) {
   const isWide = useIsWide();
-  const { formatPrice } = useCurrency();
-  const { addToBag, openBag } = useCart();
-  const reduceMotion = useReducedMotion();
-  const sectionRef = useRef(null);
-  const rowRef = useRef(null);
 
-  const count = models.length;
+  const { formatPrice } =
+    useCurrency();
 
-  // Five slots wide, three narrow — but never more than the models we
-  // have, and always odd so there is one true middle.
-  const wantedVisible = isWide ? 5 : 3;
-  const cappedVisible = Math.min(wantedVisible, count);
-  // TIP: an even count is trimmed to the odd number below it so there is
-  // one true middle model, EXCEPT with exactly two models, where trimming
-  // would leave just one on screen and the other could never be reached.
+  const {
+    addToBag,
+    openBag,
+  } = useCart();
+
+  const reduceMotion =
+    useReducedMotion();
+
+  const sectionRef =
+    useRef(null);
+
+  const rowRef =
+    useRef(null);
+
+  const count =
+    models.length;
+
+  const wantedVisible =
+    isWide ? 5 : 3;
+
+  const cappedVisible =
+    Math.min(
+      wantedVisible,
+      count
+    );
+
   const visibleCount =
-    cappedVisible % 2 === 0 && count > 2 ? cappedVisible - 1 : cappedVisible;
-  const half = Math.floor(visibleCount / 2);
+    cappedVisible % 2 === 0 &&
+    count > 2
+      ? cappedVisible - 1
+      : cappedVisible;
 
-  /*
-    PERFORMANCE: the podium's comet is an SVG (SMIL) animation with
-    a blur filter that repaints every frame. That's fine while the
-    hero is on screen, but it kept burning frames while the user
-    scrolled through the rest of the page — a real contributor to
-    the "laggy when I scroll" feel. Pause it whenever the hero is
-    off screen, resume when it's back.
-  */
+  const half =
+    Math.floor(
+      visibleCount / 2
+    );
+
   useEffect(() => {
-    const el = sectionRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
+    const el =
+      sectionRef.current;
 
-    const io = new IntersectionObserver(([entry]) => {
-      el.querySelectorAll("svg").forEach((svg) => {
-        if (entry.isIntersecting) svg.unpauseAnimations?.();
-        else svg.pauseAnimations?.();
-      });
-    });
+    if (
+      !el ||
+      typeof IntersectionObserver ===
+        "undefined"
+    ) {
+      return;
+    }
+
+    const io =
+      new IntersectionObserver(
+        ([entry]) => {
+          el
+            .querySelectorAll("svg")
+            .forEach((svg) => {
+              if (
+                entry.isIntersecting
+              ) {
+                svg.unpauseAnimations?.();
+              } else {
+                svg.pauseAnimations?.();
+              }
+            });
+        }
+      );
 
     io.observe(el);
-    return () => io.disconnect();
+
+    return () =>
+      io.disconnect();
   }, []);
 
-  /* -------------------- measure the row -------------------- */
-
-  // Slots are spaced by the row's width, so we need it in pixels.
-  // useLayoutEffect measures BEFORE the first paint, and the models
-  // aren't rendered until we have a number, so nothing ever flashes
-  // stacked in the middle.
-  const [rowWidth, setRowWidth] = useState(0);
+  const [rowWidth, setRowWidth] =
+    useState(0);
 
   useLayoutEffect(() => {
-    const el = rowRef.current;
+    const el =
+      rowRef.current;
+
     if (!el) return;
 
-    const measure = () => setRowWidth(el.clientWidth);
+    const measure = () =>
+      setRowWidth(
+        el.clientWidth
+      );
+
     measure();
 
-    const ro = new ResizeObserver(measure);
+    const ro =
+      new ResizeObserver(
+        measure
+      );
+
     ro.observe(el);
-    return () => ro.disconnect();
+
+    return () =>
+      ro.disconnect();
   }, []);
 
-  const slotWidth = rowWidth / visibleCount;
+  const slotWidth =
+    rowWidth / visibleCount;
 
-  /* -------------------- carousel state -------------------- */
+  const [nav, setNav] =
+    useState(() => ({
+      active:
+        Math.floor(count / 2),
 
-  /*
-    active     : index (into models) of the model in the middle
-    prevActive : the one that was in the middle before the last click
-    move       : how many slots the clicked model travelled (its old offset)
-    moveId     : goes up by one per click — used to restart the text/ripple
-    Together prevActive + move let every model work out where it was
-    and how far the belt moved, which is what makes multi-slot clicks
-    (e.g. the far-right model) glide as ONE continuous motion.
-  */
-  // the middle model on first load: the middle of the list
-  const [nav, setNav] = useState(() => ({
-    active: Math.floor(count / 2),
-    prevActive: Math.floor(count / 2),
-    move: 0,
-    moveId: 0,
-  }));
+      prevActive:
+        Math.floor(count / 2),
+
+      move: 0,
+
+      moveId: 0,
+    }));
 
   function handleSelect(id) {
     setNav((state) => {
-      const clickedIndex = models.findIndex((model) => model.id === id);
-      const clickedOffset = wrapOffset(clickedIndex - state.active, count);
+      const clickedIndex =
+        models.findIndex(
+          (model) =>
+            model.id === id
+        );
 
-      // already in the middle, or not one of the shown slots
-      if (clickedOffset === 0 || Math.abs(clickedOffset) > half) {
+      const clickedOffset =
+        wrapOffset(
+          clickedIndex -
+            state.active,
+          count
+        );
+
+      if (
+        clickedOffset === 0 ||
+        Math.abs(clickedOffset) >
+          half
+      ) {
         return state;
       }
 
       return {
-        // keep `active` a plain 0…count-1 index into models
-        active: (((state.active + clickedOffset) % count) + count) % count,
-        prevActive: state.active,
-        move: clickedOffset,
-        moveId: state.moveId + 1,
+        active:
+          (((state.active +
+            clickedOffset) %
+            count) +
+            count) %
+          count,
+
+        prevActive:
+          state.active,
+
+        move:
+          clickedOffset,
+
+        moveId:
+          state.moveId + 1,
       };
     });
   }
 
-  /* -------------------- swipe + arrow keys -------------------- */
+  const swipeStart =
+    useRef(null);
 
-  /*
-    TIP — HOW SWIPING WORKS: it doesn't move anything by itself. A swipe
-    just works out which model is next door and "clicks" it, so it uses the
-    exact same glide, text swap and podium ripple as tapping that model.
-      swipe LEFT  (finger moves left)  -> the model on the RIGHT comes in
-      swipe RIGHT (finger moves right) -> the model on the LEFT comes in
-    The row has `touch-action: pan-y` (see below), which tells the browser
-    "you handle up/down scrolling, I'll handle sideways drags". Without it
-    the browser would cancel the gesture the moment a finger drifted, and
-    the page would try to pan sideways.
-  */
-  const swipeStart = useRef(null);
-  const justSwiped = useRef(false);
+  const justSwiped =
+    useRef(false);
 
-  function goToNeighbour(direction) {
-    // direction: +1 = the model on the right, -1 = the one on the left
+  function goToNeighbour(
+    direction
+  ) {
     const at = (d) =>
-      models.find((_, index) => wrapOffset(index - nav.active, count) === d);
-    // with exactly two models the other one only exists on one side, so
-    // a swipe either way should bring it in
-    const target = at(direction) ?? (count === 2 ? at(-direction) : undefined);
-    if (target) handleSelect(target.id);
+      models.find(
+        (_, index) =>
+          wrapOffset(
+            index -
+              nav.active,
+            count
+          ) === d
+      );
+
+    const target =
+      at(direction) ??
+      (count === 2
+        ? at(-direction)
+        : undefined);
+
+    if (target) {
+      handleSelect(
+        target.id
+      );
+    }
   }
 
   const swipeHandlers = {
     onPointerDown: (event) => {
-      // touch / pen only: with a mouse, clicking a model already works and
-      // dragging would fight with selecting text
-      if (event.pointerType === "mouse" || !event.isPrimary) return;
-      swipeStart.current = { x: event.clientX, y: event.clientY };
+      if (
+        event.pointerType ===
+          "mouse" ||
+        !event.isPrimary
+      ) {
+        return;
+      }
+
+      swipeStart.current = {
+        x: event.clientX,
+        y: event.clientY,
+      };
     },
+
     onPointerUp: (event) => {
-      const start = swipeStart.current;
-      swipeStart.current = null;
+      const start =
+        swipeStart.current;
+
+      swipeStart.current =
+        null;
+
       if (!start) return;
 
-      const dx = event.clientX - start.x;
-      const dy = event.clientY - start.y;
-      if (Math.abs(dx) < SWIPE_MIN_PX) return;
-      if (Math.abs(dx) < Math.abs(dy) * SWIPE_SIDEWAYS_RATIO) return;
+      const dx =
+        event.clientX -
+        start.x;
 
-      // a swipe that starts and ends on the same model would ALSO fire a
-      // click on it, moving the carousel twice; swallow that next click
-      justSwiped.current = true;
-      window.setTimeout(() => {
-        justSwiped.current = false;
-      }, 350);
+      const dy =
+        event.clientY -
+        start.y;
 
-      goToNeighbour(dx < 0 ? 1 : -1);
+      if (
+        Math.abs(dx) <
+        SWIPE_MIN_PX
+      ) {
+        return;
+      }
+
+      if (
+        Math.abs(dx) <
+        Math.abs(dy) *
+          SWIPE_SIDEWAYS_RATIO
+      ) {
+        return;
+      }
+
+      justSwiped.current =
+        true;
+
+      window.setTimeout(
+        () => {
+          justSwiped.current =
+            false;
+        },
+        350
+      );
+
+      goToNeighbour(
+        dx < 0 ? 1 : -1
+      );
     },
+
     onPointerCancel: () => {
-      swipeStart.current = null;
+      swipeStart.current =
+        null;
     },
-    onClickCapture: (event) => {
-      if (justSwiped.current) {
+
+    onClickCapture: (
+      event
+    ) => {
+      if (
+        justSwiped.current
+      ) {
         event.preventDefault();
         event.stopPropagation();
-        justSwiped.current = false;
+        justSwiped.current =
+          false;
       }
     },
-    // keyboard users: left / right arrows while a model is focused
+
     onKeyDown: (event) => {
-      if (event.key === "ArrowRight") goToNeighbour(1);
-      else if (event.key === "ArrowLeft") goToNeighbour(-1);
+      if (
+        event.key ===
+        "ArrowRight"
+      ) {
+        goToNeighbour(1);
+      } else if (
+        event.key ===
+        "ArrowLeft"
+      ) {
+        goToNeighbour(-1);
+      }
     },
   };
 
-  // Once a move has finished, forget it — otherwise a later window
-  // resize would replay the loop-around path for models that wrapped.
   useEffect(() => {
-    if (nav.moveId === 0) return undefined;
+    if (
+      nav.moveId === 0
+    ) {
+      return undefined;
+    }
 
-    const timer = setTimeout(() => {
-      setNav((state) =>
-        state.moveId === nav.moveId
-          ? { ...state, prevActive: state.active, move: 0 }
-          : state
-      );
-    }, WRAP_DURATION_SECONDS * 1000 + 150);
+    const timer =
+      setTimeout(() => {
+        setNav((state) =>
+          state.moveId ===
+          nav.moveId
+            ? {
+                ...state,
+                prevActive:
+                  state.active,
+                move: 0,
+              }
+            : state
+        );
+      }, WRAP_DURATION_SECONDS *
+        1000 +
+        150);
 
-    return () => clearTimeout(timer);
+    return () =>
+      clearTimeout(timer);
   }, [nav.moveId]);
 
-  const activeModel = models[nav.active];
+  const activeModel =
+    models[nav.active];
 
-  const handleAddToBag = (model) => {
-    const product = model?.product;
+  const handleAddToBag = (
+    model
+  ) => {
+    const product =
+      model?.product;
 
     if (!product) return;
 
     addToBag(
       product,
-      product.colors?.[0] || "Default",
-      product.shades?.[0] || "Default",
-      product.sizes?.[0] || "S"
+      product.colors?.[0] ||
+        "Default",
+      product.shades?.[0] ||
+        "Default",
+      product.sizes?.[0] ||
+        "S"
     );
 
     openBag();
   };
 
-  // The podium's spin phase is fixed once so re-renders don't restart it.
-  const [podiumDelay] = useState(getPodiumAnimationDelay);
+  const [podiumDelay] =
+    useState(
+      getPodiumAnimationDelay
+    );
 
   return (
     <section
@@ -995,34 +1562,19 @@ function HeroCarousel({ models }) {
           ${PAGE_CONTAINER_PADDING}
         `}
       >
-
-        {/* ==================================================
-            MODEL ROW — five models at >= 1440px, three below.
-            TIP: this row is a fixed-height stage. The models,
-            name, podium and price are all positioned inside it,
-            so the name/podium/price stay put while the models
-            slide past them.
-            ================================================== */}
-
         <div
           ref={rowRef}
-          className={`relative w-full ${IMAGE_HEIGHT_SELECTED}`}
-          // TIP: pan-y = vertical page scrolling stays with the browser,
-          // sideways drags come to us (see the swipe notes above)
-          style={{ touchAction: "pan-y" }}
+          className={`
+            relative
+            w-full
+            ${IMAGE_HEIGHT_SELECTED}
+          `}
+          style={{
+            touchAction: "pan-y",
+          }}
           {...swipeHandlers}
         >
-          {/* ==============================================
-              MODEL NAME — fades out, then the new one fades in
-
-              TIP — PHONES: `max-sm:bottom-[95%]` lifts the name a little
-              (the number is how far up the row its bottom edge sits;
-              87.9% is the desktop value) so the model's head covers less
-              of the letters. Raise 95 to lift it more, lower it to drop it.
-              The hero section's top padding is pt-12 (48px, it was 32px)
-              so the lifted name doesn't touch the navbar; if you raise the
-              95, raise that padding too.
-              ============================================== */}
+          {/* MODEL NAME */}
 
           <div
             className="
@@ -1035,40 +1587,55 @@ function HeroCarousel({ models }) {
               z-0
             "
           >
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence
+              mode="wait"
+              initial={false}
+            >
               <motion.h1
                 key={activeModel.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
                 animate={{
                   opacity: 1,
                   y: 0,
-                  transition: reduceMotion
-                    ? { duration: 0 }
-                    : {
-                        duration: TEXT_IN_SECONDS,
-                        delay: TEXT_IN_DELAY_SECONDS,
-                        ease: [0.22, 1, 0.36, 1],
-                      },
+                  transition:
+                    reduceMotion
+                      ? {
+                          duration: 0,
+                        }
+                      : {
+                          duration:
+                            TEXT_IN_SECONDS,
+                          delay:
+                            TEXT_IN_DELAY_SECONDS,
+                          ease: [
+                            0.22,
+                            1,
+                            0.36,
+                            1,
+                          ],
+                        },
                 }}
                 exit={{
                   opacity: 0,
                   y: -6,
                   transition: {
-                    duration: reduceMotion ? 0 : TEXT_OUT_SECONDS,
+                    duration:
+                      reduceMotion
+                        ? 0
+                        : TEXT_OUT_SECONDS,
                   },
                 }}
                 className="
                   font-['Raleway']
                   font-bold
-
                   tracking-[-0.07em]
-
                   text-[clamp(3rem,5vw,6rem)]
                   max-sm:text-[4.2rem]
                   leading-[1.05]
-
                   text-[var(--maroon-dark)]
-
                   select-none
                   whitespace-nowrap
                 "
@@ -1078,10 +1645,7 @@ function HeroCarousel({ models }) {
             </AnimatePresence>
           </div>
 
-          {/* ==============================================
-              PODIUM — stays put; a ripple leaves it whenever
-              a new model lands
-              ============================================== */}
+          {/* PODIUM */}
 
           <div
             aria-hidden="true"
@@ -1089,22 +1653,16 @@ function HeroCarousel({ models }) {
               pointer-events-none
               absolute
               left-1/2
-              -translate-x-1/2 sm:mb-4
-              bottom-[-5%]  
+              -translate-x-1/2
+              sm:mb-4
+              bottom-[-5%]
               max-sm:bottom-[-12%]
-
               z-0
-
               w-[clamp(8rem,12.7vw,15.24rem)]
               max-sm:w-[47vw]
-
               aspect-[243.81/116.05]
             "
           >
-
-            {/* Soft floor glow — TIP: the dark shadow under the podium.
-                Peak strength is the first alpha (0.14; it was 0.35).
-                Lower it for an even lighter shadow, raise it for darker. */}
             <div
               className="
                 absolute
@@ -1114,13 +1672,15 @@ function HeroCarousel({ models }) {
               style={{
                 background:
                   "radial-gradient(ellipse 70% 65% at 50% 45%, rgba(76,5,25,0.05), rgba(76,5,25,0.03) 60%, transparent 80%)",
-                filter: "blur(6px)",
+                filter:
+                  "blur(6px)",
               }}
             />
 
-            {/* Base podium */}
             <svg
-              viewBox={PODIUM_VIEWBOX}
+              viewBox={
+                PODIUM_VIEWBOX
+              }
               className="
                 absolute
                 inset-0
@@ -1154,9 +1714,10 @@ function HeroCarousel({ models }) {
               )}
             </svg>
 
-            {/* Animated comet */}
             <svg
-              viewBox={PODIUM_VIEWBOX}
+              viewBox={
+                PODIUM_VIEWBOX
+              }
               className="
                 absolute
                 inset-0
@@ -1167,20 +1728,25 @@ function HeroCarousel({ models }) {
               fill="none"
             >
               <defs>
-
                 <linearGradient
                   id="podium-comet"
                   gradientUnits="userSpaceOnUse"
                   x1={
-                    PODIUM_RINGS[0].cx -
-                    PODIUM_RINGS[0].rx * 1.4
+                    PODIUM_RINGS[0]
+                      .cx -
+                    PODIUM_RINGS[0]
+                      .rx *
+                      1.4
                   }
                   y1={
                     PODIUM_RINGS[0].cy
                   }
                   x2={
-                    PODIUM_RINGS[0].cx +
-                    PODIUM_RINGS[0].rx * 1.4
+                    PODIUM_RINGS[0]
+                      .cx +
+                    PODIUM_RINGS[0]
+                      .rx *
+                      1.4
                   }
                   y2={
                     PODIUM_RINGS[0].cy
@@ -1207,7 +1773,9 @@ function HeroCarousel({ models }) {
                     from={`0 ${PODIUM_RINGS[0].cx} ${PODIUM_RINGS[0].cy}`}
                     to={`360 ${PODIUM_RINGS[0].cx} ${PODIUM_RINGS[0].cy}`}
                     dur={`${SPIN_DURATION_SECONDS}s`}
-                    begin={podiumDelay}
+                    begin={
+                      podiumDelay
+                    }
                     repeatCount="indefinite"
                   />
                 </linearGradient>
@@ -1231,7 +1799,6 @@ function HeroCarousel({ models }) {
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
-
               </defs>
 
               {PODIUM_RINGS.map(
@@ -1256,94 +1823,134 @@ function HeroCarousel({ models }) {
               )}
             </svg>
 
-            {/*
-              RIPPLE — now an always-on idle loop instead of a one-shot
-              triggered by clicks. `repeat: Infinity` + `repeatDelay`
-              makes each ring fade up, grow, fade out, pause, then do it
-              again forever, so the podium never sits still. Each ring
-              starts invisible at the outer podium's size, fades up
-              quickly, then grows and fades out.
-              vectorEffect="non-scaling-stroke" keeps the line a constant
-              thin width while the ring scales. To make it subtler lower
-              RIPPLE_PEAK_OPACITY or RIPPLE_END_SCALE; for a wider spread
-              raise RIPPLE_END_SCALE; for a busier/calmer rhythm adjust
-              RIPPLE_REPEAT_GAP_SECONDS.
-            */}
-            {!reduceMotion && [0, 1].map((ring) => (
-              <motion.svg
-                key={`idle-ripple-${ring}`}
-                viewBox={PODIUM_VIEWBOX}
-                className="
-                  absolute
-                  inset-0
-                  h-full
-                  w-full
-                  overflow-visible
-                "
-                fill="none"
-                initial={{ scale: 0.92, opacity: 0 }}
-                animate={{
-                  scale: [0.92, RIPPLE_END_SCALE],
-                  opacity: [0, RIPPLE_PEAK_OPACITY - ring * 0.2, 0],
-                }}
-                transition={{
-                  // opacity: 0 → peak (quickly) → 0; scale: just grows;
-                  // both loop forever with a short pause in between.
-                  opacity: {
-                    duration: RIPPLE_DURATION_SECONDS,
-                    delay: ring * 0.14,
-                    repeat: Infinity,
-                    repeatDelay: RIPPLE_REPEAT_GAP_SECONDS,
-                    times: [0, 0.18, 1],
-                    ease: "easeOut",
-                  },
-                  scale: {
-                    duration: RIPPLE_DURATION_SECONDS,
-                    delay: ring * 0.14,
-                    repeat: Infinity,
-                    repeatDelay: RIPPLE_REPEAT_GAP_SECONDS,
-                    ease: "easeOut",
-                  },
-                }}
-                style={{ transformOrigin: "50% 50%" }}
-              >
-                <ellipse
-                  cx={PODIUM_RINGS[0].cx}
-                  cy={PODIUM_RINGS[0].cy}
-                  rx={PODIUM_RINGS[0].rx}
-                  ry={PODIUM_RINGS[0].ry}
-                  stroke="var(--maroon-dark)"
-                  strokeWidth={1.5}
-                  vectorEffect="non-scaling-stroke"
-                />
-              </motion.svg>
-            ))}
+            {!reduceMotion &&
+              [0, 1].map(
+                (ring) => (
+                  <motion.svg
+                    key={`idle-ripple-${ring}`}
+                    viewBox={
+                      PODIUM_VIEWBOX
+                    }
+                    className="
+                      absolute
+                      inset-0
+                      h-full
+                      w-full
+                      overflow-visible
+                    "
+                    fill="none"
+                    initial={{
+                      scale: 0.92,
+                      opacity: 0,
+                    }}
+                    animate={{
+                      scale: [
+                        0.92,
+                        RIPPLE_END_SCALE,
+                      ],
+                      opacity: [
+                        0,
+                        RIPPLE_PEAK_OPACITY -
+                          ring * 0.2,
+                        0,
+                      ],
+                    }}
+                    transition={{
+                      opacity: {
+                        duration:
+                          RIPPLE_DURATION_SECONDS,
+                        delay:
+                          ring * 0.14,
+                        repeat:
+                          Infinity,
+                        repeatDelay:
+                          RIPPLE_REPEAT_GAP_SECONDS,
+                        times: [
+                          0,
+                          0.18,
+                          1,
+                        ],
+                        ease: "easeOut",
+                      },
+
+                      scale: {
+                        duration:
+                          RIPPLE_DURATION_SECONDS,
+                        delay:
+                          ring * 0.14,
+                        repeat:
+                          Infinity,
+                        repeatDelay:
+                          RIPPLE_REPEAT_GAP_SECONDS,
+                        ease: "easeOut",
+                      },
+                    }}
+                    style={{
+                      transformOrigin:
+                        "50% 50%",
+                    }}
+                  >
+                    <ellipse
+                      cx={
+                        PODIUM_RINGS[0].cx
+                      }
+                      cy={
+                        PODIUM_RINGS[0].cy
+                      }
+                      rx={
+                        PODIUM_RINGS[0].rx
+                      }
+                      ry={
+                        PODIUM_RINGS[0].ry
+                      }
+                      stroke="var(--maroon-dark)"
+                      strokeWidth={1.5}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </motion.svg>
+                )
+              )}
           </div>
 
-          {/* ==============================================
-              THE MODELS — each one is placed by its offset
-              from the middle and glides between slots
-              ============================================== */}
+          {/* MODELS */}
 
           {slotWidth > 0 &&
-            models.map((model, index) => (
-              <HeroModel
-                key={model.id}
-                model={model}
-                offset={wrapOffset(index - nav.active, count)}
-                prevOffset={wrapOffset(index - nav.prevActive, count)}
-                shift={-nav.move}
-                moveId={nav.moveId}
-                half={half}
-                slotWidth={slotWidth}
-                reduceMotion={reduceMotion}
-                onSelect={handleSelect}
-              />
-            ))}
+            models.map(
+              (model, index) => (
+                <HeroModel
+                  key={model.id}
+                  model={model}
+                  offset={wrapOffset(
+                    index -
+                      nav.active,
+                    count
+                  )}
+                  prevOffset={wrapOffset(
+                    index -
+                      nav.prevActive,
+                    count
+                  )}
+                  shift={
+                    -nav.move
+                  }
+                  moveId={
+                    nav.moveId
+                  }
+                  half={half}
+                  slotWidth={
+                    slotWidth
+                  }
+                  reduceMotion={
+                    reduceMotion
+                  }
+                  onSelect={
+                    handleSelect
+                  }
+                />
+              )
+            )}
 
-          {/* ==============================================
-              PRICE ROW — same fade-out / fade-in as the name
-              ============================================== */}
+          {/* PRICE ROW */}
 
           <div
             className="
@@ -1353,43 +1960,66 @@ function HeroCarousel({ models }) {
               -translate-x-1/2
               top-full
               z-10
-
-              mt-16 md:mt-18
+              mt-16
+              md:mt-18
               max-sm:mt-12
-
               w-[clamp(11rem,18.75vw,22.5rem)]
               max-sm:w-full
               max-sm:px-1
             "
           >
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence
+              mode="wait"
+              initial={false}
+            >
               <motion.div
                 key={activeModel.id}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{
+                  opacity: 0,
+                  y: 8,
+                }}
                 animate={{
                   opacity: 1,
                   y: 0,
-                  transition: reduceMotion
-                    ? { duration: 0 }
-                    : {
-                        duration: TEXT_IN_SECONDS,
-                        delay: TEXT_IN_DELAY_SECONDS + 0.06,
-                        ease: [0.22, 1, 0.36, 1],
-                      },
+                  transition:
+                    reduceMotion
+                      ? {
+                          duration: 0,
+                        }
+                      : {
+                          duration:
+                            TEXT_IN_SECONDS,
+                          delay:
+                            TEXT_IN_DELAY_SECONDS +
+                            0.06,
+                          ease: [
+                            0.22,
+                            1,
+                            0.36,
+                            1,
+                          ],
+                        },
                 }}
                 exit={{
                   opacity: 0,
                   y: -4,
                   transition: {
-                    duration: reduceMotion ? 0 : TEXT_OUT_SECONDS,
+                    duration:
+                      reduceMotion
+                        ? 0
+                        : TEXT_OUT_SECONDS,
                   },
                 }}
-                className="grid grid-cols-3 items-center text-xl max-sm:grid-cols-[1fr_auto_1fr] sm:flex sm:justify-between"
+                className="
+                  grid
+                  grid-cols-3
+                  items-center
+                  text-xl
+                  max-sm:grid-cols-[1fr_auto_1fr]
+                  sm:flex
+                  sm:justify-between
+                "
               >
-                {/* TIP — PHONES (Figma): the name is already the big word
-                    behind the model, so the row is price on the left, a
-                    little chevron stack in the middle and a bag button on
-                    the right. From sm up it is the original name + price. */}
                 <span
                   className="
                     uppercase
@@ -1407,27 +2037,72 @@ function HeroCarousel({ models }) {
                     max-sm:justify-self-start
                   "
                 >
-                  {formatPrice(activeModel.price)}
+                  {formatPrice(
+                    activeModel.price
+                  )}
                 </span>
 
-                <span aria-hidden="true" className="sm:hidden -space-y-2.5 flex flex-col max-sm:justify-self-center items-center text-[var(--muted)]">
-                  <ChevronUp size={18} strokeWidth={1.5} className="opacity-100" />
-                  <ChevronUp size={18} strokeWidth={1.5} className="opacity-60" />
-                  <ChevronUp size={18} strokeWidth={1.5} className="opacity-30" />
+                <span
+                  aria-hidden="true"
+                  className="
+                    sm:hidden
+                    -space-y-2.5
+                    flex
+                    flex-col
+                    max-sm:justify-self-center
+                    items-center
+                    text-[var(--muted)]
+                  "
+                >
+                  <ChevronUp
+                    size={18}
+                    strokeWidth={1.5}
+                    className="opacity-100"
+                  />
+
+                  <ChevronUp
+                    size={18}
+                    strokeWidth={1.5}
+                    className="opacity-60"
+                  />
+
+                  <ChevronUp
+                    size={18}
+                    strokeWidth={1.5}
+                    className="opacity-30"
+                  />
                 </span>
 
                 <button
                   type="button"
-                  onClick={() => handleAddToBag(activeModel)}
+                  onClick={() =>
+                    handleAddToBag(
+                      activeModel
+                    )
+                  }
                   aria-label={`Add ${activeModel.name} to bag`}
-                  className="sm:hidden pointer-events-auto flex h-11 w-11 items-center justify-center max-sm:justify-self-end rounded-full bg-[var(--mauve-light)] text-[var(--ink)]"
+                  className="
+                    sm:hidden
+                    pointer-events-auto
+                    flex
+                    h-11
+                    w-11
+                    items-center
+                    justify-center
+                    max-sm:justify-self-end
+                    rounded-full
+                    bg-[var(--mauve-light)]
+                    text-[var(--ink)]
+                  "
                 >
-                  <ShoppingBag size={20} strokeWidth={1.5} />
+                  <ShoppingBag
+                    size={20}
+                    strokeWidth={1.5}
+                  />
                 </button>
               </motion.div>
             </AnimatePresence>
           </div>
-
         </div>
       </div>
     </section>
@@ -1435,26 +2110,39 @@ function HeroCarousel({ models }) {
 }
 
 /* ============================================================
-   HERO — waits for the models, then mounts the carousel
-   ============================================================
+   HERO
+   ============================================================ */
 
-   `models` is null while the products are still loading: the stage is
-   held open at the same height so the page doesn't jump when the
-   carousel appears. `key` remounts the carousel if the list of models
-   changes, so its selected-model state never points at a model that
-   is no longer there.
-*/
-export default function Hero({ models }) {
+export default function Hero({
+  models,
+}) {
   if (!models?.length) {
     return (
       <section
         id="hero"
         data-hero="true"
         data-no-rise="true"
-        className="pt-12 md:pt-12 lg:pt-14 pb-24 md:pb-32"
+        className="
+          pt-12
+          md:pt-12
+          lg:pt-14
+          pb-24
+          md:pb-32
+        "
       >
-        <div className={`relative mx-auto ${PAGE_CONTAINER_PADDING}`}>
-          <div className={`w-full ${IMAGE_HEIGHT_SELECTED}`} />
+        <div
+          className={`
+            relative
+            mx-auto
+            ${PAGE_CONTAINER_PADDING}
+          `}
+        >
+          <div
+            className={`
+              w-full
+              ${IMAGE_HEIGHT_SELECTED}
+            `}
+          />
         </div>
       </section>
     );
@@ -1462,7 +2150,11 @@ export default function Hero({ models }) {
 
   return (
     <HeroCarousel
-      key={models.map((model) => model.id).join("|")}
+      key={models
+        .map(
+          (model) => model.id
+        )
+        .join("|")}
       models={models}
     />
   );
