@@ -29,10 +29,10 @@ import heroCenter from "../assets/reina-front.webp";
 // FRONT-FACING photos (cut out, cropped head-to-toe like reina-front.webp).
 // These are what each model shows when it is in the MIDDLE of the hero;
 // the older model-*.webp photos above are the turned, side-of-the-row ones.
-import coralFront from "../assets/model-images/front-coral.webp";
+import coralFront from "../assets/model-images/coral.png";
 import amberFront from "../assets/model-images/front-amber.webp";
-import siennaFront from "../assets/model-images/front-sienna.webp";
-import marinaFront from "../assets/model-images/front-marina.webp";
+import siennaFront from "../assets/model-images/sienna.png";
+import marinaFront from "../assets/model-images/marina.png";
 
 export const FALLBACK_HERO_MODELS = [
   { id: "fallback-coral", name: "Coral", price: 70000, views: { front: coralFront, left: model2, right: null } },
