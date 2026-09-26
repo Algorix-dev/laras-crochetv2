@@ -644,17 +644,10 @@ function HeroModel({
   slotWidth,
   reduceMotion,
   onSelect,
-  podiumRef,
-  rowRef,
 }) {
   const navigate = useNavigate();
 
   const frontImageRef =
-    useRef(null);
-
-  // TIP: lets the podium-tracking effect below measure whichever
-  // image is actually on screen, even for models with no front photo.
-  const sideImageRef =
     useRef(null);
 
   const [
@@ -794,97 +787,6 @@ function HeroModel({
     view?.front,
     isSelected,
     visualScale,
-  ]);
-
-  /*
-    TIP: Framer Motion animates scaleX/scaleY and the feet-alignment
-    translate as JS-driven transforms. ResizeObserver only reacts to
-    an element's own layout size, not ancestor transforms, so it
-    won't refire while this model is scaling in/out.
-    requestAnimationFrame is the reliable way to stay in sync with
-    those transforms while this model is the centered one.
-
-    We write straight to the podium DOM node (podiumRef) instead of
-    calling setState, so this doesn't trigger a React re-render every
-    frame - it's a plain style write, the same technique Framer
-    Motion itself uses internally.
-  */
-  useEffect(() => {
-    if (!isSelected) return undefined;
-
-    const podiumEl = podiumRef?.current;
-    const rowEl = rowRef?.current;
-
-    if (!podiumEl || !rowEl) return undefined;
-
-    let frameId;
-
-    const measure = () => {
-      const imageEl = hasFront
-        ? frontImageRef.current
-        : sideImageRef.current;
-
-      if (imageEl) {
-        const rowRect =
-          rowEl.getBoundingClientRect();
-
-        const imgRect =
-          imageEl.getBoundingClientRect();
-
-        if (imgRect.width > 0) {
-          // TIP: widthRatio trims the transparent padding around the
-          // photo, so the podium matches the visible product, not
-          // the empty space around it.
-          const widthRatio =
-            visualBounds?.widthRatio ?? 1;
-
-          // TIP: frontFeet is the horizontal ratio (0-1) of where
-          // the feet actually sit inside the front photo. Using it
-          // instead of a flat 0.5 means the podium centers on the
-          // feet even when a photo's crop isn't perfectly symmetric.
-          const feetRatio =
-            hasFront && frontFeet !== null
-              ? frontFeet
-              : 0.5;
-
-          const width =
-            imgRect.width * widthRatio;
-
-          const centerX =
-            imgRect.left +
-            imgRect.width * feetRatio;
-
-          const offsetX =
-            centerX -
-            (rowRect.left +
-              rowRect.width / 2);
-
-          podiumEl.style.width = `${width}px`;
-
-          // TIP: "left" stays whatever the "left-1/2" class already
-          // sets - untouched. We only override translateX, so it
-          // still shifts back by half of ITS OWN width (the "-50%"),
-          // plus offsetX to land under THIS model's feet specifically.
-          podiumEl.style.transform =
-            `translateX(calc(-50% + ${offsetX}px))`;
-        }
-      }
-
-      frameId = requestAnimationFrame(measure);
-    };
-
-    frameId = requestAnimationFrame(measure);
-
-    return () => {
-      if (frameId) cancelAnimationFrame(frameId);
-    };
-  }, [
-    isSelected,
-    hasFront,
-    visualBounds,
-    frontFeet,
-    podiumRef,
-    rowRef,
   ]);
 
   const feetCorrection =
@@ -1182,7 +1084,6 @@ function HeroModel({
           initial={false}
         >
           <motion.img
-            ref={sideImageRef}
             key={`${view.side}|${view.mirror}`}
             src={view.side}
             decoding="async"
@@ -1302,12 +1203,6 @@ function HeroCarousel({ models }) {
     useRef(null);
 
   const rowRef =
-    useRef(null);
-
-  // TIP: gives the HeroModel below a direct handle on the podium DOM
-  // node, so it can write width/position to it every frame without
-  // routing that through React state.
-  const podiumRef =
     useRef(null);
 
   const count =
@@ -1753,7 +1648,6 @@ function HeroCarousel({ models }) {
           {/* PODIUM */}
 
           <div
-            ref={podiumRef}
             aria-hidden="true"
             className="
               pointer-events-none
@@ -2051,12 +1945,6 @@ function HeroCarousel({ models }) {
                   }
                   onSelect={
                     handleSelect
-                  }
-                  podiumRef={
-                    podiumRef
-                  }
-                  rowRef={
-                    rowRef
                   }
                 />
               )
