@@ -14,7 +14,7 @@ export default function ProductCard({
 }) {
   const { addToBag, openBag, cartItems } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const { formatPriceNumber } = useCurrency();
+  const { formatPrice } = useCurrency();
 
   const isRecommendation = variant === 'recommendation';
   const inWishlist = isInWishlist(product.id);
@@ -262,7 +262,7 @@ export default function ProductCard({
               lg:leading-6
             `}
           >
-            {formatPriceNumber(product.price)}
+            {formatPrice(product.price)}
           </div>
         </CardLink>
 
