@@ -723,7 +723,7 @@ function HeroModel({
               transition: swapInstantly ? { duration: 0 } : fade,
             }}
             style={{ pointerEvents: "none" }}
-            className={`absolute bottom-0 left-1/2 h-[115%] w-auto max-w-none -translate-x-1/2 select-none object-contain ${
+            className={`absolute bottom-0 left-1/2 h-full w-auto max-w-none -translate-x-1/2 select-none object-contain ${
               view.mirror ? "-scale-x-100" : ""
             }`}
           />
@@ -746,7 +746,7 @@ function HeroModel({
               translate: `calc(-50% + ${feetCorrection}px) 0`,
               pointerEvents: "none",
             }}
-            className="absolute bottom-0 left-1/2 h-[115%] w-auto max-w-none select-none object-contain"
+            className="absolute bottom-0 left-1/2 h-full w-auto max-w-none select-none object-contain"
           />
         )}
       </div>
