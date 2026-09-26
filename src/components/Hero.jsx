@@ -1014,7 +1014,7 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2
               bottom-[87.9%]
-              max-sm:bottom-[98%]
+              max-sm:bottom-[96%]
               z-0
             "
           >
@@ -1047,7 +1047,7 @@ function HeroCarousel({ models }) {
                   tracking-[-0.07em]
 
                   text-[clamp(3rem,5vw,6rem)]
-                  max-sm:text-[4rem]
+                  max-sm:text-[4.2rem]
                   leading-[1.05]
 
                   text-[var(--maroon-dark)]
