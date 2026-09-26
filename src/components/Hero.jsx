@@ -1655,7 +1655,7 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2
               sm:mb-4
-              bottom-[-5%]
+              bottom-[-8%]
               max-sm:bottom-[-12%]
               z-0
               w-[clamp(8rem,12.7vw,15.24rem)]
