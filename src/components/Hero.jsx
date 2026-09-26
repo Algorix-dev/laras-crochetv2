@@ -1077,7 +1077,6 @@ function HeroModel({
         className={`
           relative
           w-full
-          bg-[var(--cream)]
           ${IMAGE_HEIGHT_SELECTED}
         `}
       >
@@ -1088,7 +1087,6 @@ function HeroModel({
             key={`${view.side}|${view.mirror}`}
             src={view.side}
             decoding="async"
-            fetchPriority={isSelected ? "high" : "auto"}
             draggable={false}
             alt=""
             initial={{
@@ -1145,7 +1143,6 @@ function HeroModel({
             ref={frontImageRef}
             src={view.front}
             decoding="async"
-            fetchPriority={isSelected ? "high" : "auto"}
             draggable={false}
             alt={
               isSelected
@@ -1659,10 +1656,10 @@ function HeroCarousel({ models }) {
               -translate-x-1/2
               sm:mb-4
               bottom-[-8%]
-              max-sm:bottom-[-12%]
+              max-sm:bottom-[-15%]
               z-0
               w-[clamp(8rem,12.7vw,15.24rem)]
-              max-sm:w-[47vw]
+              max-sm:w-[50vw]
               aspect-[243.81/116.05]
             "
           >
