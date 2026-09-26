@@ -1047,7 +1047,7 @@ function HeroCarousel({ models }) {
                   tracking-[-0.07em]
 
                   text-[clamp(3rem,5vw,6rem)]
-                  max-sm:text-[3.6rem]
+                  max-sm:text-[4rem]
                   leading-[1.05]
 
                   text-[var(--maroon-dark)]
