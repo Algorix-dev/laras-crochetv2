@@ -1073,7 +1073,7 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2 sm:mb-4
                 
-              bottom-[-7.2%]
+              bottom-[-8.2%]
 
               z-0
 
