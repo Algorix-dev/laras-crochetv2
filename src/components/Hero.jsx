@@ -975,6 +975,7 @@ function HeroCarousel({ models }) {
         className={`
           relative
           mx-auto
+          max-sm:translate-y-[10px]
           ${PAGE_CONTAINER_PADDING}
         `}
       >
