@@ -1333,7 +1333,7 @@ function HeroCarousel({ models }) {
               absolute
               left-1/2
               -translate-x-1/2
-              bottom-0
+              top-full
               z-10
 
               mt-16 md:mt-18
