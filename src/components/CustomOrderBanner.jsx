@@ -352,6 +352,10 @@ export default function CustomOrderBanner() {
                 opacity: CUSTOM_ELLIPSE_OPACITY,
               }}
             />
+          {/* TIP: was capped at 805px (41.95vw) — client review flagged the
+              models here as too big for a secondary CTA banner (vs the
+              actual Hero). Capped lower at 620px; change the clamp max
+              (620px) to size up/down again. */}
           <img
             src={customTrio}
             alt="Lara's Crochet custom pieces"
@@ -359,8 +363,8 @@ export default function CustomOrderBanner() {
               relative
               z-20
               h-auto
-              w-[94vw]
-              md:w-[clamp(480px,41.95vw,805px)]
+              w-[80vw]
+              md:w-[clamp(400px,32vw,620px)]
               select-none
               object-contain
             "

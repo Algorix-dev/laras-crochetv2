@@ -12,12 +12,17 @@ export default function ProductCard({
   variant = 'default',
   isPlaceholder = false,
 }) {
-  const { addToBag, openBag } = useCart();
+  const { addToBag, openBag, cartItems } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { formatPriceNumber } = useCurrency();
 
   const isRecommendation = variant === 'recommendation';
   const inWishlist = isInWishlist(product.id);
+  // TIP: client review — the bag icon should show filled once the piece is
+  // added. cartItems doesn't key by product id alone (each line is a
+  // color/shade/size variant), so this checks whether ANY line in the bag
+  // is this product, regardless of which variant.
+  const inBag = cartItems.some((item) => item.product.id === product.id);
 
   const handleAddToBag = () => {
     if (isPlaceholder) return;
@@ -326,6 +331,7 @@ export default function ProductCard({
             <ShoppingBag
               size={16}
               strokeWidth={1}
+              fill={inBag ? 'currentColor' : 'none'}
             />
           </button>
         )}

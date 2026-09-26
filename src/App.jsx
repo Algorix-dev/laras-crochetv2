@@ -168,7 +168,10 @@ function HomePage() {
                   <h2 className="sm:text-[16px] lg:text-[32px] md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                     Shop Our Pieces
                   </h2>
-                  <Link to="/shop" className="sm:text-[14px] md:text-[18px] pr-3 text-[14px] underline underline-offset-2 hover:text-[var(--maroon)]">
+                  {/* TIP: was text-[14px] everywhere — client review flagged this as
+                      too small ("not 16px"). text-base = 16px and matches the rest
+                      of the site's body copy. */}
+                  <Link to="/shop" className="pr-3 text-base underline underline-offset-2 hover:text-[var(--maroon)]">
                     Go to shop
                   </Link>
                 </div>

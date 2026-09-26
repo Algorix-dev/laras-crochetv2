@@ -157,6 +157,9 @@ const reviews = [
    than the literal spec, just add `rounded-lg` back into the
    className below; nothing else depends on the shape.
 ----------------------------------------------------------- */
+// TIP: swatches were 32×40px — client review asked for these boxes to be
+// smaller. Now 24×30px; bump the numbers back up if that reads too small
+// once you see it live.
 function ColorSwatch({ option, active, onClick }) {
   const isSplit = option.label === 'Black / White';
 
@@ -166,7 +169,7 @@ function ColorSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} color`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[32px] w-[40px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
+      className={`h-[24px] w-[30px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -187,7 +190,7 @@ function ShadeSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} shade`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[32px] w-[40px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
+      className={`h-[24px] w-[30px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -961,9 +964,12 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* TIP: spec sets this label at 20px Bold, letter-spacing
-                -0.04em, on a #564345 background — a big jump up from
-                the old 10px tracked-out label.
+            {/* TIP: Figma spec originally called for 20px Bold here, but the
+                client's desktop review flagged the button as noticeably
+                bigger than every other button on the site (Go to Shop, Make
+                a Custom Order, Pay Now — all text-base/16px) and asked for
+                it to match. Sized to text-base per that feedback; letter-
+                spacing stays -0.04em-ish via tracking-widest.
                 TIP — FULL WIDTH, NOT CENTERED: per the client, this
                 should fill the entire width of the column (same left/
                 right edges as the heading/price above it), not sit as
@@ -972,7 +978,7 @@ export default function ProductDetail() {
                 its growth. */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 block w-full whitespace-nowrap bg-[#564345] px-8 py-3.5 text-xl font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[322px]"
+              className="mt-8 block w-full whitespace-nowrap bg-[#564345] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[322px]"
             >
               Add to Bag
             </button>

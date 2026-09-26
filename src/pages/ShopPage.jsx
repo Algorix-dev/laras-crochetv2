@@ -73,7 +73,10 @@ export default function ShopPage() {
                   SHOP LARA'S CROCHET
                 </h1>
 
-                <p className="mt-0 text-[14px] leading-[20px] text-[#564345] md:mt-2 md:text-lg">
+                {/* TIP: client review asked for this supporting line to be
+                    bigger — bumped from 14px/18px (mobile/desktop) to
+                    16px/20px. */}
+                <p className="mt-0 text-base leading-[22px] text-[#564345] md:mt-2 md:text-xl">
                   Shop the latest pieces and must-haves from Lara's Crochet
                 </p>
               </div>

@@ -13,6 +13,10 @@ import RecommendedProducts from '../components/RecommendedProducts';
 import Footer from '../components/Footer';
 import { formatDeliveryRange } from '../utils/delivery';
 
+// TIP: client's desktop review flagged this whole page as too small
+// ("16px is not that small") — every text-sm/text-[12–14px] class below
+// was bumped up to text-base (16px). If a specific label still reads too
+// big/cramped once you see it live, that's the class to dial back.
 export default function MyBagPage() {
   const {
     cartItems,
@@ -41,7 +45,7 @@ export default function MyBagPage() {
               My Bag (0)
             </h1>
 
-            <p className="mt-4 text-sm text-[var(--muted)] md:text-base">
+            <p className="mt-4 text-base text-[var(--muted)] md:text-base">
               Your bag is currently empty.
             </p>
 
@@ -55,7 +59,7 @@ export default function MyBagPage() {
                 justify-center
                 bg-[var(--ink)]
                 px-8
-                text-sm
+                text-base
                 font-bold
                 tracking-widest
                 text-white
@@ -82,12 +86,12 @@ export default function MyBagPage() {
             My Bag ({cartCount})
           </h1>
 
-          <p className="mt-2 mb-8 text-[14px] text-[var(--muted)] md:mb-10 md:text-base">
+          <p className="mt-2 mb-8 text-base text-[var(--muted)] md:mb-10 md:text-base">
             Enjoy international shipping rates and pre-pay duties & taxes at checkout.
           </p>
 
           {/* BREADCRUMB */}
-          <p className="mb-4 text-[14px] text-[var(--muted)] md:text-base">
+          <p className="mb-4 text-base text-[var(--muted)] md:text-base">
             Home / Shop / Bag
           </p>
 
@@ -99,21 +103,21 @@ export default function MyBagPage() {
             <div>
               {/* DESKTOP TABLE HEADER */}
               <div className="hidden border-b border-[var(--line)] pb-4 md:grid md:grid-cols-[6rem_1fr_96px_120px_140px] md:items-center md:gap-3">
-                <span className="text-sm font-bold uppercase tracking-wide">
+                <span className="text-base font-bold uppercase tracking-wide">
                   Item
                 </span>
 
                 <span />
 
-                <span className="text-sm font-bold uppercase tracking-wide">
+                <span className="text-base font-bold uppercase tracking-wide">
                   Size
                 </span>
 
-                <span className="text-sm font-bold uppercase tracking-wide">
+                <span className="text-base font-bold uppercase tracking-wide">
                   Color
                 </span>
 
-                <span className="text-sm font-bold uppercase tracking-wide">
+                <span className="text-base font-bold uppercase tracking-wide">
                   Qty
                 </span>
               </div>
@@ -178,7 +182,7 @@ export default function MyBagPage() {
                         PRODUCT INFORMATION
                     ========================== */}
                     <div className="flex min-w-0 flex-col py-1 md:py-0">
-                      <p className="text-[12px] uppercase tracking-wider text-[#564345] md:text-sm">
+                      <p className="text-base uppercase tracking-wider text-[#564345] md:text-base">
                         {item.product.category === 'two-pieces'
                           ? 'Two-Piece'
                           : item.product.category === 'bikinis'
@@ -192,17 +196,17 @@ export default function MyBagPage() {
 
                       <Link
                         to={`/product/${item.product.id}`}
-                        className="mt-1 text-[14px] font-bold uppercase tracking-wide hover:underline md:text-base"
+                        className="mt-1 text-base font-bold uppercase tracking-wide hover:underline md:text-base"
                       >
                         {item.product.name}
                       </Link>
 
-                      <p className="mt-1 text-[14px] text-[#564345] md:text-base">
+                      <p className="mt-1 text-base text-[#564345] md:text-base">
                         {formatPrice(item.product.price)}
                       </p>
 
                       {/* MOBILE SIZE + COLOR */}
-                      <div className="mt-2 space-y-1 text-[14px] text-[#564345] md:hidden">
+                      <div className="mt-2 space-y-1 text-base text-[#564345] md:hidden">
                         <p>
                           Size{' '}
                           <span className="font-bold text-[var(--ink)]">
@@ -228,7 +232,7 @@ export default function MyBagPage() {
                           mt-2
                           w-fit
                           text-left
-                          text-[12px]
+                          text-base
                           font-bold
                           uppercase
                           tracking-wide
@@ -243,7 +247,7 @@ export default function MyBagPage() {
 
                       {/* MOBILE QUANTITY */}
                       <div className="mt-auto pt-3 md:hidden">
-                        <div className="flex h-[34px] w-full items-center justify-between border border-[#DED3D4] text-[14px] text-[#564345]">
+                        <div className="flex h-[34px] w-full items-center justify-between border border-[#DED3D4] text-base text-[#564345]">
                           <button
                             type="button"
                             onClick={() => {
@@ -303,14 +307,14 @@ export default function MyBagPage() {
                     {/* =========================
                         DESKTOP SIZE
                     ========================== */}
-                    <span className="hidden text-sm text-[#564345] md:block">
+                    <span className="hidden text-base text-[#564345] md:block">
                       {item.selectedSize}
                     </span>
 
                     {/* =========================
                         DESKTOP COLOR
                     ========================== */}
-                    <span className="hidden text-sm text-[#564345] md:block">
+                    <span className="hidden text-base text-[#564345] md:block">
                       {item.selectedColor}
                     </span>
 
@@ -351,7 +355,7 @@ export default function MyBagPage() {
                           )}
                         </button>
 
-                        <span className="text-sm">
+                        <span className="text-base">
                           {item.quantity}
                         </span>
 
@@ -378,7 +382,7 @@ export default function MyBagPage() {
                         onClick={() =>
                           toggleWishlist(item.product)
                         }
-                        className="text-sm font-bold uppercase tracking-wide text-[#564345] underline underline-offset-2"
+                        className="text-base font-bold uppercase tracking-wide text-[#564345] underline underline-offset-2"
                       >
                         Move to wishlist
                       </button>
@@ -399,7 +403,7 @@ export default function MyBagPage() {
                   onClick={() =>
                     setPromoOpen((open) => !open)
                   }
-                  className="flex h-[28px] w-full items-center justify-between text-[14px] font-bold text-[#564345]"
+                  className="flex h-[28px] w-full items-center justify-between text-base font-bold text-[#564345]"
                 >
                   <span>Promo Code or Gift Card?</span>
 
@@ -416,12 +420,12 @@ export default function MyBagPage() {
                     <input
                       type="text"
                       placeholder="Enter code"
-                      className="h-10 min-w-0 flex-1 border border-[#DED3D4] bg-white px-3 text-sm outline-none"
+                      className="h-10 min-w-0 flex-1 border border-[#DED3D4] bg-white px-3 text-base outline-none"
                     />
 
                     <button
                       type="button"
-                      className="h-10 bg-[var(--ink)] px-5 text-sm font-bold text-white"
+                      className="h-10 bg-[var(--ink)] px-5 text-base font-bold text-white"
                     >
                       APPLY
                     </button>
@@ -431,7 +435,7 @@ export default function MyBagPage() {
 
               {/* TOTAL */}
               <div className="mt-10">
-                <div className="flex h-10 items-center justify-between bg-[#EFE7E7] px-[30px] text-[14px] text-[#564345]">
+                <div className="flex h-10 items-center justify-between bg-[#EFE7E7] px-[30px] text-base text-[#564345]">
                   <span>TOTAL</span>
 
                   <span>{formatPrice(total)}</span>
@@ -448,7 +452,7 @@ export default function MyBagPage() {
                     items-center
                     justify-center
                     bg-[#412B2D]
-                    text-[14px]
+                    text-base
                     font-bold
                     tracking-widest
                     text-[#FFFCFC]
@@ -467,7 +471,7 @@ export default function MyBagPage() {
                   onClick={() =>
                     setTermsOpen((open) => !open)
                   }
-                  className="flex h-[45px] w-full items-center justify-between border-b border-[#EFE7E7] text-[14px] font-bold text-[#564345]"
+                  className="flex h-[45px] w-full items-center justify-between border-b border-[#EFE7E7] text-base font-bold text-[#564345]"
                 >
                   <span>Terms & Conditions</span>
 
@@ -480,7 +484,7 @@ export default function MyBagPage() {
                 </button>
 
                 {termsOpen && (
-                  <div className="border-b border-[#EFE7E7] px-1 py-4 text-[13px] leading-5 text-[#564345]">
+                  <div className="border-b border-[#EFE7E7] px-1 py-4 text-base leading-5 text-[#564345]">
                     Please review our terms and conditions before completing
                     your purchase.
                   </div>
@@ -494,7 +498,7 @@ export default function MyBagPage() {
                   onClick={() =>
                     setDeliveryOpen((open) => !open)
                   }
-                  className="flex h-[45px] w-full items-center justify-between border-b border-[#EFE7E7] text-[14px] font-bold text-[#564345]"
+                  className="flex h-[45px] w-full items-center justify-between border-b border-[#EFE7E7] text-base font-bold text-[#564345]"
                 >
                   <span>Delivery</span>
 
@@ -507,7 +511,7 @@ export default function MyBagPage() {
                 </button>
 
                 {deliveryOpen && (
-                  <div className="border-b border-[#EFE7E7] px-1 py-4 text-[13px] leading-5 text-[#564345]">
+                  <div className="border-b border-[#EFE7E7] px-1 py-4 text-base leading-5 text-[#564345]">
                     {formatDeliveryRange()}
                   </div>
                 )}
