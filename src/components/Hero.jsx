@@ -37,42 +37,11 @@ const SELECTED_SCALE_Y = 1.0;
 // model's top edge (the head) above the visible viewport — it renders
 // behind the fixed navbar and behind the name text (which sits at a
 // lower z-index than the model), so both the head and the name
-// effectively disappear. If Lara wants it bigger, it's safer to grow
-// NAME_NAVBAR_GAP_PX below (gives the head more room to rise into the
-// text before it reaches the navbar) than to push this much higher.
-const SELECTED_SCALE_PHONE = 1.1;
-
-// TIP — HEAD-THROUGH-TEXT OVERLAP (mobile): the model is pinned to the
-// row's bottom edge and grows UPWARD as SELECTED_SCALE_PHONE increases
-// (transformOrigin is 50% 100%), so a bigger scale = the head reaches
-// higher above the row. The row's top edge sits this many px below the
-// navbar; the name text starts NAME_TOP_OFFSET_PX into that gap. Both
-// exist so the head has room to rise into the middle of the text
-// without reaching all the way up into the navbar's own space (the
-// navbar is z-50, above the model, so anything that pokes up that far
-// hides behind it instead of overlapping the text).
-//   NAME_NAVBAR_GAP_PX  — total gap between navbar bottom and row top.
-//   NAME_TOP_OFFSET_PX  — how far into that gap the text itself starts
-//                         (smaller = text sits higher / closer to navbar).
-// These two are a starting estimate, not a measured value — check
-// against Lara's real photos and nudge them (and SELECTED_SCALE_PHONE)
-// together: raise NAME_NAVBAR_GAP_PX and/or SELECTED_SCALE_PHONE for
-// more overlap, lower them for less.
-const NAME_NAVBAR_GAP_PX = 60;
-const NAME_TOP_OFFSET_PX = 16;
-
-// TIP — WHY THE PRICE ROW KEPT DISAPPEARING (mobile): it's the space
-// reserved below the model row for the podium + price block to exist
-// in. Too small an estimate here is exactly what caused the price row
-// to render below the visible screen (needing a scroll) even though
-// the earlier fix reserved SOME space — the real rendered content was
-// taller than that estimate. This is deliberately generous (with room
-// to spare, not a tight fit) so it's visible with a bit of margin
-// above the actual screen edge rather than being right on the edge or
-// still slightly short. If it still doesn't fit on a real device,
-// raise this further — a bigger row is worth trading for a price row
-// that's reliably on screen.
-const MOBILE_BOTTOM_RESERVE_PX = 170;
+// effectively disappear. If Lara wants it bigger, it's safer to trim
+// --hero-navbar-offset/--hero-price-offset in index.css (grows the row
+// itself, which the layout already accounts for) than to push this much
+// higher.
+const SELECTED_SCALE_PHONE = 1.15;
 
 /*
   TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
@@ -240,18 +209,22 @@ function useIsWide() {
    phones where 27rem didn't happen to fill the screen. Instead the
    row now claims 100% of the *dynamic* viewport height (dvh accounts
    for the mobile browser's address bar, unlike plain vh) minus the
-   navbar-and-gap above it (--hero-navbar-offset + NAME_NAVBAR_GAP_PX)
-   and MOBILE_BOTTOM_RESERVE_PX below it — so there is never dead
-   space, and the price row has real room to actually be visible.
+   navbar-and-gap above it and the podium+price block below it — so
+   there is never dead space, on any phone.
 
-   --hero-navbar-offset is set once in index.css's :root (Navbar's
-   h-[66px] + 1px border = 67px) since it's shared with the section's
-   own padding-top below. NAME_NAVBAR_GAP_PX and
-   MOBILE_BOTTOM_RESERVE_PX are defined above — keep all three in sync
-   with the section's max-sm:pt/pb if you change any of them.
+   The two pieces this is built from are set once in index.css's
+   :root (see the matching TIP there):
+     --hero-navbar-offset: 67px   // Navbar's h-[66px] + 1px border
+     --hero-price-offset:  140px  // podium/price block's height
+
+   --hero-navbar-offset is ALSO what this section's own
+   `max-sm:pt-[101px]` below is built from (67px navbar + 34px gap
+   to the name) — the fallback numbers in the two var() calls here
+   must stay in sync with index.css and with that padding value if
+   Navbar.jsx's height, or the gap, ever changes.
 */
 const IMAGE_HEIGHT_SELECTED =
-  `h-[clamp(25rem,34vw,42rem)] max-sm:h-[calc(100dvh-var(--hero-navbar-offset,67px)-${NAME_NAVBAR_GAP_PX}px-${MOBILE_BOTTOM_RESERVE_PX}px)]`;
+  "h-[clamp(25rem,34vw,42rem)] max-sm:h-[calc(100dvh-var(--hero-navbar-offset,67px)-34px-var(--hero-price-offset,140px))]";
 
 /* ============================================================
    CAROUSEL MATH
@@ -1018,17 +991,17 @@ function HeroCarousel({ models }) {
       id="hero"
       data-hero="true"
       data-no-rise="true"
-      className={`
+      className="
         overflow-x-clip
         pt-16
         md:pt-20
         lg:pt-24
-        max-sm:pt-[calc(var(--hero-navbar-offset,67px)+${NAME_NAVBAR_GAP_PX}px)]
+        max-sm:pt-[calc(var(--hero-navbar-offset,67px)+34px)]
         pb-24
         md:pb-32
-        max-sm:pb-[${MOBILE_BOTTOM_RESERVE_PX}px]
+        max-sm:pb-[var(--hero-price-offset,140px)]
         text-center
-      `}
+      "
       /* TIP — MOBILE TOP OFFSET: on desktop, pt-16/20/24 does double
          duty — it's what pushes content below the fixed Navbar
          (position: fixed, so nothing pushes it out of the way
@@ -1083,34 +1056,33 @@ function HeroCarousel({ models }) {
           {/* ==============================================
               MODEL NAME — fades out, then the new one fades in
 
-              TIP — PHONES: the name is anchored near the row's TOP edge
-              (`max-sm:top-[${NAME_TOP_OFFSET_PX}px]`, a small drop into
-              the NAME_NAVBAR_GAP_PX gap under the navbar) rather than
-              the row's bottom, so its position stays stable regardless
-              of the row's dvh-based height. The model is pinned to the
-              row's bottom edge and grows UPWARD as SELECTED_SCALE_PHONE
-              increases, so the head rises into this same gap — that's
-              the overlap that puts the head through the text. All
-              three (SELECTED_SCALE_PHONE, NAME_NAVBAR_GAP_PX,
-              NAME_TOP_OFFSET_PX, defined near the top of this file)
-              are a starting estimate — check against Lara's real
-              photos and nudge them together; there's no way to know
-              exactly where a given photo's head sits without seeing it
-              rendered.
+              TIP — PHONES: the name used to be anchored to the row's
+              BOTTOM edge (a % of a fixed row height), which meant it
+              moved every time the row height changed. Now that the row
+              height is dynamic (dvh-based, see IMAGE_HEIGHT_SELECTED),
+              the name is anchored to the row's TOP edge instead
+              (`max-sm:top-0`), which sits a fixed 34px under the navbar
+              (the section's `max-sm:pt-[...]` covers navbar height +
+              that 34px gap). That keeps it in a stable spot regardless
+              of screen height, and is what makes the model's (now
+              bigger) head land through the middle of the letters —
+              check against the real photos and nudge
+              SELECTED_SCALE_PHONE or the --hero-price-offset variable
+              if a particular model's head sits a bit high or low.
               ============================================== */}
 
           <div
-            className={`
+            className="
               pointer-events-none
               absolute
               left-1/2
               -translate-x-1/2
               bottom-[87.9%]
               max-sm:bottom-auto
-              max-sm:top-[${NAME_TOP_OFFSET_PX}px]
-              z-20
+              max-sm:top-0
+              z-0
               max-sm:z-20
-            `}
+            "
           >
             {/* TIP: model images are z-10 (z-12 for the selected one) —
                 bumped to z-20 on mobile so the name always paints on top
