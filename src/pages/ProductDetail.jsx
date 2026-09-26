@@ -405,10 +405,10 @@ function Reviews() {
       <div className="mt-5 flex items-center gap-3">
         <strong className="text-base font-medium">4.5</strong>
         {renderStars(4, 14)}
-        <span className="sm:block text-[10px] text-[var(--muted)]">
+      </div>
+        <span className="sm:block text-[14px] md:text-[18px] text-[var(--muted)]">
           Based on 18 reviews
         </span>
-      </div>
 
       <div className="mt-8">
         {/* TIP — COLLAPSIBLE SUMMARY: added a toggle (per the Figma's
@@ -422,7 +422,7 @@ function Reviews() {
           aria-expanded={summaryExpanded}
           className="flex w-full items-center justify-between gap-2 text-left"
         >
-          <h3 className="text-base font-bold">Reviews Summary</h3>
+          <h3 className="text-base md:text-[20px] font-bold">Reviews Summary</h3>
           {summaryExpanded ? (
             <ChevronUp size={20} className="shrink-0" />
           ) : (
