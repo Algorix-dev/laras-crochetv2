@@ -28,8 +28,8 @@ const SUPPORT_SCALE_Y = 1.0;
 /*
   The selected model is intentionally larger.
 */
-const SELECTED_SCALE_X = 1.0;
-const SELECTED_SCALE_Y = 1.0;
+const SELECTED_SCALE_X = 1.22;
+const SELECTED_SCALE_Y = 1.22;
 
 /*
   TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
@@ -238,11 +238,11 @@ function getSlotLook(offset, half) {
 
     // Center model slightly bigger on mobile
     scaleX: isCenter
-      ? (isPhone ? 1.12 : SELECTED_SCALE_X)
+      ? (isPhone ? 1.22 : SELECTED_SCALE_X)
       : SUPPORT_SCALE_X * supportRatio(),
 
     scaleY: isCenter
-      ? (isPhone ? 1.12 : SELECTED_SCALE_Y)
+      ? (isPhone ? 1.22 : SELECTED_SCALE_Y)
       : SUPPORT_SCALE_Y * supportRatio(),
 
     // ONLY the side models move upward on mobile
