@@ -1018,11 +1018,6 @@ export default function ProductDetail() {
           </p>
         </div>
 
-        <RecommendedProducts
-          category={product.category}
-          excludeId={product.id}
-          className="mt-20 px-5 md:px-8 lg:px-[15.83%]"
-        />
 
         {/* ============================
             REVIEWS
@@ -1032,6 +1027,11 @@ export default function ProductDetail() {
         {/* ============================
             RECOMMENDATIONS
             ============================ */}
+            <RecommendedProducts
+              category={product.category}
+              excludeId={product.id}
+              className="mt-20 px-5 md:px-8 lg:px-[15.83%]"
+            />
       </main>
 
       <Footer />
