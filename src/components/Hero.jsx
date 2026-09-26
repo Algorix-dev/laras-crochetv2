@@ -686,7 +686,7 @@ function HeroModel({
       }}
       className="
         absolute
-        bottom-0
+        bottom-[2%]
         max-sm:bottom-[-7%]
         left-1/2
         flex
@@ -1074,7 +1074,7 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2 sm:mb-4
                 
-              bottom-[-12%]
+              max-sm:bottom-[-12%]
 
               z-0
 
