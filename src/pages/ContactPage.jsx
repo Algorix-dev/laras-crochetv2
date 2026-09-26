@@ -248,7 +248,7 @@ function SuccessCard({
 }) {
   return (
     <div className="text-center max-w-md mx-auto">
-      <div className="bg-[#FAFAFA] border-none border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 md:px-15 md:py-10 lg:px-15 lg:py-10 md:border">
+      <div className="bg-[#FAFAFA] border-none border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 lg:px-15 lg:py-10 lg:border">
         
         <h2 className="font-display text-2xl text-[var(--ink)] font-bold mb-1">
           {heading}
