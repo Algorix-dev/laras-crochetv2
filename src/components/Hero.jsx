@@ -1338,7 +1338,7 @@ function HeroCarousel({ models }) {
               z-10
 
               mt-16 md:mt-18
-              max-sm:mt-16
+              max-sm:mt-14
 
               w-[clamp(11rem,18.75vw,22.5rem)]
               max-sm:w-full
