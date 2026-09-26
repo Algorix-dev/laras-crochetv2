@@ -150,11 +150,11 @@ export default function AddressesPage() {
                     </p>
                     <div className="mt-3 flex items-center justify-between">
                       {a.isDefault && (
-                        <span className="flex items-center gap-1 text-base">
+                        <span className="flex items-center gap-1 text-sm font-semibold">
                           <input type="checkbox" checked readOnly /> Default
                         </span>
                       )}
-                      <div className="ml-auto flex gap-3 text-base">
+                      <div className="ml-auto flex gap-3 text-base font-semibold">
                         <button onClick={() => startEdit(a)} className="underline hover:text-[var(--maroon)]">
                           Edit
                         </button>
@@ -268,7 +268,7 @@ export default function AddressesPage() {
                   Set as default address
                 </label>
 
-                <div className="mt-5 flex sm:flex-col gap-3">
+                <div className="mt-5 flex flex-col sm:flex-row gap-3">
                   <button
                     type="submit"
                     disabled={saving}

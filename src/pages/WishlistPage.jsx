@@ -65,7 +65,7 @@ export default function WishlistPage() {
             "Account > Wishlist" sub-view WITH the sidebar on desktop
             too, that'd need to be a separate route from this one. */}
         <div className="md:hidden mb-6">
-          <p className="mb-6 text-xs text-[var(--muted)]">
+          <p className="mb-6 text-base text-[var(--muted)]">
             <Link to="/" className="hover:underline">Home</Link> / Account
           </p>
           <AccountSidebar active="wishlist" />

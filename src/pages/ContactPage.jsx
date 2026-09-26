@@ -146,7 +146,7 @@ function PrimaryButton({ children, className = "", pinned = true, ...props }) {
   return (
     <button
       {...props}
-      className={`${pin} w-full h-11 flex items-center justify-center border border-[var(--maroon)] hover:bg-[#412B2D] text-white text-base font-bold uppercase tracking-widest px-4 sm:h-auto sm:py-3.5 md:py-4 transition-colors bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`${pin} w-full flex items-center justify-center border border-[var(--maroon)] hover:bg-[#412B2D] text-white text-base font-bold uppercase tracking-widest px-4 py-3.5 md:py-4 transition-colors bg-[var(--maroon)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
     >
       {children}
     </button>
@@ -210,7 +210,7 @@ function StepShell({
       <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040] max-md:border-0 max-md:shadow-none max-md:p-0 max-md:pb-24">
         {showHeader && (
           <div className="text-center mb-6">
-            <p className="text-base tracking-[0.2em] font-semibold text-[var(--muted)] uppercase mb-2">
+            <p className="text-xs tracking-[0.2em] font-normal text-[var(--muted)] uppercase mb-2">
               Step {stepNumber} of {totalSteps}
             </p>
             <div

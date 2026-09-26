@@ -244,14 +244,22 @@ export default function ShopPage() {
                     hover:bg-[var(--maroon)]
                     cursor-pointer
 
-                    md:h-auto
+                    md:h-[44px]
                     md:w-auto
-                    md:py-3.5
-                    md:text-xs
-                    md:tracking-widest
+                    md:px-12
+                    md:py-3
+                    md:text-sm
+                    md:tracking-wide
+
+                    lg:h-[46px]
+                    lg:w-[320px]
+                    lg:px-[104px]
+                    lg:py-[11px]
+                    lg:text-base
+                    lg:tracking-normal
                   "
                 >
-                  ADD TO BAG
+                  View More Products
                 </button>
               </div>
             )}

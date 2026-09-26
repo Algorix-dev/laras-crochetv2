@@ -514,8 +514,8 @@ function Reviews() {
 
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <p className="sm:text-[14px] text-xl font-bold">{review.name}</p>
-                <span className="sm:text-[14px] flex items-center gap-1 text-xl text-[var(--ink-warm)]">
+                <p className="text-[14px] font-bold">{review.name}</p>
+                <span className="flex items-center gap-1 text-[14px] text-[var(--ink-warm)]">
                   Verified Buyer
                   <Check size={17} strokeWidth={3} />
                 </span>
@@ -523,7 +523,7 @@ function Reviews() {
 
               <div className="mt-5">{renderStars(review.rating, 24)}</div>
 
-              <h3 className="sm:text-[14px] mt-5 text-xl font-bold">{review.title}</h3>
+              <h3 className="mt-5 text-[14px] font-bold">{review.title}</h3>
 
               {review.photo && (
                 <ZoomImage
@@ -539,7 +539,7 @@ function Reviews() {
                 />
               )}
 
-              <p className="sm:text-[14px] mt-6 text-base leading-6 text-[var(--muted)]">
+              <p className="mt-6 text-[14px] leading-6 text-[var(--muted)]">
                 {review.text}
               </p>
             </div>
