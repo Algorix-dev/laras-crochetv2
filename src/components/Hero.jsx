@@ -687,7 +687,7 @@ function HeroModel({
       className="
         absolute
         bottom-0
-        max-sm:bottom-[1%]
+        max-sm:bottom-[6%]
         left-1/2
         flex
         items-end
