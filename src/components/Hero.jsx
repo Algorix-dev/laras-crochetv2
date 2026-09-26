@@ -51,7 +51,7 @@ const PAGE_CONTAINER_PADDING =
 
    0.90 = target visible model height as a fraction of the image stage.
 */
-const TARGET_VISIBLE_HEIGHT = 0.9;
+const TARGET_VISIBLE_HEIGHT = 1.5;
 
 const MIN_VISUAL_SCALE = 0.75;
 const MAX_VISUAL_SCALE = 1.6;
