@@ -963,8 +963,8 @@ function HeroCarousel({ models }) {
         pt-16
         md:pt-20
         lg:pt-24
-        pb-24
-        md:pb-32
+        pb-28
+        md:pb-36
         text-center
       "
       style={{
