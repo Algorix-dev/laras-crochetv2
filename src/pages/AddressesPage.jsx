@@ -117,7 +117,7 @@ export default function AddressesPage() {
         setEditingId(null);
         setFormOpen(true);
       }}
-      className="w-full block sm:w-fi sm:inline-block bg-[var(--ink)] px-5 py-3 text-base font-semibold uppercase tracking-wide text-white hover:bg-[var(--maroon)]"
+      className="w-full block sm:w-fit sm:inline-block bg-[var(--ink)] px-5 py-3 text-base font-semibold uppercase tracking-wide text-white hover:bg-[var(--maroon)]"
     >
       {addresses.length > 0 ? 'Add a New Address' : 'Add Address'}
     </button>
