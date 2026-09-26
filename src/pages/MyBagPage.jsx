@@ -445,7 +445,7 @@ export default function MyBagPage() {
                 <Link
                   to="/checkout"
                   className="
-                    mt-4
+                    mt-2
                     flex
                     h-[42px]
                     w-full
