@@ -687,7 +687,7 @@ function HeroModel({
       className="
         absolute
         bottom-0
-        max-sm:bottom-[-5%]
+        max-sm:bottom-[-7%]
         left-1/2
         flex
         items-end
@@ -1047,6 +1047,7 @@ function HeroCarousel({ models }) {
                   tracking-[-0.07em]
 
                   text-[clamp(3rem,5vw,6rem)]
+                  max-sm:text-[3.6rem]
                   leading-[1.05]
 
                   text-[var(--maroon-dark)]
@@ -1073,7 +1074,7 @@ function HeroCarousel({ models }) {
               left-1/2
               -translate-x-1/2 sm:mb-4
                 
-              bottom-[-10%]
+              bottom-[-12%]
 
               z-0
 
@@ -1337,7 +1338,7 @@ function HeroCarousel({ models }) {
               z-10
 
               mt-16 md:mt-18
-              max-sm:mt-12
+              max-sm:mt-16
 
               w-[clamp(11rem,18.75vw,22.5rem)]
               max-sm:w-full
