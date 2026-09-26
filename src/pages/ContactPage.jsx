@@ -139,7 +139,7 @@ function PillButton({ active, children, className = "", ...props }) {
 // TIP: on phones the wizard is one unscrollable screen (Figma), so the main
 // button is pinned to the bottom edge, full width. Pass `pinned={false}` for
 // a button that lives inside a pop-up and should stay where it is.
-function PrimaryButton({ children, className = "", pinned = true, ...props }) {
+function PrimaryButton({ children, className = "", pinned = false, ...props }) {
   const pin = pinned
     ? "max-md:fixed max-md:bottom-5 max-md:left-5 max-md:right-5 max-md:z-30 max-md:w-auto max-md:max-w-none max-md:mx-0 max-md:mt-0"
     : "";
@@ -207,7 +207,7 @@ function StepShell({
           </button>
         )}
       </div>
-      <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040] max-md:border-0 max-md:shadow-none max-md:p-0 max-md:pb-24">
+      <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040] max-md:border-0 max-md:shadow-none max-md:p-0">
         {showHeader && (
           <div className="text-center mb-6">
             <p className="text-xs tracking-[0.2em] font-normal text-[var(--muted)] uppercase mb-2">
@@ -912,57 +912,128 @@ export default function ContactPage() {
                 {/* ============ ENQUIRY: order status → tracker (self-serve, no email) ============ */}
                 {phase === "os-tracker" && (
                   <div>
-                    <h2 className="text-[16px] font-display text-2xl text-center text-[var(--ink)] mb-8 font-bold">
+                    <h2 className="font-display text-2xl text-left md:text-center text-[var(--ink)] mb-8 font-bold">
                       Here is the status of your order
                     </h2>
-                    <div className="flex items-center justify-between mb-10 px-1">
-                      {ORDER_STATUSES.map((status, idx) => (
-                        <div
-                          key={status}
-                          className="sm:flex-col flex items-center flex-1 last:flex-none"
-                        >
-                          <div className="flex flex-col items-center gap-2 relative">
-                            <span className="text-[14px] text-[var(--muted)] uppercase tracking-wide absolute -top-5 whitespace-nowrap">
-                              {status}
-                            </span>
-                            <div
-                              className={`w-4 h-4 rounded-full ${
-                                idx === orderStatusIndex
-                                  ? "bg-[#10B981] ring-4 ring-[#10B981]/25"
-                                  : idx < orderStatusIndex
-                                    ? "bg-[var(--line-2)]"
-                                    : "bg-[var(--line)]"
-                              }`}
-                            />
+
+                    {/* ---- MOBILE: vertical stepper, description only under the current step ---- */}
+                    <div className="md:hidden">
+                      {ORDER_STATUSES.map((status, idx) => {
+                        const isCurrent = idx === orderStatusIndex;
+                        const isPast = idx < orderStatusIndex;
+                        const isLast = idx === ORDER_STATUSES.length - 1;
+                        return (
+                          <div key={status} className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                              <span
+                                className={`h-3 w-3 shrink-0 rounded-full ${
+                                  isCurrent
+                                    ? "bg-[#10B981] ring-4 ring-[#10B981]/25"
+                                    : isPast
+                                      ? "bg-[var(--line-2)]"
+                                      : "bg-[var(--line)]"
+                                }`}
+                              />
+                              {!isLast && (
+                                <div
+                                  className={`w-px min-h-[36px] flex-1 ${
+                                    isPast ? "bg-[var(--line-2)]" : "bg-[var(--line)]"
+                                  }`}
+                                />
+                              )}
+                            </div>
+                            <div className={isLast ? "pb-1" : "pb-6"}>
+                              <p
+                                className={`text-sm uppercase tracking-wide ${
+                                  isCurrent
+                                    ? "font-bold text-[var(--ink)]"
+                                    : "text-[var(--muted)]"
+                                }`}
+                              >
+                                {status}
+                              </p>
+                              {isCurrent && (
+                                <div className="mt-2 text-base text-[#404040] leading-relaxed">
+                                  <p>
+                                    Your order (#{formData.orderRef}) has been received on{" "}
+                                    {today} and{" "}
+                                    {currentStatus === "Order received" &&
+                                      "is being reviewed."}
+                                    {currentStatus === "In production" &&
+                                      "is currently in production."}
+                                    {currentStatus === "Packaging" &&
+                                      "is currently in packaging undergoing proper inspection and quality check."}
+                                    {currentStatus === "Delivery" &&
+                                      "is finally on its way to you!"}
+                                  </p>
+                                  <p className="mt-3">
+                                    Thank you for choosing Lara&apos;s Crochet.
+                                  </p>
+                                  <p className="mt-3">
+                                    Yours in love,
+                                    <br />
+                                    <span className="font-logo text-base">Lara</span>
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          {idx < ORDER_STATUSES.length - 1 && (
-                            <div
-                              className={`flex-1 h-px mx-2 ${idx < orderStatusIndex ? "bg-[var(--line-2)]" : "bg-[var(--line)]"}`}
-                            />
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
-                    <p className="sm:text-[14px] text-base text-[#404040] leading-relaxed">
-                      Your order (#{formData.orderRef}) has been received on{" "}
-                      {today} and{" "}
-                      {currentStatus === "Order received" &&
-                        "is being reviewed."}
-                      {currentStatus === "In production" &&
-                        "is currently in production."}
-                      {currentStatus === "Packaging" &&
-                        "is currently in packaging undergoing proper inspection and quality check."}
-                      {currentStatus === "Delivery" &&
-                        "is finally on its way to you!"}
-                    </p>
-                    <p className="sm:text-[14px] text-base text-[#404040] mt-4">
-                      Thank you for choosing Lara&apos;s Crochet.
-                    </p>
-                    <p className="sm:text-[14px] text-base text-[#404040] mt-4">
-                      Yours in love,
-                      <br />
-                      <span className="font-logo text-base">Lara</span>
-                    </p>
+
+                    {/* ---- DESKTOP: horizontal stepper, description below the whole row ---- */}
+                    <div className="hidden md:block">
+                      <div className="flex items-center justify-between mb-10 px-1">
+                        {ORDER_STATUSES.map((status, idx) => (
+                          <div
+                            key={status}
+                            className="flex items-center flex-1 last:flex-none"
+                          >
+                            <div className="flex flex-col items-center gap-2 relative">
+                              <span className="text-[14px] text-[var(--muted)] uppercase tracking-wide absolute -top-5 whitespace-nowrap">
+                                {status}
+                              </span>
+                              <div
+                                className={`w-4 h-4 rounded-full ${
+                                  idx === orderStatusIndex
+                                    ? "bg-[#10B981] ring-4 ring-[#10B981]/25"
+                                    : idx < orderStatusIndex
+                                      ? "bg-[var(--line-2)]"
+                                      : "bg-[var(--line)]"
+                                }`}
+                              />
+                            </div>
+                            {idx < ORDER_STATUSES.length - 1 && (
+                              <div
+                                className={`flex-1 h-px mx-2 ${idx < orderStatusIndex ? "bg-[var(--line-2)]" : "bg-[var(--line)]"}`}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-base text-[#404040] leading-relaxed">
+                        Your order (#{formData.orderRef}) has been received on{" "}
+                        {today} and{" "}
+                        {currentStatus === "Order received" &&
+                          "is being reviewed."}
+                        {currentStatus === "In production" &&
+                          "is currently in production."}
+                        {currentStatus === "Packaging" &&
+                          "is currently in packaging undergoing proper inspection and quality check."}
+                        {currentStatus === "Delivery" &&
+                          "is finally on its way to you!"}
+                      </p>
+                      <p className="text-base text-[#404040] mt-4">
+                        Thank you for choosing Lara&apos;s Crochet.
+                      </p>
+                      <p className="text-base text-[#404040] mt-4">
+                        Yours in love,
+                        <br />
+                        <span className="font-logo text-base">Lara</span>
+                      </p>
+                    </div>
+
                     <TerminalActions
                       primaryTo="/shop"
                       primaryLabel="Back to shop"

@@ -102,7 +102,7 @@ export default function MyBagPage() {
             ========================== */}
             <div>
               {/* DESKTOP TABLE HEADER */}
-              <div className="hidden border-b border-[var(--line)] pb-4 md:grid md:grid-cols-[6rem_1fr_96px_120px_140px] md:items-center md:gap-3">
+              <div className="hidden border-b border-[var(--line)] pb-4 md:grid md:grid-cols-[6rem_1fr_96px_120px_260px] md:items-center md:gap-3">
                 <span className="text-base font-bold uppercase tracking-wide">
                   Item
                 </span>
@@ -136,7 +136,7 @@ export default function MyBagPage() {
                       border-[#D4D4D4]
 
                       md:min-h-0
-                      md:grid-cols-[6rem_1fr_96px_120px_140px]
+                      md:grid-cols-[6rem_1fr_96px_120px_260px]
                       md:items-center
                       md:gap-3
                       md:py-5
@@ -321,8 +321,8 @@ export default function MyBagPage() {
                     {/* =========================
                         DESKTOP QUANTITY
                     ========================== */}
-                    <div className="hidden md:flex md:flex-col md:items-start md:gap-2">
-                      <div className="flex w-full items-center justify-between border border-[var(--line)]">
+                    <div className="hidden md:flex md:flex-row md:items-center md:gap-3">
+                      <div className="flex w-[104px] shrink-0 items-center justify-between border border-[var(--line)]">
                         <button
                           type="button"
                           onClick={() => {
@@ -382,7 +382,7 @@ export default function MyBagPage() {
                         onClick={() =>
                           toggleWishlist(item.product)
                         }
-                        className="text-base font-bold uppercase tracking-wide text-[#564345] underline underline-offset-2"
+                        className="whitespace-nowrap text-base font-bold uppercase tracking-wide text-[#564345] underline underline-offset-2"
                       >
                         Move to wishlist
                       </button>

@@ -67,7 +67,7 @@ export default function ShopPage() {
           <div className="flex flex-col gap-5 pt-5 md:flex-row md:items-start md:justify-between md:gap-4 md:pt-0">
 
             {/* Title + description */}
-            <div className="flex flex-col gap-8 md:gap-2">
+            <div className="flex flex-col gap-8 md:order-1 md:gap-2">
               <div>
                 <h1 className="text-[24px] font-bold leading-[32px] tracking-[-0.48px] text-[#564345] md:text-[36px] md:leading-[1.05] md:tracking-[-2%]">
                   SHOP LARA'S CROCHET
@@ -97,7 +97,7 @@ export default function ShopPage() {
             </div>
 
             {/* Search */}
-            <label className="relative block w-full md:w-161.5">
+            <label className="relative order-first block w-full md:order-2 md:w-161.5">
               <span className="sr-only">
                 Search products
               </span>

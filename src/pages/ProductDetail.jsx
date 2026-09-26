@@ -169,7 +169,7 @@ function ColorSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} color`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[24px] w-[30px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
+      className={`h-[30px] w-[31px] shrink-0 rounded-none border-2 cursor-pointer transition-all md:h-[49px] md:w-[61px] ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -190,7 +190,7 @@ function ShadeSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} shade`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[24px] w-[30px] shrink-0 rounded-none border-2 cursor-pointer transition-all ${
+      className={`h-[30px] w-[31px] shrink-0 rounded-none border-2 cursor-pointer transition-all md:h-[49px] md:w-[61px] ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -978,7 +978,7 @@ export default function ProductDetail() {
                 its growth. */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 block w-full whitespace-nowrap bg-[#564345] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[322px]"
+              className="mt-8 flex w-full items-center justify-center whitespace-nowrap bg-[#564345] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[322px]"
             >
               Add to Bag
             </button>
@@ -998,7 +998,7 @@ export default function ProductDetail() {
             className here ever became dynamic, React would overwrite the
             .rv/.on classes the engine adds. */}
         <div className="mt-16 mb-12 px-5 md:px-8 lg:px-[15.83%]" data-auto-rise="true">
-          <div className="flex sm:justify-between gap-6 border-b border-[var(--line)]">
+          <div className="flex gap-6 md:gap-[30px] border-b border-[var(--line)]">
             {Object.keys(tabs).map((tabName) => (
               <button
                 key={tabName}
