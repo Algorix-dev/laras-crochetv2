@@ -29,41 +29,19 @@ const SUPPORT_SCALE_Y = 1.0;
 const SELECTED_SCALE_X = 1.0;
 const SELECTED_SCALE_Y = 1.0;
 
-// TIP — MOBILE CENTER MODEL SIZE: used for BOTH scaleX and scaleY on phones
-// so the model grows bigger while staying proportional (never stretched).
-// The row's height is now flex-based (grows to fill whatever space is
-// left, see IMAGE_HEIGHT_SELECTED below), and the section has
-// max-sm:overflow-hidden as a safety net — so an oversized scale here
-// gets safely CLIPPED at the screen edge rather than pushing content
-// off screen the way it did before. Still worth keeping deliberate:
-// too high and the head clips at the very top instead of landing
-// inside the name text where it's supposed to.
-const SELECTED_SCALE_PHONE = 1.25;
-
-// TIP — HEAD THROUGH THE MIDDLE OF THE TEXT (mobile): the name text
-// must render BEHIND the model (see the name's z-index below — it's
-// LOWER than the model's, not higher) so the head sits in FRONT,
-// visually crossing through the middle of the letters, with text
-// still showing above and below the head. The model is pinned to the
-// row's bottom edge and grows UPWARD as SELECTED_SCALE_PHONE
-// increases (transformOrigin is 50% 100%), so raising that scale is
-// what pushes the head further up into the text.
-//   NAME_NAVBAR_GAP_PX  — gap between the navbar and the row's top
-//                         edge; this is the "room" the head has to
-//                         rise into before reaching the navbar itself
-//                         (which is z-50, above the model, so
-//                         anything poking up past it hides behind it).
-//   NAME_TOP_OFFSET_PX  — how far into that gap the text starts
-//                         (smaller = text sits higher, closer to the
-//                         navbar; the head needs to reach roughly this
-//                         far up plus half the text's own height to
-//                         cross its middle).
-// These are a starting estimate, not a measured value — head position
-// varies by photo, so check against Lara's real photos and nudge
-// SELECTED_SCALE_PHONE / NAME_NAVBAR_GAP_PX / NAME_TOP_OFFSET_PX
-// together from there.
-const NAME_NAVBAR_GAP_PX = 60;
-const NAME_TOP_OFFSET_PX = 16;
+// TIP — MOBILE (Figma spec): the earlier attempts here guessed at
+// pixel amounts (navbar height, text height, price row height) and
+// subtracted them from the viewport — every guess turned out wrong in
+// a different way. Lara's Figma export gives exact numbers instead, so
+// there's nothing left to estimate: mobile now positions the name,
+// model, podium and price row at fixed PERCENTAGES of the row's own
+// height/width, taken directly from the Figma frame (a 375×595 frame,
+// so e.g. the name's top: 37px becomes 37/595 = 6.2%). The row itself
+// is set to that exact aspect ratio (see IMAGE_HEIGHT_SELECTED below),
+// so those percentages hold true at any phone width — no dvh, no
+// flexbox, no guessed reserve amounts. No extra scale-up on mobile
+// either — the Figma frame's own proportions are already the intended
+// size, not a smaller thing that needs inflating.
 
 /*
   TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
