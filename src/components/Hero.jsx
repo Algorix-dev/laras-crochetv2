@@ -29,20 +29,6 @@ const SUPPORT_SCALE_Y = 1.0;
 const SELECTED_SCALE_X = 1.0;
 const SELECTED_SCALE_Y = 1.0;
 
-// TIP — MOBILE (Figma spec): the earlier attempts here guessed at
-// pixel amounts (navbar height, text height, price row height) and
-// subtracted them from the viewport — every guess turned out wrong in
-// a different way. Lara's Figma export gives exact numbers instead, so
-// there's nothing left to estimate: mobile now positions the name,
-// model, podium and price row at fixed PERCENTAGES of the row's own
-// height/width, taken directly from the Figma frame (a 375×595 frame,
-// so e.g. the name's top: 37px becomes 37/595 = 6.2%). The row itself
-// is set to that exact aspect ratio (see IMAGE_HEIGHT_SELECTED below),
-// so those percentages hold true at any phone width — no dvh, no
-// flexbox, no guessed reserve amounts. No extra scale-up on mobile
-// either — the Figma frame's own proportions are already the intended
-// size, not a smaller thing that needs inflating.
-
 /*
   TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
   Every model image is now rendered at the SELECTED height and the
@@ -204,21 +190,9 @@ function useIsWide() {
 
    At 1920px: selected ≈ 650px tall, supporting ≈ 570px.
 */
-const IMAGE_HEIGHT_SELECTED = "h-[clamp(25rem,34vw,42rem)]";
-// TIP — MOBILE HEIGHT IS NO LONGER A GUESSED dvh CALC: two rounds of
-// estimating navbar/text/price pixel heights and subtracting them from
-// 100dvh kept landing on wrong numbers (there was no way to verify them
-// without a live render), and each miss pushed the price row off
-// screen. Mobile now uses flexbox instead: the section is pinned to
-// exactly 100dvh, the row is `flex-1` (grows to fill whatever's left
-// after the navbar gap and the price row take their own natural
-// height), and the price row is a normal last-in-flow item — so it is
-// ALWAYS at the bottom of the screen, regardless of how tall the real
-// navbar or price content turns out to be. See the mobile classes on
-// the row (`max-sm:flex-1 max-sm:min-h-0`), its wrapper
-// (`max-sm:flex max-sm:flex-col`), and the price block itself further
-// down, plus `max-sm:overflow-hidden` on the section as a safety net —
-// worst case something gets clipped, never pushed off screen.
+
+const IMAGE_HEIGHT_SELECTED =
+  "h-[clamp(25rem,34vw,42rem)] max-sm:h-[27rem]";
 
 /* ============================================================
    CAROUSEL MATH
@@ -260,14 +234,13 @@ function getSlotLook(offset, half) {
       ? 0
       : Math.sign(offset) * SIDE_TILT_DEGREES,
 
-    // Center model bigger on mobile — same factor on X and Y so it
-    // scales up proportionally instead of stretching.
+    // Center model slightly bigger on mobile
     scaleX: isCenter
-      ? (isPhone ? SELECTED_SCALE_PHONE : SELECTED_SCALE_X)
+      ? (isPhone ? 1.2 : SELECTED_SCALE_X)
       : SUPPORT_SCALE_X * supportRatio(),
 
     scaleY: isCenter
-      ? (isPhone ? SELECTED_SCALE_PHONE : SELECTED_SCALE_Y)
+      ? (isPhone ? 1.2 : SELECTED_SCALE_Y)
       : SUPPORT_SCALE_Y * supportRatio(),
 
     // ONLY the side models move upward on mobile
@@ -697,13 +670,6 @@ function HeroModel({
       transition={transition}
       style={{
         width: slotWidth,
-        // TIP: explicit height (not just the desktop clamp on the inner
-        // div) so the inner div's `max-sm:h-full` on mobile has a real
-        // percentage to resolve against — the row is now a flex-grown
-        // item with no fixed px height on mobile, so this button needs
-        // to explicitly match it rather than relying on its own content
-        // to size it.
-        height: "100%",
         marginLeft: -slotWidth / 2,
         // the middle model sits in front of its overlapping neighbours
         zIndex: isSelected ? 12 : 10,
@@ -732,7 +698,7 @@ function HeroModel({
         overflow-visible
       "
     >
-      <div className={`relative w-full ${IMAGE_HEIGHT_SELECTED} max-sm:h-full`}>
+      <div className={`relative w-full ${IMAGE_HEIGHT_SELECTED}`}>
         {/* TIP — CROSS-FADE WHEN A VISIBLE MODEL CHANGES DIRECTION:
             keyed by the photo (+ whether it is mirrored), so when the photo
             changes React keeps the old <img> around while it fades out and
@@ -992,38 +958,15 @@ function HeroCarousel({ models }) {
       id="hero"
       data-hero="true"
       data-no-rise="true"
-      className={`
+      className="
         overflow-x-clip
         pt-16
         md:pt-20
         lg:pt-24
-        max-sm:pt-[calc(var(--hero-navbar-offset,67px)+${NAME_NAVBAR_GAP_PX}px)]
         pb-24
         md:pb-32
-        max-sm:pb-0
-        max-sm:h-[100dvh]
-        max-sm:overflow-hidden
         text-center
-      `}
-      /* TIP — MOBILE TOP OFFSET: on desktop, pt-16/20/24 does double
-         duty — it's what pushes content below the fixed Navbar
-         (position: fixed, so nothing pushes it out of the way
-         automatically) AND sets the gap above the content. Mobile
-         needs the same: Navbar height (--hero-navbar-offset, 67px)
-         PLUS NAME_NAVBAR_GAP_PX (the gap to the name text) — not just
-         the gap alone.
-
-         TIP — max-sm:h-[100dvh] + max-sm:overflow-hidden: this pins
-         the whole hero to exactly one screen's height on mobile and
-         clips anything that would spill past it. Combined with the
-         row being max-sm:flex-1 (below) and the price row being a
-         normal flow item instead of position: absolute, the price row
-         is now guaranteed to render inside this fixed box — flexbox
-         works out how much space the row gets, rather than this file
-         guessing pixel amounts and subtracting them (which is what
-         kept quietly landing on the wrong number and pushing the
-         price row below the screen). max-sm:pb-0 cancels the desktop
-         pb-24/pb-32 so it doesn't eat into that fixed height. */
+      "
       style={{
         perspective: "1800px",
       }}
@@ -1033,30 +976,20 @@ function HeroCarousel({ models }) {
           relative
           mx-auto
           ${PAGE_CONTAINER_PADDING}
-          max-sm:flex
-          max-sm:flex-col
-          max-sm:h-full
-          max-sm:pb-4
         `}
       >
 
         {/* ==================================================
             MODEL ROW — five models at >= 1440px, three below.
-            TIP: on desktop this row is a fixed-height stage (the
-            models, name and podium are all positioned inside it, so
-            they stay put while the models slide past them). On mobile
-            it's a flex-grown item instead — max-sm:flex-1 below makes
-            it take up whatever's left after the wrapper's own height
-            (max-sm:h-full, set above) minus the price row's natural
-            height and this wrapper's max-sm:pb-4 bottom gap. The name
-            and podium stay nested inside it either way; the price row
-            (further down) is now a sibling of this div instead, so it
-            can sit in normal flow after it.
+            TIP: this row is a fixed-height stage. The models,
+            name, podium and price are all positioned inside it,
+            so the name/podium/price stay put while the models
+            slide past them.
             ================================================== */}
 
         <div
           ref={rowRef}
-          className={`relative w-full ${IMAGE_HEIGHT_SELECTED} max-sm:h-auto max-sm:flex-1 max-sm:min-h-0`}
+          className={`relative w-full ${IMAGE_HEIGHT_SELECTED}`}
           // TIP: pan-y = vertical page scrolling stays with the browser,
           // sideways drags come to us (see the swipe notes above)
           style={{ touchAction: "pan-y" }}
@@ -1065,47 +998,26 @@ function HeroCarousel({ models }) {
           {/* ==============================================
               MODEL NAME — fades out, then the new one fades in
 
-              TIP — PHONES: the name is anchored near the row's TOP edge
-              (`max-sm:top-[${NAME_TOP_OFFSET_PX}px]`, a small drop into
-              the NAME_NAVBAR_GAP_PX gap under the navbar) rather than
-              the row's bottom, so its position stays stable regardless
-              of the row's height. The model is pinned to the row's
-              bottom edge and grows UPWARD as SELECTED_SCALE_PHONE
-              increases, so the head rises into this same gap — and
-              renders IN FRONT of the text (the name's z-index is LOWER
-              than the model's, see below — text behind, head in
-              front), which is what puts the head visually through the
-              middle of the letters, with the text still showing above
-              and below it. All three (SELECTED_SCALE_PHONE,
-              NAME_NAVBAR_GAP_PX, NAME_TOP_OFFSET_PX, defined near the
-              top of this file) are a starting estimate — check against
-              Lara's real photos and nudge them together; there's no
-              way to know exactly where a given photo's head sits
-              without seeing it rendered.
+              TIP — PHONES: `max-sm:bottom-[95%]` lifts the name a little
+              (the number is how far up the row its bottom edge sits;
+              87.9% is the desktop value) so the model's head covers less
+              of the letters. Raise 95 to lift it more, lower it to drop it.
+              The hero section's top padding is pt-12 (48px, it was 32px)
+              so the lifted name doesn't touch the navbar; if you raise the
+              95, raise that padding too.
               ============================================== */}
 
           <div
-            className={`
+            className="
               pointer-events-none
               absolute
               left-1/2
               -translate-x-1/2
               bottom-[87.9%]
-              max-sm:bottom-auto
-              max-sm:top-[${NAME_TOP_OFFSET_PX}px]
+              max-sm:bottom-[100%]
               z-0
-            `}
+            "
           >
-            {/* TIP: model images are z-10 (z-12 for the selected one),
-                the name is z-0 — DELIBERATELY lower, so the model
-                renders IN FRONT of the text on both mobile and desktop.
-                On mobile that's what lets the head sit through the
-                middle of the letters (text visible above/below, head
-                overlapping the middle) instead of the name always
-                floating on top of the model. Don't raise this above
-                the model's z-index — that was tried and it just made
-                the name always cover the head instead of overlapping
-                it, which isn't the effect wanted here. */}
             <AnimatePresence mode="wait" initial={false}>
               <motion.h1
                 key={activeModel.id}
@@ -1410,48 +1322,28 @@ function HeroCarousel({ models }) {
                 onSelect={handleSelect}
               />
             ))}
-        </div>
 
-        {/* ==============================================
-            PRICE ROW — same fade-out / fade-in as the name
+          {/* ==============================================
+              PRICE ROW — same fade-out / fade-in as the name
+              ============================================== */}
 
-            TIP — MOBILE: this used to be nested inside the row above
-            and position: absolute (top-full + margin), which is what
-            let it silently render below the visible screen whenever
-            the row's height estimate was off (twice). It's now a
-            normal sibling of the row, in normal document flow, with
-            `max-sm:relative` (overriding the desktop `absolute`) —
-            since the row above is `max-sm:flex-1`, it consumes
-            whatever's left, and this simply sits right after it,
-            flush with the wrapper's bottom (max-sm:pb-4 above gives it
-            a small gap from the literal screen edge). Desktop is
-            unchanged: `top-full` still resolves against this wrapper's
-            box, which on desktop is sized by the row alone, same as
-            before.
-            ============================================== */}
+          <div
+            className="
+              pointer-events-none
+              absolute
+              left-1/2
+              -translate-x-1/2
+              top-full
+              z-10
 
-        <div
-          className="
-            pointer-events-none
-            absolute
-            left-1/2
-            -translate-x-1/2
-            top-full
-            z-10
+              mt-16 md:mt-18
+              max-sm:mt-12
 
-            mt-16 md:mt-18
-
-            w-[clamp(11rem,18.75vw,22.5rem)]
-
-            max-sm:relative
-            max-sm:left-auto
-            max-sm:translate-x-0
-            max-sm:top-auto
-            max-sm:mt-3
-            max-sm:w-full
-            max-sm:px-1
-          "
-        >
+              w-[clamp(11rem,18.75vw,22.5rem)]
+              max-sm:w-full
+              max-sm:px-1
+            "
+          >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={activeModel.id}
@@ -1525,6 +1417,7 @@ function HeroCarousel({ models }) {
             </AnimatePresence>
           </div>
 
+        </div>
       </div>
     </section>
   );
@@ -1547,22 +1440,10 @@ export default function Hero({ models }) {
         id="hero"
         data-hero="true"
         data-no-rise="true"
-        className={`
-          pt-12 md:pt-12 lg:pt-14
-          max-sm:pt-[calc(var(--hero-navbar-offset,67px)+${NAME_NAVBAR_GAP_PX}px)]
-          pb-24 md:pb-32
-          max-sm:pb-0
-          max-sm:h-[100dvh]
-          max-sm:overflow-hidden
-        `}
+        className="pt-12 md:pt-12 lg:pt-14 pb-24 md:pb-32"
       >
-        <div
-          className={`
-            relative mx-auto ${PAGE_CONTAINER_PADDING}
-            max-sm:flex max-sm:flex-col max-sm:h-full
-          `}
-        >
-          <div className={`w-full ${IMAGE_HEIGHT_SELECTED} max-sm:h-auto max-sm:flex-1 max-sm:min-h-0`} />
+        <div className={`relative mx-auto ${PAGE_CONTAINER_PADDING}`}>
+          <div className={`w-full ${IMAGE_HEIGHT_SELECTED}`} />
         </div>
       </section>
     );
