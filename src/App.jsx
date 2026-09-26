@@ -104,7 +104,10 @@ function HomePage() {
 
         const onHero = live
           .filter((product) => product.placements.includes("hero"))
-          .map(toHeroModel);
+          .map((product) => ({
+            ...toHeroModel(product),
+            product,
+          }));
         // TIP: with nothing marked "Hero" yet, the sample models are shown.
         // Link each one to the real piece of the same name (if the shop has
         // it) so clicking it in the middle opens a real product page.
@@ -112,7 +115,9 @@ function HomePage() {
           const match = live.find(
             (product) => product.name?.trim().toLowerCase() === sample.name.toLowerCase()
           );
-          return match ? { ...sample, productId: match.id } : sample;
+          return match
+            ? { ...sample, productId: match.id, product: match }
+            : sample;
         });
         setHeroModels(onHero.length > 0 ? onHero : linkedSamples);
 

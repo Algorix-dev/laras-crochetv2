@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useCurrency } from "../context/CurrencyContext";
+import { useCart } from "../context/CartContext";
 import { ChevronUp, ShoppingBag } from "lucide-react";
 
 const isSampleModel = (model) => String(model.id).startsWith("fallback-");
@@ -335,9 +337,6 @@ function getPodiumAnimationDelay() {
   return `-${phase.toFixed(3)}s`;
 }
 
-function formatNaira(amount) {
-  return `₦${amount.toLocaleString("en-NG")}`;
-}
 
 /*
   Which photo(s) does this model show at this offset?
@@ -761,6 +760,8 @@ function HeroModel({
 
 function HeroCarousel({ models }) {
   const isWide = useIsWide();
+  const { formatPrice } = useCurrency();
+  const { addToBag, openBag } = useCart();
   const reduceMotion = useReducedMotion();
   const sectionRef = useRef(null);
   const rowRef = useRef(null);
@@ -948,6 +949,21 @@ function HeroCarousel({ models }) {
   }, [nav.moveId]);
 
   const activeModel = models[nav.active];
+
+  const handleAddToBag = (model) => {
+    const product = model?.product;
+
+    if (!product) return;
+
+    addToBag(
+      product,
+      product.colors?.[0] || "Default",
+      product.shades?.[0] || "Default",
+      product.sizes?.[0] || "S"
+    );
+
+    openBag();
+  };
 
   // The podium's spin phase is fixed once so re-renders don't restart it.
   const [podiumDelay] = useState(getPodiumAnimationDelay);
@@ -1391,9 +1407,7 @@ function HeroCarousel({ models }) {
                     max-sm:justify-self-start
                   "
                 >
-                  {formatNaira(
-                    activeModel.price
-                  )}
+                  {formatPrice(activeModel.price)}
                 </span>
 
                 <span aria-hidden="true" className="sm:hidden -space-y-2.5 flex flex-col max-sm:justify-self-center items-center text-[var(--muted)]">
