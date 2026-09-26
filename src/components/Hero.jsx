@@ -1402,19 +1402,14 @@ function HeroCarousel({ models }) {
                   <ChevronUp size={18} strokeWidth={1.5} className="opacity-30" />
                 </span>
 
-                <Link
-                  to={
-                    activeModel.productId
-                      ? `/product/${activeModel.productId}`
-                      : isSampleModel(activeModel)
-                        ? "/shop"
-                        : `/product/${activeModel.id}`
-                  }
-                  aria-label={`Choose a size and add ${activeModel.name} to your bag`}
+                <button
+                  type="button"
+                  onClick={() => handleAddToBag(activeModel)}
+                  aria-label={`Add ${activeModel.name} to bag`}
                   className="sm:hidden pointer-events-auto flex h-11 w-11 items-center justify-center max-sm:justify-self-end rounded-full bg-[var(--mauve-light)] text-[var(--ink)]"
                 >
                   <ShoppingBag size={20} strokeWidth={1.5} />
-                </Link>
+                </button>
               </motion.div>
             </AnimatePresence>
           </div>
