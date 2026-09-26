@@ -26,8 +26,8 @@ const SUPPORT_SCALE_Y = 1.0;
 /*
   The selected model is intentionally larger.
 */
-const SELECTED_SCALE_X = 1.0;
-const SELECTED_SCALE_Y = 1.0;
+const SELECTED_SCALE_X = 0.92;
+const SELECTED_SCALE_Y = 0.92;
 
 /*
   TIP — WHY THERE IS NO "UNSELECTED HEIGHT" ANY MORE:
