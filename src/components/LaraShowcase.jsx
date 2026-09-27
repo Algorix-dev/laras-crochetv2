@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import { motion, useMotionValue, useScroll, useTransform } from "framer-motion";
 
 import laraWordmark from "../assets/lara-wordmark-solid.png";
 import scatterBeach from "../assets/scatter-beach.webp";
@@ -180,10 +180,16 @@ const REVIEWS_HOLD_END = 0.70;
 // TIMELINE_END (100vh stage + 900vh-per-unit of progress).
 const TRACK_VH = Math.round(100 + 900 * TIMELINE_END);
 
-// PHONES: only ONE row of three reviews is shown (nine cards don't fit a
-// phone screen, and Lara only wants three there), so the pinned track ends
-// sooner instead of holding an empty stretch. Raise it for a longer read time.
-const TIMELINE_END_NARROW = 0.75;
+// PHONES: Lara + photos + paragraph are no longer part of the pinned
+// sequence at all (see NarrowIntro above) — they're normal document flow,
+// with the paragraph's own scroll position (not this timeline) driving
+// its word reveal. The pin on phones now covers ONLY the reviews
+// turn-taking, so this track is much shorter than desktop's.
+const NARROW_REVIEWS_REVEAL_START = 0.09;
+const NARROW_REVIEWS_CONTAINER_FADE_END = 0.11;
+const NARROW_REVIEWS_FADE = 0.06;
+const NARROW_REVIEWS_TURN_AT = NARROW_REVIEWS_REVEAL_START + 0.15;
+const TIMELINE_END_NARROW = NARROW_REVIEWS_TURN_AT + 0.15;
 const TRACK_VH_NARROW = Math.round(100 + 900 * TIMELINE_END_NARROW);
 
 // Gap kept between the last review row and whatever comes next.
@@ -315,14 +321,22 @@ function paragraphContainerOpacity(progress) {
   an empty stage before the pin released; now the reviews just scroll
   away naturally when the pin lets go.)
 */
-function reviewsContainerOpacity(progress) {
-  if (progress < REVIEWS_CONTAINER_FADE_START) return 0;
+function reviewsContainerOpacity(progress, isNarrow) {
+  // On phones the reviews are the ONLY thing in the pinned stage (Lara and
+  // the paragraph are normal document flow above it now), so they get a
+  // short fade-in near the start of the shorter mobile track instead of
+  // desktop's cross-fade-from-paragraph window.
+  const start = isNarrow
+    ? NARROW_REVIEWS_REVEAL_START - 0.02
+    : REVIEWS_CONTAINER_FADE_START;
+  const end = isNarrow
+    ? NARROW_REVIEWS_CONTAINER_FADE_END
+    : REVIEWS_CONTAINER_FADE_END;
 
-  if (progress < REVIEWS_CONTAINER_FADE_END) {
-    return clamp01(
-      (progress - REVIEWS_CONTAINER_FADE_START) /
-        (REVIEWS_CONTAINER_FADE_END - REVIEWS_CONTAINER_FADE_START)
-    );
+  if (progress < start) return 0;
+
+  if (progress < end) {
+    return clamp01((progress - start) / (end - start));
   }
 
   return 1;
@@ -363,22 +377,22 @@ function getReviewRowRevealNarrow(progress, rowIndex = 0) {
   // TIP: phones show SIX reviews (client request) as TWO turns of 3.
   // Turn 1 rises in, holds, then fades while turn 2 rises in over it;
   // turn 2 then stays until the pin lets go.
-  //   turn 1: in  REVIEWS_REVEAL_START -> +0.045, out at PHONE_TURN_AT
-  //   turn 2: in  at PHONE_TURN_AT, then stays
-  // Change PHONE_TURN_AT to give the first three more/less reading time.
-  const fade = 0.045;
-  const PHONE_TURN_AT = REVIEWS_REVEAL_START + 0.11;
-
   if (rowIndex === 0) {
-    const inT = clamp01((progress - REVIEWS_REVEAL_START) / fade);
-    const outT = clamp01((progress - PHONE_TURN_AT) / fade);
+    const inT = clamp01(
+      (progress - NARROW_REVIEWS_REVEAL_START) / NARROW_REVIEWS_FADE
+    );
+    const outT = clamp01(
+      (progress - NARROW_REVIEWS_TURN_AT) / NARROW_REVIEWS_FADE
+    );
     return {
       opacity: inT * (1 - outT),
       y: lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(inT)) - 10 * outT,
     };
   }
 
-  const inT = clamp01((progress - PHONE_TURN_AT) / fade);
+  const inT = clamp01(
+    (progress - NARROW_REVIEWS_TURN_AT) / NARROW_REVIEWS_FADE
+  );
   return { opacity: inT, y: lerp(REVIEW_CARD_RISE_PX, 0, easeInOutCubic(inT)) };
 }
 
@@ -621,11 +635,16 @@ const WORD_WINDOW = 0.12;
 // rise, lower it (10) for almost none.
 const WORD_RISE_PX = 18;
 
-function Word({ progress, globalIndex, totalWords, children }) {
+function Word({
+  progress,
+  globalIndex,
+  totalWords,
+  children,
+  rangeStart = PARAGRAPH_WORDS_START,
+  rangeEnd = PARAGRAPH_WORDS_END,
+}) {
   const t = useTransform(progress, (p) => {
-    const rangeT = clamp01(
-      (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
-    );
+    const rangeT = clamp01((p - rangeStart) / (rangeEnd - rangeStart));
     const start = (globalIndex / totalWords) * (1 - WORD_WINDOW);
     return clamp01((rangeT - start) / WORD_WINDOW);
   });
@@ -642,12 +661,25 @@ function Word({ progress, globalIndex, totalWords, children }) {
   );
 }
 
-function WordParagraph({ words, progress, totalWords, className }) {
+function WordParagraph({
+  words,
+  progress,
+  totalWords,
+  className,
+  rangeStart,
+  rangeEnd,
+}) {
   return (
     <p className={className}>
       {words.map(({ word, globalIndex }) => (
         <Fragment key={globalIndex}>
-          <Word progress={progress} globalIndex={globalIndex} totalWords={totalWords}>
+          <Word
+            progress={progress}
+            globalIndex={globalIndex}
+            totalWords={totalWords}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+          >
             {word}
           </Word>{" "}
         </Fragment>
@@ -656,6 +688,121 @@ function WordParagraph({ words, progress, totalWords, className }) {
   );
 }
 
+
+/*
+  MOBILE ONLY — replaces the pinned "LARA + PHOTOS" and "PARAGRAPH" layers
+  for phones (see the `!isNarrow` guards further down). Lara's spec: Lara
+  + photos at the top (already in final position, just fade in as one
+  group — no photo-by-photo flight), the paragraph directly under it "just
+  like normal flow", word-by-word — but it must fully finish revealing
+  before the reviews below come into view.
+
+  Rather than pin this section (fixed position) or time the word reveal
+  with a stagger timer — both of which either fought the "normal flow"
+  layout or could be outrun by a fast scroll — the paragraph's reveal is
+  tied to ITS OWN scroll position via useScroll(target=paragraphRef).
+  Progress here is 0 at the top of that block and reaches 1 once its
+  bottom has scrolled to the upper-middle of the screen, comfortably
+  before the reviews section (which sits right after it) is on screen at
+  all. Because it's driven by scroll distance rather than time, it can't
+  be "not finished yet" when reviews arrive — by definition, it's done
+  first.
+*/
+function NarrowIntro({ wordParagraphs, totalWords }) {
+  const paragraphRef = useRef(null);
+
+  const { scrollYProgress: paragraphProgress } = useScroll({
+    target: paragraphRef,
+    // Reveal starts as the paragraph enters from the bottom, and
+    // finishes once its bottom edge reaches the upper half of the
+    // screen — i.e. done well before it (and the reviews after it)
+    // have fully scrolled past.
+    offset: ["start 0.9", "end 0.45"],
+  });
+
+  return (
+    <div className={`w-full pt-16 ${PAGE_CONTAINER_PADDING}`}>
+      <div className="mx-auto w-full max-w-[1080px]">
+        {/* Wordmark + decor + all 3 photos, already in final position,
+            fading in together as ONE group — no individual photo entrance. */}
+        <motion.div
+          className="relative flex items-center justify-center pb-8 pt-8"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.35 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+        >
+          <div className="relative w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
+            <img
+              src={laraDecor}
+              alt=""
+              aria-hidden="true"
+              decoding="async"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none scale-[2.5] scale-y-[3.2]"
+              style={{ width: "100vw" }}
+            />
+
+            <img
+              src={laraWordmark}
+              alt="Lara's Crochet"
+              decoding="async"
+              className="relative z-10 block h-auto w-full select-none scale-[1.85]"
+            />
+
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 z-20"
+              style={{
+                width: `${PHOTO_WIDTH_PX}px`,
+                height: "103.72863006591797px",
+                transform: "translate(-50%, -50%) scale(0.5)",
+              }}
+            >
+              {SCATTER_PHOTOS.map((photo) => (
+                <img
+                  key={photo.id}
+                  src={photo.src}
+                  alt={photo.alt}
+                  decoding="async"
+                  className="absolute block select-none"
+                  style={{
+                    left: `${photo.finalX}px`,
+                    top: `${photo.finalY}px`,
+                    width: `${photo.width}px`,
+                    height: `${photo.height}px`,
+                    transform: `rotate(${-photo.figmaAngle}deg)`,
+                    transformOrigin: "50% 50%",
+                    zIndex: photo.zIndex,
+                    objectFit: "cover",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Paragraph, directly under Lara, normal flow — word-by-word,
+            tied to how far THIS block has scrolled, not a timer. */}
+        <div ref={paragraphRef} className="flex items-center justify-center pb-16 pt-6">
+          <div className="mx-auto max-w-2xl text-center text-[15px] leading-[1.6] text-[var(--ink)]">
+            {wordParagraphs.map((words, paragraphIndex) => (
+              <WordParagraph
+                key={paragraphIndex}
+                words={words}
+                progress={paragraphProgress}
+                totalWords={totalWords}
+                rangeStart={0}
+                rangeEnd={1}
+                className={
+                  paragraphIndex === wordParagraphs.length - 1 ? "mt-5" : "mb-4"
+                }
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ScatterPhoto({ photo, range, progress }) {
   const state = useTransform(progress, (p) => getPhotoState(photo, range, p));
@@ -859,7 +1006,7 @@ export default function LaraShowcase() {
 
   const sceneMV = useTransform(progress, sceneOpacity);
   const paragraphMV = useTransform(progress, paragraphContainerOpacity);
-  const reviewsMV = useTransform(progress, reviewsContainerOpacity);
+  const reviewsMV = useTransform(progress, (p) => reviewsContainerOpacity(p, isNarrow));
 
   /* -------------------- navbar hide-during-pin -------------------- */
 
@@ -1299,6 +1446,10 @@ export default function LaraShowcase() {
 
   return (
     <>
+      {isNarrow && (
+        <NarrowIntro wordParagraphs={wordParagraphs} totalWords={totalWords} />
+      )}
+
       <section
         id="lara-showcase"
         ref={wrapperRef}
@@ -1307,100 +1458,81 @@ export default function LaraShowcase() {
       >
         <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
           <div className="relative h-full w-full">
-            {/* ======================= LARA + PHOTOS ======================= */}
-            <motion.div
-              className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
-              style={{
-                ...layerBaseStyle,
-                opacity: sceneMV,
-                pointerEvents: "none",
-              }}
-            >
-              <div className="relative mx-auto w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
-                <img
-                  src={laraDecor}
-                  alt=""
-                  aria-hidden="true"
-                  decoding="async"
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[2.5] max-sm:scale-y-[3.2]"
-                  style={{ width: "100vw" }}
-                />
-
-                <img
-                  src={laraWordmark}
-                  alt="Lara's Crochet"
-                  decoding="async"
-                  className="relative z-10 block h-auto w-full select-none pointer-events-none max-sm:scale-[1.85]"
-                />
-
-                <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible [--photo-scale:0.5] sm:[--photo-scale:1]"
-                  style={{
-                    width: `${PHOTO_WIDTH_PX}px`,
-                    height: "103.72863006591797px",
-                    transform: "translate(-50%, -50%) scale(var(--photo-scale, 1))",
-                  }}
-                >
-                  {isNarrow
-                    ? // MOBILE: per Lara's feedback, no photo-by-photo flight-in —
-                      // all 3 photos just sit in their FINAL position always and
-                      // fade in together with the wordmark (same sceneMV opacity
-                      // this whole layer already uses), instead of animating in
-                      // one at a time via ScatterPhoto/PHOTO_RANGES.
-                      SCATTER_PHOTOS.map((photo) => (
-                        <img
-                          key={photo.id}
-                          src={photo.src}
-                          alt={photo.alt}
-                          decoding="async"
-                          className="absolute block select-none"
-                          style={{
-                            left: `${photo.finalX}px`,
-                            top: `${photo.finalY}px`,
-                            width: `${photo.width}px`,
-                            height: `${photo.height}px`,
-                            transform: `rotate(${-photo.figmaAngle}deg)`,
-                            transformOrigin: "50% 50%",
-                            zIndex: photo.zIndex,
-                            objectFit: "cover",
-                          }}
-                        />
-                      ))
-                    : SCATTER_PHOTOS.map((photo, index) => (
-                        <ScatterPhoto
-                          key={photo.id}
-                          photo={photo}
-                          range={PHOTO_RANGES[index]}
-                          progress={progress}
-                        />
-                      ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* ======================= PARAGRAPH ======================= */}
-            <motion.div
-              className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
-              style={{
-                ...layerBaseStyle,
-                opacity: paragraphMV,
-                pointerEvents: "none",
-              }}
-            >
-              <div className="mx-auto max-w-2xl px-1 text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
-                {wordParagraphs.map((words, paragraphIndex) => (
-                  <WordParagraph
-                    key={paragraphIndex}
-                    words={words}
-                    progress={progress}
-                    totalWords={totalWords}
-                    className={
-                      paragraphIndex === wordParagraphs.length - 1 ? "mt-5 sm:mt-8" : "mb-4 sm:mb-6"
-                    }
+            {/* ======================= LARA + PHOTOS (desktop only —
+                phones render NarrowIntro above, in normal flow) ======================= */}
+            {!isNarrow && (
+              <motion.div
+                className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
+                style={{
+                  ...layerBaseStyle,
+                  opacity: sceneMV,
+                  pointerEvents: "none",
+                }}
+              >
+                <div className="relative mx-auto w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
+                  <img
+                    src={laraDecor}
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                    className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
+                    style={{ width: "100vw" }}
                   />
-                ))}
-              </div>
-            </motion.div>
+
+                  <img
+                    src={laraWordmark}
+                    alt="Lara's Crochet"
+                    decoding="async"
+                    className="relative z-10 block h-auto w-full select-none pointer-events-none"
+                  />
+
+                  <div
+                    className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible"
+                    style={{
+                      width: `${PHOTO_WIDTH_PX}px`,
+                      height: "103.72863006591797px",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  >
+                    {SCATTER_PHOTOS.map((photo, index) => (
+                      <ScatterPhoto
+                        key={photo.id}
+                        photo={photo}
+                        range={PHOTO_RANGES[index]}
+                        progress={progress}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ======================= PARAGRAPH (desktop only —
+                phones render NarrowIntro above, in normal flow) ======================= */}
+            {!isNarrow && (
+              <motion.div
+                className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
+                style={{
+                  ...layerBaseStyle,
+                  opacity: paragraphMV,
+                  pointerEvents: "none",
+                }}
+              >
+                <div className="mx-auto max-w-2xl px-1 text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
+                  {wordParagraphs.map((words, paragraphIndex) => (
+                    <WordParagraph
+                      key={paragraphIndex}
+                      words={words}
+                      progress={progress}
+                      totalWords={totalWords}
+                      className={
+                        paragraphIndex === wordParagraphs.length - 1 ? "mt-5 sm:mt-8" : "mb-4 sm:mb-6"
+                      }
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* ======================= REVIEWS ======================= */}
             <motion.div
