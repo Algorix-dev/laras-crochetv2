@@ -282,8 +282,7 @@ function clamp(value, min, max) {
 function getSlotLook(
   offset,
   half,
-  visualScale = 1,
-  sideVisualScale = visualScale
+  visualScale = 1
 ) {
   const isCenter = offset === 0;
   const isShown =
@@ -323,11 +322,11 @@ function getSlotLook(
 
     scaleX: isCenter
       ? centerScaleX * visualScale
-      : sideScale * sideVisualScale,
+      : sideScale * visualScale,
 
     scaleY: isCenter
       ? centerScaleY * visualScale
-      : sideScaleY * sideVisualScale,
+      : sideScaleY * visualScale,
 
     y:
       !isCenter && isPhone
@@ -749,53 +748,6 @@ function HeroModel({
       : 1;
 
   /*
-    SIDE-SLOT NORMALIZATION:
-    visualScale above is deliberately measured off the FRONT image
-    (see the comment above it) so the SAME model doesn't jump in size
-    as it slides from a side slot into the centre. That's correct for
-    the centre slot. But it means a model's SIDE photo — a different
-    image, which can have more/less transparent padding around the
-    person than that model's own front photo — was still being scaled
-    using the FRONT photo's ratio, so two different models' side
-    slots could end up showing the person at slightly different
-    heights even though their front/centre slots matched perfectly.
-
-    sideVisualScale measures the bounds of whatever image is actually
-    showing in the side slot (`view.side`) and normalizes against
-    THAT, so side slots are consistent with each other. Only bothers
-    with a second measurement when there's a genuinely different
-    image to measure (hasFront and a distinct side photo) — otherwise
-    it's already the same src as visualBounds above, so just reuse
-    visualScale instead of measuring twice.
-  */
-  const hasDistinctSideImage =
-    hasFront &&
-    Boolean(view?.side) &&
-    view.side !== model.views.front;
-
-  const sideVisualBounds =
-    useVisualModelBounds(
-      hasDistinctSideImage
-        ? view.side
-        : null
-    );
-
-  const sideVisualScale =
-    hasDistinctSideImage
-      ? sideVisualBounds
-        ? clamp(
-            TARGET_VISIBLE_HEIGHT /
-              sideVisualBounds.heightRatio,
-            MIN_VISUAL_SCALE,
-            MAX_VISUAL_SCALE
-          )
-        // TIP: bounds haven't loaded/measured yet — fall back to the
-        // front-based scale rather than 1, so there's no visible pop
-        // once the real measurement arrives a moment later.
-        : visualScale
-      : visualScale;
-
-  /*
     If there is transparent space below the visible model, move the
     image itself upward so the visible bottom stays on the same
     baseline.
@@ -862,8 +814,7 @@ function HeroModel({
     const look = getSlotLook(
       offset,
       half,
-      visualScale,
-      sideVisualScale
+      visualScale
     );
 
     const xFor = (slot) =>
@@ -1023,7 +974,6 @@ function HeroModel({
     slotWidth,
     reduceMotion,
     visualScale,
-    sideVisualScale,
     isShown,
   ]);
 
@@ -1032,8 +982,7 @@ function HeroModel({
       ...getSlotLook(
         offset,
         half,
-        visualScale,
-        sideVisualScale
+        visualScale
       ),
 
       x:
@@ -1238,7 +1187,6 @@ function HeroModel({
 
 function HeroCarousel({ models }) {
   const isWide = useIsWide();
-  const navigate = useNavigate();
 
   const { formatPrice } =
     useCurrency();
@@ -1567,16 +1515,7 @@ function HeroCarousel({ models }) {
     const product =
       model?.product;
 
-    // TIP: fallback/sample hero models don't always have a real
-    // product attached (see heroFallback.js + App.jsx's linking
-    // logic) — that used to make this button silently do nothing.
-    // Mirrors the same fallback used by the centered-image click
-    // handler above: no linked product -> send them to the shop
-    // instead of a dead click.
-    if (!product) {
-      navigate("/shop");
-      return;
-    }
+    if (!product) return;
 
     addToBag(
       product,
