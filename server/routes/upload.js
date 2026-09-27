@@ -3,6 +3,9 @@ import multer from 'multer';
 import { removeBackground } from '@imgly/background-removal-node';
 import cloudinary from '../config/cloudinary.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
+import sharp from 'sharp'; // already in your package.json
+
+const SKIP_AI_ABOVE_BYTES = 12 * 1024 * 1024; // ~12MB raw — too risky to run the model on
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -15,7 +18,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 const STRIP_TIMEOUT_MS = 15000;
 
 async function stripBackground(buffer, mimetype) {
-  const blob = new Blob([buffer], { type: mimetype });
+  // Downscale first — memory use scales with pixel count, and product
+  // photos don't need to be huge before Cloudinary stores them.
+  const resized = await sharp(buffer).resize({ width: 1600, withoutEnlargement: true }).toBuffer();
+
+  if (buffer.length > SKIP_AI_ABOVE_BYTES) {
+    console.warn('Skipping background removal — file too large to risk it:', buffer.length);
+    return resized;
+  }
+
+  const blob = new Blob([resized], { type: mimetype });
   const resultBlob = await removeBackground(blob);
   return Buffer.from(await resultBlob.arrayBuffer());
 }
