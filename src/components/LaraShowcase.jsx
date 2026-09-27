@@ -1322,8 +1322,6 @@ export default function LaraShowcase() {
                   alt=""
                   aria-hidden="true"
                   decoding="async"
-                  // TIP: same 2.0x as the static version above — keep
-                  // both in sync when tuning.
                   className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[2.5] max-sm:scale-y-[3.2]"
                   style={{ width: "100vw" }}
                 />
@@ -1340,23 +1338,42 @@ export default function LaraShowcase() {
                   style={{
                     width: `${PHOTO_WIDTH_PX}px`,
                     height: "103.72863006591797px",
-                    // TIP — PHONES: the photos sit in the CENTRE of the wordmark
-                    // (like on desktop) but at 40% size (--photo-scale:0.4), and
-                    // the wordmark itself is enlarged (max-sm:scale-[1.75]), so
-                    // together they cover far less of the letters. Change 0.4 in
-                    // the class above for bigger/smaller phone photos (0.35 is
-                    // tiny, 0.6 is chunky).
                     transform: "translate(-50%, -50%) scale(var(--photo-scale, 1))",
                   }}
                 >
-                  {SCATTER_PHOTOS.map((photo, index) => (
-                    <ScatterPhoto
-                      key={photo.id}
-                      photo={photo}
-                      range={PHOTO_RANGES[index]}
-                      progress={progress}
-                    />
-                  ))}
+                  {isNarrow
+                    ? // MOBILE: per Lara's feedback, no photo-by-photo flight-in —
+                      // all 3 photos just sit in their FINAL position always and
+                      // fade in together with the wordmark (same sceneMV opacity
+                      // this whole layer already uses), instead of animating in
+                      // one at a time via ScatterPhoto/PHOTO_RANGES.
+                      SCATTER_PHOTOS.map((photo) => (
+                        <img
+                          key={photo.id}
+                          src={photo.src}
+                          alt={photo.alt}
+                          decoding="async"
+                          className="absolute block select-none"
+                          style={{
+                            left: `${photo.finalX}px`,
+                            top: `${photo.finalY}px`,
+                            width: `${photo.width}px`,
+                            height: `${photo.height}px`,
+                            transform: `rotate(${-photo.figmaAngle}deg)`,
+                            transformOrigin: "50% 50%",
+                            zIndex: photo.zIndex,
+                            objectFit: "cover",
+                          }}
+                        />
+                      ))
+                    : SCATTER_PHOTOS.map((photo, index) => (
+                        <ScatterPhoto
+                          key={photo.id}
+                          photo={photo}
+                          range={PHOTO_RANGES[index]}
+                          progress={progress}
+                        />
+                      ))}
                 </div>
               </div>
             </motion.div>
@@ -1370,8 +1387,6 @@ export default function LaraShowcase() {
                 pointerEvents: "none",
               }}
             >
-              {/* TIP: 15px on phones (it was 20px, which filled the whole screen),
-                  18px from sm, 20px from md. Change the first number for phones. */}
               <div className="mx-auto max-w-2xl px-1 text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
                 {wordParagraphs.map((words, paragraphIndex) => (
                   <WordParagraph
