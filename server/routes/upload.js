@@ -5,60 +5,61 @@ import cloudinary from '../config/cloudinary.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 
 const router = Router();
-
-// TIP: switched from multer-storage-cloudinary (which streamed the
-// file straight to Cloudinary with no chance to touch it first) to
-// memoryStorage, so every product photo passes through
-// removeBackground() below BEFORE it ever reaches Cloudinary. This is
-// what makes "no background, just the page color showing through"
-// automatic for Lara — she uploads whatever photo she has, the
-// background is stripped server-side, and only the transparent PNG
-// is what gets stored.
 const upload = multer({ storage: multer.memoryStorage() });
 
-// TIP: @imgly/background-removal-node runs a local ONNX segmentation
-// model on the server — no third-party API, no per-image cost, no
-// remove.bg account/API key. It's slower than a paid API (a couple
-// seconds per image) and the very first call downloads its model
-// weights, so the FIRST upload after a fresh deploy will be visibly
-// slower than the rest — that's expected, not a bug.
+// TIP: background removal is now best-effort per file. If it throws OR
+// takes longer than STRIP_TIMEOUT_MS (slow/cold model, low memory, etc.),
+// we fall back to the ORIGINAL image instead of failing the whole upload —
+// a product photo that still has its background is a much smaller problem
+// than the admin being unable to add products before launch.
+const STRIP_TIMEOUT_MS = 15000;
+
 async function stripBackground(buffer, mimetype) {
   const blob = new Blob([buffer], { type: mimetype });
   const resultBlob = await removeBackground(blob);
   return Buffer.from(await resultBlob.arrayBuffer());
 }
 
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('stripBackground timed out')), ms)),
+  ]);
+}
+
 function uploadBufferToCloudinary(buffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: 'laras-crochet-products',
-        // TIP: force PNG so the transparent background survives —
-        // if this stayed jpg/webp-without-alpha the cutout would get
-        // flattened onto a solid color again on the way out.
-        format: 'png',
-      },
+      { folder: 'laras-crochet-products', format: 'png' },
       (err, result) => (err ? reject(err) : resolve(result))
     );
     stream.end(buffer);
   });
 }
 
-// POST /api/upload — expects multipart/form-data with an "images" field
-// (Lara's admin form will send one or more files under that field name).
-// Protected: only the logged-in admin can upload.
 router.post('/', requireAdmin, upload.array('images', 6), async (req, res) => {
   try {
-    const urls = await Promise.all(
-      req.files.map(async (file) => {
-        const cutout = await stripBackground(file.buffer, file.mimetype);
-        const result = await uploadBufferToCloudinary(cutout);
-        return result.secure_url;
-      })
-    );
+    // TIP: sequential, not Promise.all — running the model on several
+    // images AT ONCE multiplies peak memory, which is almost certainly
+    // what was killing the process (a 502 with no JSON body means the
+    // process itself died/hung, not that our own catch block ran).
+    const urls = [];
+    for (const file of req.files) {
+      let bufferToUpload = file.buffer;
+      try {
+        bufferToUpload = await withTimeout(
+          stripBackground(file.buffer, file.mimetype),
+          STRIP_TIMEOUT_MS
+        );
+      } catch (stripErr) {
+        console.error('Background removal failed, uploading original image instead:', stripErr);
+      }
+      const result = await uploadBufferToCloudinary(bufferToUpload);
+      urls.push(result.secure_url);
+    }
     res.json({ urls });
   } catch (err) {
-    console.error('Upload/background-removal failed:', err);
+    console.error('Upload failed:', err);
     res.status(500).json({ error: 'Failed to process one or more images.' });
   }
 });
