@@ -309,38 +309,6 @@ function paragraphContainerOpacity(progress) {
   return 0;
 }
 
-// MOBILE ONLY: Lara + photos + paragraph are ONE combined, vertically
-// stacked layer on phones (Lara on top, paragraph directly under it —
-// see the isNarrow branch further down), not two cross-fading layers
-// like desktop. So Lara does NOT fade out at LARA_HOLD_END here — she
-// stays on screen the whole time the paragraph is revealing beneath
-// her, and the whole group only fades out once the paragraph is fully
-// done and it's time to cross-fade into reviews.
-function narrowSceneOpacity(progress) {
-  if (progress < WORDMARK_FADE_IN_START) return 0;
-
-  if (progress < WORDMARK_FADE_IN_END) {
-    return clamp01(
-      (progress - WORDMARK_FADE_IN_START) /
-        (WORDMARK_FADE_IN_END - WORDMARK_FADE_IN_START)
-    );
-  }
-
-  if (progress < PARAGRAPH_HOLD_END) return 1;
-
-  if (progress < REVIEWS_CONTAINER_FADE_END) {
-    return (
-      1 -
-      clamp01(
-        (progress - REVIEWS_CONTAINER_FADE_START) /
-          (REVIEWS_CONTAINER_FADE_END - REVIEWS_CONTAINER_FADE_START)
-      )
-    );
-  }
-
-  return 0;
-}
-
 /*
   Opacity for the reviews grid AS A WHOLE — fades in while the paragraph
   fades out, then simply STAYS at 1. (It used to fade out again and leave
@@ -653,16 +621,11 @@ const WORD_WINDOW = 0.12;
 // rise, lower it (10) for almost none.
 const WORD_RISE_PX = 18;
 
-function Word({
-  progress,
-  globalIndex,
-  totalWords,
-  children,
-  rangeStart = PARAGRAPH_WORDS_START,
-  rangeEnd = PARAGRAPH_WORDS_END,
-}) {
+function Word({ progress, globalIndex, totalWords, children }) {
   const t = useTransform(progress, (p) => {
-    const rangeT = clamp01((p - rangeStart) / (rangeEnd - rangeStart));
+    const rangeT = clamp01(
+      (p - PARAGRAPH_WORDS_START) / (PARAGRAPH_WORDS_END - PARAGRAPH_WORDS_START)
+    );
     const start = (globalIndex / totalWords) * (1 - WORD_WINDOW);
     return clamp01((rangeT - start) / WORD_WINDOW);
   });
@@ -679,25 +642,12 @@ function Word({
   );
 }
 
-function WordParagraph({
-  words,
-  progress,
-  totalWords,
-  className,
-  rangeStart,
-  rangeEnd,
-}) {
+function WordParagraph({ words, progress, totalWords, className }) {
   return (
     <p className={className}>
       {words.map(({ word, globalIndex }) => (
         <Fragment key={globalIndex}>
-          <Word
-            progress={progress}
-            globalIndex={globalIndex}
-            totalWords={totalWords}
-            rangeStart={rangeStart}
-            rangeEnd={rangeEnd}
-          >
+          <Word progress={progress} globalIndex={globalIndex} totalWords={totalWords}>
             {word}
           </Word>{" "}
         </Fragment>
@@ -908,7 +858,6 @@ export default function LaraShowcase() {
   );
 
   const sceneMV = useTransform(progress, sceneOpacity);
-  const narrowSceneMV = useTransform(progress, narrowSceneOpacity);
   const paragraphMV = useTransform(progress, paragraphContainerOpacity);
   const reviewsMV = useTransform(progress, reviewsContainerOpacity);
 
@@ -1358,164 +1307,88 @@ export default function LaraShowcase() {
       >
         <div ref={contentRef} className="w-full bg-[var(--cream)]" style={containerStyle}>
           <div className="relative h-full w-full">
-            {isNarrow ? (
-              /* ======================= LARA + PARAGRAPH, COMBINED
-                 (mobile only) =======================
-                 One pinned layer instead of desktop's two cross-fading
-                 ones: Lara + photos sit at the top (already in final
-                 position, fading in as one group — no photo-by-photo
-                 flight), and the paragraph is laid out directly under
-                 it, in the SAME layer, so both are on screen together.
-                 The whole group fades out only once the paragraph is
-                 fully revealed, cross-fading into reviews below. */
-              <motion.div
-                className={`flex flex-col items-center justify-start pt-10 ${PAGE_CONTAINER_PADDING}`}
-                style={{
-                  ...layerBaseStyle,
-                  opacity: narrowSceneMV,
-                  pointerEvents: "none",
-                }}
+            {/* ======================= LARA + PHOTOS ======================= */}
+            <motion.div
+              className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
+              style={{
+                ...layerBaseStyle,
+                opacity: sceneMV,
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                className="relative mx-auto w-full translate-y-[clamp(1rem,4vh,3rem)]"
+                style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}
               >
+                <img
+                  src={laraDecor}
+                  alt=""
+                  aria-hidden="true"
+                  decoding="async"
+                  // TIP: same 2.0x as the static version above — keep
+                  // both in sync when tuning.
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none max-sm:scale-[2.5] max-sm:scale-y-[3.2]"
+                  style={{ width: "100vw" }}
+                />
+
+                <img
+                  src={laraWordmark}
+                  alt="Lara's Crochet"
+                  decoding="async"
+                  className="relative z-10 block h-auto w-full select-none pointer-events-none max-sm:scale-[1.85]"
+                />
+
                 <div
-                  className="relative w-full shrink-0"
-                  style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}
+                  className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible [--photo-scale:0.5] sm:[--photo-scale:1]"
+                  style={{
+                    width: `${PHOTO_WIDTH_PX}px`,
+                    height: "103.72863006591797px",
+                    // TIP — PHONES: the photos sit in the CENTRE of the wordmark
+                    // (like on desktop) but at 40% size (--photo-scale:0.4), and
+                    // the wordmark itself is enlarged (max-sm:scale-[1.75]), so
+                    // together they cover far less of the letters. Change 0.4 in
+                    // the class above for bigger/smaller phone photos (0.35 is
+                    // tiny, 0.6 is chunky).
+                    transform: "translate(-50%, -50%) scale(var(--photo-scale, 1))",
+                  }}
                 >
-                  <img
-                    src={laraDecor}
-                    alt=""
-                    aria-hidden="true"
-                    decoding="async"
-                    className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none scale-[2.5] scale-y-[3.2]"
-                    style={{ width: "100vw" }}
-                  />
-
-                  <img
-                    src={laraWordmark}
-                    alt="Lara's Crochet"
-                    decoding="async"
-                    className="relative z-10 block h-auto w-full select-none scale-[1.85]"
-                  />
-
-                  <div
-                    className="pointer-events-none absolute left-1/2 top-1/2 z-20"
-                    style={{
-                      width: `${PHOTO_WIDTH_PX}px`,
-                      height: "103.72863006591797px",
-                      transform: "translate(-50%, -50%) scale(0.5)",
-                    }}
-                  >
-                    {/* No photo-by-photo flight on phones — all 3 sit in
-                        their final position and fade in with the rest
-                        of the group (narrowSceneMV above). */}
-                    {SCATTER_PHOTOS.map((photo) => (
-                      <img
-                        key={photo.id}
-                        src={photo.src}
-                        alt={photo.alt}
-                        decoding="async"
-                        className="absolute block select-none"
-                        style={{
-                          left: `${photo.finalX}px`,
-                          top: `${photo.finalY}px`,
-                          width: `${photo.width}px`,
-                          height: `${photo.height}px`,
-                          transform: `rotate(${-photo.figmaAngle}deg)`,
-                          transformOrigin: "50% 50%",
-                          zIndex: photo.zIndex,
-                          objectFit: "cover",
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-2 w-full px-1 text-center text-[15px] leading-[1.6] text-[var(--ink)]">
-                  {wordParagraphs.map((words, paragraphIndex) => (
-                    <WordParagraph
-                      key={paragraphIndex}
-                      words={words}
+                  {SCATTER_PHOTOS.map((photo, index) => (
+                    <ScatterPhoto
+                      key={photo.id}
+                      photo={photo}
+                      range={PHOTO_RANGES[index]}
                       progress={progress}
-                      totalWords={totalWords}
-                      className={
-                        paragraphIndex === wordParagraphs.length - 1 ? "mt-4" : "mb-3"
-                      }
                     />
                   ))}
                 </div>
-              </motion.div>
-            ) : (
-              <>
-                {/* ======================= LARA + PHOTOS ======================= */}
-                <motion.div
-                  className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
-                  style={{
-                    ...layerBaseStyle,
-                    opacity: sceneMV,
-                    pointerEvents: "none",
-                  }}
-                >
-                  <div className="relative mx-auto w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
-                    <img
-                      src={laraDecor}
-                      alt=""
-                      aria-hidden="true"
-                      decoding="async"
-                      className="pointer-events-none absolute left-1/2 top-1/2 z-0 max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
-                      style={{ width: "100vw" }}
-                    />
+              </div>
+            </motion.div>
 
-                    <img
-                      src={laraWordmark}
-                      alt="Lara's Crochet"
-                      decoding="async"
-                      className="relative z-10 block h-auto w-full select-none pointer-events-none"
-                    />
-
-                    <div
-                      className="pointer-events-none absolute left-1/2 top-1/2 z-20 overflow-visible"
-                      style={{
-                        width: `${PHOTO_WIDTH_PX}px`,
-                        height: "103.72863006591797px",
-                        transform: "translate(-50%, -50%)",
-                      }}
-                    >
-                      {SCATTER_PHOTOS.map((photo, index) => (
-                        <ScatterPhoto
-                          key={photo.id}
-                          photo={photo}
-                          range={PHOTO_RANGES[index]}
-                          progress={progress}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* ======================= PARAGRAPH ======================= */}
-                <motion.div
-                  className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
-                  style={{
-                    ...layerBaseStyle,
-                    opacity: paragraphMV,
-                    pointerEvents: "none",
-                  }}
-                >
-                  <div className="mx-auto max-w-2xl px-1 text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
-                    {wordParagraphs.map((words, paragraphIndex) => (
-                      <WordParagraph
-                        key={paragraphIndex}
-                        words={words}
-                        progress={progress}
-                        totalWords={totalWords}
-                        className={
-                          paragraphIndex === wordParagraphs.length - 1 ? "mt-5 sm:mt-8" : "mb-4 sm:mb-6"
-                        }
-                      />
-                    ))}
-                  </div>
-                </motion.div>
-              </>
-            )}
+            {/* ======================= PARAGRAPH ======================= */}
+            <motion.div
+              className={`flex items-center justify-center ${PAGE_CONTAINER_PADDING}`}
+              style={{
+                ...layerBaseStyle,
+                opacity: paragraphMV,
+                pointerEvents: "none",
+              }}
+            >
+              {/* TIP: 15px on phones (it was 20px, which filled the whole screen),
+                  18px from sm, 20px from md. Change the first number for phones. */}
+              <div className="mx-auto max-w-2xl -translate-y-[clamp(1rem,4vh,3rem)] px-1 text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
+                {wordParagraphs.map((words, paragraphIndex) => (
+                  <WordParagraph
+                    key={paragraphIndex}
+                    words={words}
+                    progress={progress}
+                    totalWords={totalWords}
+                    className={
+                      paragraphIndex === wordParagraphs.length - 1 ? "mt-5 sm:mt-8" : "mb-4 sm:mb-6"
+                    }
+                  />
+                ))}
+              </div>
+            </motion.div>
 
             {/* ======================= REVIEWS ======================= */}
             <motion.div
