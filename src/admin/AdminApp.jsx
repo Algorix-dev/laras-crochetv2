@@ -6,6 +6,7 @@
     /admin/customers       Customers (click a row for its details)
     /admin/categories      Categories
     /admin/transactions    Transaction
+    /admin/shipping        Shipping prices (per state / country)
     /admin/products        Product List
     /admin/products/new    Add Product        /admin/products/<id>  edit
     /admin/role            Admin role
@@ -28,6 +29,7 @@ import DashboardPage from "./pages/DashboardPage";
 import { ComingSoonPage, ProductListPage } from "./pages/MiscPages";
 import OrdersPage from "./pages/OrdersPage";
 import ProductFormPage from "./pages/ProductFormPage";
+import ShippingPage from "./pages/ShippingPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import { Btn } from "./ui";
 
@@ -119,6 +121,7 @@ function Screens() {
           <Route path="customers" element={<CustomersPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="shipping" element={<ShippingPage />} />
           <Route path="products" element={<ProductListPage />} />
           <Route path="products/new" element={<ProductFormPage />} />
           <Route path="products/:id" element={<ProductFormPage />} />

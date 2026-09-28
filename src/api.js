@@ -237,3 +237,23 @@ export async function saveProduct(payload, id) {
   if (!res.ok) throw new Error(data.error || "Could not save the piece");
   return data;
 }
+
+/* ============================================================
+   SHIPPING PRICES (per destination) — checkout reads a quote,
+   the admin Shipping page reads/saves the full list
+   ============================================================ */
+
+// public: what does delivery to this country/state cost?
+export async function getShippingQuote(country, state) {
+  const params = new URLSearchParams({ country: country || "", state: state || "" });
+  const res = await fetch(`${API_URL}/api/shipping/quote?${params}`);
+  if (!res.ok) throw new Error("Could not load shipping prices");
+  return res.json(); // { available, standard, express }
+}
+
+// admin: every saved row  [{ country, state, standard, express, active }]
+export const getShippingRates = () => adminRequest("/api/shipping/rates");
+
+// admin: replaces the whole list with the one sent
+export const saveShippingRates = (rates) =>
+  adminRequest("/api/shipping/rates", { method: "PUT", body: JSON.stringify({ rates }) });

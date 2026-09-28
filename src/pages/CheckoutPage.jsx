@@ -11,13 +11,14 @@
   with just the form fields and order summary.
 */
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, Lock, MessageCircleQuestion, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { initializePayment } from '../api';
+import { getShippingQuote, initializePayment } from '../api';
 import { openPaystackPopup } from '../utils/paystack';
 import { countries } from '../data/countries';
+import { NIGERIAN_STATES } from '../data/nigerianStates';
 import { formatBusinessDays, formatDeliveryRange } from '../utils/delivery';
 import Footer from '../components/Footer';
 import laraCrochetLogo from '../assets/lara-crochet-logo.png';
@@ -86,14 +87,42 @@ export default function CheckoutPage() {
   /* TIP: `base` = business days for ONE piece. The window shown to the
      customer grows with the number of pieces (see utils/delivery.js). */
   const SHIPPING_METHODS = {
-    standard: { label: 'Standard Checkout', base: { min: 10, max: 14 }, price: 20440 },
-    express: { label: 'Express Checkout', base: { min: 4, max: 5 }, price: 30440 },
+    standard: { label: 'Standard Checkout', base: { min: 10, max: 14 } },
+    express: { label: 'Express Checkout', base: { min: 4, max: 5 } },
   };
   const [shippingMethod, setShippingMethod] = useState('standard');
 
-  /* TIP: Shipping now comes from the selected Checkout Method above
-     (₦0 if the cart is empty) instead of a flat ₦10,000. */
-  const shipping = cartItems.length ? SHIPPING_METHODS[shippingMethod].price : 0;
+  /* TIP — SHIPPING PRICE PER ADDRESS: the price is no longer a fixed
+     number in this file. Lara sets a price for each state / country on
+     the admin Shipping page, and this asks the server for the price of
+     wherever the customer is sending the order. `quoteState` is only the
+     State field for Nigeria (other countries are priced per country).
+     status: 'loading' | 'ok' | 'unavailable' (we don't deliver there) | 'error' */
+  const quoteState = country === 'NG' ? form.state : '';
+  const [quote, setQuote] = useState({ status: 'loading', standard: 0, express: 0 });
+  useEffect(() => {
+    let cancelled = false;
+    setQuote((q) => ({ ...q, status: 'loading' }));
+    getShippingQuote(country, quoteState)
+      .then((r) => {
+        if (cancelled) return;
+        setQuote(
+          r.available
+            ? { status: 'ok', standard: r.standard, express: r.express }
+            : { status: 'unavailable', standard: 0, express: 0 }
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setQuote({ status: 'error', standard: 0, express: 0 });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [country, quoteState]);
+
+  /* Shipping = the price for the picked method at this address (₦0 if
+     the cart is empty or the price hasn't loaded / isn't available). */
+  const shipping = cartItems.length && quote.status === 'ok' ? quote[shippingMethod] : 0;
 
   /* TIP: Total is subtotal + shipping. */
   const total = cartTotal + shipping;
@@ -119,6 +148,9 @@ export default function CheckoutPage() {
         // The backend looks the shipping PRICE up itself from this name
         // (server/routes/payments.js) and adds it to what Paystack charges.
         shippingMethod,
+        // Where it's going — the server looks the price up from these.
+        shippingCountry: country,
+        shippingState: quoteState,
         // TIP: server/models/Order.js stores shippingAddress as a plain
         // String field, not a nested object — so we format it into one
         // readable line here rather than sending the raw form object
@@ -259,7 +291,15 @@ export default function CheckoutPage() {
                   <select
                     className="w-full border border-[var(--line)] p-3 text-base"
                     value={country}
-                    onChange={(e) => setCountry(e.target.value)}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setCountry(next);
+                      // Nigeria uses the state dropdown; other countries type their own
+                      setForm((f) => ({
+                        ...f,
+                        state: next === 'NG' ? (NIGERIAN_STATES.includes(f.state) ? f.state : 'Lagos') : '',
+                      }));
+                    }}
                   >
                     {countries.map((c) => (
                       <option key={c.code} value={c.code}>{c.name}</option>
@@ -285,7 +325,23 @@ export default function CheckoutPage() {
                     State shows "Lagos" as default, matching the Figma. */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Field placeholder="City" value={form.city} onChange={updateField('city')} />
-                  <Field label="State" value={form.state} onChange={updateField('state')} />
+                  {country === 'NG' ? (
+                    <label className="block text-base">
+                      <span className="mb-1 block text-[var(--muted)]">State</span>
+                      <select
+                        className="w-full border border-[var(--line)] bg-white px-3 py-3 text-base"
+                        value={form.state}
+                        onChange={updateField('state')}
+                        required
+                      >
+                        {NIGERIAN_STATES.map((st) => (
+                          <option key={st} value={st}>{st}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <Field label="State / Region" optional value={form.state} onChange={updateField('state')} />
+                  )}
                   <Field placeholder="Postal Code (Optional)" optional value={form.postalCode} onChange={updateField('postalCode')} />
                 </div>
 
@@ -360,10 +416,22 @@ export default function CheckoutPage() {
                         </span>
                       </span>
                     </span>
-                    <span className="whitespace-nowrap text-base">{formatPrice(method.price)}</span>
+                    <span className="whitespace-nowrap text-base">
+                      {quote.status === 'ok' ? formatPrice(quote[key]) : '—'}
+                    </span>
                   </label>
                 ))}
               </div>
+              {quote.status === 'unavailable' && (
+                <p role="alert" className="mt-2 text-base text-red-700">
+                  Sorry, we don't deliver to this location yet. Please contact us and we'll see what we can do.
+                </p>
+              )}
+              {quote.status === 'error' && (
+                <p role="alert" className="mt-2 text-base text-red-700">
+                  We couldn't load the shipping price. Please refresh the page and try again.
+                </p>
+              )}
             </section>
 
             {/* ================================================================
@@ -420,7 +488,7 @@ export default function CheckoutPage() {
                 nothing. */}
             <button
               type="submit"
-              disabled={submitting || !cartItems.length}
+              disabled={submitting || !cartItems.length || quote.status !== 'ok'}
               className="mt-8 w-full bg-[#412B2D] py-[11px] text-base font-bold text-white disabled:opacity-50"
             >
               {submitting ? 'OPENING SECURE PAYMENT…' : 'PAY NOW'}
@@ -529,7 +597,7 @@ export default function CheckoutPage() {
                     onClick={() =>
                       window.dispatchEvent(
                         new CustomEvent('lara-toast', {
-                          detail: 'Flat rate shipping within Nigeria. International rates calculated at payment.',
+                          detail: 'Shipping price depends on where you are sending your order (your state or country).',
                         })
                       )
                     }

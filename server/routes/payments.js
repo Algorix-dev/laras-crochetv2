@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { Router } from 'express';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import ShippingRate from '../models/ShippingRate.js';
 
 const router = Router();
 const PAYSTACK_BASE = 'https://api.paystack.co';
@@ -31,21 +32,18 @@ function paymentInfo(data = {}) {
 // Your secret key (PAYSTACK_SECRET_KEY) must never be sent to the
 // browser — that's why both calls below happen here on the server.
 
-// TIP: shipping prices live HERE on the server (same numbers as the
-// Checkout Method section in src/pages/CheckoutPage.jsx). The browser
-// only sends the NAME of the method ("standard" / "express"); the price
-// is looked up here, so nobody can change what they pay for shipping by
-// editing the request. If you change a price, change it in both files.
-const SHIPPING_METHODS = {
-  standard: 20440,
-  express: 30440,
-};
+// TIP: shipping prices now come from the database (models/ShippingRate.js),
+// set by Lara on the admin Shipping page — one price per destination.
+// The browser only sends WHERE it's going (shippingCountry + shippingState)
+// and the NAME of the method ("standard" / "express"); the price is looked
+// up here, so nobody can change what they pay for shipping by editing the
+// request.
 
 // POST /api/payments/initialize
-// body: { customerName, customerEmail, customerPhone, shippingAddress, shippingMethod, items: [{productId, color, size, quantity}] }
+// body: { customerName, customerEmail, customerPhone, shippingAddress, shippingCountry, shippingState, shippingMethod, items: [{productId, color, size, quantity}] }
 router.post('/initialize', async (req, res) => {
-  const { customerName, customerEmail, customerPhone, shippingAddress, items } = req.body;
-  const shippingMethod = SHIPPING_METHODS[req.body.shippingMethod] ? req.body.shippingMethod : 'standard';
+  const { customerName, customerEmail, customerPhone, shippingAddress, shippingCountry, shippingState, items } = req.body;
+  const shippingMethod = req.body.shippingMethod === 'express' ? 'express' : 'standard';
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your bag is empty' });
@@ -73,7 +71,22 @@ router.post('/initialize', async (req, res) => {
   // TIP: the checkout page shows "Total = items + shipping", so Paystack
   // must charge that same number. Before this, shipping was shown on the
   // page but never added here, so customers were charged items only.
-  const shippingFee = SHIPPING_METHODS[shippingMethod];
+  // Look up the price for THIS destination (most specific row wins:
+  // state, then country, then the default). If the destination is
+  // switched off, stop here before anything is charged or saved.
+  let rate;
+  try {
+    rate = await ShippingRate.findRate(shippingCountry, shippingState);
+  } catch (err) {
+    console.error('Shipping lookup failed:', err);
+    return res.status(500).json({ error: 'Could not work out shipping. Please try again.' });
+  }
+  if (!rate || !rate.active) {
+    return res
+      .status(400)
+      .json({ error: "Sorry, we don't deliver to that location yet. Please contact us to arrange it." });
+  }
+  const shippingFee = rate[shippingMethod];
   totalAmount += shippingFee;
 
   const paystackRes = await fetch(`${PAYSTACK_BASE}/transaction/initialize`, {

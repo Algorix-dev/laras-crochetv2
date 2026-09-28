@@ -29,7 +29,8 @@ router.get('/mine', requireCustomer, async (req, res) => {
 // number (from their confirmation email) to look it up, no login
 // required. This is the same pattern most small e-commerce sites use.
 router.get('/track/:reference', async (req, res) => {
-  const order = await Order.findOne({ paystackReference: req.params.reference });
+     const order = await Order.findOne({ paystackReference: req.params.reference })
+     .select('-customerPhone -customerEmail');
   if (!order) return res.status(404).json({ error: 'Order not found' });
   res.json(order);
 });
@@ -78,6 +79,10 @@ router.put('/:id/status', requireAdmin, async (req, res) => {
   const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
   if (!order) return res.status(404).json({ error: 'Order not found' });
   res.json(order);
+
+  if (!mongoose.isValidObjectId(req.params.id)) {
+     return res.status(404).json({ error: 'Order not found' });
+  }  
 });
 
 export default router;

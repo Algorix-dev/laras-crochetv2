@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema(
     // request-code call just overwrites these two fields.
     otpCode: { type: String, default: null },
     otpExpiresAt: { type: Date, default: null },
+    otpAttempts: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

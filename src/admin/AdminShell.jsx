@@ -24,6 +24,7 @@ import {
   Star,
   Store,
   Ticket,
+  Truck,
   Users,
 } from "lucide-react";
 import logo from "../assets/lara-crochet-logo.png";
@@ -44,6 +45,7 @@ const MENU = [
       { to: "/admin/coupons", label: "Coupon Code", icon: Ticket, title: "Coupon Code" },
       { to: "/admin/categories", label: "Categories", icon: Shapes, title: "Categories" },
       { to: "/admin/transactions", label: "Transaction", icon: CreditCard, title: "Transaction" },
+      { to: "/admin/shipping", label: "Shipping", icon: Truck, title: "Shipping" },
       { to: "/admin/brand", label: "Brand", icon: Star, title: "Brand" },
     ],
   },
@@ -287,4 +289,3 @@ export default function AdminShell({ onSignOut, children }) {
     </div>
   );
 }
-

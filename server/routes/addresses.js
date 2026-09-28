@@ -15,6 +15,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const user = await User.findById(req.customerId);
   const { setDefault, ...addressData } = req.body;
+  // TIP: stop a caller from overwriting the address's own _id through the body.
+  delete addressData._id;
 
   // TIP: if this new address is marked default, every OTHER address
   // needs isDefault flipped to false first — only one can be default

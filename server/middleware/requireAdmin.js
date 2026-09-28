@@ -1,21 +1,27 @@
 import jwt from 'jsonwebtoken';
+import AdminUser from '../models/AdminUser.js';
 
-// TIP: this is "middleware" — a function that sits between the
-// incoming request and your route handler. Express runs it first;
-// if it calls next(), the request continues to the actual route.
-// If it doesn't, the request stops here. This is how you protect
-// routes without repeating the same auth check in every one.
-export function requireAdmin(req, res, next) {
-  const authHeader = req.headers.authorization; // expected: "Bearer <token>"
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
+// TIP: the old version only asked "did WE sign this token?". Customers get
+// tokens signed by us too, so a customer token passed as admin. Now we also
+// require role === 'admin' AND that the id still exists in AdminUser
+// (so deleting an admin instantly locks them out).
+export async function requireAdmin(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.adminId = decoded.id; // route handlers can now read req.adminId
+
+    // TIP: 401 (not 403) on purpose, because the admin screen signs Lara
+    // out when it sees a 401.
+    if (decoded.role !== 'admin') {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    const admin = await AdminUser.findById(decoded.id).select('_id');
+    if (!admin) return res.status(401).json({ error: 'Invalid or expired token' });
+
+    req.adminId = admin._id;
     next();
   } catch {
     return res.status(401).json({ error: 'Invalid or expired token' });

@@ -11,7 +11,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
 import RecommendedProducts from '../components/RecommendedProducts';
 import Footer from '../components/Footer';
-import { formatDeliveryRange } from '../utils/delivery';
+import { formatDeliveryRange, formatDeliveryDays, DELIVERY_WINDOWS } from '../utils/delivery';
 
 // TIP: client's desktop review flagged this whole page as too small
 // ("16px is not that small") — every text-sm/text-[12–14px] class below
@@ -512,7 +512,8 @@ export default function MyBagPage() {
 
                 {deliveryOpen && (
                   <div className="border-b border-[#EFE7E7] px-1 py-4 text-base leading-5 text-[#564345]">
-                    {formatDeliveryRange()}
+                    <p>Standard: {formatDeliveryDays(DELIVERY_WINDOWS.standard)} · est. {formatDeliveryRange(DELIVERY_WINDOWS.standard)}</p>
+                    <p className="mt-2">Express: {formatDeliveryDays(DELIVERY_WINDOWS.express)} · est. {formatDeliveryRange(DELIVERY_WINDOWS.express)}</p>
                   </div>
                 )}
               </div>

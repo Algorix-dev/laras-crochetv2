@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { connectDB } from "./config/db.js";
 
 import authRoutes from "./routes/auth.js";
@@ -11,20 +13,22 @@ import paymentRoutes from "./routes/payments.js";
 import orderRoutes from "./routes/orders.js";
 import addressRoutes from "./routes/addresses.js";
 import analyticsRoutes from "./routes/analytics.js";
-import customOrderRoutes from './routes/customOrders.js';
-
+import customOrderRoutes from "./routes/customOrders.js";
+import shippingRoutes from "./routes/shipping.js";
 
 await connectDB();
 
 const app = express();
 
-// TIP: cors() locked to a single origin means local dev
-// (http://localhost:5173) and the deployed Vercel frontend can't
-// both work at the same time — whichever one ISN'T in CLIENT_URL
-// gets "Failed to fetch" from CORS silently rejecting it. Instead,
-// CLIENT_URL can hold a comma-separated list of every origin that's
-// allowed to call this API — add more (a staging URL, a custom
-// domain) the same way, no code changes needed.
+// TIP: Render puts a proxy in front of your app. Without this line the rate
+// limiter sees every visitor as the same IP and could lock everyone out at once.
+app.set("trust proxy", 1);
+
+// TIP: helmet adds standard security headers with one line.
+app.use(helmet());
+
+// TIP: CLIENT_URL can hold a comma-separated list of allowed origins
+// (localhost for dev, the Vercel URL, the real domain later).
 const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
   .split(",")
   .map((url) => url.trim());
@@ -32,9 +36,7 @@ const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
 app.use(
   cors({
     origin(origin, callback) {
-      // TIP: `origin` is undefined for non-browser requests (like
-      // Postman, curl, or Paystack's webhook) — those aren't subject
-      // to CORS at all, so we let them through unconditionally.
+      // TIP: undefined origin = Postman/curl/Paystack webhook, not a browser.
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -43,22 +45,39 @@ app.use(
     },
   })
 );
-// TIP: verify() hands us the raw bytes of each JSON body before it's
-// parsed. Only the Paystack webhook needs them (its signature is
-// computed over the exact bytes Paystack sent), so it's the only
-// route that keeps a copy — every other request is unchanged.
+
+// TIP: rawBody is kept only for the Paystack webhook (its signature is
+// computed over the exact bytes Paystack sent).
 app.use(
   express.json({
     verify: (req, res, buf) => {
       if (req.originalUrl.startsWith("/api/payments/webhook")) req.rawBody = buf;
     },
   })
-); // lets req.body work for JSON requests
+);
 
-// TIP: every route file gets "mounted" under a base path here.
-// A request to POST /api/auth/login actually runs the '/login'
-// handler inside routes/auth.js — Express combines the prefix
-// you set here with whatever path is defined inside that file.
+// TIP: rate limits. To change how strict they are, edit max (number of
+// tries) and windowMs (the time window, in milliseconds).
+const tooMany = { error: "Too many attempts. Try again in a few minutes." };
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: tooMany,
+});
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false, message: tooMany,
+});
+// TIP: custom orders upload photos to Cloudinary, so cap them per IP.
+const customOrderLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: tooMany,
+});
+const pingLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false,
+});
+
+app.use("/api/auth/login", loginLimiter);
+app.use("/api/auth/customer", otpLimiter);
+app.use("/api/custom-orders", customOrderLimiter);
+app.use("/api/analytics/ping", pingLimiter);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/customer", customerAuthRoutes);
 app.use("/api/products", productRoutes);
@@ -67,7 +86,8 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/account/addresses", addressRoutes);
 app.use("/api/analytics", analyticsRoutes);
-app.use('/api/custom-orders', customOrderRoutes);
+app.use("/api/custom-orders", customOrderRoutes);
+app.use("/api/shipping", shippingRoutes);
 
 app.get("/", (req, res) => res.send("Lara's Crochet API is running"));
 
