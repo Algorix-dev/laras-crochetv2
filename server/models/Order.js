@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { sendAdminOrderNotification } from '../utils/email.js';
 
 // TIP: the prefix in Lara's mockup ("AG" in #AG-2026-0001). Change it
 // here if it should be something else, e.g. "LC" for Lara's Crochet.
@@ -96,6 +97,13 @@ const orderSchema = new mongoose.Schema(
 //   3. Gives the order its AG-YYYY-NNNN number at this moment, not when
 //      checkout starts, so abandoned checkouts never use up numbers.
 // (A document hook can't do this: findOneAndUpdate skips them.)
+//
+// TIP — ADMIN EMAIL: `claimed` is only truthy for whichever caller wins
+// the atomic claim above — the redirect or the webhook, never both. So
+// putting sendAdminOrderNotification() inside this `if (claimed)` block
+// guarantees Lara gets exactly ONE email per order, no matter which of
+// the two callers gets there first, and no matter how many times the
+// webhook retries afterward.
 orderSchema.statics.markPaid = async function (reference, payment = {}) {
   const update = { status: 'paid' };
   if (payment.channel) update.paymentMethod = payment;
@@ -115,16 +123,29 @@ orderSchema.statics.markPaid = async function (reference, payment = {}) {
         { new: true, upsert: true }
       );
       const orderNumber = `${ORDER_PREFIX}-${year}-${String(counter.seq).padStart(4, '0')}`;
-      return await this.findOneAndUpdate(
+      const numbered = await this.findOneAndUpdate(
         { _id: claimed._id, orderNumber: { $exists: false } },
         { orderNumber },
         { new: true }
       );
+      // Fire-and-forget: never let an email hiccup delay or fail the
+      // response back to the customer/Paystack. sendAdminOrderNotification
+      // already catches its own errors internally, but .catch() here is a
+      // second safety net in case something else goes wrong.
+      sendAdminOrderNotification(numbered).catch((err) =>
+        console.error('Order-notification email failed:', err)
+      );
+      return numbered;
     } catch (err) {
       // The payment DID succeed — never report failure just because
       // numbering hiccupped. The order stays paid without a number
       // (Order History falls back to the Paystack reference).
       console.error(`Order numbering failed for ${reference}:`, err);
+      // Still notify Lara — the payment went through either way, and she
+      // should hear about it even if the AG-2026-0001 numbering failed.
+      sendAdminOrderNotification(claimed).catch((notifyErr) =>
+        console.error('Order-notification email failed:', notifyErr)
+      );
       return claimed;
     }
   }

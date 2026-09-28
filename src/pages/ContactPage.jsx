@@ -643,24 +643,38 @@ export default function ContactPage() {
     }, 1000);
   };
 
-  const submitCustom = (e) => {
+  const submitCustom = async (e) => {
     e.preventDefault();
     if (!formData.customEmail) {
       setErrors((p) => ({ ...p, customEmail: "Email is required" }));
       return;
     }
     if (!EMAIL_REGEX.test(formData.customEmail)) {
-      setErrors((p) => ({
-        ...p,
-        customEmail: "Please enter a valid email address",
-      }));
+      setErrors((p) => ({ ...p, customEmail: "Please enter a valid email address" }));
       return;
     }
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      const body = new FormData();
+      body.append("customerEmail", formData.customEmail);
+      body.append("garmentType", formData.garmentType);
+      body.append("sizeChoice", formData.sizeChoice);
+      body.append("colorNote", formData.colorNote);
+      body.append("customDetails", formData.customDetails);
+      body.append("customMeasurements", JSON.stringify(formData.customMeasurements));
+      formData.photos.forEach((file) => body.append("photos", file));
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/custom-orders`, {
+        method: "POST",
+        body,
+      });
+      if (!res.ok) throw new Error("Submission failed");
       goTo("success");
-    }, 1000);
+    } catch (err) {
+      setErrors((p) => ({ ...p, customEmail: "Something went wrong — please try again." }));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // TIP: the "Other" garment path has one extra question ("What would

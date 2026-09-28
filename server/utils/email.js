@@ -36,3 +36,54 @@ export async function sendOtpEmail(email, code) {
     throw new Error("Could not send verification email");
   }
 }
+
+export async function sendCustomOrderNotification(request) {
+  const to = process.env.ADMIN_NOTIFY_EMAIL;
+  if (!to) return console.warn('ADMIN_NOTIFY_EMAIL not set — skipping notification');
+
+  const photos = request.photoUrls?.length
+    ? request.photoUrls.map((url) => `<a href="${url}">${url}</a>`).join('<br/>')
+    : 'No photos attached';
+
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL || "Lara's Crochet <onboarding@resend.dev>",
+    to,
+    subject: `Custom order request — ${request.customerEmail}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <p style="font-size: 20px; font-weight: bold; color: #404040;">New custom order request</p>
+        <p><strong>From:</strong> ${request.customerEmail}</p>
+        <p><strong>Garment:</strong> ${request.garmentType || '—'} | <strong>Size:</strong> ${request.sizeChoice || '—'}</p>
+        <p><strong>Color note:</strong> ${request.colorNote || '—'}</p>
+        <p><strong>Details:</strong> ${request.customDetails || '—'}</p>
+        <p><strong>Reference photos:</strong><br/>${photos}</p>
+      </div>
+    `,
+  });
+  if (error) console.error('Custom-order notification email failed:', error);
+}
+
+export async function sendAdminOrderNotification(order) {
+  const to = process.env.ADMIN_NOTIFY_EMAIL; // set this to her Gmail address
+  if (!to) return console.warn('ADMIN_NOTIFY_EMAIL not set — skipping order notification');
+
+  const itemLines = order.items
+    .map((i) => `${i.quantity} × ${i.name} (${i.color}, ${i.size}) — ₦${i.price.toLocaleString()}`)
+    .join('<br/>');
+
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL || "Lara's Crochet <onboarding@resend.dev>",
+    to,
+    subject: `New order ${order.orderNumber || order.paystackReference} — ₦${order.totalAmount.toLocaleString()}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <p style="font-size: 20px; font-weight: bold; color: #404040;">New order received</p>
+        <p><strong>${order.orderNumber || order.paystackReference}</strong> — ${order.customerName} (${order.customerEmail})</p>
+        <p>${itemLines}</p>
+        <p><strong>Total:</strong> ₦${order.totalAmount.toLocaleString()} (incl. ${order.shippingMethod} shipping)</p>
+        <p><strong>Ship to:</strong> ${order.shippingAddress}</p>
+      </div>
+    `,
+  });
+  if (error) console.error('Order-notification email failed:', error);
+}

@@ -11,6 +11,8 @@ import paymentRoutes from "./routes/payments.js";
 import orderRoutes from "./routes/orders.js";
 import addressRoutes from "./routes/addresses.js";
 import analyticsRoutes from "./routes/analytics.js";
+import customOrderRoutes from './routes/customOrders.js';
+
 
 await connectDB();
 
@@ -65,6 +67,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/account/addresses", addressRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use('/api/custom-orders', customOrderRoutes);
 
 app.get("/", (req, res) => res.send("Lara's Crochet API is running"));
 
