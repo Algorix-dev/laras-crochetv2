@@ -75,7 +75,7 @@ const pingLimiter = rateLimit({
 
 app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth/customer", otpLimiter);
-app.use("/api/custom-orders", customOrderLimiter);
+app.post("/api/custom-orders", customOrderLimiter);
 app.use("/api/analytics/ping", pingLimiter);
 
 app.use("/api/auth", authRoutes);

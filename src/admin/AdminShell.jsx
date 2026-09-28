@@ -16,6 +16,7 @@ import {
   Menu,
   MessageSquareText,
   PackageSearch,
+  Scissors,
   Search,
   Settings,
   Shapes,
@@ -41,6 +42,7 @@ const MENU = [
     items: [
       { to: "/admin", label: "Dashboard", icon: House, title: "Dashboard", exact: true },
       { to: "/admin/orders", label: "Order Management", icon: ShoppingCart, title: "Order Management" },
+      { to: "/admin/custom-orders", label: "Custom Orders", icon: Scissors, title: "Custom Orders" },
       { to: "/admin/customers", label: "Customers", icon: Users, title: "Customers" },
       { to: "/admin/coupons", label: "Coupon Code", icon: Ticket, title: "Coupon Code" },
       { to: "/admin/categories", label: "Categories", icon: Shapes, title: "Categories" },

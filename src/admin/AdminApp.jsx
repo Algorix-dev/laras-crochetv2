@@ -3,6 +3,7 @@
 
     /admin                 Dashboard
     /admin/orders          Order Management
+    /admin/custom-orders   Custom Orders (requests from the custom-order form)
     /admin/customers       Customers (click a row for its details)
     /admin/categories      Categories
     /admin/transactions    Transaction
@@ -15,7 +16,7 @@
   Lara signs in with the admin account from server/seedAdmin.js.
   /admin?demo shows made-up sample data (see demo.js) — handy for previews.
 */
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import { adminLogin, adminSession } from "../api";
 import logo from "../assets/lara-crochet-logo.png";
@@ -25,6 +26,7 @@ import "./admin.css";
 import AdminRolePage from "./pages/AdminRolePage";
 import CategoriesPage from "./pages/CategoriesPage";
 import CustomersPage from "./pages/CustomersPage";
+import CustomOrdersPage from "./pages/CustomOrdersPage";
 import DashboardPage from "./pages/DashboardPage";
 import { ComingSoonPage, ProductListPage } from "./pages/MiscPages";
 import OrdersPage from "./pages/OrdersPage";
@@ -118,6 +120,7 @@ function Screens() {
         <Routes>
           <Route index element={<DashboardPage />} />
           <Route path="orders" element={<OrdersPage />} />
+          <Route path="custom-orders" element={<CustomOrdersPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
@@ -133,7 +136,37 @@ function Screens() {
   );
 }
 
+// TIP: matchMedia asks the browser "is the screen narrower than 1024px?" and
+// tells us again if that changes (rotating a phone). To allow tablets,
+// lower 1023 to something like 767.
+function useIsSmallScreen() {
+  const query = "(max-width: 1023px)";
+  const [small, setSmall] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = (e) => setSmall(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return small;
+}
+
+function DesktopOnlyNotice() {
+  return (
+    <div className="admin-root flex min-h-screen items-center justify-center px-6 text-center">
+      <div className="max-w-[360px]">
+        <img src={logo} alt="Lara's Crochet" className="mx-auto h-[56px] w-auto" />
+        <h1 className="mt-6 text-[22px] font-bold text-[var(--a-ink)]">Please use a laptop or computer</h1>
+        <p className="mt-2 text-[15px] text-[var(--a-muted)]">
+          The dashboard is built for a bigger screen. Open this page on a computer to manage orders and products.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminApp() {
+  const small = useIsSmallScreen();
   const [demo] = useState(readDemoFlag);
   const [signedIn, setSignedIn] = useState(() => Boolean(adminSession.get()));
 
@@ -143,6 +176,9 @@ export default function AdminApp() {
     if (demo) window.location.assign("/admin?demo=off");
   }, [demo]);
 
+  // TIP: keep these early returns BELOW all the hooks above. React needs the
+  // hooks to run in the same order on every render.
+  if (small) return <DesktopOnlyNotice />;
   if (!demo && !signedIn) return <LoginScreen onSignedIn={() => setSignedIn(true)} />;
 
   return (

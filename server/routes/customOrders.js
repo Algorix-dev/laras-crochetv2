@@ -3,10 +3,41 @@ import multer from 'multer';
 import cloudinary from '../config/cloudinary.js';
 import CustomOrderRequest from '../models/CustomOrderRequest.js';
 import { sendCustomOrderNotification } from '../utils/email.js';
+import { requireAdmin } from '../middleware/requireAdmin.js';
+import CustomOrderRequest from '../models/CustomOrderRequest.js';
+import mongoose from 'mongoose';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
+// GET /api/custom-orders — admin-only list for the dashboard.
+// TIP: the customer-facing POST route stays open; only this one is locked.
+router.get('/', requireAdmin, async (req, res) => {
+  const requests = await CustomOrderRequest.find().sort({ createdAt: -1 });
+  res.json(requests);
+});
+
+// GET /api/custom-orders — admin-only list, newest first
+router.get('/', requireAdmin, async (req, res) => {
+  const requests = await CustomOrderRequest.find().sort({ createdAt: -1 });
+  res.json(requests);
+});
+
+// PATCH /api/custom-orders/:id/status — mark new / contacted / closed
+router.patch('/:id/status', requireAdmin, async (req, res) => {
+  const { status } = req.body || {};
+  // TIP: findByIdAndUpdate skips the schema's enum check, so we check
+  // against the model's own list to reject typos.
+  if (!CustomOrderRequest.schema.path('status').enumValues.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(404).json({ error: 'Request not found' });
+  }
+  const doc = await CustomOrderRequest.findByIdAndUpdate(req.params.id, { status }, { new: true });
+  if (!doc) return res.status(404).json({ error: 'Request not found' });
+  res.json(doc);
+});
 // TIP: plain upload, no @imgly background removal — these are the
 // customer's own reference photos (what they want it to look like),
 // not a product photo that needs a clean background for the shop.

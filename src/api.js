@@ -257,3 +257,9 @@ export const getShippingRates = () => adminRequest("/api/shipping/rates");
 // admin: replaces the whole list with the one sent
 export const saveShippingRates = (rates) =>
   adminRequest("/api/shipping/rates", { method: "PUT", body: JSON.stringify({ rates }) });
+
+/* ---------- CUSTOM ORDERS (admin) ---------- */
+export const getCustomOrders = () => adminRequest("/api/custom-orders");
+
+export const updateCustomOrderStatus = (id, status) =>
+  adminRequest(`/api/custom-orders/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
