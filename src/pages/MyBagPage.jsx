@@ -321,7 +321,7 @@ export default function MyBagPage() {
                     {/* =========================
                         DESKTOP QUANTITY
                     ========================== */}
-                    <div className="hidden md:flex md:flex-row md:items-center md:gap-3">
+                    <div className="hidden md:flex md:flex-col md:items-center md:gap-3">
                       <div className="flex w-[104px] shrink-0 items-center justify-between border border-[var(--line)]">
                         <button
                           type="button"
