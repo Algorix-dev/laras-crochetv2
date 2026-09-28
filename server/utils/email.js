@@ -87,3 +87,31 @@ export async function sendAdminOrderNotification(order) {
   });
   if (error) console.error('Order-notification email failed:', error);
 }
+
+export async function sendOrderConfirmationEmail(order) {
+  const itemLines = order.items
+    .map((i) => `${i.quantity} × ${i.name} (${i.color}, ${i.size}) — ₦${i.price.toLocaleString()}`)
+    .join('<br/>');
+
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL || "Lara's Crochet <onboarding@resend.dev>",
+    to: order.customerEmail,
+    subject: `Order confirmed — ${order.orderNumber || order.paystackReference}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <p style="font-size: 20px; font-weight: bold; color: #404040;">Thank you, ${order.customerName}!</p>
+        <p style="color: #737373;">Your order <strong>${order.orderNumber || order.paystackReference}</strong> is confirmed.</p>
+        <p>${itemLines}</p>
+        <p><strong>Total:</strong> ₦${order.totalAmount.toLocaleString()} (incl. ${order.shippingMethod} shipping)</p>
+        <p><strong>Shipping to:</strong> ${order.shippingAddress}</p>
+        <p style="color: #A3A3A3; font-size: 13px; margin-top: 24px;">
+          You can track this order any time using your order number or Paystack reference.
+        </p>
+      </div>
+    `,
+  });
+  // TIP: don't throw. A failed customer email should never undo a
+  // successful payment or crash markPaid — same pattern as the two
+  // functions above it.
+  if (error) console.error('Order-confirmation email failed:', error);
+}

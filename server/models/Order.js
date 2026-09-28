@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { sendAdminOrderNotification } from '../utils/email.js';
+import { sendAdminOrderNotification, sendOrderConfirmationEmail } from '../utils/email.js';
 
 // TIP: the prefix in Lara's mockup ("AG" in #AG-2026-0001). Change it
 // here if it should be something else, e.g. "LC" for Lara's Crochet.
@@ -135,6 +135,12 @@ orderSchema.statics.markPaid = async function (reference, payment = {}) {
       sendAdminOrderNotification(numbered).catch((err) =>
         console.error('Order-notification email failed:', err)
       );
+      // TIP: same fire-and-forget pattern as the admin email above — a
+      // slow or failed customer email should never delay the response
+      // or affect the payment itself.
+      sendOrderConfirmationEmail(numbered).catch((err) =>
+        console.error('Order-confirmation email failed:', err)
+      );
       return numbered;
     } catch (err) {
       // The payment DID succeed — never report failure just because
@@ -146,6 +152,10 @@ orderSchema.statics.markPaid = async function (reference, payment = {}) {
       sendAdminOrderNotification(claimed).catch((notifyErr) =>
         console.error('Order-notification email failed:', notifyErr)
       );
+      sendOrderConfirmationEmail(claimed).catch((err) =>
+        console.error('Order-confirmation email failed:', err)
+      );
+      return claimed;
       return claimed;
     }
   }
