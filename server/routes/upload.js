@@ -4,7 +4,23 @@ import { removeBackground } from '@imgly/background-removal-node';
 import cloudinary from '../config/cloudinary.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 import sharp from 'sharp'; // already in your package.json
+// TIP: emergency switch. @imgly/background-removal-node has been
+// segfaulting (exit 139) on this host. Set SKIP_BACKGROUND_REMOVAL=true
+// in the environment to upload photos with their original background
+// instead of risking the whole server going down mid-upload.
+const SKIP_BG_REMOVAL = process.env.SKIP_BACKGROUND_REMOVAL === 'true';
 
+async function stripBackground(buffer, mimetype) {
+  const resized = await sharp(buffer).resize({ width: 1600, withoutEnlargement: true }).toBuffer();
+
+  if (SKIP_BG_REMOVAL || buffer.length > SKIP_AI_ABOVE_BYTES) {
+    return resized;
+  }
+
+  const blob = new Blob([resized], { type: mimetype });
+  const resultBlob = await removeBackground(blob);
+  return Buffer.from(await resultBlob.arrayBuffer());
+}
 const SKIP_AI_ABOVE_BYTES = 12 * 1024 * 1024; // ~12MB raw — too risky to run the model on
 
 const router = Router();
@@ -16,21 +32,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 // a product photo that still has its background is a much smaller problem
 // than the admin being unable to add products before launch.
 const STRIP_TIMEOUT_MS = 15000;
-
-async function stripBackground(buffer, mimetype) {
-  // Downscale first — memory use scales with pixel count, and product
-  // photos don't need to be huge before Cloudinary stores them.
-  const resized = await sharp(buffer).resize({ width: 1600, withoutEnlargement: true }).toBuffer();
-
-  if (buffer.length > SKIP_AI_ABOVE_BYTES) {
-    console.warn('Skipping background removal — file too large to risk it:', buffer.length);
-    return resized;
-  }
-
-  const blob = new Blob([resized], { type: mimetype });
-  const resultBlob = await removeBackground(blob);
-  return Buffer.from(await resultBlob.arrayBuffer());
-}
 
 function withTimeout(promise, ms) {
   return Promise.race([
