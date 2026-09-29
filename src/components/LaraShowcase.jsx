@@ -720,13 +720,25 @@ function ReviewCardBody({ testimonial, compact = false }) {
         "{testimonial.quote}"
       </p>
 
-      <p className="flex items-center gap-1 text-sm font-bold text-[var(--ink)]">
+            <p className="flex items-center gap-1.5 text-sm font-bold text-[var(--ink)]">
         {testimonial.name}
-        <span
-          aria-hidden="true"
-          className="inline-flex h-3.5 w-3.5 items-center rounded-full bg-[var(--maroon)] text-[9px] text-white"
-        >
-          ✓
+        {/* TIP: same maroon seal-with-checkmark shape used on the product
+            page's review badge, scaled down to fit inline with the name.
+            To resize, change both width and height on the svg together. */}
+        <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 1.5l2.1 1.9 2.7-.9 1.3 2.5 2.8.5-.2 2.8 2 2-1.6 2.3 1 2.6-2.6 1.2-.4 2.8-2.8-.2-1.7 2.2-2.6-1.2-2.6 1.2-1.7-2.2-2.8.2-.4-2.8-2.6-1.2 1-2.6L1.9 12l2-2-.2-2.8 2.8-.5 1.3-2.5 2.7.9L12 1.5z"
+              fill="var(--maroon)"
+            />
+            <path
+              d="M8.5 12.2l2.2 2.2 4.3-4.6"
+              stroke="white"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </span>
       </p>
 
@@ -1216,13 +1228,22 @@ export default function LaraShowcase() {
               "{testimonial.quote}"
             </p>
 
-            <p className="flex items-center  gap-1 text-sm font-bold text-[var(--ink)]">
+                        <p className="flex items-center gap-1.5 text-sm font-bold text-[var(--ink)]">
               {testimonial.name}
-              <span
-                aria-hidden="true"
-                className="inline-flex h-3.5 w-3.5 items-center  rounded-full bg-[var(--maroon)] text-[9px] text-white"
-              >
-                ✓
+              <span aria-hidden="true" className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 1.5l2.1 1.9 2.7-.9 1.3 2.5 2.8.5-.2 2.8 2 2-1.6 2.3 1 2.6-2.6 1.2-.4 2.8-2.8-.2-1.7 2.2-2.6-1.2-2.6 1.2-1.7-2.2-2.8.2-.4-2.8-2.6-1.2 1-2.6L1.9 12l2-2-.2-2.8 2.8-.5 1.3-2.5 2.7.9L12 1.5z"
+                    fill="var(--maroon)"
+                  />
+                  <path
+                    d="M8.5 12.2l2.2 2.2 4.3-4.6"
+                    stroke="white"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </span>
             </p>
 
