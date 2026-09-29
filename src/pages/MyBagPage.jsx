@@ -103,23 +103,11 @@ export default function MyBagPage() {
             <div>
               {/* DESKTOP TABLE HEADER */}
               <div className="hidden border-b border-[var(--line)] pb-4 md:grid md:grid-cols-[6rem_1fr_96px_120px_260px] md:items-center md:gap-3">
-                <span className="text-base font-bold uppercase tracking-wide">
-                  Item
-                </span>
-
+                <span className="text-[14px] text-[#564345]">Item</span>
                 <span />
-
-                <span className="text-base font-bold uppercase tracking-wide">
-                  Size
-                </span>
-
-                <span className="text-base font-bold uppercase tracking-wide">
-                  Color
-                </span>
-
-                <span className="text-base font-bold uppercase tracking-wide">
-                  Qty
-                </span>
+                <span className="text-[14px] text-[#564345]">Size</span>
+                <span className="text-[14px] text-[#564345]">Color</span>
+                <span className="text-[14px] text-[#564345]">Qty</span>
               </div>
 
               {/* CART LIST */}
@@ -182,7 +170,7 @@ export default function MyBagPage() {
                         PRODUCT INFORMATION
                     ========================== */}
                     <div className="flex min-w-0 flex-col py-1 md:py-0">
-                      <p className="text-base uppercase tracking-wider text-[#564345] md:text-base">
+                      <p className="text-[12px] uppercase tracking-wider text-[#AF9D9E] md:text-[12px]">
                         {item.product.category === 'two-pieces'
                           ? 'Two-Piece'
                           : item.product.category === 'bikinis'
@@ -196,12 +184,12 @@ export default function MyBagPage() {
 
                       <Link
                         to={`/product/${item.product.id}`}
-                        className="mt-1 text-base font-bold uppercase tracking-wide hover:underline md:text-base"
+                        className="mt-1 text-base font-bold uppercase tracking-wide text-[#000000] hover:underline md:text-base"
                       >
                         {item.product.name}
                       </Link>
 
-                      <p className="mt-1 text-base text-[#564345] md:text-base">
+                      <p className="mt-1 text-base text-[#000000] md:text-base">
                         {formatPrice(item.product.price)}
                       </p>
 

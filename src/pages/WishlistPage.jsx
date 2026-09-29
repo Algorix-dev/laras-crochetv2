@@ -19,7 +19,7 @@ import Footer from '../components/Footer';
 import { shouldShowSplash } from '../utils/splashOnce';
 
 export default function WishlistPage() {
-  const { wishlistItems } = useWishlist();
+  const { wishlistItems, pruneToValidIds } = useWishlist();
   const [showSplash] = useState(() => shouldShowSplash('/wishlist'));
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,12 +28,19 @@ export default function WishlistPage() {
   // WishlistContext) — we fetch the full catalog once from the API
   // (like ShopPage does) and match IDs client-side, instead of
   // reading the old hardcoded products.js array.
-  useEffect(() => {
+    useEffect(() => {
     getProducts('all')
-      .then((data) => setAllProducts(data.map(normalizeProduct)))
+      .then((data) => {
+        const products = data.map(normalizeProduct);
+        setAllProducts(products);
+        // TIP: now that we know which ids are real, drop any stored id
+        // that isn't — this is what keeps the header badge and this
+        // page's count in sync going forward.
+        pruneToValidIds(products.map((p) => p.id));
+      })
       .catch(() => setAllProducts([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [pruneToValidIds]);
 
   const wishlistedProducts = allProducts.filter((p) => wishlistItems.includes(p.id));
 

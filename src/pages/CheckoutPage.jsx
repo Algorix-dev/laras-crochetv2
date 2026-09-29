@@ -11,7 +11,7 @@
   with just the form fields and order summary.
 */
 import { Link, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Lock, MessageCircleQuestion, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -28,7 +28,7 @@ import laraCrochetLogo from '../assets/lara-crochet-logo.png';
    with shared styling matching the Figma's light gray borders.
    Now a controlled input (value + onChange) instead of defaultValue,
    since we need the actual values at submit time to send to the API. */
-const Field = ({ label, value, onChange, ...props }) => (
+const Field = ({ label, value, onChange, error, ...props }) => (
   <label className="block text-base">
     {label && <span className="mb-1 block text-[var(--muted)]">{label}</span>}
     <input
@@ -36,12 +36,18 @@ const Field = ({ label, value, onChange, ...props }) => (
       value={value}
       onChange={onChange}
       required={!props.optional}
-      className="w-full border border-[var(--line)] bg-white px-3 py-3 text-base"
+      aria-invalid={error || undefined}
+      className={`w-full border bg-white px-3 py-3 text-base ${
+        error ? 'border-red-500 bg-red-50' : 'border-[var(--line)]'
+      }`}
     />
+    {error && <span className="mt-1 block text-[13px] text-red-600">Please fill in this field</span>}
   </label>
 );
 
 export default function CheckoutPage() {
+  const formRef = useRef(null);
+  const [invalidFields, setInvalidFields] = useState(new Set());
   const navigate = useNavigate();
   const { cartItems, cartTotal, removeFromBag } = useCart();
   /* TIP: `country` + `setCountry` come from the SAME currency context the
@@ -69,8 +75,17 @@ export default function CheckoutPage() {
     postalCode: '',
     phone: '',
   });
-  const updateField = (key) => (e) =>
-    setForm((f) => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+    const updateField = (key) => (e) => {
+      setForm((f) => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+      // TIP: as soon as they type into a field we flagged, clear its red
+      // border — otherwise it would stay red until their NEXT submit attempt.
+      setInvalidFields((prev) => {
+        if (!prev.has(key)) return prev;
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    };
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -138,6 +153,24 @@ export default function CheckoutPage() {
   const submit = async (e) => {
     e.preventDefault();
     if (!cartItems.length || submitting) return;
+
+    // TIP: checkValidity() runs the SAME checks the `required` attributes
+    // already declare, without submitting — so nothing about validation
+    // rules changes. We just take over how failures are SHOWN: every
+    // invalid field's `name` goes into invalidFields, which lights up a
+    // clear red border + message (see the Field component), instead of
+    // relying on the browser's own small, easy-to-miss default popup.
+    if (formRef.current && !formRef.current.checkValidity()) {
+      const invalid = new Set();
+      for (const el of formRef.current.elements) {
+        if (el.name && !el.validity.valid) invalid.add(el.name);
+      }
+      setInvalidFields(invalid);
+      formRef.current.reportValidity(); // still scrolls to / focuses the first invalid field
+      return;
+    }
+    setInvalidFields(new Set());
+
     setSubmitError(null);
     setSubmitting(true);
     try {
@@ -230,7 +263,7 @@ export default function CheckoutPage() {
           {/* ================================================================
               LEFT COLUMN — Checkout form
               ================================================================ */}
-          <form onSubmit={submit} className="py-8">
+            <form ref={formRef} onSubmit={submit} noValidate className="py-8">
 
             {/* TIP: Brand link back to the home/shop page. */}
             <Link to="/" aria-label="Lara's Crochet home">
@@ -252,7 +285,7 @@ export default function CheckoutPage() {
               <h2 className="text-base font-semibold">Contact</h2>
 
               <div className="mt-3 relative">
-                <Field type="email" placeholder="Email" value={form.email} onChange={updateField('email')} />
+                <Field type="email" name="email" placeholder="Email" value={form.email} onChange={updateField('email')} error={invalidFields.has('email')} />
                 {/* TIP: Help icon inside the email field */}
                 <button
                   type="button"
@@ -309,11 +342,11 @@ export default function CheckoutPage() {
 
                 {/* TIP: First name and last name side by side. */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Field placeholder="First name" value={form.firstName} onChange={updateField('firstName')} />
-                  <Field placeholder="Last name" value={form.lastName} onChange={updateField('lastName')} />
+                  <Field name="firstName" placeholder="First name" value={form.firstName} onChange={updateField('firstName')} error={invalidFields.has('firstName')} />
+                  <Field name="lastName" placeholder="Last name" value={form.lastName} onChange={updateField('lastName')} error={invalidFields.has('lastName')} />
                 </div>
 
-                <Field placeholder="Address" value={form.address} onChange={updateField('address')} />
+                <Field name="address" placeholder="Address" value={form.address} onChange={updateField('address')} error={invalidFields.has('address')} />
                 <Field
                   placeholder="Apartment, suite, etc. (optional)"
                   optional
@@ -324,12 +357,15 @@ export default function CheckoutPage() {
                 {/* TIP: City, State, and Postal Code — three columns.
                     State shows "Lagos" as default, matching the Figma. */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Field placeholder="City" value={form.city} onChange={updateField('city')} />
+                  <Field name="city" placeholder="City" value={form.city} onChange={updateField('city')} error={invalidFields.has('city')} />
                   {country === 'NG' ? (
                     <label className="block text-base">
                       <span className="mb-1 block text-[var(--muted)]">State</span>
                       <select
-                        className="w-full border border-[var(--line)] bg-white px-3 py-3 text-base"
+                        name="state"
+                        className={`w-full border bg-white px-3 py-3 text-base ${
+                          invalidFields.has('state') ? 'border-red-500 bg-red-50' : 'border-[var(--line)]'
+                        }`}
                         value={form.state}
                         onChange={updateField('state')}
                         required
@@ -361,10 +397,14 @@ export default function CheckoutPage() {
                   </span>
                   <input
                     required
+                    name="phone"
                     placeholder="Phone number"
                     value={form.phone}
                     onChange={updateField('phone')}
-                    className="min-w-0 flex-1 p-3 text-base"
+                    aria-invalid={invalidFields.has('phone') || undefined}
+                    className={`min-w-0 flex-1 p-3 text-base ${
+                      invalidFields.has('phone') ? 'bg-red-50' : ''
+                    }`}
                   />
                   {/* TIP: Help icon inside the phone field */}
                   <button

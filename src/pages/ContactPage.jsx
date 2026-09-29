@@ -1478,9 +1478,12 @@ export default function ContactPage() {
                         onChange={(e) =>
                           updateField("customDetails", e.target.value)
                         }
-                        placeholder="This might help Lara nail your vision faster. E.g. and for the lady, perhaps a matching bag 😉?"
+                        placeholder="And for the lady, perhaps a matching bag 😉?"
                         className="w-full border border-[var(--line)] px-4 py-3.5 bg-[var(--cream)]/40 focus:bg-white text-base outline-none transition-all focus:border-[var(--ink)] resize-none"
                       />
+                      <p className="text-xs text-[var(--muted)]">
+                        This might help Lara nail your vision faster.
+                      </p>
                       <PrimaryButton onClick={() => goTo("email")}>
                         {formData.customDetails.trim() ? "Next" : "No"}
                       </PrimaryButton>

@@ -150,7 +150,18 @@ export default function Navbar() {
     >
       {/* TIP: fill="currentColor" makes the bag icon solid once something is
           in it (client request). Empty bag = outline only. */}
-      <ShoppingBag size={18} fill={cartCount > 0 ? 'currentColor' : 'none'} />
+      <ShoppingBag
+              size={16}
+              strokeWidth={1}
+              // TIP — Teniayo's spec: filled state should have the inside
+              // colored and the outline in the BACKGROUND color, not the
+              // same color as the fill (that's what made it look like a
+              // solid black blob before). '#FFFFFF' assumes a white card
+              // background — if the card sits on a cream/off-white
+              // section elsewhere, change this to match (e.g. '#FAFAFA').
+              fill={inBag ? 'currentColor' : 'none'}
+              stroke={inBag ? '#FFFFFF' : 'currentColor'}
+            />
       {cartCount > 0 && (
         <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
           {cartCount}

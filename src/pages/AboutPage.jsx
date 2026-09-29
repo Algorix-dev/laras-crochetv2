@@ -105,9 +105,7 @@ export default function AboutPage() {
             {/* Instagram */}
             <div className="rv d3 mt-8 flex justify-center text-[16px] underline underline-offset-4">
               <a
-                href="https://www.instagram.com/_larascrochet/"
-                target="_blank"
-                rel="noreferrer"
+                href="#"
                 className="text-[#564345]"
               >
                 Connect with Lara&apos;s Crochet

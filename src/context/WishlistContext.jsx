@@ -53,7 +53,7 @@ export function WishlistProvider({ children }) {
       /* TIP: toggleWishlist uses the functional updater form of setState
          (items => ...) so it always reads the latest state, even if multiple
          toggles happen in quick succession. */
-      toggleWishlist: (productId) =>
+            toggleWishlist: (productId) =>
         setWishlistItems((items) => {
           const included = items.includes(productId);
 
@@ -68,6 +68,20 @@ export function WishlistProvider({ children }) {
           return included
             ? items.filter((id) => id !== productId)
             : [...items, productId];
+        }),
+
+      /* TIP: silently drops any stored id that no longer matches a real,
+         live product — no toast, since this isn't a user action. This is
+         what fixes the header badge showing a higher count than the
+         Wishlist page displays: a product Lara deletes or hides stays in
+         someone's stored wishlist forever unless something prunes it.
+         Only the Wishlist page calls this, once it has the real catalog. */
+      pruneToValidIds: (validIds) =>
+        setWishlistItems((items) => {
+          const validSet = new Set(validIds);
+          const next = items.filter((id) => validSet.has(id));
+          // avoid a pointless state update + localStorage write when nothing changed
+          return next.length === items.length ? items : next;
         }),
     }),
     [wishlistItems]

@@ -331,7 +331,14 @@ export default function ProductCard({
             <ShoppingBag
               size={16}
               strokeWidth={1}
+              // TIP — Teniayo's spec: filled state should have the inside
+              // colored and the outline in the BACKGROUND color, not the
+              // same color as the fill (that's what made it look like a
+              // solid black blob before). '#FFFFFF' assumes a white card
+              // background — if the card sits on a cream/off-white
+              // section elsewhere, change this to match (e.g. '#FAFAFA').
               fill={inBag ? 'currentColor' : 'none'}
+              stroke={inBag ? '#FFFFFF' : 'currentColor'}
             />
           </button>
         )}
