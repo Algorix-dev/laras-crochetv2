@@ -402,9 +402,11 @@ function Reviews() {
     <section className="mt-16 px-5 md:px-8 lg:px-[15.83%] md:mt-20" data-auto-rise="true">
       <h2 className="font-bold font-display text-3xl md:text-4xl">Reviews</h2>
 
+      {/* TIP: was renderStars(4, 14) — Figma has these top stars at 24×24,
+          matching the per-review star size below. */}
       <div className="mt-5 flex items-center gap-3">
         <strong className="text-base font-medium">4.5</strong>
-        {renderStars(4, 14)}
+        {renderStars(4, 24)}
       </div>
         <span className="sm:block text-[14px] md:text-[18px] text-[var(--muted)]">
           Based on 18 reviews
@@ -438,7 +440,7 @@ function Reviews() {
           }`}
         >
           Customers say this bra offers exceptional comfort for all-day wear,
-          with many noting they forget they&apos;re wearing it. Many reviews mention
+          with many noting they&apos;re wearing it. Many reviews mention
           the smooth fit under clothing and precise sizing when following the
           measurement guide. While some note the band runs slightly tight, most
           praise the secure fit without slipping straps. Frequent comments address
@@ -513,26 +515,22 @@ function Reviews() {
             </div>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-[14px] font-bold">{review.name}</p>
-                {/* TIP: this SVG draws the maroon seal-with-checkmark shape
-                    from the client's reference image, instead of plain text
-                    + a checkmark icon. To change the color, edit the two
-                    fill="var(--maroon)" values below (or swap in a hex code). */}
-                <span
-                  className="inline-flex shrink-0 items-center justify-center"
-                  title="Verified Buyer"
-                  aria-label="Verified Buyer"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <div className="flex items-center gap-1.5">
+                {/* TIP: name + "Verified Buyer" + badge are all the same
+                    20px size in Figma (the name is bold, the label isn't).
+                    Bumped from 14px to match. */}
+                <p className="text-[20px] font-bold text-[#404040]">{review.name}</p>
+                <span className="flex items-center gap-1.5 text-[20px] text-[#564345]">
+                  Verified Buyer
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path
                       d="M12 1.5l2.1 1.9 2.7-.9 1.3 2.5 2.8.5-.2 2.8 2 2-1.6 2.3 1 2.6-2.6 1.2-.4 2.8-2.8-.2-1.7 2.2-2.6-1.2-2.6 1.2-1.7-2.2-2.8.2-.4-2.8-2.6-1.2 1-2.6L1.9 12l2-2-.2-2.8 2.8-.5 1.3-2.5 2.7.9L12 1.5z"
-                      fill="var(--maroon)"
+                      fill="#564345"
                     />
                     <path
                       d="M8.5 12.2l2.2 2.2 4.3-4.6"
                       stroke="white"
-                      strokeWidth="1.8"
+                      strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
@@ -542,23 +540,25 @@ function Reviews() {
 
               <div className="mt-5">{renderStars(review.rating, 24)}</div>
 
-              <h3 className="mt-5 text-[14px] font-bold">{review.title}</h3>
+              {/* TIP: was 14px, Figma has this at the same 20px bold as
+                  the reviewer's name above. */}
+              <h3 className="mt-5 text-[20px] font-bold text-[#404040]">{review.title}</h3>
 
               {review.photo && (
                 <ZoomImage
                   src={review.photo}
                   alt={`Customer photo for ${review.title}`}
-                  // TIP — WAS DESKTOP-SIZED ON EVERY SCREEN: this had a
-                  // flat 392x359(max) size with no mobile override, so
-                  // phones got the same huge desktop photo instead of a
-                  // smaller one. h-[131px] w-[120px] below is the actual
-                  // Figma mobile size ("Rectangle 38"); md: restores the
-                  // original desktop size.
-                  className="mt-6 h-[110px] w-[100px] object-cover md:h-[240px] md:w-[220px]"
+                  // TIP: this is the INDIVIDUAL review's own photo size in
+                  // Figma ("Rectangle 38": 260 × 284.69), which is a
+                  // different size from the two summary photos above
+                  // ("Rectangle 39/40": 220 × 240) — it was wrongly reusing
+                  // that size before. Mobile keeps the smaller fallback.
+                  className="mt-6 h-[110px] w-[100px] object-cover md:h-[285px] md:w-[260px]"
                 />
               )}
 
-              <p className="mt-6 text-[14px] leading-6 text-[var(--muted)]">
+              {/* TIP: was 14px, Figma has the review text at 16px. */}
+              <p className="mt-6 text-[16px] leading-6 text-[#564345]">
                 {review.text}
               </p>
             </div>
