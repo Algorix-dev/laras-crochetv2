@@ -130,7 +130,8 @@ export default function Navbar() {
 
     return location.pathname + location.search === to;
   };
-
+    // Navbar bag icon is solid whenever anything is in the bag.
+  const inBag = cartCount > 0;
   /* Bag button with count badge */
   const BagButton = ({ onNavigate }) => (
     <button
@@ -160,7 +161,7 @@ export default function Navbar() {
               // background — if the card sits on a cream/off-white
               // section elsewhere, change this to match (e.g. '#FAFAFA').
               fill={inBag ? 'currentColor' : 'none'}
-              stroke={inBag ? '#FFFFFF' : 'currentColor'}
+              stroke={inBag ? '#FAFAFA' : 'currentColor'}
             />
       {cartCount > 0 && (
         <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
