@@ -141,8 +141,8 @@ export default function ProductCard({
             `}
           >
             <Heart
-              size={10}
-              strokeWidth={0.625}
+              size={15}
+              strokeWidth={1.25}
               fill={
                 inWishlist
                   ? 'currentColor'
