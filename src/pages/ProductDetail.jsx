@@ -513,11 +513,30 @@ function Reviews() {
             </div>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <p className="text-[14px] font-bold">{review.name}</p>
-                <span className="flex items-center gap-1 text-[14px] text-[var(--ink-warm)]">
-                  Verified Buyer
-                  <Check size={17} strokeWidth={3} />
+                {/* TIP: this SVG draws the maroon seal-with-checkmark shape
+                    from the client's reference image, instead of plain text
+                    + a checkmark icon. To change the color, edit the two
+                    fill="var(--maroon)" values below (or swap in a hex code). */}
+                <span
+                  className="inline-flex shrink-0 items-center justify-center"
+                  title="Verified Buyer"
+                  aria-label="Verified Buyer"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 1.5l2.1 1.9 2.7-.9 1.3 2.5 2.8.5-.2 2.8 2 2-1.6 2.3 1 2.6-2.6 1.2-.4 2.8-2.8-.2-1.7 2.2-2.6-1.2-2.6 1.2-1.7-2.2-2.8.2-.4-2.8-2.6-1.2 1-2.6L1.9 12l2-2-.2-2.8 2.8-.5 1.3-2.5 2.7.9L12 1.5z"
+                      fill="var(--maroon)"
+                    />
+                    <path
+                      d="M8.5 12.2l2.2 2.2 4.3-4.6"
+                      stroke="white"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </span>
               </div>
 
