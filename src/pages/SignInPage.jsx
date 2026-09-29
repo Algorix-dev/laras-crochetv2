@@ -139,42 +139,56 @@ export default function SignInPage() {
 
     const googleButtonRef = useRef(null);
 
-    useEffect(() => {
-      if (screen !== 'signin' || !window.google || !googleButtonRef.current) return;
+      useEffect(() => {
+        if (screen !== 'signin' || !window.google || !googleButtonRef.current) return;
 
-      // TIP: this initializes Google's own button and popup flow. The
-      // client ID here is PUBLIC by design (it identifies your app to
-      // Google, it isn't a secret) — safe to have in frontend code.
-      window.google.accounts.id.initialize({
-        client_id: '792840703111-84srmq73pbgfup28asjbrraftssl69hk.apps.googleusercontent.com',
-        callback: async (response) => {
-          setChecking(true);
-          setError('');
-          try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/customer/google`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ credential: response.credential }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Google sign-in failed');
-            login(data.user, data.token);
-            const redirectTo = new URLSearchParams(location.search).get('redirect') || '/';
-            navigate(redirectTo);
-          } catch (err) {
-            setError(err.message);
-          } finally {
-            setChecking(false);
-          }
-        },
-      });
+        // TIP: Google's renderButton wants a fixed pixel width, not a percentage,
+        // so we measure the actual container width ourselves and re-measure on
+        // resize — this is what makes the button match the email input's width
+        // on any screen size instead of overflowing on narrow ones.
+        const renderGoogleButton = () => {
+          if (!googleButtonRef.current) return;
+          googleButtonRef.current.innerHTML = ''; // clear before re-rendering at new width
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: 'outline',
+            size: 'large',
+            width: googleButtonRef.current.offsetWidth,
+          });
+        };
 
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        width: 457,
-      });
-    }, [screen]);
+        window.google.accounts.id.initialize({
+          client_id: '792840703111-84srmq73pbgfup28asjbrraftssl69hk.apps.googleusercontent.com',
+          callback: async (response) => {
+            setChecking(true);
+            setError('');
+            try {
+              const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/customer/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: response.credential }),
+              });
+              let data;
+              try {
+                data = await res.json();
+              } catch {
+                throw new Error('The server is waking up — please try again in a moment.');
+              }
+              if (!res.ok) throw new Error(data.error || 'Google sign-in failed');
+              login(data.user, data.token);
+              const redirectTo = new URLSearchParams(location.search).get('redirect') || '/';
+              navigate(redirectTo);
+            } catch (err) {
+              setError(err.message);
+            } finally {
+              setChecking(false);
+            }
+          },
+        });
+
+        renderGoogleButton();
+        window.addEventListener('resize', renderGoogleButton);
+        return () => window.removeEventListener('resize', renderGoogleButton);
+      }, [screen]);
 
   if (screen === 'splash') return <main className="flex min-h-screen items-center justify-center overflow-hidden bg-[#FAFAFA] font-ui text-center"><div className={`transition duration-[1000ms] ${clear ? 'opacity-100 blur-0' : 'opacity-55 blur-[3px]'}`}><img className="mx-auto h-[120px] w-[186px] object-contain" src={logoMark} alt="Lara's Crochet" /><p className="mt-3 text-[14px] tracking-[0.5em] text-[#A3A3A3]">LIMITED BY NATURE</p></div></main>;
 
