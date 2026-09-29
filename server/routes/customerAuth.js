@@ -4,8 +4,10 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { sendOtpEmail } from "../utils/email.js";
 import { requireCustomer } from "../middleware/requireCustomer.js";
+import { OAuth2Client } from 'google-auth-library';
 
 const router = Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const CODE_EXPIRY_MINUTES = 10;
 const MAX_WRONG_GUESSES = 5; // TIP: change this number to allow more or fewer tries
 
@@ -110,6 +112,54 @@ router.post("/verify-code", async (req, res) => {
   } catch (err) {
     console.error("verify-code error:", err);
     res.status(500).json({ error: "Something went wrong, try again" });
+  }
+});
+
+// POST /api/auth/customer/google   body: { credential }
+// TIP: `credential` is the ID token Google's popup hands back to the
+// browser — we verify it server-side (never trust it as-is) before
+// treating the person as signed in.
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body || {};
+    if (typeof credential !== 'string') {
+      return res.status(400).json({ error: 'Missing Google credential' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const normalizedEmail = payload.email.toLowerCase();
+
+    // TIP: same upsert pattern as the OTP flow — first-time Google
+    // sign-in creates the account, same as first-time OTP does.
+    const user = await User.findOneAndUpdate(
+      { email: normalizedEmail },
+      {
+        $setOnInsert: { username: payload.name || '' },
+        googleId: payload.sub,
+      },
+      { upsert: true, new: true },
+    );
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '30d',
+    });
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        loyaltyStatus: user.loyaltyStatus,
+      },
+    });
+  } catch (err) {
+    console.error('Google sign-in error:', err);
+    res.status(401).json({ error: 'Could not verify Google sign-in' });
   }
 });
 
