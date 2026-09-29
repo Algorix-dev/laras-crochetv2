@@ -148,11 +148,15 @@ export default function SignInPage() {
         // on any screen size instead of overflowing on narrow ones.
         const renderGoogleButton = () => {
           if (!googleButtonRef.current) return;
-          googleButtonRef.current.innerHTML = ''; // clear before re-rendering at new width
+          googleButtonRef.current.innerHTML = '';
           window.google.accounts.id.renderButton(googleButtonRef.current, {
             theme: 'outline',
             size: 'large',
-            width: googleButtonRef.current.offsetWidth,
+            // Google hard-caps this at 400px regardless of what's passed — asking
+            // for more than that (e.g. the full 457px card width on desktop)
+            // just gets silently capped, leaving the button narrower than the
+            // email input beside it. Request exactly what Google will honor.
+            width: Math.min(googleButtonRef.current.offsetWidth, 400),
           });
         };
 
