@@ -1,5 +1,5 @@
-import clientPic1 from "../assets/client-pic1.jpg";
-import clientPic from "../assets/client-pic.jpg";
+import clientPic1 from "../assets/client-pic1.webp";
+import clientPic from "../assets/client-pic.webp";
 import aboutHeadingLockup from "../assets/about-heading-lockup.png";
 import Footer from "../components/Footer";
 
