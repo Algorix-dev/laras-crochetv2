@@ -251,37 +251,20 @@ export default function ProductCard({
         {isRecommendation ? (
           <button
             type="button"
-            aria-label={`${inWishlist ? 'Remove' : 'Add'} ${
-              product.name
-            } ${inWishlist ? 'from' : 'to'} wishlist`}
+            aria-label={`${inWishlist ? 'Remove' : 'Add'} ${product.name} ${inWishlist ? 'from' : 'to'} wishlist`}
             aria-pressed={inWishlist}
             aria-disabled={isPlaceholder}
             onClick={handleToggleWishlist}
             className={`
-              flex
-              h-[14px]
-              w-[14px]
-              shrink-0
-              items-center
-              justify-center
-              text-[#000000]
-              transition-colors
-
-              ${
-                isPlaceholder
-                  ? 'cursor-default opacity-60'
-                  : 'hover:text-[var(--maroon)]'
-              }
+              -mr-[3px] flex h-6 w-6 shrink-0 items-center justify-center
+              text-[#000000] transition-colors
+              ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}
             `}
           >
             <Heart
-              size={14}
-              strokeWidth={0.875}
-              fill={
-                inWishlist
-                  ? 'currentColor'
-                  : HEART_UNFILLED
-              }
+              size={18}
+              strokeWidth={1.5}
+              fill={inWishlist ? 'currentColor' : HEART_UNFILLED}
             />
           </button>
         ) : (
