@@ -148,11 +148,11 @@ export default function Navbar() {
         // this button is rendered inside that mobile dropdown.
         onNavigate?.();
       }}
-      className="relative hover:text-[var(--maroon)]"
+      className="relative text-[#000000] hover:text-[var(--maroon)]"
     >
       {/* TIP: fill="currentColor" makes the bag icon solid once something is
           in it (client request). Empty bag = outline only. */}
-      <BagIcon size={16} filled={inBag} lineColor="#000000" />
+      <BagIcon size={16} filled={inBag}/>
       {cartCount > 0 && (
         <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
           {cartCount}
