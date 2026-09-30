@@ -36,8 +36,6 @@ const CATEGORY_OPTIONS = [
 ];
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 const DEFAULT_SIZES = ["XS", "S", "M", "XL", "XXL"];
-// the five swatches from the Figma; saved on the piece as hex codes
-const SWATCHES = ["#d8ebd0", "#f0d5d8", "#d9dee1", "#efe6c2", "#46494c"];
 const SOON = "Coming soon";
 
 const input =
