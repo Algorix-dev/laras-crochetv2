@@ -24,13 +24,18 @@ import { AdminDataProvider, readDemoFlag, useAdmin } from "./AdminData";
 import AdminShell from "./AdminShell";
 import "./admin.css";
 import AdminRolePage from "./pages/AdminRolePage";
+import BrandPage from "./pages/BrandPage";
 import CategoriesPage from "./pages/CategoriesPage";
+import ControlAuthorityPage from "./pages/ControlAuthorityPage";
+import CouponPage from "./pages/CouponPage";
 import CustomersPage from "./pages/CustomersPage";
 import CustomOrdersPage from "./pages/CustomOrdersPage";
 import DashboardPage from "./pages/DashboardPage";
 import { ComingSoonPage, ProductListPage } from "./pages/MiscPages";
 import OrdersPage from "./pages/OrdersPage";
 import ProductFormPage from "./pages/ProductFormPage";
+import ProductMediaPage from "./pages/ProductMediaPage";
+import ProductReviewsPage from "./pages/ProductReviewsPage";
 import ShippingPage from "./pages/ShippingPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import { Btn } from "./ui";
@@ -129,6 +134,12 @@ function Screens() {
           <Route path="products/new" element={<ProductFormPage />} />
           <Route path="products/:id" element={<ProductFormPage />} />
           <Route path="role" element={<AdminRolePage />} />
+          {/* Previously "coming soon" — now fully built */}
+          <Route path="coupons" element={<CouponPage />} />
+          <Route path="brand" element={<BrandPage />} />
+          <Route path="media" element={<ProductMediaPage />} />
+          <Route path="reviews" element={<ProductReviewsPage />} />
+          <Route path="authority" element={<ControlAuthorityPage />} />
           <Route path="*" element={<ComingSoonPage />} />
         </Routes>
       )}

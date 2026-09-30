@@ -299,7 +299,7 @@ export default function App() {
             component — e.g. <Route path="/shop" element={<ShopPage />} /> */}
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
         <Route path="/account/orders" element={<OrderHistoryPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
