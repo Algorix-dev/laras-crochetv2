@@ -1,15 +1,14 @@
 // Bag icon with a proper "filled" state.
-// Filled: body is solid, and the outline + top line + handle are drawn in
-// lineColor (the section's background) so they stay visible on the fill.
-// Empty: same outline-only look as the Lucide ShoppingBag.
+// Empty: outline only.
+// Filled: solid bag body with the outline, top line, and handle still visible.
+
 export default function BagIcon({
   size = 16,
   filled = false,
-  lineColor = '#FFFFFF',
   strokeWidth = 1,
   className = '',
 }) {
-  const line = filled ? lineColor : 'currentColor';
+  const line = 'currentColor';
   const w = filled ? strokeWidth + 0.5 : strokeWidth;
 
   return (
@@ -29,8 +28,18 @@ export default function BagIcon({
         stroke={line}
         strokeWidth={w}
       />
-      <path d="M3 6h18" stroke={line} strokeWidth={w} />
-      <path d="M16 10a4 4 0 0 1-8 0" stroke={line} strokeWidth={w} />
+
+      <path
+        d="M3 6h18"
+        stroke={line}
+        strokeWidth={w}
+      />
+
+      <path
+        d="M16 10a4 4 0 0 1-8 0"
+        stroke={line}
+        strokeWidth={w}
+      />
     </svg>
   );
 }
