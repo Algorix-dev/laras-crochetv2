@@ -152,7 +152,7 @@ export default function Navbar() {
     >
       {/* TIP: fill="currentColor" makes the bag icon solid once something is
           in it (client request). Empty bag = outline only. */}
-      <BagIcon size={16} filled={inBag} lineColor="#FFFFFF" />
+      <BagIcon size={16} filled={inBag}/>
       {cartCount > 0 && (
         <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
           {cartCount}
