@@ -29,7 +29,7 @@
   literal spec value.
 ----------------------------------------------------------- */
 import { ArrowLeft, Check, Star, Heart, ChevronDown, ChevronUp, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getProduct, normalizeProduct } from '../api';
 import { useCart } from '../context/CartContext';
@@ -347,6 +347,29 @@ function Reviews() {
   // TIP: collapsed by default — see the Reviews Summary block below.
   const [summaryExpanded, setSummaryExpanded] = useState(false);
 
+  // TIP — ARROW ONLY WHEN THERE IS SOMETHING TO EXPAND: the summary is cut to
+  // 3 lines. We measure the paragraph's full height against 3 lines (and
+  // re-measure whenever its width changes, e.g. resizing the window), and only
+  // show the arrow — and make the heading clickable — when the text is longer
+  // than 3 lines at the current width. Short summary on a wide desktop = no
+  // arrow; long summary, or a phone = arrow.
+  const summaryRef = useRef(null);
+  const [summaryOverflows, setSummaryOverflows] = useState(false);
+  useEffect(() => {
+    const el = summaryRef.current;
+    if (!el) return undefined;
+    const measure = () => {
+      const cs = window.getComputedStyle(el);
+      const lineHeight = parseFloat(cs.lineHeight) || 24;
+      const padding = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+      setSummaryOverflows(el.scrollHeight - padding > lineHeight * 3 + 1);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const renderStars = (rating = 5, size = 14) => (
     <span className="flex items-center gap-1 text-[#564345] md:gap-[10px]">
       {Array.from({ length: 5 }, (_, i) => (
@@ -455,25 +478,29 @@ function Reviews() {
 
         {/* Frame 91 — Reviews Summary: full width, 16/24 #404040 */}
         <div className="mt-8 md:mt-[65px]">
-          {/* TIP — COLLAPSIBLE SUMMARY: toggle kept from before. Collapsed =
-              3 lines (the Figma frame is 72px = 3 lines); change line-clamp-3
-              to show more or fewer. */}
+          {/* TIP — COLLAPSIBLE SUMMARY: cut to 3 lines (the Figma frame is
+              72px = 3 lines); change line-clamp-3 to adjust. The arrow only
+              appears when the text really is longer than 3 lines (see
+              summaryOverflows above). */}
           <button
             type="button"
             onClick={() => setSummaryExpanded((v) => !v)}
-            aria-expanded={summaryExpanded}
-            className="flex w-full items-center justify-between gap-2 text-left"
+            aria-expanded={summaryOverflows ? summaryExpanded : undefined}
+            disabled={!summaryOverflows}
+            className="flex w-full items-center justify-between gap-2 text-left disabled:cursor-default"
           >
             <h3 className="text-base font-bold md:py-[10px] md:text-[20px] md:leading-[30px] md:tracking-[-0.04em] md:text-[#404040]">
               Reviews Summary
             </h3>
-            {summaryExpanded ? (
-              <ChevronUp size={20} className="shrink-0" />
-            ) : (
-              <ChevronDown size={20} className="shrink-0" />
-            )}
+            {summaryOverflows &&
+              (summaryExpanded ? (
+                <ChevronUp size={20} className="shrink-0" />
+              ) : (
+                <ChevronDown size={20} className="shrink-0" />
+              ))}
           </button>
           <p
+            ref={summaryRef}
             className={`mt-4 text-base leading-6 text-[var(--muted)] md:mt-0 md:py-[10px] md:text-[#404040] ${
               summaryExpanded ? '' : 'line-clamp-3'
             }`}
