@@ -5,7 +5,7 @@
 export default function BagIcon({
   size = 16,
   filled = false,
-  strokeWidth = 1,
+  strokeWidth = 1.5,
   className = '',
 }) {
   const line = 'currentColor';
