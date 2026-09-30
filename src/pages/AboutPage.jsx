@@ -1,5 +1,5 @@
-import laraPortrait from "../assets/lara-portrait.webp";
-import laraSunglasses from "../assets/lara-sunglasses.webp";
+import clientPic1 from "../assets/client-pic1.jpg";
+import clientPic from "../assets/client-pic.jpg";
 import aboutHeadingLockup from "../assets/about-heading-lockup.png";
 import Footer from "../components/Footer";
 
@@ -27,7 +27,7 @@ export default function AboutPage() {
             whole flex order. */}
         <div className="hidden md:block md:w-1/2 md:flex-shrink-0">
           <img
-            src={laraSunglasses}
+            src={clientPic}
             alt="Lara — founder of Lara's Crochet"
             className="block h-full min-h-0 w-full object-cover"
           />
@@ -57,7 +57,7 @@ export default function AboutPage() {
                 order across a bunch of sibling elements is to render it
                 twice and toggle visibility per breakpoint. */}
             <img
-              src={laraSunglasses}
+              src={clientPic}
               alt="Lara — founder of Lara's Crochet"
               className="rv d1 mt-2.5 block h-auto w-full max-w-[420px] object-cover md:hidden"
             />
@@ -84,7 +84,7 @@ export default function AboutPage() {
               </p>
 
               <img
-                src={laraPortrait}
+                src={clientPic1}
                 alt="Lara close-up portrait"
                 className="block aspect-[416/391] w-full object-cover"
               />
