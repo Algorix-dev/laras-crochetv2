@@ -27,7 +27,7 @@ export default function MyBagPage() {
   } = useCart();
 
   const { formatPrice } = useCurrency();
-  const { toggleWishlist } = useWishlist();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [promoOpen, setPromoOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
@@ -35,6 +35,11 @@ export default function MyBagPage() {
 
   const shipping = cartItems.length ? 10000 : 0;
   const total = cartTotal + shipping;
+    // Move = add to wishlist (only if it isn't there already), then take it out of the bag.
+  const moveToWishlist = (item) => {
+    if (!isInWishlist(item.product.id)) toggleWishlist(item.product.id);
+    removeFromBag(item.id);
+  };
 
   if (!cartItems.length) {
     return (
@@ -215,7 +220,7 @@ export default function MyBagPage() {
                       {/* MOBILE WISHLIST */}
                       <button
                         type="button"
-                        onClick={() => toggleWishlist(item.product)}
+                        onClick={() => moveToWishlist(item)}
                         className="
                           mt-2
                           w-fit
@@ -367,9 +372,7 @@ export default function MyBagPage() {
 
                       <button
                         type="button"
-                        onClick={() =>
-                          toggleWishlist(item.product)
-                        }
+                        onClick={() => moveToWishlist(item)}
                         className="w-fit whitespace-nowrap text-left text-base font-semibold text-[#564345] underline underline-offset-2"
                       >
                         Move to wishlist

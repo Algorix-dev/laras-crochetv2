@@ -4,6 +4,7 @@ import ProductPlaceholder from './ProductPlaceholder';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCurrency } from '../context/CurrencyContext';
+import BagIcon from './BagIcon';
 
 const HEART_UNFILLED = 'rgba(64, 64, 64, 0.15)';
 
@@ -110,44 +111,22 @@ export default function ProductCard({
         {!isRecommendation && (
           <button
             type="button"
-            aria-label={`${inWishlist ? 'Remove' : 'Add'} ${
-              product.name
-            } ${inWishlist ? 'from' : 'to'} wishlist`}
+            aria-label={`${inWishlist ? 'Remove' : 'Add'} ${product.name} ${inWishlist ? 'from' : 'to'} wishlist`}
             aria-pressed={inWishlist}
             aria-disabled={isPlaceholder}
             onClick={handleToggleWishlist}
             className={`
-              absolute
-              left-[16px]
-              top-[6px]
-              flex
-              h-[28px]
-              w-[28px]
-              items-center
-              justify-center
-              rounded-full
-              bg-[#EFE7E7]
-
-              md:left-5
-              md:top-5
-              md:h-7
-              md:w-7
-
-              ${
-                isPlaceholder
-                  ? 'cursor-default opacity-60'
-                  : 'hover:text-[var(--maroon)]'
-              }
+              absolute left-[16px] top-[6px]
+              flex h-[28px] w-[28px] items-center justify-center
+              rounded-full bg-[#EFE7E7] text-[#412B2D]
+              md:left-5 md:top-5 md:h-8 md:w-8
+              ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}
             `}
           >
             <Heart
-              size={15}
-              strokeWidth={1.25}
-              fill={
-                inWishlist
-                  ? 'currentColor'
-                  : HEART_UNFILLED
-              }
+              size={16}
+              strokeWidth={1.5}
+              fill={inWishlist ? 'currentColor' : HEART_UNFILLED}
             />
           </button>
         )}
@@ -328,18 +307,7 @@ export default function ProductCard({
               }
             `}
           >
-            <ShoppingBag
-              size={16}
-              strokeWidth={1}
-              // TIP — Teniayo's spec: filled state should have the inside
-              // colored and the outline in the BACKGROUND color, not the
-              // same color as the fill (that's what made it look like a
-              // solid black blob before). '#FFFFFF' assumes a white card
-              // background — if the card sits on a cream/off-white
-              // section elsewhere, change this to match (e.g. '#FAFAFA').
-              fill={inBag ? 'currentColor' : 'none'}
-              stroke={inBag ? '#FFFFFF' : 'currentColor'}
-            />
+            <BagIcon size={16} filled={inBag} lineColor="#FFFFFF" />
           </button>
         )}
       </div>

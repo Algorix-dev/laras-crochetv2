@@ -32,7 +32,7 @@ export default function RecommendedProducts({
   enabled = true,
   columns = 4,
   headingClassName =
-    'text-[18px] font-bold leading-[26px] tracking-[-0.36px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]',
+    'text-[18px] font-bold leading-[28px] tracking-[-0.36px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]',
   onProductClick,
 }) {
   const [products, setProducts] = useState([]);
@@ -47,7 +47,8 @@ export default function RecommendedProducts({
       : [];
 
   useEffect(() => {
-    if (!enabled || products.length > 0) return;
+    if (!enabled) return undefined;
+    let cancelled = false;
 
     getProducts(category)
       .then(async (data) => {
@@ -55,24 +56,22 @@ export default function RecommendedProducts({
           .map(normalizeProduct)
           .filter((product) => !excludeIds.includes(product.id));
 
-        // If the category has no other products, fall back
-        // to the full catalogue.
         if (mapped.length === 0 && category) {
           const all = await getProducts();
-
           mapped = all
             .map(normalizeProduct)
-            .filter(
-              (product) => !excludeIds.includes(product.id)
-            );
+            .filter((product) => !excludeIds.includes(product.id));
         }
 
-        // Keep the recommendation section limited to four products.
-        setProducts(mapped.slice(0, 4));
+        if (!cancelled) setProducts(mapped.slice(0, 4));
       })
-      .catch(() => setProducts([]));
+      .catch(() => {
+        if (!cancelled) setProducts([]);
+      });
 
-    // excludeIds is intentionally serialized for dependency tracking.
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, JSON.stringify(excludeIds), enabled]);
 

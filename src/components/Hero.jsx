@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCart } from "../context/CartContext";
-import { ChevronUp, ShoppingBag } from "lucide-react";
+import { ChevronUp } from "lucide-react";
+import BagIcon from "./BagIcon";
 
 import {
   AnimatePresence,
@@ -1193,8 +1194,13 @@ function HeroCarousel({ models }) {
 
   const {
     addToBag,
-    openBag,
+    openBag, cartItems
   } = useCart();
+
+  // right after: const activeModel = models[nav.active];
+  const activeInBag = cartItems.some(
+    (item) => item.product.id === activeModel?.product?.id
+  );
 
   const reduceMotion =
     useReducedMotion();
@@ -2095,10 +2101,12 @@ function HeroCarousel({ models }) {
                     text-[var(--ink)]
                   "
                 >
-                  <ShoppingBag
-                    size={20}
-                    strokeWidth={1.5}
-                  />
+                <BagIcon
+                  size={20}
+                  strokeWidth={1.5}
+                  filled={activeInBag}
+                  lineColor="var(--mauve-light)"
+                />
                 </button>
               </motion.div>
             </AnimatePresence>

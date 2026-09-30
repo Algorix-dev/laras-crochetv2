@@ -27,7 +27,7 @@ export default function BagDrawer({ open, onClose }) {
   } = useCart();
 
   const { formatPrice: money } = useCurrency();
-  const { toggleWishlist } = useWishlist();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const navigate = useNavigate();
   const [promoOpen, setPromoOpen] = useState(false);
 
@@ -130,7 +130,7 @@ export default function BagDrawer({ open, onClose }) {
                           </div>
                           <button
                             onClick={() => {
-                              toggleWishlist(item.product.id);
+                              if (!isInWishlist(item.product.id)) toggleWishlist(item.product.id);
                               removeFromBag(item.id);
                             }}
                             className="shrink-0 text-[10px] uppercase tracking-wider underline"

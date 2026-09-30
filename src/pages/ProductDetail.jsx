@@ -45,6 +45,7 @@ import reviewRestaurantPhoto from '../assets/reviews/review-beach.webp';
 import BrandedLoader from '../components/BrandedLoader';
 import InlineLoader from '../components/InlineLoader';
 import { shouldShowSplash } from '../utils/splashOnce';
+import verifiedBadge from '../assets/verified-badge.png';
 // TIP: the source files on disk are mislabeled relative to what they
 // actually show — review-restaurant.webp is the beach photo, and
 // review-beach.webp is the restaurant photo. Rather than have every
@@ -218,7 +219,7 @@ function ShadeSwatch({ option, active, onClick }) {
    for the per-review usage, only showing on the aggregate scale
    at the top of the Reviews section — hence the new showChevrons
    prop, defaulting to off. */
-function FitIndicator({ fit, showChevrons = false }) {
+function FitIndicator({ fit }) {
   const dotPosition =
     fit === 'small'
       ? 'top-0'
@@ -230,45 +231,66 @@ function FitIndicator({ fit, showChevrons = false }) {
     <div className="relative h-[249px] w-[160px] shrink-0">
       <div className="absolute left-[3px] top-1 h-[234px] w-[2px] bg-[var(--mauve)]" />
 
-      <span className="absolute left-2 top-0 text-xs text-[var(--muted)]">
+      <span className="absolute left-2 top-0 text-xs leading-[18px] text-[#564345]">
         Runs small
       </span>
-      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)]">
+      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs leading-[18px] text-[#564345]">
         True to size
       </span>
-      <span className="absolute bottom-0 left-2 text-xs text-[var(--muted)]">
+      <span className="absolute bottom-0 left-2 text-xs leading-[18px] text-[#564345]">
         Runs large
       </span>
 
       <span
         className={`absolute left-[-1px] z-10 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#af9d9e] ${dotPosition}`}
       />
-
-      {showChevrons && (
-        <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 text-[#d8c7c7]">
-          <span>›</span>
-          <span>›</span>
-          <span>›</span>
-          <span>›</span>
-          <span>›</span>
-        </div>
-      )}
     </div>
+  );
+}
+
+/* TIP — FIGMA "Frame 94": four double-chevron ("fast-arrow-right") icons,
+   14.82px each, overlapping by 3.7px, fading from #EFE7E7 to #C9BABB. They
+   sit to the RIGHT of the aggregate sizing slider, vertically centred on it,
+   37.67px away. Each icon is two small right-pointing chevrons drawn at the
+   exact positions from the export (20.83% and 54.17% across the icon). */
+function FitArrows() {
+  const colors = ['#EFE7E7', '#EFE7E7', '#C9BABB', '#C9BABB'];
+  return (
+    <svg
+      width="48.17"
+      height="14.82"
+      viewBox="0 0 48.17 14.82"
+      fill="none"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      {colors.map((color, i) => {
+        const x = i * 11.12;
+        return (
+          <g key={i} stroke={color} strokeWidth="0.93" strokeLinecap="round" strokeLinejoin="round">
+            <path d={`M${x + 3.09} 3.7 L${x + 6.79} 7.41 L${x + 3.09} 11.11`} />
+            <path d={`M${x + 8.03} 3.7 L${x + 11.73} 7.41 L${x + 8.03} 11.11`} />
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
 function FitScaleAggregate({ position = 'true' }) {
   return (
-    <FitIndicator
-      showChevrons
-      fit={
-        position === 'small'
-          ? 'small'
-          : position === 'large'
-            ? 'large'
-            : 'true'
-      }
-    />
+    <div className="flex items-center gap-[37.67px]">
+      <FitIndicator
+        fit={
+          position === 'small'
+            ? 'small'
+            : position === 'large'
+              ? 'large'
+              : 'true'
+        }
+      />
+      <FitArrows />
+    </div>
   );
 }
 
@@ -326,12 +348,12 @@ function Reviews() {
   const [summaryExpanded, setSummaryExpanded] = useState(false);
 
   const renderStars = (rating = 5, size = 14) => (
-    <span className="flex items-center gap-1 text-[var(--ink-warm)]">
+    <span className="flex items-center gap-1 text-[#564345] md:gap-[10px]">
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
           size={size}
-          strokeWidth={1.8}
+          strokeWidth={1.5}
           fill={i < rating ? 'currentColor' : 'none'}
         />
       ))}
@@ -399,180 +421,193 @@ function Reviews() {
   };
 
   return (
-    <section className="mt-16 px-5 md:px-8 lg:px-[15.83%] md:mt-20" data-auto-rise="true">
-      <h2 className="font-bold font-display text-3xl md:text-4xl">Reviews</h2>
+    /* TIP — FIGMA "Frame 95" + "Desktop - 2": on desktop the whole Reviews
+       area sits on a full-width #FAFAFA band. The summary half (rating,
+       summary text, sizing slider + photos) has 60px of bottom padding and a
+       1px #EFE7E7 line under it; the individual reviews are a second block
+       with 60px top and bottom padding. Both use the shared 304px side margin.
+       Phones keep the original layout. Keep this className static (the
+       scroll-rise engine adds its own classes to it). */
+    <div className="mt-16 md:mt-20 md:bg-[#FAFAFA]" data-auto-rise="true">
+      {/* ================= SUMMARY BLOCK ================= */}
+      <section className="px-5 md:border-b md:border-[#EFE7E7] md:px-8 md:pb-[60px] lg:px-[15.83%]">
+        {/* Frame 96 — heading + rating */}
+        <div className="flex flex-col md:gap-[10px]">
+          <h2
+            className="text-3xl font-bold md:py-[10px] md:text-[36px] md:leading-[44px] md:tracking-[-0.02em] md:text-[#404040]"
+            style={{ fontFamily: 'DM Sans, sans-serif' }}
+          >
+            Reviews
+          </h2>
 
-      {/* TIP: was renderStars(4, 14) — Figma has these top stars at 24×24,
-          matching the per-review star size below. */}
-      <div className="mt-5 flex items-center gap-3">
-        <strong className="text-base font-medium">4.5</strong>
-        {renderStars(4, 24)}
-      </div>
-        <span className="sm:block text-[14px] md:text-[18px] text-[var(--muted)]">
-          Based on 18 reviews
-        </span>
-
-      <div className="mt-8">
-        {/* TIP — COLLAPSIBLE SUMMARY: added a toggle (per the Figma's
-            "nav-arrow-down" icon next to this heading, which the site
-            didn't have before). Collapsed state clamps to 3 lines with
-            line-clamp-3; the chevron flips to point up when expanded.
-            Change the "3" below to clamp more/fewer lines by default. */}
-        <button
-          type="button"
-          onClick={() => setSummaryExpanded((v) => !v)}
-          aria-expanded={summaryExpanded}
-          className="flex w-full items-center justify-between gap-2 text-left"
-        >
-          <h3 className="text-base md:text-[20px] font-bold">Reviews Summary</h3>
-          {summaryExpanded ? (
-            <ChevronUp size={20} className="shrink-0" />
-          ) : (
-            <ChevronDown size={20} className="shrink-0" />
-          )}
-        </button>
-        <p
-          // TIP: max-w-[64ch] keeps each line to roughly 66-75 characters (1ch is
-          // the width of a "0", and average letters are a bit narrower). To
-          // change the line length, edit the 64 here.
-          className={`mt-4 max-w-[64ch] text-base leading-6 text-[var(--muted)] ${
-            summaryExpanded ? '' : 'line-clamp-3'
-          }`}
-        >
-          Customers say this bra offers exceptional comfort for all-day wear,
-          with many noting they&apos;re wearing it. Many reviews mention
-          the smooth fit under clothing and precise sizing when following the
-          measurement guide. While some note the band runs slightly tight, most
-          praise the secure fit without slipping straps. Frequent comments address
-          the versatile everyday wear and natural shaping. Reviews indicate
-          consistent satisfaction across different body types, with many becoming
-          repeat purchasers.
-        </p>
-      </div>
-
-      {/* Figma: tall fit scale + two 359 × 392 customer photos */}
-      <div className="mt-10 hidden md:grid md:grid-cols-[160px_minmax(0,1fr)] md:gap-8">
-        <FitScaleAggregate position="true" />
-
-        {/* TIP: fixed from grid-cols-2 — that creates two EQUAL-width
-            columns stretching to fill the whole parent, so each 359px
-            image sat at the left edge of a much wider column, with
-            a large chunk of empty column space (not the real gap-8)
-            making the visual gap look far bigger than 32px. Explicit
-            359px columns size each track to the image itself, so the
-            only space between them is the actual 32px gap. */}
-        <div className="grid grid-cols-[220px_220px] gap-8">
-          <ZoomImage
-            src={reviewRestaurantPhoto}
-            alt="Customer wearing The Reina Dress at a restaurant"
-            className="h-[240px] w-[220px] object-cover"
-          />
-          <ZoomImage
-            src={reviewBeachPhoto}
-            alt="Customer wearing The Reina Dress at the beach"
-            className="h-[240px] w-[220px] object-cover"
-          />
+          <div>
+            <div className="mt-5 flex items-center gap-2 md:mt-0">
+              <strong className="text-base font-medium md:py-[10px] md:text-[20px] md:font-bold md:leading-[30px] md:tracking-[-0.04em] md:text-[#404040]">
+                4.5
+              </strong>
+              <div className="md:p-[10px]">{renderStars(4, 24)}</div>
+            </div>
+            <span className="block text-[14px] text-[var(--muted)] md:text-base md:leading-6 md:text-[#404040]">
+              Based on 18 reviews
+            </span>
+          </div>
         </div>
-      </div>
 
-      {/* Mobile Figma layout */}
-      <div className="mt-8 md:hidden">
-        <HorizontalFitScale fit="true" />
-        {/* TIP — WAS BIGGER THAN THE REVIEW PHOTOS BELOW: these used
-            aspect-[359/392] w-full, stretching each photo to fill half
-            the row (~160px+ wide) — much bigger than the 120×131
-            individual review photos further down. Same fixed 120×131
-            size here now, so the summary photos and the per-review
-            photos read as one consistent size. */}
-        <div className="mt-6 flex gap-3">
-          <ZoomImage
-            src={reviewRestaurantPhoto}
-            alt="Customer wearing The Reina Dress at a restaurant"
-            className="h-[110px] w-[100px] object-cover"
-          />
-          <ZoomImage
-            src={reviewBeachPhoto}
-            alt="Customer wearing The Reina Dress at the beach"
-            className="h-[110px] w-[100px] object-cover"
-          />
-          <ZoomImage
-            src={reviewBeachPhoto}
-            alt="Customer wearing The Reina Dress at the beach"
-            className="h-[110px] w-[100px] object-cover"
-          />
+        {/* Frame 91 — Reviews Summary: full width, 16/24 #404040 */}
+        <div className="mt-8 md:mt-[65px]">
+          {/* TIP — COLLAPSIBLE SUMMARY: toggle kept from before. Collapsed =
+              3 lines (the Figma frame is 72px = 3 lines); change line-clamp-3
+              to show more or fewer. */}
+          <button
+            type="button"
+            onClick={() => setSummaryExpanded((v) => !v)}
+            aria-expanded={summaryExpanded}
+            className="flex w-full items-center justify-between gap-2 text-left"
+          >
+            <h3 className="text-base font-bold md:py-[10px] md:text-[20px] md:leading-[30px] md:tracking-[-0.04em] md:text-[#404040]">
+              Reviews Summary
+            </h3>
+            {summaryExpanded ? (
+              <ChevronUp size={20} className="shrink-0" />
+            ) : (
+              <ChevronDown size={20} className="shrink-0" />
+            )}
+          </button>
+          <p
+            className={`mt-4 text-base leading-6 text-[var(--muted)] md:mt-0 md:py-[10px] md:text-[#404040] ${
+              summaryExpanded ? '' : 'line-clamp-3'
+            }`}
+          >
+            Customers say this bra offers exceptional comfort for all-day wear,
+            with many noting they&apos;re wearing it. Many reviews mention
+            the smooth fit under clothing and precise sizing when following the
+            measurement guide. While some note the band runs slightly tight, most
+            praise the secure fit without slipping straps. Frequent comments address
+            the versatile everyday wear and natural shaping. Reviews indicate
+            consistent satisfaction across different body types, with many becoming
+            repeat purchasers.
+          </p>
         </div>
-      </div>
 
-      {/* Individual review */}
-      <div className="mt-16">
+        {/* Frame 99 — sizing slider + arrows (245.84px), 163px gap, then two
+            359 × 392 photos with a 32px gap. flex-wrap lets the photos drop
+            below the slider on narrower laptops instead of overflowing. */}
+        <div className="mt-10 hidden md:mt-[50px] md:flex md:flex-wrap md:items-start md:gap-x-[163px] md:gap-y-[50px]">
+          <FitScaleAggregate position="true" />
+
+          <div className="flex flex-wrap gap-8">
+            <ZoomImage
+              src={reviewRestaurantPhoto}
+              alt="Customer wearing The Reina Dress at a restaurant"
+              className="h-[392px] w-[359px] max-w-full object-cover"
+            />
+            <ZoomImage
+              src={reviewBeachPhoto}
+              alt="Customer wearing The Reina Dress at the beach"
+              className="h-[392px] w-[359px] max-w-full object-cover"
+            />
+          </div>
+        </div>
+
+        {/* Mobile Figma layout */}
+        <div className="mt-8 md:hidden">
+          <HorizontalFitScale fit="true" />
+          <div className="mt-6 flex gap-3">
+            <ZoomImage
+              src={reviewRestaurantPhoto}
+              alt="Customer wearing The Reina Dress at a restaurant"
+              className="h-[110px] w-[100px] object-cover"
+            />
+            <ZoomImage
+              src={reviewBeachPhoto}
+              alt="Customer wearing The Reina Dress at the beach"
+              className="h-[110px] w-[100px] object-cover"
+            />
+            <ZoomImage
+              src={reviewBeachPhoto}
+              alt="Customer wearing The Reina Dress at the beach"
+              className="h-[110px] w-[100px] object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ================= INDIVIDUAL REVIEWS ================= */}
+      <section className="mt-16 px-5 md:mt-0 md:px-8 md:py-[60px] lg:px-[15.83%]">
         {reviews.map((review) => (
+          /* Figma columns: 413 (name + verified + slider) / 777 (stars,
+             title, photo, text) / 102 (date), 10px apart. */
           <article
             key={review.name}
-            className="grid border-t border-[var(--line)] py-10 md:grid-cols-[160px_minmax(0,359px)_1fr] md:gap-8"
+            className="grid border-t border-[var(--line)] py-10 md:grid-cols-[minmax(0,413px)_minmax(0,1fr)_auto] md:gap-[10px] md:border-t-0 md:py-0 md:[&:not(:first-child)]:mt-[60px]"
           >
-            <div className="hidden md:block">
+            {/* Column 1 (desktop): name + Verified Buyer + badge, then the slider */}
+            <div className="hidden md:flex md:flex-col md:gap-1">
+              <div className="flex items-center gap-[15px]">
+                <p className="py-[10px] text-[20px] font-bold leading-[30px] tracking-[-0.04em] text-[#404040]">
+                  {review.name}
+                </p>
+                <span className="flex items-end gap-[6px] text-[20px] leading-[30px] text-[#564345]">
+                  Verified Buyer
+                  <img
+                    src={verifiedBadge}
+                    alt=""
+                    width={24}
+                    height={24}
+                    className="h-6 w-6 shrink-0"
+                  />
+                </span>
+              </div>
               <FitIndicator fit={review.fit} />
             </div>
 
+            {/* Column 2 */}
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                {/* TIP: name + "Verified Buyer" + badge are all the same
-                    20px size in Figma (the name is bold, the label isn't).
-                    Bumped from 14px to match. */}
+              {/* Phones keep the name row on top of the content */}
+              <div className="flex items-center gap-1.5 md:hidden">
                 <p className="text-[20px] font-bold text-[#404040]">{review.name}</p>
                 <span className="flex items-center gap-1.5 text-[20px] text-[#564345]">
                   Verified Buyer
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M12 1.5l2.1 1.9 2.7-.9 1.3 2.5 2.8.5-.2 2.8 2 2-1.6 2.3 1 2.6-2.6 1.2-.4 2.8-2.8-.2-1.7 2.2-2.6-1.2-2.6 1.2-1.7-2.2-2.8.2-.4-2.8-2.6-1.2 1-2.6L1.9 12l2-2-.2-2.8 2.8-.5 1.3-2.5 2.7.9L12 1.5z"
-                      fill="#564345"
-                    />
-                    <path
-                      d="M8.5 12.2l2.2 2.2 4.3-4.6"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <img
+                    src={verifiedBadge}
+                    alt=""
+                    width={24}
+                    height={24}
+                    className="h-6 w-6 shrink-0"
+                  />
                 </span>
               </div>
 
-              <div className="mt-5">{renderStars(review.rating, 24)}</div>
+              <div className="mt-5 md:mt-0 md:py-[10px] md:pl-0 md:pr-[10px]">
+                {renderStars(review.rating, 24)}
+              </div>
 
-              {/* TIP: was 14px, Figma has this at the same 20px bold as
-                  the reviewer's name above. */}
-              <h3 className="mt-5 text-[20px] font-bold text-[#404040]">{review.title}</h3>
+              <h3 className="mt-5 text-[20px] font-bold text-[#404040] md:mt-0 md:py-[10px] md:leading-[30px] md:tracking-[-0.04em]">
+                {review.title}
+              </h3>
 
               {review.photo && (
                 <ZoomImage
                   src={review.photo}
                   alt={`Customer photo for ${review.title}`}
-                  // TIP: this is the INDIVIDUAL review's own photo size in
-                  // Figma ("Rectangle 38": 260 × 284.69), which is a
-                  // different size from the two summary photos above
-                  // ("Rectangle 39/40": 220 × 240) — it was wrongly reusing
-                  // that size before. Mobile keeps the smaller fallback.
-                  className="mt-6 h-[110px] w-[100px] object-cover md:h-[285px] md:w-[260px]"
+                  // Figma "Rectangle 38": 260 × 284.69, 20px under the title
+                  // (16px padding + 4px gap). Phones keep the small fallback.
+                  className="mt-6 h-[110px] w-[100px] object-cover md:mt-5 md:h-[284.69px] md:w-[260px]"
                 />
               )}
 
-              {/* TIP: was 14px, Figma has the review text at 16px. */}
-              <p className="mt-6 text-[16px] leading-6 text-[#564345]">
+              {/* Figma: 16/24 #564345 with 16px above and below */}
+              <p className="mt-6 text-[16px] leading-6 text-[#564345] md:mt-0 md:py-4">
                 {review.text}
               </p>
             </div>
 
-            <time className="mt-2 justify-self-end text-base text-[var(--ink-warm)] md:block">
+            {/* Column 3: "3 months ago", 16/24 #564345, right-aligned */}
+            <time className="mt-2 justify-self-end text-base leading-6 text-[#564345] md:mt-0 md:block md:text-right">
               {review.date}
             </time>
 
             <div className="mt-8 md:hidden">
-              {/* TIP — ARROW ADDED: on mobile this scale sits below the
-                  review it belongs to with no visual link, so it could
-                  read as belonging to the NEXT review instead. The
-                  stacked-chevron arrow (ReviewFitArrow, above) ties it
-                  back to the content just above it. */}
               <div className="mb-1 flex justify-center">
                 <ReviewFitArrow />
               </div>
@@ -580,8 +615,8 @@ function Reviews() {
             </div>
           </article>
         ))}
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
 

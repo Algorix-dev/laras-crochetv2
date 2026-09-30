@@ -58,6 +58,7 @@ import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
 import CountrySelectorModal from "./CountrySelectorModal";
 import SearchOverlay from "./SearchOverlay";
 import laraCrochetLogo from "../assets/lara-crochet-logo.png";
+import BagIcon from "./BagIcon";
 
 // Tweak these two to taste — nothing else needs to change.
 const NAVBAR_IDLE_OPACITY = 1; // resting/dimmed state (try between 0.65–0.8)
@@ -151,18 +152,7 @@ export default function Navbar() {
     >
       {/* TIP: fill="currentColor" makes the bag icon solid once something is
           in it (client request). Empty bag = outline only. */}
-      <ShoppingBag
-              size={16}
-              strokeWidth={1}
-              // TIP — Teniayo's spec: filled state should have the inside
-              // colored and the outline in the BACKGROUND color, not the
-              // same color as the fill (that's what made it look like a
-              // solid black blob before). '#FFFFFF' assumes a white card
-              // background — if the card sits on a cream/off-white
-              // section elsewhere, change this to match (e.g. '#FAFAFA').
-              fill={inBag ? 'currentColor' : 'none'}
-              stroke={inBag ? '#FAFAFA' : 'currentColor'}
-            />
+      <BagIcon size={16} filled={inBag} lineColor="#FAFAFA" />
       {cartCount > 0 && (
         <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
           {cartCount}
