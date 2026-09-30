@@ -1,5 +1,17 @@
 import mongoose from 'mongoose';
 
+// TIP — COLOR / SHADE OPTIONS LARA CAN EDIT IN THE ADMIN PAGE: each option is
+// a name ("Lavender") plus a hex color ("#B7A6E8"). They live in NEW fields
+// (colorOptions / shadeOptions) so the older `colors` / `shades` arrays of
+// plain hex strings keep working untouched for pieces saved before this.
+const optionSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    hex: { type: String, required: true, match: /^#[0-9a-fA-F]{6}$/ },
+  },
+  { _id: false }
+);
+
 // TIP: this schema deliberately mirrors the shape of the frontend's
 // existing src/data/products.js (name, price, colors, shades, sizes)
 // so that migrating the frontend to fetch from the API later is a
@@ -11,7 +23,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['dresses', 'bikinis', 'two-pieces', 'shirts', 'skirts'],
+      enum: ['dresses', 'bikinis', 'two-pieces', 'shirts', 'skirts', 'accessories'],
     },
     // Cloudinary URLs, not local file paths — see routes/upload.js
     // TIP: `images` is kept for older code (ProductCard reads images[0]).
@@ -36,8 +48,10 @@ const productSchema = new mongoose.Schema(
     // is always in the Shop). 'hero' = the carousel at the top of the home
     // page, 'featured' = the "Shop Our Pieces" row on the home page.
     placements: [{ type: String, enum: ['hero', 'featured'] }],
-    colors: [{ type: String }], // hex codes, e.g. '#1c1c22'
+    colors: [{ type: String }], // hex codes, e.g. '#1c1c22'  (older pieces)
     shades: [{ type: String }],
+    colorOptions: [optionSchema], // { name, hex } — edited in the admin page
+    shadeOptions: [optionSchema],
     sizes: [{ type: String }], // e.g. ['XS','S','M','XL','XXL']
     stock: { type: Number, default: 0, min: 0 },
     description: { type: String, default: '' },

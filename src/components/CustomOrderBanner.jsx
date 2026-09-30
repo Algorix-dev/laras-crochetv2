@@ -305,7 +305,7 @@ export default function CustomOrderBanner() {
             exactly as plain as they are today.
             ====================================================== */}
 
-        <div className="relative z-20 mx-auto mt-[-60px] md:mt-[-65px] flex justify-center">
+        <div className="relative z-20 mx-auto mt-[-13vw] md:mt-[-70px] flex justify-center">
           {/* TIP — HEADS AT THE BOTTOM OF THE "C", NOT THE MIDDLE:
               this negative margin is what pulls the models UP into
               the wordmark above — it WAS -70px, which pulled them up

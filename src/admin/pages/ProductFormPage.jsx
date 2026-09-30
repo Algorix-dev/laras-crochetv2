@@ -19,6 +19,7 @@ import { saveProduct, uploadPhoto } from "../../api";
 import { useAdmin } from "../AdminData";
 import { cx } from "../fmt";
 import { Btn, Card, IconBtn, useDismiss, useToast } from "../ui";
+import ColorOptionsEditor from "../ColorOptionsEditor";
 
 const ANGLES = [
   { key: "front", label: "Front" },
@@ -197,7 +198,8 @@ export default function ProductFormPage() {
   const [stock, setStock] = useState("10");
   const [sizes, setSizes] = useState(DEFAULT_SIZES);
   const [placements, setPlacements] = useState([]);
-  const [colors, setColors] = useState([]);
+  const [colorOptions, setColorOptions] = useState([]);
+  const [shadeOptions, setShadeOptions] = useState([]);
   const [views, setViews] = useState(blank);
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
@@ -214,7 +216,8 @@ export default function ProductFormPage() {
     setStock(piece?.stock != null ? String(piece.stock) : "10");
     setSizes(piece?.sizes?.length ? piece.sizes : DEFAULT_SIZES);
     setPlacements(piece?.placements ?? []);
-    setColors(piece?.colors ?? []);
+    setColorOptions(piece?.colorOptions ?? []);
+    setShadeOptions(piece?.shadeOptions ?? []);
     setViews(piece?.views ?? blank);
     setError("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,7 +226,6 @@ export default function ProductFormPage() {
   const stockNumber = Number(stock) || 0;
   const togglePlacement = (key) => setPlacements((l) => (l.includes(key) ? l.filter((k) => k !== key) : [...l, key]));
   const toggleSize = (s) => setSizes((l) => (l.includes(s) ? l.filter((x) => x !== s) : [...l, s]));
-  const toggleColor = (c) => setColors((l) => (l.includes(c) ? l.filter((x) => x !== c) : [...l, c]));
 
   async function onFile(key, file) {
     if (!file) return;
@@ -257,7 +259,7 @@ export default function ProductFormPage() {
     setSaving(true);
     try {
       await saveProduct(
-        { name: name.trim(), price: priceNumber, category, stock: stockNumber, description, sizes, placements, views, colors },
+        { name: name.trim(), price: priceNumber, category, stock: stockNumber, description, sizes, placements, views, colorOptions, shadeOptions },
         piece?._id
       );
       await refresh();
@@ -467,25 +469,9 @@ export default function ProductFormPage() {
             </select>
           </Field>
 
-          <p className="mb-3 mt-5 text-[15px] font-bold text-[var(--a-ink)]">Select your color</p>
-          <div className="flex gap-3">
-            {SWATCHES.map((c) => {
-              const on = colors.includes(c);
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => toggleColor(c)}
-                  aria-label={`Colour ${c}`}
-                  aria-pressed={on}
-                  className={cx(
-                    "size-10 rounded-md shadow-[0_1px_3px_rgba(16,24,40,0.2)]",
-                    on && "outline outline-2 outline-offset-2 outline-[var(--a-maroon)]"
-                  )}
-                  style={{ background: c }}
-                />
-              );
-            })}
+          <div className="mt-5 space-y-6">
+            <ColorOptionsEditor label="Colors" value={colorOptions} onChange={setColorOptions} />
+            <ColorOptionsEditor label="Shades" value={shadeOptions} onChange={setShadeOptions} />
           </div>
         </Card>
       </div>

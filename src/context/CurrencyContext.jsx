@@ -15,7 +15,6 @@ export const currencyMeta = {
   NGN: { locale: 'en-NG', label: 'NGN' },
   USD: { locale: 'en-US', label: 'USD' },
   GBP: { locale: 'en-GB', label: 'GBP' },
-  EUR: { locale: 'en-DE', label: 'EUR' },
 };
 
 /* TIP: kept ONLY as a fallback — used for the first paint before the
@@ -23,7 +22,7 @@ export const currencyMeta = {
    (offline, outage, ad-blocker). Nudge these every few months so the
    "no internet" experience doesn't drift too far from reality — but
    normal browsing no longer depends on them. */
-const FALLBACK_RATES = { NGN: 1, USD: 1550, GBP: 1950, EUR: 1680 };
+const FALLBACK_RATES = { NGN: 1, USD: 1550, GBP: 1950};
 
 /* TIP: back-compat export, in case anything elsewhere imports
    { currencies } expecting { rate, locale, label } per code (e.g. a
@@ -79,9 +78,10 @@ export function CurrencyProvider({ children }) {
     localStorage.getItem('laras-currency') || 'NGN'
   );
 
-  const [country, setCountryCode] = useState(() =>
-    localStorage.getItem('laras-country') || defaultCountry.code
-  );
+  const [currency, setCurrency] = useState(() => {
+    const saved = localStorage.getItem('laras-currency');
+    return ALLOWED.includes(saved) ? saved : 'NGN';
+  });
 
   /* TIP: rates start from whatever's cached in localStorage — so a
      returning visitor sees yesterday's real rates INSTANTLY, no
@@ -134,7 +134,8 @@ export function CurrencyProvider({ children }) {
 
   const setCountry = (code) => {
     setCountryCode(code);
-    setCurrency(countryToCurrency[code] || 'USD');
+    const next = countryToCurrency[code];
+    setCurrency(ALLOWED.includes(next) ? next : 'USD');
   };
 
   const value = useMemo(() => {

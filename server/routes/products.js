@@ -43,6 +43,15 @@ function tidyProduct(body) {
     data.views = views;
     if (views.front) data.images = [views.front];
   }
+
+  // Lara's own colors / shades: keep only { name, hex } with a real hex code.
+  for (const key of ['colorOptions', 'shadeOptions']) {
+    if (Array.isArray(body[key])) {
+      data[key] = body[key]
+        .filter((o) => o && typeof o.name === 'string' && o.name.trim() && /^#[0-9a-f]{6}$/i.test(o.hex))
+        .map((o) => ({ name: o.name.trim(), hex: o.hex }));
+    }
+  }
   return data;
 }
 
