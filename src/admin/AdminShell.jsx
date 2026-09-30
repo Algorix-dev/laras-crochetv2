@@ -29,7 +29,7 @@ import {
   Users,
 } from "lucide-react";
 import logo from "../assets/lara-crochet-logo.png";
-import portrait from "../assets/lara-portrait.webp";
+import portrait from "../assets/client-pic1.webp";
 import { useAdmin } from "./AdminData";
 import { useProfileExtra } from "./profileStore";
 import { cx } from "./fmt";
