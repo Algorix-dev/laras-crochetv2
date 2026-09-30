@@ -3,7 +3,7 @@
 // lineColor (the section's background) so they stay visible on the fill.
 // Empty: same outline-only look as the Lucide ShoppingBag.
 export default function BagIcon({
-  size = 16,
+  size = 18,
   filled = false,
   lineColor = '#FFFFFF',
   strokeWidth = 1.5,
