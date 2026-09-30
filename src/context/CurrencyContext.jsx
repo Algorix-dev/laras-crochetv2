@@ -6,6 +6,8 @@ import { countryToCurrency, defaultCountry } from '../data/countries';
 
 const CurrencyContext = createContext(null);
 
+const ALLOWED = ['NGN', 'GBP', 'USD'];
+
 /* TIP: metadata that never changes — the exchange RATE is the only
    thing that goes live now. locale/label stay here so a currency
    selector dropdown can list options without waiting on a network
@@ -74,14 +76,14 @@ function readCache() {
 }
 
 export function CurrencyProvider({ children }) {
-  const [currency, setCurrency] = useState(() =>
-    localStorage.getItem('laras-currency') || 'NGN'
-  );
-
   const [currency, setCurrency] = useState(() => {
     const saved = localStorage.getItem('laras-currency');
     return ALLOWED.includes(saved) ? saved : 'NGN';
   });
+
+  const [country, setCountryCode] = useState(() =>
+    localStorage.getItem('laras-country') || defaultCountry.code
+  );
 
   /* TIP: rates start from whatever's cached in localStorage — so a
      returning visitor sees yesterday's real rates INSTANTLY, no
