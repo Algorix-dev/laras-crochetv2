@@ -102,7 +102,7 @@ export default function MyBagPage() {
             ========================== */}
             <div>
               {/* DESKTOP TABLE HEADER */}
-              <div className="hidden border-b border-[var(--line)] pb-4 md:grid md:grid-cols-[6rem_1fr_96px_120px_260px] md:items-center md:gap-3">
+              <div className="hidden border-b border-[var(--line)] pb-4 md:grid md:grid-cols-[6rem_1fr_96px_120px_223px] md:items-center md:gap-3">
                 <span className="text-[14px] text-[#564345]">Item</span>
                 <span />
                 <span className="text-[14px] text-[#564345]">Size</span>
@@ -124,8 +124,8 @@ export default function MyBagPage() {
                       border-[#D4D4D4]
 
                       md:min-h-0
-                      md:grid-cols-[6rem_1fr_96px_120px_260px]
-                      md:items-center
+                      md:grid-cols-[6rem_1fr_96px_120px_223px]
+                      md:items-start
                       md:gap-3
                       md:py-5
                     "
@@ -295,22 +295,22 @@ export default function MyBagPage() {
                     {/* =========================
                         DESKTOP SIZE
                     ========================== */}
-                    <span className="hidden text-base text-[#564345] md:block">
+                    <span className="hidden text-sm font-semibold leading-[18px] text-[#564345] md:block">
                       {item.selectedSize}
                     </span>
 
                     {/* =========================
                         DESKTOP COLOR
                     ========================== */}
-                    <span className="hidden text-base text-[#564345] md:block">
+                    <span className="hidden text-base font-semibold leading-[18px] text-[#564345] md:block">
                       {item.selectedColor}
                     </span>
 
                     {/* =========================
                         DESKTOP QUANTITY
                     ========================== */}
-                    <div className="hidden md:flex md:flex-col md:items-center md:gap-3">
-                      <div className="flex w-[104px] shrink-0 items-center justify-between border border-[var(--line)]">
+                    <div className="hidden md:flex md:w-full md:flex-col md:items-stretch md:gap-[10px]">
+                      <div className="flex h-10 w-full items-center justify-between border border-[#EFE7E7] px-2 py-[7px]">
                         <button
                           type="button"
                           onClick={() => {
@@ -323,7 +323,7 @@ export default function MyBagPage() {
                               removeFromBag(item.id);
                             }
                           }}
-                          className="flex h-9 w-9 items-center justify-center"
+                          className="flex h-full w-6 items-center justify-center"
                           aria-label={
                             item.quantity > 1
                               ? 'Decrease quantity'
@@ -332,12 +332,12 @@ export default function MyBagPage() {
                         >
                           {item.quantity > 1 ? (
                             <Minus
-                              size={14}
+                              size={24}
                               strokeWidth={1.5}
                             />
                           ) : (
                             <Trash2
-                              size={14}
+                              size={16}
                               strokeWidth={1.5}
                             />
                           )}
@@ -355,11 +355,11 @@ export default function MyBagPage() {
                               item.quantity + 1
                             )
                           }
-                          className="flex h-9 w-9 items-center justify-center"
+                          className="flex h-full w-6 items-center justify-center"
                           aria-label="Increase quantity"
                         >
                           <Plus
-                            size={14}
+                            size={24}
                             strokeWidth={1.5}
                           />
                         </button>
@@ -370,7 +370,7 @@ export default function MyBagPage() {
                         onClick={() =>
                           toggleWishlist(item.product)
                         }
-                        className="whitespace-nowrap text-base font-bold uppercase tracking-wide text-[#564345] underline underline-offset-2"
+                        className="w-fit whitespace-nowrap text-left text-base font-semibold text-[#564345] underline underline-offset-2"
                       >
                         Move to wishlist
                       </button>
