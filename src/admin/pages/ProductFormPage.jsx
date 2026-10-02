@@ -122,7 +122,7 @@ function PhotoPicker({ views, uploading, onFile, onClear }) {
         </div>
       </Field>
       <p className="mb-2 mt-3 text-[13px] text-[var(--a-muted)]">
-        Photos are cleaned up automatically (the background is removed). {front.label} is the main photo; the other angles
+        Upload photos with a transparent background (PNG) — they are resized but the background is kept as is. {front.label} is the main photo; the other angles
         are used on the product page and in the home-page carousel.
       </p>
       <div className="grid grid-cols-3 gap-3">

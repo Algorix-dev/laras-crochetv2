@@ -4,58 +4,27 @@ import sharp from 'sharp';
 import cloudinary from '../config/cloudinary.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 
-// TIP: the background-removal library is NOT imported at the top any more.
-// A top-level import loads its native code at server start, and that code
-// collides with sharp's own copy (the cause of the segfault in your logs).
-// getRemoveBackground() below loads it only the first time it's needed.
-// With SKIP_BACKGROUND_REMOVAL=true it is never loaded at all.
-const SKIP_BG_REMOVAL = process.env.SKIP_BACKGROUND_REMOVAL === 'true';
-const SKIP_AI_ABOVE_BYTES = 12 * 1024 * 1024; // raw file bigger than this skips the AI step
-const STRIP_TIMEOUT_MS = 15000;
-
-// TIP: one image at a time, and don't keep decoded images cached in memory.
-// Both help a small host (Render's free plan has 512 MB) stay under its limit.
+// TIP: NO background removal any more. Lara uploads photos that already have a
+// transparent background, so the server's only job is to shrink them and keep
+// that transparency. (The old AI step is gone — that's also why the server no
+// longer needs the big @imgly package or lots of memory.)
+//
+// The one thing that MUST be handled: JPEG cannot store transparency. So a
+// photo that has see-through pixels is saved as PNG; a normal photo with no
+// transparency is saved as a smaller JPEG.
 sharp.concurrency(1);
 sharp.cache(false);
-
-let removeBackgroundFn = null;
-async function getRemoveBackground() {
-  if (!removeBackgroundFn) {
-    const mod = await import('@imgly/background-removal-node');
-    removeBackgroundFn = mod.removeBackground;
-  }
-  return removeBackgroundFn;
-}
 
 // TIP: .rotate() with no arguments reads the photo's EXIF orientation and
 // turns it upright (phone photos often look sideways without it).
 // To change the maximum size, edit the 1600 (pixels wide).
-async function resizeImage(buffer) {
-  return sharp(buffer).rotate().resize({ width: 1600, withoutEnlargement: true });
-}
-
-// Returns { buffer, format } ready for Cloudinary.
 async function prepareImage(file) {
-  const base = await resizeImage(file.buffer);
-
-  // No background removal: keep the photo as a smaller JPEG.
-  if (SKIP_BG_REMOVAL || file.buffer.length > SKIP_AI_ABOVE_BYTES) {
-    return { buffer: await base.jpeg({ quality: 85 }).toBuffer(), format: 'jpg' };
+  const img = sharp(file.buffer).rotate().resize({ width: 1600, withoutEnlargement: true });
+  const { hasAlpha } = await sharp(file.buffer).metadata();
+  if (hasAlpha) {
+    return { buffer: await img.png({ compressionLevel: 9 }).toBuffer(), format: 'png' };
   }
-
-  // Background removal needs a PNG so the see-through background survives.
-  const resized = await base.png().toBuffer();
-  const removeBackground = await getRemoveBackground();
-  const blob = new Blob([resized], { type: 'image/png' });
-  const resultBlob = await removeBackground(blob);
-  return { buffer: Buffer.from(await resultBlob.arrayBuffer()), format: 'png' };
-}
-
-function withTimeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('background removal timed out')), ms)),
-  ]);
+  return { buffer: await img.jpeg({ quality: 85 }).toBuffer(), format: 'jpg' };
 }
 
 function uploadBufferToCloudinary(buffer, format) {
@@ -97,13 +66,10 @@ router.post('/', requireAdmin, receiveImages, async (req, res) => {
     for (const file of req.files) {
       let prepared;
       try {
-        prepared = await withTimeout(prepareImage(file), STRIP_TIMEOUT_MS);
+        prepared = await prepareImage(file);
       } catch (err) {
-        // TIP: if resizing or background removal fails, fall back to the
-        // plain resized JPEG so the upload still works.
-        console.error('Image processing failed, using a plain resize instead:', err);
-        const fallback = await (await resizeImage(file.buffer)).jpeg({ quality: 85 }).toBuffer();
-        prepared = { buffer: fallback, format: 'jpg' };
+        console.error('Image could not be processed:', err);
+        return res.status(400).json({ error: "That file doesn't look like a valid image." });
       }
       const result = await uploadBufferToCloudinary(prepared.buffer, prepared.format);
       urls.push(result.secure_url);

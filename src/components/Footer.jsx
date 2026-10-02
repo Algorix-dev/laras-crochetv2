@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import lacMonogram from "../assets/lara-monogram.webp";
 import Reveal from "./Reveal";
+import { subscribeNewsletter } from "../api";
 
 const columns = [
   {
@@ -37,15 +38,25 @@ const columns = [
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubscribe = (e) => {
+  // TIP: saves the email on the server (POST /api/newsletter/subscribe), which
+  // also sends the "You're subscribed" email. Only people who subscribe here
+  // (or tick the box at checkout) ever receive Lara's newsletters.
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (!email) return;
-    // TIP: no backend endpoint for this yet — wiring it to a real
-    // mailing list (Mailchimp, Klaviyo, etc.) is a separate small
-    // task once Lara picks a provider. For now this just confirms
-    // the interaction locally so the UI isn't a dead end.
-    setSubscribed(true);
+    if (!email.trim() || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await subscribeNewsletter(email.trim());
+      setSubscribed(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -128,7 +139,7 @@ export default function Footer() {
           </h3>
           {subscribed ? (
             <p className="text-sm text-[var(--muted)] max-md:order-2">
-              You're subscribed — thank you!
+              You're subscribed — thank you! Check your inbox for a confirmation.
             </p>
           ) : (
             <>
@@ -142,11 +153,17 @@ export default function Footer() {
                 />
                 <button
                   type="submit"
-                  className="h-12 w-[clamp(7.5rem,10.8vw,13rem)] shrink-0 bg-[var(--maroon)] px-4 text-[16px] font-bold uppercase text-white hover:bg-[var(--maroon-dark)] max-md:h-[50px] max-md:w-full"
+                  disabled={busy}
+                  className="h-12 w-[clamp(7.5rem,10.8vw,13rem)] shrink-0 disabled:opacity-60 bg-[var(--maroon)] px-4 text-[16px] font-bold uppercase text-white hover:bg-[var(--maroon-dark)] max-md:h-[50px] max-md:w-full"
                 >
-                  Subscribe
+                  {busy ? "Subscribing…" : "Subscribe"}
                 </button>
               </form>
+              {error && (
+                <p role="alert" className="mt-1.5 text-xs text-red-600 max-md:order-2 max-md:mb-3">
+                  {error}
+                </p>
+              )}
               <p className="mt-1.5 text-xs text-[var(--muted)] max-md:order-2 max-md:mb-[22px] max-md:mt-0 max-md:text-[16px] max-md:tracking-normal max-md:text-[#a9acb2]">Enjoy latest exclusives.</p>
             </>
           )}

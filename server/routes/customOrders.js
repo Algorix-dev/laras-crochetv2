@@ -1,22 +1,35 @@
 import { Router } from 'express';
 import multer from 'multer';
+import mongoose from 'mongoose';
 import cloudinary from '../config/cloudinary.js';
-import { sendCustomOrderNotification } from '../utils/email.js';
+import { sendCustomOrderNotification, sendRequestReceived } from '../utils/email.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 import CustomOrderRequest from '../models/CustomOrderRequest.js';
-import mongoose from 'mongoose';
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const clip = (v, n = 2000) => (typeof v === 'string' ? v.trim().slice(0, n) : undefined);
 
-// GET /api/custom-orders — admin-only list for the dashboard.
-// TIP: the customer-facing POST route stays open; only this one is locked.
-router.get('/', requireAdmin, async (req, res) => {
-  const requests = await CustomOrderRequest.find().sort({ createdAt: -1 });
-  res.json(requests);
+// TIP: this route is public, so limit what it accepts: max 4 photos, 10 MB
+// each, images only. Without limits one person could fill Cloudinary.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 4 },
+  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
 });
 
-// GET /api/custom-orders — admin-only list, newest first
+// wraps multer so its errors become a normal JSON message
+function receivePhotos(req, res, next) {
+  upload.array('photos', 4)(req, res, (err) => {
+    if (!err) return next();
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'One of your photos is too big. Please use photos under 10 MB.' });
+    }
+    return res.status(400).json({ error: 'Could not read your photos. Please try again.' });
+  });
+}
+
+// GET /api/custom-orders — admin-only list for the dashboard, newest first.
 router.get('/', requireAdmin, async (req, res) => {
   const requests = await CustomOrderRequest.find().sort({ createdAt: -1 });
   res.json(requests);
@@ -37,11 +50,9 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
   if (!doc) return res.status(404).json({ error: 'Request not found' });
   res.json(doc);
 });
-// TIP: plain upload, no @imgly background removal — these are the
-// customer's own reference photos (what they want it to look like),
-// not a product photo that needs a clean background for the shop.
-// That also means this route can't hit the memory problem the
-// product-upload route had.
+
+// TIP: plain upload, no background removal — these are the customer's own
+// reference photos (what they want it to look like).
 function uploadBufferToCloudinary(buffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -52,24 +63,24 @@ function uploadBufferToCloudinary(buffer) {
   });
 }
 
-// POST /api/custom-orders  (public — no login required, same as the
-// contact form itself)
-// multipart/form-data: photos (up to 4 files) + the same field names
-// ContactPage.jsx already collects in its "custom" formData.
-router.post('/', upload.array('photos', 4), async (req, res) => {
+// POST /api/custom-orders  (public — no login required)
+// multipart/form-data: photos (up to 4 files) + the fields ContactPage.jsx collects.
+router.post('/', receivePhotos, async (req, res) => {
   try {
-    const {
-      customerEmail,
-      garmentType,
-      sizeChoice,
-      colorNote,
-      customDetails,
-      // customMeasurements is sent as a JSON string in the form body
-      customMeasurements,
-    } = req.body;
+    const customerEmail = clip(req.body.customerEmail, 200)?.toLowerCase();
+    if (!customerEmail || !EMAIL_RE.test(customerEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
 
-    if (!customerEmail) {
-      return res.status(400).json({ error: 'Email is required' });
+    // customMeasurements arrives as a JSON string; bad JSON shouldn't crash the request
+    let measurements;
+    try {
+      const m = req.body.customMeasurements ? JSON.parse(req.body.customMeasurements) : null;
+      if (m && typeof m === 'object') {
+        measurements = { size: clip(m.size, 20), bust: clip(m.bust, 20), waist: clip(m.waist, 20), hip: clip(m.hip, 20) };
+      }
+    } catch {
+      measurements = undefined;
     }
 
     const photoUrls = [];
@@ -80,11 +91,13 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
 
     const request = await CustomOrderRequest.create({
       customerEmail,
-      garmentType,
-      sizeChoice,
-      customMeasurements: customMeasurements ? JSON.parse(customMeasurements) : undefined,
-      colorNote,
-      customDetails,
+      garmentType: clip(req.body.garmentType, 100),
+      sizeChoice: clip(req.body.sizeChoice, 100),
+      customMeasurements: measurements,
+      colorNote: clip(req.body.colorNote, 500),
+      colorSwatch: clip(req.body.colorSwatch, 20),
+      otherFitDetails: clip(req.body.otherFitDetails, 1000),
+      customDetails: clip(req.body.customDetails),
       photoUrls,
     });
 
@@ -92,6 +105,9 @@ router.post('/', upload.array('photos', 4), async (req, res) => {
     // record is already saved above regardless of what happens here.
     sendCustomOrderNotification(request).catch((err) =>
       console.error('Custom-order notification email failed:', err)
+    );
+    sendRequestReceived(customerEmail, 'custom').catch((err) =>
+      console.error('Custom-order acknowledgement email failed:', err)
     );
 
     res.status(201).json({ id: request._id });

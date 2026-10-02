@@ -35,6 +35,22 @@ router.get('/track/:reference', async (req, res) => {
   res.json(order);
 });
 
+// GET /api/orders/status/:ref — powers "Order status" on the Contact page.
+// TIP: accepts EITHER the AG-2026-0001 order number OR the Paystack
+// reference, and returns ONLY the status + date. Order numbers run in a
+// sequence (0001, 0002…), so anyone could guess them — that's why this
+// route must never return a name, address or items.
+router.get('/status/:ref', async (req, res) => {
+  const ref = String(req.params.ref || '').trim().replace(/^#/, '').slice(0, 80);
+  if (!ref) return res.status(404).json({ error: 'Order not found' });
+  const order = await Order.findOne({
+    $or: [{ orderNumber: ref.toUpperCase() }, { paystackReference: ref }],
+    status: { $ne: 'pending' },
+  }).select('orderNumber status createdAt');
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+  res.json({ orderNumber: order.orderNumber, status: order.status, createdAt: order.createdAt });
+});
+
 // GET /api/orders/:id — ONE of the logged-in customer's own orders
 // (powers the Order Tracking page they reach from Order History).
 // TIP: this is deliberately NOT public like /track/:reference. It only
@@ -76,13 +92,12 @@ router.put('/:id/status', requireAdmin, async (req, res) => {
   if (!Order.schema.path('status').enumValues.includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
   const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
   if (!order) return res.status(404).json({ error: 'Order not found' });
   res.json(order);
-
-  if (!mongoose.isValidObjectId(req.params.id)) {
-     return res.status(404).json({ error: 'Order not found' });
-  }  
 });
 
 export default router;

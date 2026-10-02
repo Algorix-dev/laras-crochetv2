@@ -1,7 +1,7 @@
 {
   "name": "laras-crochet-server",
   "version": "1.0.0",
-  "description": "Backend API for Lara's Crochet — products, admin auth, orders, Paystack payments",
+  "description": "Backend API for Lara's Crochet \u2014 products, admin auth, orders, Paystack payments",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,6 @@
     "node": "22.x"
   },
   "dependencies": {
-    "@imgly/background-removal-node": "^1.4.5",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
@@ -32,7 +31,6 @@
   },
   "allowScripts": {
     "sharp@0.32.6": true,
-    "sharp@0.33.5": true,
-    "onnxruntime-node@1.17.3": true
+    "sharp@0.33.5": true
   }
 }

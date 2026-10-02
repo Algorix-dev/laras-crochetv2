@@ -1,8 +1,10 @@
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 import { Router } from 'express';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import ShippingRate from '../models/ShippingRate.js';
+import { subscribeEmail } from './newsletter.js';
 
 const router = Router();
 const PAYSTACK_BASE = 'https://api.paystack.co';
@@ -55,16 +57,26 @@ router.post('/initialize', async (req, res) => {
   let totalAmount = 0;
   const orderItems = [];
   for (const item of items) {
+    // TIP: quantity comes from the browser, so it must be a whole number of
+    // at least 1 — otherwise a negative or fractional quantity could lower
+    // the total that Paystack charges.
+    const quantity = Number(item.quantity);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+      return res.status(400).json({ error: 'Invalid quantity in your bag' });
+    }
+    if (!mongoose.isValidObjectId(item.productId)) {
+      return res.status(400).json({ error: 'Invalid product in your bag' });
+    }
     const product = await Product.findById(item.productId);
     if (!product) return res.status(400).json({ error: `Product ${item.productId} not found` });
-    totalAmount += product.price * item.quantity;
+    totalAmount += product.price * quantity;
     orderItems.push({
       product: product._id,
       name: product.name,
       price: product.price,
       color: item.color,
       size: item.size,
-      quantity: item.quantity,
+      quantity,
     });
   }
 
@@ -105,6 +117,15 @@ router.post('/initialize', async (req, res) => {
 
   if (!paystackData.status) {
     return res.status(502).json({ error: 'Could not start payment with Paystack' });
+  }
+
+  // TIP: "Email me with news and offers" on the checkout page. Ticking it
+  // subscribes this email (and sends the welcome email); unticked does
+  // nothing, so they never get newsletters. Never blocks the payment.
+  if (req.body.newsletterOptIn === true) {
+    subscribeEmail(customerEmail, 'checkout').catch((err) =>
+      console.error('Checkout newsletter opt-in failed:', err)
+    );
   }
 
   // Save the order now as "pending" — verify() flips it to "paid"

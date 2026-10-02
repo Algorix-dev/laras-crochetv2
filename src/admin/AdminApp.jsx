@@ -4,6 +4,8 @@
     /admin                 Dashboard
     /admin/orders          Order Management
     /admin/custom-orders   Custom Orders (requests from the custom-order form)
+    /admin/enquiries       Enquiries (messages from the Contact page)
+    /admin/newsletter      Newsletter (write + send to subscribers)
     /admin/customers       Customers (click a row for its details)
     /admin/categories      Categories
     /admin/transactions    Transaction
@@ -31,6 +33,8 @@ import CouponPage from "./pages/CouponPage";
 import CustomersPage from "./pages/CustomersPage";
 import CustomOrdersPage from "./pages/CustomOrdersPage";
 import DashboardPage from "./pages/DashboardPage";
+import EnquiriesPage from "./pages/EnquiriesPage";
+import NewsletterPage from "./pages/NewsletterPage";
 import { ComingSoonPage, ProductListPage } from "./pages/MiscPages";
 import OrdersPage from "./pages/OrdersPage";
 import ProductFormPage from "./pages/ProductFormPage";
@@ -126,6 +130,8 @@ function Screens() {
           <Route index element={<DashboardPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="custom-orders" element={<CustomOrdersPage />} />
+          <Route path="enquiries" element={<EnquiriesPage />} />
+          <Route path="newsletter" element={<NewsletterPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="transactions" element={<TransactionsPage />} />

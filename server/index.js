@@ -15,6 +15,8 @@ import addressRoutes from "./routes/addresses.js";
 import analyticsRoutes from "./routes/analytics.js";
 import customOrderRoutes from "./routes/customOrders.js";
 import shippingRoutes from "./routes/shipping.js";
+import newsletterRoutes from "./routes/newsletter.js";
+import enquiryRoutes from "./routes/enquiries.js";
 
 await connectDB();
 
@@ -69,6 +71,11 @@ const otpLimiter = rateLimit({
 const customOrderLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: tooMany,
 });
+// TIP: the footer sign-up and the contact form are public and each one can
+// trigger an email, so cap them per IP to stop someone using them to spam.
+const publicFormLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 15, standardHeaders: true, legacyHeaders: false, message: tooMany,
+});
 const pingLimiter = rateLimit({
   windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false,
 });
@@ -77,6 +84,9 @@ app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth/customer", otpLimiter);
 app.post("/api/custom-orders", customOrderLimiter);
 app.use("/api/analytics/ping", pingLimiter);
+app.post("/api/newsletter/subscribe", publicFormLimiter);
+app.post("/api/enquiries", publicFormLimiter);
+app.use("/api/orders/status", rateLimit({ windowMs: 15 * 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false, message: tooMany }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/customer", customerAuthRoutes);
@@ -88,6 +98,8 @@ app.use("/api/account/addresses", addressRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/custom-orders", customOrderRoutes);
 app.use("/api/shipping", shippingRoutes);
+app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/enquiries", enquiryRoutes);
 
 app.get("/", (req, res) => res.send("Lara's Crochet API is running"));
 

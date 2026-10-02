@@ -204,8 +204,8 @@ export async function adminLogin(email, password) {
   return data; // { token, name, email }
 }
 
-// TIP: sends ONE photo to POST /api/upload, which strips the background
-// and stores it on Cloudinary, and returns its URL. (That route wants
+// TIP: sends ONE photo to POST /api/upload, which shrinks it, keeps any
+// transparent background as-is, stores it on Cloudinary and returns its URL. (That route wants
 // multipart/form-data, so this can't reuse authenticatedFetch, which
 // forces a JSON Content-Type.)
 export async function uploadPhoto(file) {
@@ -257,6 +257,51 @@ export const getShippingRates = () => adminRequest("/api/shipping/rates");
 // admin: replaces the whole list with the one sent
 export const saveShippingRates = (rates) =>
   adminRequest("/api/shipping/rates", { method: "PUT", body: JSON.stringify({ rates }) });
+
+/* ============================================================
+   NEWSLETTER + ENQUIRIES + ORDER STATUS (public)
+   ============================================================ */
+
+// footer sign-up → { status: "subscribed" | "already" }
+export async function subscribeNewsletter(email) {
+  const res = await fetch(`${API_URL}/api/newsletter/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not subscribe. Please try again.");
+  return data;
+}
+
+// Contact page, enquiry side → saved for Lara + emailed to her
+export async function submitEnquiry(payload) {
+  const res = await fetch(`${API_URL}/api/enquiries`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not send your message. Please try again.");
+  return data;
+}
+
+// Contact page "Order status" → { orderNumber, status, createdAt } or null if not found
+export async function lookupOrderStatus(reference) {
+  const res = await fetch(`${API_URL}/api/orders/status/${encodeURIComponent(reference.trim())}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Could not check that order. Please try again.");
+  return res.json();
+}
+
+/* ---------- NEWSLETTER + ENQUIRIES (admin) ---------- */
+export const getSubscribers = () => adminRequest("/api/newsletter/subscribers");
+export const getCampaigns = () => adminRequest("/api/newsletter/campaigns");
+export const sendNewsletter = (subject, body, testOnly = false) =>
+  adminRequest("/api/newsletter/send", { method: "POST", body: JSON.stringify({ subject, body, testOnly }) });
+export const getEnquiries = () => adminRequest("/api/enquiries");
+export const updateEnquiryStatus = (id, status) =>
+  adminRequest(`/api/enquiries/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
 
 /* ---------- CUSTOM ORDERS (admin) ---------- */
 export const getCustomOrders = () => adminRequest("/api/custom-orders");

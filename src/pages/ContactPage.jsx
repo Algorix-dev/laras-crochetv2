@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, HelpCircle, UploadCloud, X } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import Footer from "../components/Footer";
+import { lookupOrderStatus, submitEnquiry as sendEnquiry } from "../api";
 
 const stepVariants = {
   enter: (dir) => ({ x: dir > 0 ? 50 : -50, opacity: 0 }),
@@ -107,13 +108,17 @@ const ORDER_STATUSES = [
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function hashString(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (h * 31 + str.charCodeAt(i)) >>> 0;
-  }
-  return h;
-}
+// TIP: the real order statuses (server/models/Order.js) mapped onto the four
+// steps shown on this page. "shipped" and "delivered" both land on the last
+// step ("Delivery"); "delivered" is worded differently in the text below.
+const STATUS_TO_STEP = {
+  paid: 0,
+  in_production: 1,
+  packaging: 2,
+  shipped: 3,
+  delivered: 3,
+  cancelled: 0,
+};
 
 /* ---------- Shared building blocks ---------- */
 
@@ -474,6 +479,10 @@ export default function ContactPage() {
   const [direction, setDirection] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  // the real order found by the "Order status" question (null until looked up)
+  const [trackedOrder, setTrackedOrder] = useState(null);
+  const [lookupError, setLookupError] = useState("");
+  const [lookingUp, setLookingUp] = useState(false);
 
   useEffect(() => {
     if (flowParam === "custom") {
@@ -588,6 +597,8 @@ export default function ContactPage() {
     setHistory([]);
     setDirection(-1);
     setErrors({});
+    setTrackedOrder(null);
+    setLookupError("");
     setFormData({
       enquiryTopic: "",
       itemName: "",
@@ -623,7 +634,28 @@ export default function ContactPage() {
     goTo(garment === "Other" ? "other-fit" : "size");
   };
 
-  const submitEnquiry = (e) => {
+  // "Order status": ask the server for the REAL status of this order.
+  const checkOrderStatus = async () => {
+    setLookupError("");
+    setLookingUp(true);
+    try {
+      const found = await lookupOrderStatus(formData.orderRef);
+      if (!found) {
+        setLookupError(
+          "We couldn't find that order. Check the number in your confirmation email and try again.",
+        );
+        return;
+      }
+      setTrackedOrder(found);
+      goTo("os-tracker");
+    } catch (err) {
+      setLookupError(err.message);
+    } finally {
+      setLookingUp(false);
+    }
+  };
+
+  const submitEnquiry = async (e) => {
     e.preventDefault();
     if (!formData.enquiryEmail) {
       setErrors((p) => ({ ...p, enquiryEmail: "Email is required" }));
@@ -637,10 +669,23 @@ export default function ContactPage() {
       return;
     }
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      // TIP: this used to be a fake 1-second timer — nothing was sent. Now it
+      // is saved on the server and emailed to Lara (reply goes to the customer).
+      await sendEnquiry({
+        customerEmail: formData.enquiryEmail,
+        topic: formData.enquiryTopic,
+        itemName: formData.itemName,
+        orderRef: formData.orderRef,
+        message: formData.issueDetails,
+        sizingMeasurements: formData.sizingMeasurements,
+      });
       goTo("success");
-    }, 1000);
+    } catch (err) {
+      setErrors((p) => ({ ...p, enquiryEmail: err.message || "Something went wrong — please try again." }));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const submitCustom = async (e) => {
@@ -660,6 +705,8 @@ export default function ContactPage() {
       body.append("garmentType", formData.garmentType);
       body.append("sizeChoice", formData.sizeChoice);
       body.append("colorNote", formData.colorNote);
+      body.append("colorSwatch", formData.colorSwatch);
+      body.append("otherFitDetails", formData.otherFitDetails);
       body.append("customDetails", formData.customDetails);
       body.append("customMeasurements", JSON.stringify(formData.customMeasurements));
       formData.photos.forEach((file) => body.append("photos", file));
@@ -699,10 +746,14 @@ export default function ContactPage() {
     day: "numeric",
     year: "numeric",
   });
-  const orderStatusIndex = formData.orderRef
-    ? hashString(formData.orderRef) % ORDER_STATUSES.length
-    : 1;
+  const orderStatusIndex = trackedOrder ? (STATUS_TO_STEP[trackedOrder.status] ?? 0) : 0;
   const currentStatus = ORDER_STATUSES[orderStatusIndex];
+  const orderDate = trackedOrder?.createdAt
+    ? new Date(trackedOrder.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : today;
+  const orderLabel = trackedOrder?.orderNumber || formData.orderRef;
+  const delivered = trackedOrder?.status === "delivered";
+  const cancelled = trackedOrder?.status === "cancelled";
 
   return (
     <>
@@ -909,15 +960,20 @@ export default function ContactPage() {
                         placeholder="Input order ref. number"
                         helpText="Found in your order confirmation email."
                       />
+                      {phase === "os-field" && lookupError && (
+                        <p role="alert" className="text-sm text-red-600">
+                          {lookupError}
+                        </p>
+                      )}
                       <PrimaryButton
-                        disabled={!formData.orderRef.trim()}
+                        disabled={!formData.orderRef.trim() || lookingUp}
                         onClick={() =>
-                          goTo(
-                            phase === "os-field" ? "os-tracker" : "pay-issue",
-                          )
+                          phase === "os-field"
+                            ? checkOrderStatus()
+                            : goTo("pay-issue")
                         }
                       >
-                        Next
+                        {lookingUp ? "Checking..." : "Next"}
                       </PrimaryButton>
                     </div>
                   </div>
@@ -969,16 +1025,17 @@ export default function ContactPage() {
                               {isCurrent && (
                                 <div className="mt-2 text-base text-[#404040] leading-relaxed">
                                   <p>
-                                    Your order (#{formData.orderRef}) has been received on{" "}
-                                    {today} and{" "}
-                                    {currentStatus === "Order received" &&
+                                    Your order (#{orderLabel}) has been received on{" "}
+                                    {orderDate} and{" "}
+                                    {cancelled && "has been cancelled."}
+                                    {!cancelled && currentStatus === "Order received" &&
                                       "is being reviewed."}
-                                    {currentStatus === "In production" &&
+                                    {!cancelled && currentStatus === "In production" &&
                                       "is currently in production."}
-                                    {currentStatus === "Packaging" &&
+                                    {!cancelled && currentStatus === "Packaging" &&
                                       "is currently in packaging undergoing proper inspection and quality check."}
-                                    {currentStatus === "Delivery" &&
-                                      "is finally on its way to you!"}
+                                    {!cancelled && currentStatus === "Delivery" &&
+                                      (delivered ? "has been delivered." : "is finally on its way to you!")}
                                   </p>
                                   <p className="mt-3">
                                     Thank you for choosing Lara&apos;s Crochet.
@@ -1027,16 +1084,17 @@ export default function ContactPage() {
                         ))}
                       </div>
                       <p className="text-base text-[#404040] leading-relaxed">
-                        Your order (#{formData.orderRef}) has been received on{" "}
-                        {today} and{" "}
-                        {currentStatus === "Order received" &&
+                        Your order (#{orderLabel}) has been received on{" "}
+                        {orderDate} and{" "}
+                        {cancelled && "has been cancelled."}
+                        {!cancelled && currentStatus === "Order received" &&
                           "is being reviewed."}
-                        {currentStatus === "In production" &&
+                        {!cancelled && currentStatus === "In production" &&
                           "is currently in production."}
-                        {currentStatus === "Packaging" &&
+                        {!cancelled && currentStatus === "Packaging" &&
                           "is currently in packaging undergoing proper inspection and quality check."}
-                        {currentStatus === "Delivery" &&
-                          "is finally on its way to you!"}
+                        {!cancelled && currentStatus === "Delivery" &&
+                          (delivered ? "has been delivered." : "is finally on its way to you!")}
                       </p>
                       <p className="text-base text-[#404040] mt-4">
                         Thank you for choosing Lara&apos;s Crochet.

@@ -181,6 +181,9 @@ export default function CheckoutPage() {
         // The backend looks the shipping PRICE up itself from this name
         // (server/routes/payments.js) and adds it to what Paystack charges.
         shippingMethod,
+        // "Email me with news and offers" tick-box — the server subscribes this
+        // email only when it's true.
+        newsletterOptIn: form.newsletterOptIn,
         // Where it's going — the server looks the price up from these.
         shippingCountry: country,
         shippingState: quoteState,

@@ -17,6 +17,8 @@ const customOrderRequestSchema = new mongoose.Schema(
       hip: String,
     },
     colorNote: String,
+    colorSwatch: String, // hex the customer picked, e.g. #7a1f3d
+    otherFitDetails: String, // 'Other' garment path: what the piece should be
     customDetails: String,
     // Cloudinary URLs — uploaded WITHOUT background removal, since these
     // are the customer's own reference photos, not product shots.
