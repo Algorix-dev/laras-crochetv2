@@ -142,6 +142,20 @@ export default function EnquiriesPage() {
             <Field label="Order">{r.orderRef}</Field>
             <Field label="Item">{r.itemName}</Field>
           </div>
+          {r.sizingMeasurements && Object.values(r.sizingMeasurements).some(Boolean) && (
+            <div className="mt-4">
+              <Field label="Measurements (asked for sizing help)">
+                {[
+                  r.sizingMeasurements.size && `Size ${r.sizingMeasurements.size}`,
+                  r.sizingMeasurements.bust && `Bust ${r.sizingMeasurements.bust}`,
+                  r.sizingMeasurements.waist && `Waist ${r.sizingMeasurements.waist}`,
+                  r.sizingMeasurements.hip && `Hip ${r.sizingMeasurements.hip}`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </Field>
+            </div>
+          )}
           <div className="mt-4">
             <Field label="Message">{r.message}</Field>
           </div>

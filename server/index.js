@@ -17,6 +17,10 @@ import customOrderRoutes from "./routes/customOrders.js";
 import shippingRoutes from "./routes/shipping.js";
 import newsletterRoutes from "./routes/newsletter.js";
 import enquiryRoutes from "./routes/enquiries.js";
+import teamRoutes from "./routes/team.js";
+import couponRoutes from "./routes/coupons.js";
+import reviewRoutes from "./routes/reviews.js";
+import brandRoutes from "./routes/brand.js";
 
 await connectDB();
 
@@ -86,6 +90,9 @@ app.post("/api/custom-orders", customOrderLimiter);
 app.use("/api/analytics/ping", pingLimiter);
 app.post("/api/newsletter/subscribe", publicFormLimiter);
 app.post("/api/enquiries", publicFormLimiter);
+// TIP: stops someone trying thousands of discount codes.
+app.post("/api/coupons/validate", rateLimit({ windowMs: 15 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, message: tooMany }));
+app.use("/api/auth/accept-invite", loginLimiter);
 app.use("/api/orders/status", rateLimit({ windowMs: 15 * 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false, message: tooMany }));
 
 app.use("/api/auth", authRoutes);
@@ -100,6 +107,10 @@ app.use("/api/custom-orders", customOrderRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/enquiries", enquiryRoutes);
+app.use("/api/team", teamRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/brand", brandRoutes);
 
 app.get("/", (req, res) => res.send("Lara's Crochet API is running"));
 

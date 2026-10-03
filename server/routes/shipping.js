@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import ShippingRate from '../models/ShippingRate.js';
-import { requireAdmin } from '../middleware/requireAdmin.js';
+import { requireAdmin, requireFullAdmin } from '../middleware/requireAdmin.js';
 
 const router = Router();
 
@@ -55,7 +55,7 @@ router.get('/rates', requireAdmin, async (req, res) => {
 // rows in the list are created/updated, rows missing from it are
 // deleted (that's how Lara "clears" a state back to the default).
 // The default row (country '*') must always be included.
-router.put('/rates', requireAdmin, async (req, res) => {
+router.put('/rates', requireAdmin, requireFullAdmin, async (req, res) => {
   const { rates } = req.body;
   if (!Array.isArray(rates)) return res.status(400).json({ error: 'rates must be a list' });
 

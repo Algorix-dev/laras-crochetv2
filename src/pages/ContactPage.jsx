@@ -678,7 +678,8 @@ export default function ContactPage() {
         itemName: formData.itemName,
         orderRef: formData.orderRef,
         message: formData.issueDetails,
-        sizingMeasurements: formData.sizingMeasurements,
+        // only sent when the person asked Lara for custom sizing help
+        sizingMeasurements: formData.wantsSizeHelp === "yes" ? formData.sizingMeasurements : undefined,
       });
       goTo("success");
     } catch (err) {
@@ -920,11 +921,20 @@ export default function ContactPage() {
                       </motion.div>
                     )}
 
+                    {/* TIP: "No" stays self-serve (nothing to send). "Yes" means Lara
+                        should help, so we ask for an email next and the measurements
+                        are sent to her (see submitEnquiry) — at least one is required. */}
                     <PrimaryButton
                       className="mt-6"
-                      onClick={() => goTo("sizing-done")}
+                      disabled={
+                        formData.wantsSizeHelp === "yes" &&
+                        !Object.values(formData.sizingMeasurements || {}).some((v) => String(v || "").trim())
+                      }
+                      onClick={() =>
+                        goTo(formData.wantsSizeHelp === "yes" ? "email" : "sizing-done")
+                      }
                     >
-                      {formData.wantsSizeHelp === "yes" ? "Done" : "Next"}
+                      Next
                     </PrimaryButton>
                   </div>
                 )}
@@ -1198,7 +1208,11 @@ export default function ContactPage() {
                         value={formData.enquiryEmail}
                         onChange={(v) => updateField("enquiryEmail", v)}
                         placeholder="Email address"
-                        helpText="We will only use your email to reply to your enquiry."
+                        helpText={
+                          formData.wantsSizeHelp === "yes"
+                            ? "Lara will email you the size that suits your measurements."
+                            : "We will only use your email to reply to your enquiry."
+                        }
                         error={errors.enquiryEmail}
                         required
                       />

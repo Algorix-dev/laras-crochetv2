@@ -1,9 +1,12 @@
 /*
   CONTROL AUTHORITY — Who can do what in the admin dashboard.
-  Lara can invite team members, assign roles (Admin / Editor / Viewer),
-  and revoke access.
+  Lara can invite team members (an email link lets them choose their own
+  password), assign roles (Admin / Editor / Viewer), and remove access.
+  The roles are ENFORCED by the server (server/middleware/requireAdmin.js),
+  not just shown here.
 */
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { changeMemberLevel, getTeam, inviteMember, removeMember, resendInvite } from "../../api";
 import { CirclePlus, Crown, Eye, Pencil, Shield, Trash2, X } from "lucide-react";
 import { useAdmin } from "../AdminData";
 import { cx, dateDMY } from "../fmt";
@@ -13,7 +16,7 @@ import { Btn, Card, EmptyState, HeadRow, StatusDot, useToast } from "../ui";
 /* ---------- types ---------- */
 const ROLES = {
   admin: { label: "Admin", Icon: Crown, desc: "Full access — can do everything including managing team members." },
-  editor: { label: "Editor", Icon: Pencil, desc: "Can manage products, orders and custom orders, but not team members or settings." },
+  editor: { label: "Editor", Icon: Pencil, desc: "Can manage products, orders, enquiries, coupons and reviews, but not team, shipping, brand or newsletters." },
   viewer: { label: "Viewer", Icon: Eye, desc: "Read-only access — can view everything but cannot make changes." },
 };
 
@@ -33,15 +36,14 @@ function RoleBadge({ role }) {
 }
 
 /* ---------- modal ---------- */
-function InviteModal({ onClose, onInvite }) {
+function InviteModal({ onClose, onInvite, busy }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("editor");
 
   function submit(e) {
     e.preventDefault();
     if (!email.trim()) return;
-    onInvite(email.trim(), role);
-    onClose();
+    onInvite(email.trim(), role); // the page closes this once the invite email is sent
   }
 
   const inp = "h-11 w-full rounded-md border border-[#eceef1] bg-[var(--a-bg)] px-3.5 text-[15px] text-[var(--a-ink)] outline-none focus:border-[var(--a-maroon)]";
@@ -84,7 +86,7 @@ function InviteModal({ onClose, onInvite }) {
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Btn variant="white" className="h-11 rounded-md px-5" onClick={onClose}>Cancel</Btn>
-            <Btn type="submit" className="h-11 rounded-md px-5">Send invite</Btn>
+            <Btn type="submit" disabled={busy} className="h-11 rounded-md px-5">{busy ? "Sending…" : "Send invite"}</Btn>
           </div>
         </form>
       </div>
@@ -95,53 +97,100 @@ function InviteModal({ onClose, onInvite }) {
 /* ---------- the page ---------- */
 const COLS = "grid-cols-[2fr_1fr_1fr_80px]";
 
+const DEMO_MEMBERS = [
+  { id: 1, name: "Lara", email: "lara@example.com", role: "admin", status: "active" },
+  { id: 2, name: "Amara", email: "amara@example.com", role: "editor", status: "active" },
+  { id: 3, name: "Tunde", email: "tunde@example.com", role: "viewer", status: "invited" },
+];
+
+const fromServer = (m) => ({ id: m.id, name: m.name, email: m.email, role: m.accessLevel, status: m.status });
+
 export default function ControlAuthorityPage() {
   const { demo, profile } = useAdmin();
   const [toast, toastNode] = useToast();
   const [showInvite, setShowInvite] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [members, setMembers] = useState(demo ? DEMO_MEMBERS : []);
+  const [loading, setLoading] = useState(!demo);
+  const [loadError, setLoadError] = useState("");
 
-  const [members, setMembers] = useState([
-    { id: 1, name: "Lara Olafolorunsho", email: "laraolafolorunsho@gmail.com", role: "admin", status: "active", joined: "2024-01-15" },
-    { id: 2, name: "Amara Okoye", email: "amara@example.com", role: "editor", status: "active", joined: "2024-06-02" },
-    { id: 3, name: "Tunde Adesanya", email: "tunde@example.com", role: "viewer", status: "invited", joined: "2024-09-20" },
-  ]);
+  useEffect(() => {
+    if (demo) return undefined;
+    let cancelled = false;
+    getTeam()
+      .then((list) => !cancelled && setMembers(list.map(fromServer)))
+      .catch((err) => !cancelled && setLoadError(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [demo]);
 
-  function invite(email, role) {
+  const fail = (err) => toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
+  const isMe = (m) => profile?.email && m.email.toLowerCase() === profile.email.toLowerCase();
+
+  async function invite(email, role) {
     if (demo) { toast("Sample data — nothing is saved in demo mode."); return; }
-    const exists = members.find((m) => m.email === email);
-    if (exists) { toast("That email is already in the team.", "error"); return; }
-    setMembers((prev) => [
-      ...prev,
-      { id: Date.now(), name: email.split("@")[0], email, role, status: "invited", joined: new Date().toISOString().slice(0, 10) },
-    ]);
-    toast(`Invite sent to ${email}.`);
-  }
-
-  function changeRole(id, role) {
-    if (demo) { toast("Sample data — nothing is saved in demo mode."); return; }
-    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role } : m)));
-  }
-
-  function revoke(m) {
-    if (demo) { toast("Sample data — nothing is saved in demo mode."); return; }
-    if (m.role === "admin" && members.filter((x) => x.role === "admin").length === 1) {
-      toast("You need at least one admin.", "error");
-      return;
+    setInviting(true);
+    try {
+      const created = await inviteMember(email, role);
+      setMembers((prev) => [...prev, fromServer(created)]);
+      setShowInvite(false);
+      toast(`Invite sent to ${email}.`);
+    } catch (err) {
+      fail(err);
+    } finally {
+      setInviting(false);
     }
-    if (!window.confirm(`Remove ${m.name} from the team?`)) return;
-    setMembers((prev) => prev.filter((x) => x.id !== m.id));
-    toast(`${m.name} removed.`);
   }
 
+  async function changeRole(id, role) {
+    if (demo) { toast("Sample data — nothing is saved in demo mode."); return; }
+    try {
+      await changeMemberLevel(id, role);
+      setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role } : m)));
+      toast("Role updated.");
+    } catch (err) {
+      fail(err);
+    }
+  }
+
+  async function resend(m) {
+    if (demo) { toast("Sample data — nothing is saved in demo mode."); return; }
+    try {
+      await resendInvite(m.id);
+      toast(`New invite sent to ${m.email}.`);
+    } catch (err) {
+      fail(err);
+    }
+  }
+
+  async function revoke(m) {
+    if (demo) { toast("Sample data — nothing is saved in demo mode."); return; }
+    if (!window.confirm(`Remove ${m.name} from the team?`)) return;
+    try {
+      await removeMember(m.id);
+      setMembers((prev) => prev.filter((x) => x.id !== m.id));
+      toast(`${m.name} removed.`);
+    } catch (err) {
+      fail(err);
+    }
+  }
+
+  if (loading) return <p className="py-24 text-center text-[16px] text-[var(--a-muted)]">Loading team…</p>;
+  if (loadError) {
+    return <p role="alert" className="rounded-md bg-[#fff1f2] px-4 py-3 text-[14px] text-[var(--a-red)]">{loadError}</p>;
+  }
+
+  // Matches what the server enforces: a viewer can only look, never change.
   const permissions = [
-    { area: "View dashboard", admin: true, editor: true, viewer: true },
-    { area: "Manage products", admin: true, editor: true, viewer: false },
-    { area: "Manage orders", admin: true, editor: true, viewer: true },
-    { area: "Manage customers", admin: true, editor: true, viewer: true },
-    { area: "Manage coupons", admin: true, editor: true, viewer: false },
-    { area: "View transactions", admin: true, editor: true, viewer: true },
-    { area: "Edit shipping rates", admin: true, editor: false, viewer: false },
+    { area: "View dashboard, orders and customers", admin: true, editor: true, viewer: true },
+    { area: "Manage products and photos", admin: true, editor: true, viewer: false },
+    { area: "Update orders, custom orders and enquiries", admin: true, editor: true, viewer: false },
+    { area: "Manage coupons and reviews", admin: true, editor: true, viewer: false },
+    { area: "Edit shipping prices", admin: true, editor: false, viewer: false },
     { area: "Edit brand settings", admin: true, editor: false, viewer: false },
+    { area: "Send newsletters", admin: true, editor: false, viewer: false },
     { area: "Manage team", admin: true, editor: false, viewer: false },
   ];
 
@@ -185,6 +234,8 @@ export default function ControlAuthorityPage() {
                 {/* Role selector */}
                 <select
                   value={m.role}
+                  disabled={isMe(m)}
+                  title={isMe(m) ? "You can't change your own role" : undefined}
                   onChange={(e) => changeRole(m.id, e.target.value)}
                   className="h-9 rounded-md border border-[#eceef1] bg-white px-2 text-[14px] text-[var(--a-ink)] outline-none focus:border-[var(--a-maroon)]"
                 >
@@ -197,7 +248,12 @@ export default function ControlAuthorityPage() {
                 <span>
                   {m.status === "active"
                     ? <StatusDot tone="green">Active</StatusDot>
-                    : <StatusDot tone="amber">Invited</StatusDot>}
+                    : (
+                      <span className="flex items-center gap-2">
+                        <StatusDot tone="amber">Invited</StatusDot>
+                        <button type="button" onClick={() => resend(m)} className="text-[12px] font-bold text-[var(--a-maroon)] underline">Resend</button>
+                      </span>
+                    )}
                 </span>
 
                 {/* Remove */}
@@ -205,6 +261,7 @@ export default function ControlAuthorityPage() {
                   <button
                     type="button"
                     onClick={() => revoke(m)}
+                    disabled={isMe(m)}
                     aria-label={`Remove ${m.name}`}
                     className="flex size-8 items-center justify-center rounded-md text-[var(--a-muted)] hover:bg-[#ffe4e6] hover:text-[var(--a-red)]"
                   >
@@ -250,7 +307,7 @@ export default function ControlAuthorityPage() {
         </div>
       </Card>
 
-      {showInvite && <InviteModal onClose={() => setShowInvite(false)} onInvite={invite} />}
+      {showInvite && <InviteModal onClose={() => setShowInvite(false)} onInvite={invite} busy={inviting} />}
       {toastNode}
     </div>
   );

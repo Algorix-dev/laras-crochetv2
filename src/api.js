@@ -303,6 +303,90 @@ export const getEnquiries = () => adminRequest("/api/enquiries");
 export const updateEnquiryStatus = (id, status) =>
   adminRequest(`/api/enquiries/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
 
+/* ============================================================
+   COUPONS · REVIEWS · BRAND · TEAM
+   ============================================================ */
+
+// public: checks a discount code against the bag → { code, type, value, discount }
+export async function validateCoupon(code, items) {
+  const res = await fetch(`${API_URL}/api/coupons/validate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, items }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not check that code.");
+  return data;
+}
+export const getCoupons = () => adminRequest("/api/coupons");
+export const saveCoupon = (payload, id) =>
+  adminRequest(`/api/coupons${id ? `/${id}` : ""}`, { method: id ? "PUT" : "POST", body: JSON.stringify(payload) });
+export const deleteCoupon = (id) => adminRequest(`/api/coupons/${id}`, { method: "DELETE" });
+
+// public: approved reviews for a piece → { reviews, count, average }
+export async function getProductReviews(productId) {
+  const res = await fetch(`${API_URL}/api/reviews/product/${productId}`);
+  if (!res.ok) throw new Error("Could not load reviews");
+  return res.json();
+}
+// signed-in customer: may they write one? → { canReview, reason? }
+export async function canReviewProduct(productId) {
+  const res = await authenticatedFetch(`/api/reviews/can-review/${productId}`);
+  if (!res.ok) return { canReview: false };
+  return res.json();
+}
+export async function submitReview(payload) {
+  const res = await authenticatedFetch("/api/reviews", { method: "POST", body: JSON.stringify(payload) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not save your review.");
+  return data;
+}
+export const getAdminReviews = () => adminRequest("/api/reviews");
+export const setReviewStatus = (id, status) =>
+  adminRequest(`/api/reviews/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+export const deleteReview = (id) => adminRequest(`/api/reviews/${id}`, { method: "DELETE" });
+
+// public: brand settings the storefront uses (footer links, logo, favicon, colour)
+export async function getBrand() {
+  const res = await fetch(`${API_URL}/api/brand`);
+  if (!res.ok) throw new Error("Could not load brand");
+  return res.json();
+}
+export const saveBrand = (payload) => adminRequest("/api/brand", { method: "PUT", body: JSON.stringify(payload) });
+export async function uploadBrandImage(file) {
+  const body = new FormData();
+  body.append("image", file);
+  const res = await fetch(`${API_URL}/api/brand/upload`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${adminSession.get()}` },
+    body,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) throw new Error("SESSION_EXPIRED");
+  if (!res.ok) throw new Error(data.error || "Upload failed");
+  return data.url;
+}
+
+// team (full admin only)
+export const getTeam = () => adminRequest("/api/team");
+export const inviteMember = (email, accessLevel) =>
+  adminRequest("/api/team", { method: "POST", body: JSON.stringify({ email, accessLevel }) });
+export const changeMemberLevel = (id, accessLevel) =>
+  adminRequest(`/api/team/${id}`, { method: "PATCH", body: JSON.stringify({ accessLevel }) });
+export const removeMember = (id) => adminRequest(`/api/team/${id}`, { method: "DELETE" });
+export const resendInvite = (id) => adminRequest(`/api/team/${id}/resend`, { method: "POST" });
+// public: the person who got the invite email chooses a password
+export async function acceptInvite(token, password, name) {
+  const res = await fetch(`${API_URL}/api/auth/accept-invite`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password, name }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not set your password.");
+  return data; // { token, name, email, accessLevel }
+}
+
 /* ---------- CUSTOM ORDERS (admin) ---------- */
 export const getCustomOrders = () => adminRequest("/api/custom-orders");
 

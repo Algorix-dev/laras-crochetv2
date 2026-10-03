@@ -20,7 +20,7 @@
 */
 import { useCallback, useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
-import { adminLogin, adminSession } from "../api";
+import { acceptInvite, adminLogin, adminSession } from "../api";
 import logo from "../assets/lara-crochet-logo.png";
 import { AdminDataProvider, readDemoFlag, useAdmin } from "./AdminData";
 import AdminShell from "./AdminShell";
@@ -55,9 +55,9 @@ function LoginScreen({ onSignedIn }) {
     setError("");
     setBusy(true);
     try {
-      const { token, name, email: signedInEmail } = await adminLogin(email.trim(), password);
+      const { token, name, email: signedInEmail, accessLevel } = await adminLogin(email.trim(), password);
       adminSession.set(token);
-      adminSession.setProfile({ name, email: signedInEmail });
+      adminSession.setProfile({ name, email: signedInEmail, accessLevel });
       onSignedIn();
     } catch (err) {
       setError(err.message);
@@ -93,6 +93,53 @@ function LoginScreen({ onSignedIn }) {
         )}
         <Btn type="submit" disabled={busy} className="mt-6 h-12 w-full rounded-md">
           {busy ? "Signing in…" : "Sign in"}
+        </Btn>
+      </form>
+    </div>
+  );
+}
+
+// TIP: the person who got an invite email lands on /admin?invite=TOKEN and
+// chooses their own password here. Success signs them straight in.
+function AcceptInviteScreen({ token, onSignedIn }) {
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+    try {
+      const data = await acceptInvite(token, password, name.trim());
+      adminSession.set(data.token);
+      adminSession.setProfile({ name: data.name, email: data.email, accessLevel: data.accessLevel });
+      window.history.replaceState({}, "", "/admin"); // remove the token from the address bar
+      onSignedIn();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const input =
+    "h-12 w-full rounded-md border border-[#e1e4e8] bg-[var(--a-bg)] px-4 text-[16px] text-[var(--a-ink)] outline-none focus:border-[var(--a-maroon)]";
+
+  return (
+    <div className="admin-root flex min-h-screen items-center justify-center px-4">
+      <form onSubmit={submit} className="w-full max-w-[400px] rounded-lg bg-white p-8 shadow-[0_1px_3px_rgba(16,24,40,0.14),0_8px_30px_rgba(16,24,40,0.06)]">
+        <img src={logo} alt="Lara's Crochet" className="mx-auto h-[56px] w-auto" />
+        <h1 className="mt-6 text-center text-[24px] font-bold text-[var(--a-ink)]">Welcome to the team</h1>
+        <p className="mt-1 text-center text-[14px] text-[var(--a-muted)]">Choose a password to finish setting up</p>
+        <label className="mt-6 block text-[14px] font-bold text-[var(--a-ink)]" htmlFor="inv-name">Your name</label>
+        <input id="inv-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className={`mt-2 ${input}`} />
+        <label className="mt-4 block text-[14px] font-bold text-[var(--a-ink)]" htmlFor="inv-pass">Password (8+ characters)</label>
+        <input id="inv-pass" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={`mt-2 ${input}`} />
+        {error && <p role="alert" className="mt-4 text-[14px] text-[var(--a-red)]">{error}</p>}
+        <Btn type="submit" disabled={busy} className="mt-6 h-12 w-full rounded-md">
+          {busy ? "Saving…" : "Set password & sign in"}
         </Btn>
       </form>
     </div>
@@ -195,7 +242,11 @@ export default function AdminApp() {
 
   // TIP: keep these early returns BELOW all the hooks above. React needs the
   // hooks to run in the same order on every render.
+  const inviteToken = new URLSearchParams(window.location.search).get("invite");
   if (small) return <DesktopOnlyNotice />;
+  if (!demo && !signedIn && inviteToken) {
+    return <AcceptInviteScreen token={inviteToken} onSignedIn={() => setSignedIn(true)} />;
+  }
   if (!demo && !signedIn) return <LoginScreen onSignedIn={() => setSignedIn(true)} />;
 
   return (

@@ -1,0 +1,13 @@
+{
+  // Cloudflare deploy settings for the SHOP PAGES (the Vite site).
+  // "name" must be exactly the project name shown at the top of the project in Cloudflare.
+  "name": "laras-crochet",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    // the folder `npm run build` produces
+    "directory": "./dist",
+    // pages like /product/123 are handled by the React app, so any address that
+    // isn't a real file gets index.html (same job vercel.json did on Vercel)
+    "not_found_handling": "single-page-application"
+  }
+}

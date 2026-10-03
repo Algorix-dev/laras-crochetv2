@@ -254,3 +254,27 @@ export async function sendRequestReceived(email, kind) {
   });
   if (error) console.error('Request-received email failed:', error);
 }
+
+
+// Invitation to join the admin dashboard. The link opens /admin?invite=TOKEN,
+// where the person chooses their own password (no password is ever emailed).
+export async function sendTeamInvite(email, accessLevel, link, days) {
+  const roleText = { admin: 'an admin', editor: 'an editor', viewer: 'a viewer (view-only)' }[accessLevel] || 'a team member';
+  const { error } = await resend.emails.send({
+    from: FROM(),
+    to: email,
+    subject: "You've been invited to the Lara's Crochet dashboard",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <p style="font-size: 20px; font-weight: bold; color: #404040;">Join the Lara's Crochet dashboard</p>
+        <p style="color: #737373;">You've been invited as ${roleText}. Choose a password to get started:</p>
+        <p><a href="${escapeHtml(link)}" style="display:inline-block;background:#4a0e1e;color:#fff;padding:12px 24px;text-decoration:none;font-weight:bold;">Set my password</a></p>
+        <p style="color: #A3A3A3; font-size: 13px;">This link works for ${days} days. If you weren't expecting this, you can ignore the email.</p>
+      </div>`,
+  });
+  // Unlike the other emails this one THROWS, so the admin sees "could not send" instead of a silent failure.
+  if (error) {
+    console.error('Team invite email failed:', error);
+    throw new Error('Could not send invite email');
+  }
+}

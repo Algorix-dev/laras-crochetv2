@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import AdminUser from '../models/AdminUser.js';
+import crypto from 'crypto';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 
 const router = Router();
@@ -20,7 +21,7 @@ router.post('/login', async (req, res) => {
 
     // TIP: deliberately vague, "Invalid credentials" either way, so an
     // attacker can't learn which emails have admin accounts.
-    if (!admin || !(await admin.comparePassword(password))) {
+    if (!admin || !admin.password || admin.status === 'invited' || !(await admin.comparePassword(password))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -29,9 +30,46 @@ router.post('/login', async (req, res) => {
       expiresIn: '7d',
     });
 
-    res.json({ token, name: admin.name, email: admin.email });
+    res.json({ token, name: admin.name, email: admin.email, accessLevel: admin.accessLevel || 'admin' });
   } catch (err) {
     console.error('Admin login error:', err);
+    res.status(500).json({ error: 'Something went wrong, try again' });
+  }
+});
+
+// POST /api/auth/accept-invite   body: { token, password, name? }
+// TIP: the link in the invite email carries a random token. Only its hash is
+// stored, so we hash what we receive and compare. Setting a password turns the
+// invited account into an active one and signs the person straight in.
+router.post('/accept-invite', async (req, res) => {
+  try {
+    const { token, password, name } = req.body || {};
+    if (typeof token !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ error: 'This invite link is not valid.' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Choose a password with at least 8 characters.' });
+    }
+    const hash = crypto.createHash('sha256').update(token).digest('hex');
+    const admin = await AdminUser.findOne({
+      inviteTokenHash: hash,
+      status: 'invited',
+      inviteExpiresAt: { $gt: new Date() },
+    });
+    if (!admin) {
+      return res.status(400).json({ error: 'This invite link has expired. Ask your admin to send a new one.' });
+    }
+    admin.password = password; // hashed by the pre-save hook
+    if (typeof name === 'string' && name.trim()) admin.name = name.trim().slice(0, 80);
+    admin.status = 'active';
+    admin.inviteTokenHash = undefined;
+    admin.inviteExpiresAt = undefined;
+    await admin.save();
+
+    const jwtToken = jwt.sign({ id: admin._id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token: jwtToken, name: admin.name, email: admin.email, accessLevel: admin.accessLevel });
+  } catch (err) {
+    console.error('Accept invite error:', err);
     res.status(500).json({ error: 'Something went wrong, try again' });
   }
 });
@@ -70,7 +108,7 @@ router.put('/profile', requireAdmin, async (req, res) => {
 
   const admin = await AdminUser.findByIdAndUpdate(req.adminId, { name }, { new: true });
   if (!admin) return res.status(401).json({ error: 'Invalid or expired token' });
-  res.json({ name: admin.name, email: admin.email });
+  res.json({ name: admin.name, email: admin.email, accessLevel: admin.accessLevel || 'admin' });
 });
 
 export default router;

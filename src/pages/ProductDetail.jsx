@@ -31,7 +31,8 @@
 import { ArrowLeft, Check, Star, Heart, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getProduct, normalizeProduct } from '../api';
+import { canReviewProduct, getProduct, getProductReviews, normalizeProduct, submitReview } from '../api';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import RecommendedProducts from '../components/RecommendedProducts';
 import ProductPlaceholder from '../components/ProductPlaceholder';
@@ -40,8 +41,6 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
 import ShareButton from '../components/ShareButton';
 import SizeGuideModal from '../components/SizeGuideModal';
-import reviewBeachPhoto from '../assets/reviews/review-restaurant.webp';
-import reviewRestaurantPhoto from '../assets/reviews/review-beach.webp';
 import BrandedLoader from '../components/BrandedLoader';
 import InlineLoader from '../components/InlineLoader';
 import { shouldShowSplash } from '../utils/splashOnce';
@@ -130,24 +129,6 @@ const tabs = {
    which positions the dot on the vertical fit indicator scale.
    The `photo` field holds a customer-submitted image; leave undefined
    if the customer didn't upload one. */
-/* TIP: only one review here on purpose — the raw Figma CSS export
-   for this section contains exactly one individual review card
-   (matching this text verbatim), not two. A second reviewer
-   ("Zainab A.") was in an earlier version of this file but isn't
-   part of the actual design; removed rather than kept as unused
-   placeholder content. */
-const reviews = [
-  {
-    name: 'Oreoluwa F.',
-    date: '3 months ago',
-    title: 'Amazing Quality',
-    text: 'The fabric was amazing. It fit my body like a glove! Best purchase ever fr!!!',
-    fit: 'true',
-    rating: 4,
-    photo: reviewRestaurantPhoto,
-    variant: 'Navy mix · Size M',
-  },
-];
 
 /* -----------------------------------------------------------
    Helper: renders a swatch button.
@@ -343,32 +324,26 @@ function ZoomImage({ src, alt, className }) {
   );
 }
 
-function Reviews() {
-  // TIP: collapsed by default — see the Reviews Summary block below.
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
-
-  // TIP — ARROW ONLY WHEN THERE IS SOMETHING TO EXPAND: the summary is cut to
-  // 3 lines. We measure the paragraph's full height against 3 lines (and
-  // re-measure whenever its width changes, e.g. resizing the window), and only
-  // show the arrow — and make the heading clickable — when the text is longer
-  // than 3 lines at the current width. Short summary on a wide desktop = no
-  // arrow; long summary, or a phone = arrow.
-  const summaryRef = useRef(null);
-  const [summaryOverflows, setSummaryOverflows] = useState(false);
+// TIP: reviews are real now. They come from the database
+// (GET /api/reviews/product/:id) and only ones Lara has APPROVED appear.
+// A signed-in customer who has paid for this piece sees a "Write a review"
+// form (see WriteReview below); a new review waits for Lara's approval.
+function Reviews({ productId }) {
+  const [data, setData] = useState({ reviews: [], count: 0, average: 0 });
+  const loadReviews = () =>
+    getProductReviews(productId)
+      .then(setData)
+      .catch(() => {});
   useEffect(() => {
-    const el = summaryRef.current;
-    if (!el) return undefined;
-    const measure = () => {
-      const cs = window.getComputedStyle(el);
-      const lineHeight = parseFloat(cs.lineHeight) || 24;
-      const padding = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-      setSummaryOverflows(el.scrollHeight - padding > lineHeight * 3 + 1);
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+    loadReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
+
+  const list = data.reviews;
+  const fitCounts = list.reduce((acc, r) => ({ ...acc, [r.fit]: (acc[r.fit] || 0) + 1 }), {});
+  const commonFit = ['small', 'true', 'large'].sort((x, y) => (fitCounts[y] || 0) - (fitCounts[x] || 0))[0];
+  const dateOf = (iso) =>
+    new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const renderStars = (rating = 5, size = 14) => (
     <span className="flex items-center gap-1 text-[#564345] md:gap-[10px]">
@@ -466,113 +441,45 @@ function Reviews() {
           <div>
             <div className="mt-5 flex items-center gap-2 md:mt-0">
               <strong className="text-base font-medium md:py-[10px] md:text-[20px] md:font-bold md:leading-[30px] md:tracking-[-0.04em] md:text-[#404040]">
-                4.5
+                {data.count ? data.average.toFixed(1) : '—'}
               </strong>
-              <div className="md:p-[10px]">{renderStars(4, 24)}</div>
+              <div className="md:p-[10px]">{renderStars(Math.round(data.average), 24)}</div>
             </div>
             <span className="block text-[14px] text-[var(--muted)] md:text-base md:leading-6 md:text-[#404040]">
-              Based on 18 reviews
+              {data.count
+                ? `Based on ${data.count} ${data.count === 1 ? 'review' : 'reviews'}`
+                : 'No reviews yet'}
             </span>
           </div>
         </div>
 
-        {/* Frame 91 — Reviews Summary: full width, 16/24 #404040 */}
-        <div className="mt-8 md:mt-[65px]">
-          {/* TIP — COLLAPSIBLE SUMMARY: cut to 3 lines (the Figma frame is
-              72px = 3 lines); change line-clamp-3 to adjust. The arrow only
-              appears when the text really is longer than 3 lines (see
-              summaryOverflows above). */}
-          <button
-            type="button"
-            onClick={() => setSummaryExpanded((v) => !v)}
-            aria-expanded={summaryOverflows ? summaryExpanded : undefined}
-            disabled={!summaryOverflows}
-            className="flex w-full items-center justify-between gap-2 text-left disabled:cursor-default"
-          >
-            <h3 className="text-base font-bold md:py-[10px] md:text-[20px] md:leading-[30px] md:tracking-[-0.04em] md:text-[#404040]">
-              Reviews Summary
-            </h3>
-            {summaryOverflows &&
-              (summaryExpanded ? (
-                <ChevronUp size={20} className="shrink-0" />
-              ) : (
-                <ChevronDown size={20} className="shrink-0" />
-              ))}
-          </button>
-          <p
-            ref={summaryRef}
-            className={`mt-4 text-base leading-6 text-[var(--muted)] md:mt-0 md:py-[10px] md:text-[#404040] ${
-              summaryExpanded ? '' : 'line-clamp-3'
-            }`}
-          >
-            Customers say this bra offers exceptional comfort for all-day wear,
-            with many noting they&apos;re wearing it. Many reviews mention
-            the smooth fit under clothing and precise sizing when following the
-            measurement guide. While some note the band runs slightly tight, most
-            praise the secure fit without slipping straps. Frequent comments address
-            the versatile everyday wear and natural shaping. Reviews indicate
-            consistent satisfaction across different body types, with many becoming
-            repeat purchasers.
-          </p>
-        </div>
-
-        {/* Frame 99 — sizing slider + arrows (245.84px), 163px gap, then two
-            359 × 392 photos with a 32px gap. flex-wrap lets the photos drop
-            below the slider on narrower laptops instead of overflowing. */}
-        <div className="mt-10 hidden md:mt-[50px] md:flex md:flex-wrap md:items-start md:gap-x-[163px] md:gap-y-[50px]">
-          <FitScaleAggregate position="true" />
-
-          <div className="flex flex-wrap gap-8">
-            <ZoomImage
-              src={reviewRestaurantPhoto}
-              alt="Customer wearing The Reina Dress at a restaurant"
-              className="h-[392px] w-[359px] max-w-full object-cover"
-            />
-            <ZoomImage
-              src={reviewBeachPhoto}
-              alt="Customer wearing The Reina Dress at the beach"
-              className="h-[392px] w-[359px] max-w-full object-cover"
-            />
+        {/* How most reviewers found the fit (only when there are reviews) */}
+        {data.count > 0 && (
+          <div className="mt-8 md:mt-[50px]">
+            <div className="hidden md:block">
+              <FitScaleAggregate position={commonFit} />
+            </div>
+            <div className="md:hidden">
+              <HorizontalFitScale fit={commonFit} />
+            </div>
           </div>
-        </div>
-
-        {/* Mobile Figma layout */}
-        <div className="mt-8 md:hidden">
-          <HorizontalFitScale fit="true" />
-          <div className="mt-6 flex gap-3">
-            <ZoomImage
-              src={reviewRestaurantPhoto}
-              alt="Customer wearing The Reina Dress at a restaurant"
-              className="h-[110px] w-[100px] object-cover"
-            />
-            <ZoomImage
-              src={reviewBeachPhoto}
-              alt="Customer wearing The Reina Dress at the beach"
-              className="h-[110px] w-[100px] object-cover"
-            />
-            <ZoomImage
-              src={reviewBeachPhoto}
-              alt="Customer wearing The Reina Dress at the beach"
-              className="h-[110px] w-[100px] object-cover"
-            />
-          </div>
-        </div>
+        )}
       </section>
 
       {/* ================= INDIVIDUAL REVIEWS ================= */}
       <section className="mt-16 px-5 md:mt-0 md:px-8 md:py-[60px] lg:px-[15.83%]">
-        {reviews.map((review) => (
+        {list.map((review) => (
           /* Figma columns: 413 (name + verified + slider) / 777 (stars,
              title, photo, text) / 102 (date), 10px apart. */
           <article
-            key={review.name}
+            key={review._id}
             className="grid border-t border-[var(--line)] py-10 md:grid-cols-[minmax(0,413px)_minmax(0,1fr)_auto] md:gap-[10px] md:border-t-0 md:py-0 md:[&:not(:first-child)]:mt-[60px]"
           >
             {/* Column 1 (desktop): name + Verified Buyer + badge, then the slider */}
             <div className="hidden md:flex md:flex-col md:gap-1">
               <div className="flex items-center gap-[15px]">
                 <p className="py-[10px] text-[20px] font-bold leading-[30px] tracking-[-0.04em] text-[#404040]">
-                  {review.name}
+                  {review.reviewerName}
                 </p>
                 <span className="flex items-end gap-[6px] text-[20px] leading-[30px] text-[#564345]">
                   Verified Buyer
@@ -592,7 +499,7 @@ function Reviews() {
             <div className="min-w-0">
               {/* Phones keep the name row on top of the content */}
               <div className="flex items-center gap-1.5 md:hidden">
-                <p className="text-[20px] font-bold text-[#404040]">{review.name}</p>
+                <p className="text-[20px] font-bold text-[#404040]">{review.reviewerName}</p>
                 <span className="flex items-center gap-1.5 text-[20px] text-[#564345]">
                   Verified Buyer
                   <img
@@ -609,19 +516,12 @@ function Reviews() {
                 {renderStars(review.rating, 24)}
               </div>
 
-              <h3 className="mt-5 text-[20px] font-bold text-[#404040] md:mt-0 md:py-[10px] md:leading-[30px] md:tracking-[-0.04em]">
-                {review.title}
-              </h3>
-
-              {review.photo && (
-                <ZoomImage
-                  src={review.photo}
-                  alt={`Customer photo for ${review.title}`}
-                  // Figma "Rectangle 38": 260 × 284.69, 20px under the title
-                  // (16px padding + 4px gap). Phones keep the small fallback.
-                  className="mt-6 h-[110px] w-[100px] object-cover md:mt-5 md:h-[284.69px] md:w-[260px]"
-                />
+              {review.title && (
+                <h3 className="mt-5 text-[20px] font-bold text-[#404040] md:mt-0 md:py-[10px] md:leading-[30px] md:tracking-[-0.04em]">
+                  {review.title}
+                </h3>
               )}
+              {review.variant && <p className="mt-2 text-sm text-[var(--muted)]">{review.variant}</p>}
 
               {/* Figma: 16/24 #564345 with 16px above and below */}
               <p className="mt-6 text-[16px] leading-6 text-[#564345] md:mt-0 md:py-4">
@@ -631,7 +531,7 @@ function Reviews() {
 
             {/* Column 3: "3 months ago", 16/24 #564345, right-aligned */}
             <time className="mt-2 justify-self-end text-base leading-6 text-[#564345] md:mt-0 md:block md:text-right">
-              {review.date}
+              {dateOf(review.createdAt)}
             </time>
 
             <div className="mt-8 md:hidden">
@@ -643,7 +543,98 @@ function Reviews() {
           </article>
         ))}
       </section>
+
+      <WriteReview productId={productId} onSubmitted={loadReviews} />
     </div>
+  );
+}
+
+/* -----------------------------------------------------------
+   "Write a review" — shown only to a signed-in customer who has
+   PAID for this piece (the server checks this again on submit).
+   A new review is "pending" until Lara approves it in the admin.
+----------------------------------------------------------- */
+function WriteReview({ productId, onSubmitted }) {
+  const { token } = useAuth();
+  const [eligible, setEligible] = useState(false);
+  const [done, setDone] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [title, setTitle] = useState('');
+  const [text, setText] = useState('');
+  const [fit, setFit] = useState('true');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!token) {
+      setEligible(false);
+      return;
+    }
+    let cancelled = false;
+    canReviewProduct(productId).then((r) => !cancelled && setEligible(Boolean(r.canReview)));
+    return () => {
+      cancelled = true;
+    };
+  }, [productId, token]);
+
+  async function send(e) {
+    e.preventDefault();
+    setError('');
+    if (!rating) return setError('Choose a star rating.');
+    setBusy(true);
+    try {
+      await submitReview({ productId, rating, title, text, fit });
+      setDone(true);
+      setEligible(false);
+      onSubmitted?.();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const box = 'w-full border border-[var(--line)] p-3 text-base';
+  return (
+    <section className="px-5 pb-12 md:px-8 lg:px-[15.83%]">
+      {done && (
+        <p className="border border-[var(--line)] p-4 text-base text-[#404040]">
+          Thank you! Your review will appear once Lara has approved it.
+        </p>
+      )}
+      {eligible && !open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="h-12 bg-[var(--maroon)] px-6 text-base font-bold text-[var(--white-warm)]"
+        >
+          Write a review
+        </button>
+      )}
+      {eligible && open && (
+        <form onSubmit={send} className="max-w-xl space-y-4">
+          <div className="flex gap-1" role="radiogroup" aria-label="Rating">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button type="button" key={n} onClick={() => setRating(n)} aria-label={`${n} star${n > 1 ? 's' : ''}`}>
+                <Star size={28} strokeWidth={1.5} fill={n <= rating ? 'currentColor' : 'none'} className="text-[#564345]" />
+              </button>
+            ))}
+          </div>
+          <input className={box} placeholder="Title (optional)" maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} />
+          <textarea className={box} rows={4} required minLength={5} maxLength={2000} placeholder="How was it?" value={text} onChange={(e) => setText(e.target.value)} />
+          <select className={box} value={fit} onChange={(e) => setFit(e.target.value)} aria-label="How did it fit?">
+            <option value="small">Runs small</option>
+            <option value="true">True to size</option>
+            <option value="large">Runs large</option>
+          </select>
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+          <button type="submit" disabled={busy} className="h-12 bg-[var(--maroon)] px-6 text-base font-bold text-[var(--white-warm)] disabled:opacity-60">
+            {busy ? 'Sending…' : 'Submit review'}
+          </button>
+        </form>
+      )}
+    </section>
   );
 }
 
@@ -1103,7 +1094,7 @@ export default function ProductDetail() {
         {/* ============================
             REVIEWS
             ============================ */}
-        <Reviews />
+        <Reviews productId={product.id} />
 
         {/* ============================
             RECOMMENDATIONS

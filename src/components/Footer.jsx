@@ -12,6 +12,7 @@ import { useState } from "react";
 import lacMonogram from "../assets/lara-monogram.webp";
 import Reveal from "./Reveal";
 import { subscribeNewsletter } from "../api";
+import { useBrand } from "../BrandProvider";
 
 const columns = [
   {
@@ -36,6 +37,7 @@ const columns = [
 ];
 
 export default function Footer() {
+  const brand = useBrand();
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -99,7 +101,24 @@ export default function Footer() {
             gap-y-16       space between General / Support / Socials */}
       <div className="flex flex-col gap-y-9 px-5 md:flex-row md:flex-wrap md:justify-between md:gap-x-[clamp(2rem,4vw,4rem)] md:gap-y-10 md:px-8 lg:px-[15.83%]">
         <div className="flex flex-col gap-y-16 md:flex-row md:flex-wrap md:gap-x-[clamp(2rem,4vw,4rem)] md:gap-y-8">
-          {columns.map((col) => (
+          {/* TIP: Instagram stays as the default; TikTok / WhatsApp / email appear
+              only when Lara has filled them in on the admin Brand page. */}
+          {columns.map((baseCol) => {
+            const col = { ...baseCol };
+            if (col.title === "Socials") {
+              col.links = [
+                { label: "Instagram", href: brand.instagramUrl || col.links[0].href },
+                ...(brand.tiktokUrl ? [{ label: "TikTok", href: brand.tiktokUrl }] : []),
+                ...(brand.whatsappNumber
+                  ? [{ label: "WhatsApp", href: `https://wa.me/${brand.whatsappNumber.replace(/\D/g, "")}` }]
+                  : []),
+              ];
+            }
+            if (col.title === "Support" && brand.email) {
+              col.links = [...col.links, { label: "Email us", href: `mailto:${brand.email}` }];
+            }
+            return col;
+          }).map((col) => (
             <div key={col.title}>
               <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4%] max-md:mb-6 max-md:text-[16.5px] max-md:tracking-[-0.04em] max-md:text-black">
                 {col.title}

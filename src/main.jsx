@@ -19,13 +19,14 @@ import App from './App.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { WishlistProvider } from './context/WishlistContext.jsx';
 import { CurrencyProvider } from './context/CurrencyContext.jsx';
+import { BrandProvider } from './BrandProvider.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <CurrencyProvider><WishlistProvider><CartProvider>
+      <BrandProvider><CurrencyProvider><WishlistProvider><CartProvider>
         <App />
-      </CartProvider></WishlistProvider></CurrencyProvider>
+      </CartProvider></WishlistProvider></CurrencyProvider></BrandProvider>
     </BrowserRouter>
   </StrictMode>
 );

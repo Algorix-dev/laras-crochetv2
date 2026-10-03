@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Lock, MessageCircleQuestion, ShieldCheck, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { getShippingQuote, initializePayment } from '../api';
+import { getShippingQuote, initializePayment, validateCoupon } from '../api';
 import { openPaystackPopup } from '../utils/paystack';
 import { countries } from '../data/countries';
 import { NIGERIAN_STATES } from '../data/nigerianStates';
@@ -57,6 +57,10 @@ export default function CheckoutPage() {
   const { formatPrice, country, setCountry } = useCurrency();
   const selectedCountry = countries.find((c) => c.code === country) || countries[0];
   const [code, setCode] = useState('');
+  // TIP: a discount the SERVER has checked: { code, discount } or null.
+  const [coupon, setCoupon] = useState(null);
+  const [couponMsg, setCouponMsg] = useState('');
+  const [couponBusy, setCouponBusy] = useState(false);
 
   // TIP: one state object for every field the backend actually
   // needs (see server/routes/payments.js: customerName, customerEmail,
@@ -140,7 +144,50 @@ export default function CheckoutPage() {
   const shipping = cartItems.length && quote.status === 'ok' ? quote[shippingMethod] : 0;
 
   /* TIP: Total is subtotal + shipping. */
-  const total = cartTotal + shipping;
+  // The discount comes off the items only, never shipping. If the bag changes
+  // after a code was applied we re-check it (effect below) so the figure
+  // shown stays right; the server works it out again at payment anyway.
+  const discount = coupon ? Math.min(coupon.discount, cartTotal) : 0;
+  const total = cartTotal - discount + shipping;
+
+  const bagForServer = () =>
+    cartItems.map((item) => ({ productId: item.product.id, quantity: item.quantity }));
+
+  async function applyCode() {
+    if (!code.trim()) {
+      setCouponMsg('Enter a discount code first.');
+      return;
+    }
+    setCouponBusy(true);
+    setCouponMsg('');
+    try {
+      const result = await validateCoupon(code.trim(), bagForServer());
+      setCoupon(result);
+      setCouponMsg('');
+    } catch (err) {
+      setCoupon(null);
+      setCouponMsg(err.message);
+    } finally {
+      setCouponBusy(false);
+    }
+  }
+
+  const bagKey = cartItems.map((i) => `${i.product.id}:${i.quantity}`).join(',');
+  useEffect(() => {
+    if (!coupon) return undefined;
+    let cancelled = false;
+    validateCoupon(coupon.code, bagForServer())
+      .then((r) => !cancelled && setCoupon(r))
+      .catch((err) => {
+        if (cancelled) return;
+        setCoupon(null);
+        setCouponMsg(err.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bagKey]);
 
   /* TIP: Total number of items in the cart (sum of all quantities). */
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -184,6 +231,8 @@ export default function CheckoutPage() {
         // "Email me with news and offers" tick-box — the server subscribes this
         // email only when it's true.
         newsletterOptIn: form.newsletterOptIn,
+        // Only the CODE goes to the server, which works the discount out itself.
+        couponCode: coupon?.code,
         // Where it's going — the server looks the price up from these.
         shippingCountry: country,
         shippingState: quoteState,
@@ -610,20 +659,34 @@ export default function CheckoutPage() {
                 className="min-w-0 flex-1 border border-[var(--line)] p-3 text-base"
               />
               <button
-                onClick={() =>
-                  window.dispatchEvent(
-                    new CustomEvent('lara-toast', {
-                      detail: code
-                        ? 'Discount codes are applied at payment.'
-                        : 'Enter a discount code first.',
-                    })
-                  )
-                }
-                className="bg-[var(--ink)] px-4 text-base uppercase text-white"
+                type="button"
+                onClick={applyCode}
+                disabled={couponBusy}
+                className="bg-[var(--ink)] px-4 text-base uppercase text-white disabled:opacity-60"
               >
-                Apply
+                {couponBusy ? '…' : 'Apply'}
               </button>
             </div>
+            {couponMsg && (
+              <p role="alert" className="mt-2 text-sm text-red-600">
+                {couponMsg}
+              </p>
+            )}
+            {coupon && (
+              <p className="mt-2 text-sm text-[var(--ink)]">
+                Code <b>{coupon.code}</b> applied.{' '}
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => {
+                    setCoupon(null);
+                    setCode('');
+                  }}
+                >
+                  Remove
+                </button>
+              </p>
+            )}
 
             {/* TIP: Price breakdown — subtotal (with item count), shipping, total. */}
             <div className="mt-6 space-y-3 border-y border-[var(--line)] py-5 text-base">
@@ -631,6 +694,12 @@ export default function CheckoutPage() {
                 <span>Subtotal · {totalItems} {totalItems === 1 ? 'item' : 'items'}</span>
                 <span>{formatPrice(cartTotal)}</span>
               </p>
+              {discount > 0 && (
+                <p className="flex justify-between">
+                  <span>Discount ({coupon.code})</span>
+                  <span>-{formatPrice(discount)}</span>
+                </p>
+              )}
               <p className="flex justify-between">
                 <span className="flex items-center gap-1.5">
                   Shipping

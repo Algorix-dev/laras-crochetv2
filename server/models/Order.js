@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import Coupon from './Coupon.js';
 import { sendAdminOrderNotification, sendOrderConfirmationEmail } from '../utils/email.js';
 
 // TIP: the prefix in Lara's mockup ("AG" in #AG-2026-0001). Change it
@@ -50,6 +51,9 @@ const orderSchema = new mongoose.Schema(
     // totalAmount above already INCLUDES shippingFee.
     shippingMethod: { type: String, enum: ['standard', 'express'], default: 'standard' },
     shippingFee: { type: Number, default: 0 },
+    // TIP: discount code used at checkout. totalAmount is already AFTER the discount.
+    couponCode: String,
+    discountAmount: { type: Number, default: 0 },
     // TIP: Paystack's own transaction reference — this is what you use
     // later to look up or verify a payment, and what powers order tracking.
     paystackReference: { type: String, required: true, unique: true },
@@ -114,6 +118,14 @@ orderSchema.statics.markPaid = async function (reference, payment = {}) {
   );
 
   if (claimed) {
+    // TIP: a code counts as "used" only now that the order is PAID (the claim above
+    // makes this run exactly once per order), so abandoned checkouts never use
+    // up a code's limit.
+    if (claimed.couponCode) {
+      Coupon.updateOne({ code: claimed.couponCode }, { $inc: { used: 1 } }).catch((err) =>
+        console.error('Coupon usage count failed:', err)
+      );
+    }
     // We won the claim, so numbering this order is our job.
     try {
       const year = new Date().getFullYear();

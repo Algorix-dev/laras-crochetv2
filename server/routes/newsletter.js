@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import Subscriber from '../models/Subscriber.js';
 import Campaign from '../models/Campaign.js';
-import { requireAdmin } from '../middleware/requireAdmin.js';
+import { requireAdmin, requireFullAdmin } from '../middleware/requireAdmin.js';
 import { sendSubscribeWelcome, sendCampaign, escapeHtml } from '../utils/email.js';
 
 const router = Router();
@@ -85,7 +85,7 @@ router.get('/campaigns', requireAdmin, async (req, res) => {
 // TIP: only `subscribed: true` people are ever selected, so anyone who isn't
 // subscribed (or who unsubscribed) never gets the message. testOnly sends a
 // single copy to Lara's own address so she can check how it looks first.
-router.post('/send', requireAdmin, async (req, res) => {
+router.post('/send', requireAdmin, requireFullAdmin, async (req, res) => {
   try {
     const subject = String(req.body?.subject || '').trim();
     const body = String(req.body?.body || '').trim();

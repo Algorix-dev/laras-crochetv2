@@ -58,6 +58,7 @@ import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
 import CountrySelectorModal from "./CountrySelectorModal";
 import SearchOverlay from "./SearchOverlay";
 import laraCrochetLogo from "../assets/lara-crochet-logo.png";
+import { useBrand } from "../BrandProvider";
 import BagIcon from "./BagIcon";
 
 // Tweak these two to taste — nothing else needs to change.
@@ -72,6 +73,7 @@ const LINKS = [
 ];
 
 export default function Navbar() {
+  const brand = useBrand();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -209,7 +211,7 @@ export default function Navbar() {
           {/* Brand logo */}
           <Link to="/" aria-label="Lara's Crochet home" className="justify-self-start">
             <img
-              src={laraCrochetLogo}
+              src={brand.logoUrl || laraCrochetLogo}
               alt="Lara's Crochet"
               className="h-9 w-auto"
             />

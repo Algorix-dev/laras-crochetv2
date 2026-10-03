@@ -4,6 +4,7 @@ import { Router } from 'express';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import ShippingRate from '../models/ShippingRate.js';
+import Coupon from '../models/Coupon.js';
 import { subscribeEmail } from './newsletter.js';
 
 const router = Router();
@@ -80,6 +81,22 @@ router.post('/initialize', async (req, res) => {
     });
   }
 
+  // TIP: discount code. The browser only sends the CODE; the discount is worked
+  // out here from the database, so it can't be faked. It comes off the items
+  // total only (never shipping). A bad code stops the payment with a clear
+  // message rather than silently charging full price.
+  let couponCode;
+  let discountAmount = 0;
+  const submittedCode = String(req.body.couponCode || '').trim().toUpperCase();
+  if (submittedCode) {
+    const coupon = await Coupon.findOne({ code: submittedCode });
+    const problem = !coupon ? "That discount code isn't valid." : coupon.problemFor(totalAmount);
+    if (problem) return res.status(400).json({ error: problem });
+    discountAmount = coupon.discountFor(totalAmount);
+    couponCode = coupon.code;
+    totalAmount -= discountAmount;
+  }
+
   // TIP: the checkout page shows "Total = items + shipping", so Paystack
   // must charge that same number. Before this, shipping was shown on the
   // page but never added here, so customers were charged items only.
@@ -110,7 +127,9 @@ router.post('/initialize', async (req, res) => {
     body: JSON.stringify({
       email: customerEmail,
       amount: totalAmount * 100, // Paystack expects kobo, not naira
-      callback_url: `${process.env.CLIENT_URL}/order-confirmation`,
+      // TIP: CLIENT_URL may hold several allowed sites separated by commas; the
+      // customer must come back to the FIRST one (the live shop address).
+      callback_url: `${(process.env.CLIENT_URL || 'http://localhost:5173').split(',')[0].trim()}/order-confirmation`,
     }),
   });
   const paystackData = await paystackRes.json();
@@ -137,6 +156,8 @@ router.post('/initialize', async (req, res) => {
     items: orderItems,
     shippingMethod,
     shippingFee,
+    couponCode,
+    discountAmount,
     totalAmount,
     paystackReference: paystackData.data.reference,
   });

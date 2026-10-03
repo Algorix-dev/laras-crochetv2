@@ -8,9 +8,21 @@ import bcrypt from 'bcryptjs';
 // confusing one.
 const adminUserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true }, // stored as a bcrypt hash, never plain text
+  // Not required: a team member who was only INVITED has no password until they accept.
+  password: { type: String }, // stored as a bcrypt hash, never plain text
   name: { type: String, required: true },
-});
+  // TIP: what this person may do in the dashboard.
+  //   admin  = everything (incl. team, shipping, brand, newsletters)
+  //   editor = products, orders, custom orders, enquiries, coupons, reviews
+  //   viewer = look only, can't change anything
+  // Accounts created before this existed have no value and count as admin.
+  accessLevel: { type: String, enum: ['admin', 'editor', 'viewer'], default: 'admin' },
+  status: { type: String, enum: ['active', 'invited'], default: 'active' },
+  // Only a HASH of the invite link's token is stored (like a password), so a
+  // database leak can't be used to take over an invited account.
+  inviteTokenHash: String,
+  inviteExpiresAt: Date,
+}, { timestamps: true });
 
 // TIP: a Mongoose "pre-save hook" — this function runs automatically
 // right before any AdminUser document is saved. It hashes the

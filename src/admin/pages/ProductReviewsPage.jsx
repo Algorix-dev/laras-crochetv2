@@ -2,7 +2,8 @@
   PRODUCT REVIEWS — View and moderate customer reviews.
   Lara can approve, hide, or delete any review. Star rating + comment.
 */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { deleteReview, getAdminReviews, setReviewStatus } from "../../api";
 import { Link } from "react-router-dom";
 import { CheckCircle, EyeOff, Star, Trash2 } from "lucide-react";
 import { useAdmin } from "../AdminData";
@@ -41,21 +42,45 @@ function Avatar({ name }) {
   );
 }
 
-/* ---------- sample seed data ---------- */
+/* ---------- sample rows (demo mode only) ---------- */
 const SEED = [
-  { id: 1, productId: "", productName: "Wisteria Dress", reviewer: "Amara Okonkwo", rating: 5, comment: "Absolutely beautiful — the quality is better than I expected. Lara really outdid herself with this one!", date: "2024-10-14", status: "approved" },
-  { id: 2, productId: "", productName: "Coral Bikini Set", reviewer: "Tolu Adeyemi", rating: 4, comment: "Lovely set, fits true to size. Shipping was a bit slow but the piece was worth the wait.", date: "2024-10-10", status: "approved" },
-  { id: 3, productId: "", productName: "Sage Two-Piece", reviewer: "Nkechi Eze", rating: 5, comment: "Got so many compliments at the beach! Will definitely be ordering again.", date: "2024-10-08", status: "pending" },
-  { id: 4, productId: "", productName: "Wisteria Dress", reviewer: "Folake Bello", rating: 3, comment: "Nice dress but the color looked slightly different from the photo. Still pretty though.", date: "2024-09-30", status: "pending" },
-  { id: 5, productId: "", productName: "Coral Bikini Set", reviewer: "Sade Williams", rating: 1, comment: "This is spam content", date: "2024-09-25", status: "hidden" },
+  { id: 1, productName: "Wisteria Dress", reviewer: "Amara O.", rating: 5, comment: "Absolutely beautiful — the quality is better than I expected.", date: "2026-09-14", status: "approved" },
+  { id: 2, productName: "Coral Bikini Set", reviewer: "Tolu A.", rating: 4, comment: "Lovely set, fits true to size.", date: "2026-09-10", status: "pending" },
 ];
+
+// real review (server) -> row shape this page uses
+const fromServer = (r) => ({
+  id: r._id,
+  productName: r.productName || "Product",
+  reviewer: r.reviewerName,
+  rating: r.rating,
+  comment: [r.title, r.text].filter(Boolean).join(" — "),
+  date: String(r.createdAt).slice(0, 10),
+  status: r.status,
+});
 
 const COLS = "grid-cols-[2.5fr_1fr_3fr_1fr_120px]";
 
 export default function ProductReviewsPage() {
   const { demo } = useAdmin();
   const [toast, toastNode] = useToast();
-  const [reviews, setReviews] = useState(SEED);
+  const [reviews, setReviews] = useState(demo ? SEED : []);
+  const [loading, setLoading] = useState(!demo);
+  const [loadError, setLoadError] = useState("");
+
+  // TIP: reviews are written by customers on the product page and land here as
+  // "Pending". Only Approved ones are shown on the shop.
+  useEffect(() => {
+    if (demo) return undefined;
+    let cancelled = false;
+    getAdminReviews()
+      .then((list) => !cancelled && setReviews(list.map(fromServer)))
+      .catch((err) => !cancelled && setLoadError(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [demo]);
   const [tab, setTab] = useState("all");
   const [query, setQuery] = useState("");
 
@@ -74,17 +99,29 @@ export default function ProductReviewsPage() {
     });
   }, [reviews, tab, query]);
 
-  function update(id, status) {
+  const fail = (err) => toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
+
+  async function update(id, status) {
     if (demo) { toast("Sample data — nothing is saved in demo mode."); return; }
-    setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-    toast(status === "approved" ? "Review approved." : "Review hidden.");
+    try {
+      await setReviewStatus(id, status);
+      setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+      toast(status === "approved" ? "Review approved." : "Review hidden.");
+    } catch (err) {
+      fail(err);
+    }
   }
 
-  function remove(r) {
+  async function remove(r) {
     if (demo) { toast("Sample data — nothing is saved in demo mode."); return; }
     if (!window.confirm(`Delete this review by ${r.reviewer}?`)) return;
-    setReviews((prev) => prev.filter((x) => x.id !== r.id));
-    toast("Review deleted.");
+    try {
+      await deleteReview(r.id);
+      setReviews((prev) => prev.filter((x) => x.id !== r.id));
+      toast("Review deleted.");
+    } catch (err) {
+      fail(err);
+    }
   }
 
   const avgRating =
@@ -96,6 +133,11 @@ export default function ProductReviewsPage() {
     if (s === "approved") return <StatusDot tone="green">Approved</StatusDot>;
     if (s === "hidden") return <StatusDot tone="red">Hidden</StatusDot>;
     return <StatusDot tone="amber">Pending</StatusDot>;
+  }
+
+  if (loading) return <p className="py-24 text-center text-[16px] text-[var(--a-muted)]">Loading reviews…</p>;
+  if (loadError) {
+    return <p role="alert" className="rounded-md bg-[#fff1f2] px-4 py-3 text-[14px] text-[var(--a-red)]">{loadError}</p>;
   }
 
   return (

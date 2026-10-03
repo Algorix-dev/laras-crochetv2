@@ -1,10 +1,14 @@
 /*
-  BRAND — Lara's brand settings: shop name, tagline, logo, colours,
-  social links and a short "about" blurb.
-  Changes here are saved in localStorage until a real API is wired up.
+  BRAND — the settings that appear on the shop itself:
+    - logo (top bar) and favicon (browser tab)
+    - main brand colour (optional — empty keeps the site's built-in colour)
+    - Instagram / TikTok / WhatsApp / business email (shown in the footer)
+  Saved in the database (server/routes/brand.js). The storefront reads them
+  when a page opens (src/BrandProvider.jsx).
 */
 import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, Save } from "lucide-react";
+import { getBrand, saveBrand, uploadBrandImage } from "../../api";
 import { useAdmin } from "../AdminData";
 import { Btn, Card, useToast } from "../ui";
 
@@ -12,15 +16,10 @@ const inp =
   "h-11 w-full rounded-md border border-[#eceef1] bg-[var(--a-bg)] px-3.5 text-[15px] text-[var(--a-ink)] outline-none focus:border-[var(--a-maroon)]";
 const lbl = "mb-2 block text-[14px] font-bold text-[var(--a-ink)]";
 
-const STORAGE_KEY = "laras-brand-settings";
+// the colour the shop uses today (src/index.css --maroon); shown when none is chosen
+const SITE_DEFAULT_COLOR = "#412b2d";
 
-function loadBrand() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
+const EMPTY = { logoUrl: "", faviconUrl: "", primaryColor: "", instagramUrl: "", tiktokUrl: "", whatsappNumber: "", email: "" };
 
 function Section({ title, children }) {
   return (
@@ -37,55 +36,67 @@ export default function BrandPage() {
   const logoInput = useRef(null);
   const faviconInput = useRef(null);
 
-  const saved = loadBrand();
-  const [form, setForm] = useState({
-    shopName: "Lara's Crochet",
-    tagline: "Handcrafted with love",
-    about: "Welcome to Lara's Crochet — where every stitch tells a story.",
-    primaryColor: "#412b2d",
-    accentColor: "#c9a27e",
-    instagramUrl: "",
-    tiktokUrl: "",
-    whatsappNumber: "",
-    email: "",
-    ...saved,
-  });
-  const [logoPreview, setLogoPreview] = useState(saved.logoPreview || null);
-  const [faviconPreview, setFaviconPreview] = useState(saved.faviconPreview || null);
+  const [form, setForm] = useState(EMPTY);
+  const [loading, setLoading] = useState(!demo);
+  const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState("");
 
-  const upd = (k) => (e) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  useEffect(() => {
+    if (demo) return undefined;
+    let cancelled = false;
+    getBrand()
+      .then((b) => !cancelled && setForm({ ...EMPTY, ...b }))
+      .catch((err) => !cancelled && setLoadError(err.message))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [demo]);
 
-  function pickLogo(e) {
+  const fail = (err) => toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
+  const upd = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  // Uploads straight to Cloudinary so the picture is permanent — the old
+  // version kept a temporary browser link that stopped working after a reload.
+  async function pick(field, e) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setLogoPreview(url);
-  }
-
-  function pickFavicon(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setFaviconPreview(url);
+    if (demo) return toast("Sample data — nothing is saved in demo mode.");
+    setUploading(field);
+    try {
+      const url = await uploadBrandImage(file);
+      setForm((f) => ({ ...f, [field]: url }));
+      toast("Image uploaded — press Save changes to keep it.");
+    } catch (err) {
+      fail(err);
+    } finally {
+      setUploading("");
+    }
   }
 
   async function save() {
-    if (demo) {
-      toast("Sample data — nothing is saved in demo mode.");
-      return;
-    }
+    if (demo) return toast("Sample data — nothing is saved in demo mode.");
     setSaving(true);
-    // Persist locally (real API call goes here when the endpoint is ready)
-    await new Promise((r) => setTimeout(r, 600));
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...form, logoPreview, faviconPreview })
-    );
-    setSaving(false);
-    toast("Brand settings saved.");
+    try {
+      setForm({ ...EMPTY, ...(await saveBrand(form)) });
+      toast("Brand settings saved.");
+    } catch (err) {
+      fail(err);
+    } finally {
+      setSaving(false);
+    }
   }
+
+  if (loading) return <p className="py-24 text-center text-[16px] text-[var(--a-muted)]">Loading brand settings…</p>;
+  if (loadError) {
+    return <p role="alert" className="rounded-md bg-[#fff1f2] px-4 py-3 text-[14px] text-[var(--a-red)]">{loadError}</p>;
+  }
+
+  const logoPreview = form.logoUrl;
+  const faviconPreview = form.faviconUrl;
+  const shownColor = form.primaryColor || SITE_DEFAULT_COLOR;
 
   return (
     <div className="space-y-6">
@@ -97,36 +108,13 @@ export default function BrandPage() {
         </Btn>
       </div>
 
-      {/* Identity */}
-      <Section title="Identity">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={lbl}>Shop name</label>
-            <input className={inp} value={form.shopName} onChange={upd("shopName")} />
-          </div>
-          <div>
-            <label className={lbl}>Tagline</label>
-            <input className={inp} value={form.tagline} onChange={upd("tagline")} placeholder="Handcrafted with love" />
-          </div>
-        </div>
-        <div>
-          <label className={lbl}>About / shop description</label>
-          <textarea
-            rows={4}
-            className="w-full rounded-md border border-[#eceef1] bg-[var(--a-bg)] px-3.5 py-2.5 text-[15px] text-[var(--a-ink)] outline-none focus:border-[var(--a-maroon)] resize-none"
-            value={form.about}
-            onChange={upd("about")}
-          />
-        </div>
-      </Section>
-
       {/* Logos */}
       <Section title="Logo &amp; Favicon">
         <div className="grid gap-6 sm:grid-cols-2">
           {/* Logo */}
           <div>
             <label className={lbl}>Shop logo</label>
-            <input ref={logoInput} type="file" accept="image/*" hidden onChange={pickLogo} />
+            <input ref={logoInput} type="file" accept="image/*" hidden onChange={(e) => pick("logoUrl", e)} />
             <div
               onClick={() => logoInput.current?.click()}
               className="flex h-[140px] cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-[#d1d5db] bg-[#fafafa] transition hover:border-[var(--a-maroon)] hover:bg-[var(--a-pink)]"
@@ -136,7 +124,7 @@ export default function BrandPage() {
               ) : (
                 <>
                   <ImageIcon size={28} className="text-[var(--a-muted)]" />
-                  <span className="text-[13px] text-[var(--a-muted)]">Click to upload logo</span>
+                  <span className="text-[13px] text-[var(--a-muted)]">{uploading === "logoUrl" ? "Uploading…" : "Click to upload logo"}</span>
                 </>
               )}
             </div>
@@ -146,7 +134,7 @@ export default function BrandPage() {
           {/* Favicon */}
           <div>
             <label className={lbl}>Favicon</label>
-            <input ref={faviconInput} type="file" accept="image/*,.ico" hidden onChange={pickFavicon} />
+            <input ref={faviconInput} type="file" accept="image/*,.ico" hidden onChange={(e) => pick("faviconUrl", e)} />
             <div
               onClick={() => faviconInput.current?.click()}
               className="flex h-[140px] cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-[#d1d5db] bg-[#fafafa] transition hover:border-[var(--a-maroon)] hover:bg-[var(--a-pink)]"
@@ -156,7 +144,7 @@ export default function BrandPage() {
               ) : (
                 <>
                   <ImageIcon size={28} className="text-[var(--a-muted)]" />
-                  <span className="text-[13px] text-[var(--a-muted)]">Click to upload favicon</span>
+                  <span className="text-[13px] text-[var(--a-muted)]">{uploading === "faviconUrl" ? "Uploading…" : "Click to upload favicon"}</span>
                 </>
               )}
             </div>
@@ -165,28 +153,22 @@ export default function BrandPage() {
         </div>
       </Section>
 
-      {/* Colours */}
-      <Section title="Brand Colours">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={lbl}>Primary colour</label>
-            <div className="flex items-center gap-3">
-              <input type="color" value={form.primaryColor} onChange={upd("primaryColor")} className="size-10 cursor-pointer rounded-md border border-[#eceef1] p-0.5" />
-              <input className={inp} value={form.primaryColor} onChange={upd("primaryColor")} maxLength={7} />
-            </div>
+      {/* Colour */}
+      <Section title="Brand Colour">
+        <div>
+          <label className={lbl}>Main colour</label>
+          <div className="flex items-center gap-3">
+            <input type="color" value={shownColor} onChange={upd("primaryColor")} className="size-10 cursor-pointer rounded-md border border-[#eceef1] p-0.5" />
+            <input className={inp} value={form.primaryColor} onChange={upd("primaryColor")} maxLength={7} placeholder={`Empty = the shop's current colour (${SITE_DEFAULT_COLOR})`} />
+            {form.primaryColor && (
+              <button type="button" onClick={() => setForm((f) => ({ ...f, primaryColor: "" }))} className="shrink-0 text-[14px] font-bold text-[var(--a-maroon)] underline">
+                Reset
+              </button>
+            )}
           </div>
-          <div>
-            <label className={lbl}>Accent colour</label>
-            <div className="flex items-center gap-3">
-              <input type="color" value={form.accentColor} onChange={upd("accentColor")} className="size-10 cursor-pointer rounded-md border border-[#eceef1] p-0.5" />
-              <input className={inp} value={form.accentColor} onChange={upd("accentColor")} maxLength={7} />
-            </div>
-          </div>
+          <p className="mt-1.5 text-[12px] text-[var(--a-muted)]">Used for buttons and highlights across the shop.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="h-12 flex-1 rounded-md border border-[#e5e7eb]" style={{ background: form.primaryColor }} />
-          <div className="h-12 flex-1 rounded-md border border-[#e5e7eb]" style={{ background: form.accentColor }} />
-        </div>
+        <div className="h-12 rounded-md border border-[#e5e7eb]" style={{ background: shownColor }} />
       </Section>
 
       {/* Social & contact */}
