@@ -14,8 +14,8 @@
 */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CalendarDays, CirclePlus, Image as ImageIcon, Pencil, RefreshCw, Save, Search, X } from "lucide-react";
-import { saveProduct, uploadPhoto } from "../../api";
+import { CalendarDays, CirclePlus, Image as ImageIcon, Pencil, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
+import { deleteProduct, getCategories, saveProduct, uploadPhoto } from "../../api";
 import { useAdmin } from "../AdminData";
 import { cx } from "../fmt";
 import { Btn, Card, IconBtn, useDismiss, useToast } from "../ui";
@@ -27,7 +27,9 @@ const ANGLES = [
   { key: "right", label: "Right" },
   { key: "back", label: "Back" },
 ];
-const CATEGORY_OPTIONS = [
+// TIP: fallback list, used until the real list (including categories Lara adds
+// on the Categories page) loads from the server.
+const DEFAULT_CATEGORY_OPTIONS = [
   ["dresses", "Dresses"],
   ["bikinis", "Bikinis"],
   ["two-pieces", "Two-pieces"],
@@ -201,8 +203,18 @@ export default function ProductFormPage() {
   const [views, setViews] = useState(blank);
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState(DEFAULT_CATEGORY_OPTIONS);
   const [error, setError] = useState("");
   const descRef = useRef(null);
+
+  // TIP: the category list comes from the server so categories Lara adds on the
+  // Categories page appear here too. If it can't load, the built-in list is used.
+  useEffect(() => {
+    if (demo) return;
+    getCategories()
+      .then((list) => setCategoryOptions(list.map((c) => [c.slug, c.label])))
+      .catch(() => {});
+  }, [demo]);
 
   // fill the form when editing a piece (or start empty on /products/new)
   useEffect(() => {
@@ -236,6 +248,24 @@ export default function ProductFormPage() {
       setError(err.message === "SESSION_EXPIRED" ? "Your session ended — please sign in again." : `The ${key} photo didn't upload: ${err.message}`);
     } finally {
       setUploading((s) => ({ ...s, [key]: false }));
+    }
+  }
+
+
+  // TIP: "Delete" hides the piece from the shop and the admin lists but keeps it
+  // in the database, so old orders that mention it still make sense.
+  async function removePiece() {
+    if (!piece) return;
+    if (demo) return toast("Sample data — nothing is saved in demo mode.");
+    if (!window.confirm(`Delete "${piece.name}"? It will disappear from the shop. Past orders keep their record of it.`)) return;
+    setSaving(true);
+    try {
+      await deleteProduct(piece._id || piece.id);
+      await refresh();
+      navigate("/admin/products");
+    } catch (err) {
+      toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
+      setSaving(false);
     }
   }
 
@@ -436,7 +466,12 @@ export default function ProductFormPage() {
             Show this piece in the home page hero carousel.
           </label>
 
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="mt-6 flex flex-wrap justify-end gap-3">
+            {piece && (
+              <Btn variant="white" onClick={removePiece} disabled={saving} className="mr-auto h-10 rounded-md px-4 text-[14px] text-[var(--a-red)]">
+                <Trash2 size={15} /> Delete product
+              </Btn>
+            )}
             <Btn variant="white" disabled title={SOON} className="h-10 rounded-md px-4 text-[14px]">
               <Save size={15} /> Save to draft
             </Btn>
@@ -454,7 +489,7 @@ export default function ProductFormPage() {
           <Field label="Product Categories">
             <select value={category} onChange={(e) => setCategory(e.target.value)} className={cx(input, "shadow-[0_1px_2px_rgba(16,24,40,0.08)]")}>
               <option value="">Select your product</option>
-              {CATEGORY_OPTIONS.map(([slug, label]) => (
+              {categoryOptions.map(([slug, label]) => (
                 <option key={slug} value={slug}>
                   {label}
                 </option>

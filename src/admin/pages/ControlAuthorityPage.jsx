@@ -213,7 +213,7 @@ export default function ControlAuthorityPage() {
               <span>Member</span>
               <span>Role</span>
               <span>Status</span>
-              <span className="text-center">Remove</span>
+              <span>Remove</span>
             </HeadRow>
 
             {members.length === 0 && <EmptyState title="No team members" text="Invite colleagues to help manage the shop." />}
@@ -257,7 +257,7 @@ export default function ControlAuthorityPage() {
                 </span>
 
                 {/* Remove */}
-                <span className="flex justify-center">
+                <span className="flex justify-start">
                   <button
                     type="button"
                     onClick={() => revoke(m)}

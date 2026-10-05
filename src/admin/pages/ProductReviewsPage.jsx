@@ -3,9 +3,9 @@
   Lara can approve, hide, or delete any review. Star rating + comment.
 */
 import { useEffect, useMemo, useState } from "react";
-import { deleteReview, getAdminReviews, setReviewStatus } from "../../api";
+import { addManualReview, deleteReview, getAdminReviews, setReviewStatus } from "../../api";
 import { Link } from "react-router-dom";
-import { CheckCircle, EyeOff, Star, Trash2 } from "lucide-react";
+import { CheckCircle, CirclePlus, EyeOff, Star, Trash2 } from "lucide-react";
 import { useAdmin } from "../AdminData";
 import { cx, dateDMY } from "../fmt";
 import { Btn, Card, EmptyState, HeadRow, SearchField, StatusDot, PillTabs, useToast } from "../ui";
@@ -57,12 +57,13 @@ const fromServer = (r) => ({
   comment: [r.title, r.text].filter(Boolean).join(" — "),
   date: String(r.createdAt).slice(0, 10),
   status: r.status,
+  manual: r.source === "manual",
 });
 
 const COLS = "grid-cols-[2.5fr_1fr_3fr_1fr_120px]";
 
 export default function ProductReviewsPage() {
-  const { demo } = useAdmin();
+  const { demo, products } = useAdmin();
   const [toast, toastNode] = useToast();
   const [reviews, setReviews] = useState(demo ? SEED : []);
   const [loading, setLoading] = useState(!demo);
@@ -83,6 +84,13 @@ export default function ProductReviewsPage() {
   }, [demo]);
   const [tab, setTab] = useState("all");
   const [query, setQuery] = useState("");
+  // TIP: Lara chooses how the list is ordered. Change SORTS to add another way.
+  const [sort, setSort] = useState("newest");
+  const [adding, setAdding] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
+  const emptyForm = { productId: "", reviewerName: "", rating: 5, text: "", date: today, status: "approved" };
+  const [form, setForm] = useState(emptyForm);
 
   const counts = {
     all: reviews.length,
@@ -91,13 +99,23 @@ export default function ProductReviewsPage() {
     hidden: reviews.filter((r) => r.status === "hidden").length,
   };
 
+  const SORTS = {
+    newest: (a, b) => b.date.localeCompare(a.date),
+    oldest: (a, b) => a.date.localeCompare(b.date),
+    highest: (a, b) => b.rating - a.rating || b.date.localeCompare(a.date),
+    lowest: (a, b) => a.rating - b.rating || b.date.localeCompare(a.date),
+    product: (a, b) => a.productName.localeCompare(b.productName) || b.date.localeCompare(a.date),
+  };
+
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return reviews.filter((r) => {
-      if (tab !== "all" && r.status !== tab) return false;
-      return !q || r.productName.toLowerCase().includes(q) || r.reviewer.toLowerCase().includes(q);
-    });
-  }, [reviews, tab, query]);
+    return reviews
+      .filter((r) => {
+        if (tab !== "all" && r.status !== tab) return false;
+        return !q || r.productName.toLowerCase().includes(q) || r.reviewer.toLowerCase().includes(q);
+      })
+      .sort(SORTS[sort]);
+  }, [reviews, tab, query, sort]);
 
   const fail = (err) => toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
 
@@ -109,6 +127,23 @@ export default function ProductReviewsPage() {
       toast(status === "approved" ? "Review approved." : "Review hidden.");
     } catch (err) {
       fail(err);
+    }
+  }
+
+  async function submitManual(e) {
+    e.preventDefault();
+    if (demo) return toast("Sample data — nothing is saved in demo mode.");
+    setSaving(true);
+    try {
+      const made = await addManualReview(form);
+      setReviews((prev) => [fromServer(made), ...prev]);
+      setForm(emptyForm);
+      setAdding(false);
+      toast("Review added.");
+    } catch (err) {
+      fail(err);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -145,7 +180,48 @@ export default function ProductReviewsPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
         <h2 className="text-[22px] font-bold text-[var(--a-ink)]">Product Reviews</h2>
+        <Btn onClick={() => setAdding((v) => !v)} className="h-12 rounded-md px-5">
+          <CirclePlus size={22} /> Add Review
+        </Btn>
       </div>
+
+      {adding && (
+        <Card className="mb-6 p-5">
+          <p className="pb-3 text-left text-[15px] text-[var(--a-muted)]">
+            For reviews that reached you outside the website, for example in a DM. Pick the date the customer sent it.
+          </p>
+          <form onSubmit={submitManual} className="grid gap-4 text-left sm:grid-cols-2">
+            {[
+              ["Piece", <select key="p" required value={form.productId} onChange={(e) => setForm({ ...form, productId: e.target.value })} className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]">
+                <option value="">Choose a piece</option>
+                {products.map((p) => <option key={p._id || p.id} value={p._id || p.id}>{p.name}</option>)}
+              </select>],
+              ["Reviewer name", <input key="n" required maxLength={60} value={form.reviewerName} onChange={(e) => setForm({ ...form, reviewerName: e.target.value })} placeholder="e.g. Amara O." className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]" />],
+              ["Rating", <select key="r" value={form.rating} onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })} className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]">
+                {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} star{n > 1 ? "s" : ""}</option>)}
+              </select>],
+              ["Date received", <input key="d" type="date" max={today} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]" />],
+            ].map(([label, control]) => (
+              <label key={label} className="flex flex-col gap-1.5 text-[14px] text-[var(--a-ink)]">
+                {label}
+                {control}
+              </label>
+            ))}
+            <label className="flex flex-col gap-1.5 text-[14px] text-[var(--a-ink)] sm:col-span-2">
+              Review
+              <textarea required minLength={5} maxLength={2000} rows={4} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} placeholder="Paste what the customer wrote" className="rounded-md border border-[var(--a-line-strong)] bg-white px-3 py-2 text-[15px]" />
+            </label>
+            <label className="flex items-center gap-2 text-[14px] text-[var(--a-ink)] sm:col-span-2">
+              <input type="checkbox" checked={form.status === "approved"} onChange={(e) => setForm({ ...form, status: e.target.checked ? "approved" : "pending" })} />
+              Show it on the shop straight away
+            </label>
+            <div className="flex gap-3 sm:col-span-2">
+              <Btn type="submit" disabled={saving} className="h-11 rounded-md px-5">{saving ? "Saving…" : "Save review"}</Btn>
+              <Btn type="button" variant="white" onClick={() => { setAdding(false); setForm(emptyForm); }} className="h-11 rounded-md px-5">Cancel</Btn>
+            </div>
+          </form>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-4 mb-6">
@@ -175,7 +251,19 @@ export default function ProductReviewsPage() {
               { value: "hidden", label: "Hidden" },
             ]}
           />
-          <SearchField value={query} onChange={setQuery} placeholder="Search by product or reviewer…" className="w-[240px]" />
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 text-[14px] text-[var(--a-muted)]">
+              Sort by
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="h-10 rounded-md border border-[var(--a-line-strong)] bg-white px-2 text-[14px] text-[var(--a-ink)]">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="highest">Highest rating</option>
+                <option value="lowest">Lowest rating</option>
+                <option value="product">Product A–Z</option>
+              </select>
+            </label>
+            <SearchField value={query} onChange={setQuery} placeholder="Search by product or reviewer…" className="w-[240px]" />
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -185,7 +273,7 @@ export default function ProductReviewsPage() {
               <span>Rating</span>
               <span>Comment</span>
               <span>Status</span>
-              <span className="text-center">Actions</span>
+              <span>Actions</span>
             </HeadRow>
 
             {rows.length === 0 && (
@@ -201,7 +289,10 @@ export default function ProductReviewsPage() {
                 <div className="flex min-w-0 items-center gap-3">
                   <Avatar name={r.reviewer} />
                   <div className="min-w-0">
-                    <p className="truncate font-bold">{r.reviewer}</p>
+                    <p className="truncate font-bold">
+                      {r.reviewer}
+                      {r.manual && <span className="ml-2 rounded-full bg-[var(--a-pink)] px-2 py-0.5 text-[11px] font-normal text-[var(--a-maroon)]">Added by you</span>}
+                    </p>
                     <p className="truncate text-[12px] text-[var(--a-muted)]">{r.productName}</p>
                     <p className="text-[11px] text-[var(--a-muted)]">{dateDMY(r.date)}</p>
                   </div>
@@ -219,7 +310,7 @@ export default function ProductReviewsPage() {
                 <span>{statusBadge(r.status)}</span>
 
                 {/* Actions */}
-                <span className="flex items-center justify-center gap-2">
+                <span className="flex items-center justify-start gap-2">
                   {r.status !== "approved" && (
                     <button
                       type="button"

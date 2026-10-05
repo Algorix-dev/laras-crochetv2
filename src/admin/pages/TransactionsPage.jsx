@@ -193,7 +193,7 @@ export default function TransactionsPage() {
 
         <div className="mt-6 overflow-x-auto">
           <div className="min-w-[800px]">
-            <HeadRow className={cx("h-14 text-center", COLS)}>
+            <HeadRow className={cx("h-14", COLS)}>
               <span>Customer Id</span>
               <span>Name</span>
               <span>Date</span>
@@ -216,7 +216,7 @@ export default function TransactionsPage() {
                 <div
                   key={r.key}
                   className={cx(
-                    "grid h-[62px] items-center border-b border-[var(--a-line-strong)] px-4 text-center text-[15px] text-[var(--a-ink)] hover:bg-[#fafafa]",
+                    "grid h-[62px] items-center border-b border-[var(--a-line-strong)] px-4 text-left text-[15px] text-[var(--a-ink)] hover:bg-[#fafafa]",
                     COLS
                   )}
                 >
@@ -225,7 +225,7 @@ export default function TransactionsPage() {
                   <span>{dateDMY(r.date)}</span>
                   <span>{naira(r.total)}</span>
                   <span>{r.method}</span>
-                  <span className="flex justify-center">
+                  <span className="flex justify-start">
                     <StatusDot tone={st.tone}>{st.label}</StatusDot>
                   </span>
                   <span>

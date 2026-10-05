@@ -263,7 +263,7 @@ export default function CouponPage() {
               <span>Uses</span>
               <span>Expires</span>
               <span>Status</span>
-              <span className="text-center">Actions</span>
+              <span>Actions</span>
             </HeadRow>
 
             {rows.length === 0 && (
@@ -288,7 +288,7 @@ export default function CouponPage() {
                       {badgeForStatus(c.active, exp)}
                     </button>
                   </span>
-                  <span className="flex items-center justify-center gap-3">
+                  <span className="flex items-center justify-start gap-3">
                     <button type="button" aria-label={`Edit ${c.code}`} onClick={() => setModal({ coupon: c })} className="text-[#4b5563] hover:text-[var(--a-maroon)]">
                       <Pencil size={16} />
                     </button>

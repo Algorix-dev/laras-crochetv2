@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
-import { getProducts, normalizeProduct } from '../api';
+import { getCategories, getProducts, normalizeProduct } from '../api';
 import ProductGrid from '../components/ProductGrid';
 import InlineLoader from '../components/InlineLoader';
 import Footer from '../components/Footer';
@@ -25,6 +25,14 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // TIP: categories Lara adds in the admin show up here after the built-in ones.
+  const [extraCategories, setExtraCategories] = useState([]);
+
+  useEffect(() => {
+    getCategories()
+      .then((list) => setExtraCategories(list.filter((c) => c.custom).map((c) => c.slug)))
+      .catch(() => {}); // if this fails the built-in filters still work
+  }, []);
 
   useEffect(() => {
     setError(null);
@@ -159,7 +167,7 @@ export default function ShopPage() {
               20px gaps
         ========================================================== */}
           <div className="mt-5 flex w-full flex-wrap gap-[20px] md:mt-6 md:gap-5 md:mb-20">
-            {CATEGORIES.map((cat) => {
+            {[...CATEGORIES, ...extraCategories].map((cat) => {
               const active = activeCategory === cat;
 
               return (

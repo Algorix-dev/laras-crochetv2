@@ -72,7 +72,7 @@ function PriceRow({ label, row = blank(), fallback, onChange, onClear, clearLabe
         onChange={(e) => onChange({ express: e.target.value })}
         className={input}
       />
-      <span className="flex justify-center">
+      <span className="flex justify-start">
         <Checkbox
           checked={row.active !== false}
           onChange={(e) => onChange({ active: e.target.checked })}
@@ -96,7 +96,7 @@ function TableHead({ first }) {
       <span>{first}</span>
       <span>Standard (₦)</span>
       <span>Express (₦)</span>
-      <span className="text-center">Deliver</span>
+      <span>Deliver</span>
       <span />
     </div>
   );

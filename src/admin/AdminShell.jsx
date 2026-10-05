@@ -131,7 +131,7 @@ function Sidebar({ onNavigate, onSignOut, onCollapse }) {
           type="button"
           onClick={onCollapse}
           aria-label="Close menu"
-          className="mt-3.5 mr-1 text-[#6a717f] hover:text-[var(--a-maroon)] lg:pointer-events-none"
+          className="mt-3.5 mr-1 text-[#6a717f] hover:text-[var(--a-maroon)] md:pointer-events-none"
         >
           <CollapseGlyph />
         </button>
@@ -177,11 +177,14 @@ function Sidebar({ onNavigate, onSignOut, onCollapse }) {
 
       <div className="shrink-0 px-[14px] pb-5 pt-3">
         <div className="flex items-center gap-2.5 px-1 pb-4">
-          <Avatar size={40} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-bold leading-5 text-[var(--a-ink)]">{name}</p>
-            {email && <p className="truncate text-[13px] leading-4 text-[var(--a-muted)]">{email}</p>}
-          </div>
+          {/* TIP: the photo + name open the Admin role page, which is Lara's profile */}
+          <Link to="/admin/role" onClick={onNavigate} aria-label="Open your profile" className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md hover:bg-[#f3f4f5]">
+            <Avatar size={40} />
+            <div className="min-w-0 flex-1 text-left">
+              <p className="truncate text-[15px] font-bold leading-5 text-[var(--a-ink)]">{name}</p>
+              {email && <p className="truncate text-[13px] leading-4 text-[var(--a-muted)]">{email}</p>}
+            </div>
+          </Link>
           <button
             type="button"
             onClick={onSignOut}
@@ -224,7 +227,7 @@ function Topbar({ title, onMenu }) {
         type="button"
         onClick={onMenu}
         aria-label="Open menu"
-        className="flex size-10 items-center justify-center rounded-md text-[var(--a-ink)] hover:bg-[#f3f4f5] lg:hidden"
+        className="flex size-10 items-center justify-center rounded-md text-[var(--a-ink)] hover:bg-[#f3f4f5] md:hidden"
       >
         <Menu size={22} />
       </button>
@@ -252,7 +255,9 @@ function Topbar({ title, onMenu }) {
         <Bell size={22} strokeWidth={1.8} />
         {fresh > 0 && <i className="absolute right-[3px] top-[2px] size-2 rounded-full bg-[var(--a-red)]" />}
       </Link>
-      <Avatar size={40} />
+      <Link to="/admin/role" aria-label="Open your profile" className="rounded-full hover:opacity-80">
+        <Avatar size={40} />
+      </Link>
     </header>
   );
 }
@@ -268,14 +273,15 @@ export default function AdminShell({ onSignOut, children }) {
 
   return (
     <div className="admin-root min-h-screen">
-      {/* desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[260px] border-r border-[var(--a-line)] lg:block">
+      {/* desktop sidebar. TIP: it stays visible down to 768px wide (half a screen when two
+          windows are side by side) and is a little narrower below 1024px. */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r border-[var(--a-line)] md:block lg:w-[260px]">
         <Sidebar onSignOut={onSignOut} onCollapse={() => {}} />
       </aside>
 
       {/* phone menu */}
       {open && (
-        <div className="fixed inset-0 z-40 lg:hidden">
+        <div className="fixed inset-0 z-40 md:hidden">
           <button
             type="button"
             aria-label="Close menu"
@@ -288,7 +294,7 @@ export default function AdminShell({ onSignOut, children }) {
         </div>
       )}
 
-      <div className="min-w-0 lg:pl-[260px]">
+      <div className="min-w-0 md:pl-[220px] lg:pl-[260px]">
         <Topbar title={titleFor(pathname)} onMenu={() => setOpen(true)} />
         <main className="px-4 pb-12 pt-5 sm:pl-5 sm:pr-5 lg:pr-10">{children}</main>
       </div>

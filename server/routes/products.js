@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import Product from '../models/Product.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
+import { allCategorySlugs } from './categories.js';
 
 const router = Router();
 
@@ -69,6 +70,7 @@ router.post('/', requireAdmin, async (req, res) => {
     const data = tidyProduct(req.body);
     const problem = heroProblem(data);
     if (problem) return res.status(400).json({ error: problem });
+    if (!(await allCategorySlugs()).includes(data.category)) return res.status(400).json({ error: 'Choose a valid category.' });
     const product = await Product.create(data);
     res.status(201).json(product);
   } catch (err) {
@@ -80,6 +82,9 @@ router.post('/', requireAdmin, async (req, res) => {
 router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const data = tidyProduct(req.body);
+    if (data.category !== undefined && !(await allCategorySlugs()).includes(data.category)) {
+      return res.status(400).json({ error: 'Choose a valid category.' });
+    }
 
     // check the hero rule against what the product will look like AFTER the
     // update, even if this request only sent some of the fields

@@ -3,10 +3,10 @@
   "Discover" cards for each category, then every piece in a table.
   Click a category card to filter the table to it.
 */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CirclePlus, Ellipsis, ListFilter, SquarePen, Trash2 } from "lucide-react";
-import { deleteProduct } from "../../api";
+import { CirclePlus, Ellipsis, ListFilter, SquarePen, Trash2, X } from "lucide-react";
+import { createCategory, deleteCategory, deleteProduct, getCategories } from "../../api";
 import { useAdmin } from "../AdminData";
 import { cx, dateDMY, pageCount } from "../fmt";
 import { PAGE_SIZE } from "../model";
@@ -28,6 +28,61 @@ export default function CategoriesPage() {
   const [selected, setSelected] = useState(() => new Set());
   const [busy, setBusy] = useState(false);
 
+  // TIP: categories Lara adds herself ("custom"). The five built-in ones come from
+  // her products automatically; these extra ones can exist before any piece uses them.
+  const [customCats, setCustomCats] = useState([]);
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState("");
+
+  useEffect(() => {
+    if (demo) return;
+    getCategories()
+      .then((list) => setCustomCats(list.filter((c) => c.custom)))
+      .catch(() => {});
+  }, [demo]);
+
+  // the cards on screen: built-in + products' categories, then her empty custom ones
+  const cards = useMemo(() => {
+    const have = new Set(m.cards.map((c) => c.slug));
+    const extra = customCats
+      .filter((c) => !have.has(c.slug))
+      .map((c) => ({ slug: c.slug, label: c.label, count: 0, image: "" }));
+    return [...m.cards, ...extra];
+  }, [m.cards, customCats]);
+
+  async function addCategory(e) {
+    e.preventDefault();
+    if (demo) return toast("Sample data — nothing is saved in demo mode.");
+    setBusy(true);
+    try {
+      const made = await createCategory(newName);
+      setCustomCats((cur) => [...cur, made]);
+      setNewName("");
+      setAdding(false);
+      toast(`${made.label} was added. You can now pick it when adding a piece.`);
+    } catch (err) {
+      toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeCategory(c) {
+    if (demo) return toast("Sample data — nothing is saved in demo mode.");
+    if (!window.confirm(`Remove the "${c.label}" category?`)) return;
+    setBusy(true);
+    try {
+      await deleteCategory(c.slug);
+      setCustomCats((cur) => cur.filter((x) => x.slug !== c.slug));
+      if (cat === c.slug) setCat("");
+      toast(`${c.label} was removed.`);
+    } catch (err) {
+      toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return m.rows.filter((r) => {
@@ -45,11 +100,11 @@ export default function CategoriesPage() {
 
   async function remove(row) {
     if (demo) return toast("Sample data — nothing is saved in demo mode.");
-    if (!window.confirm(`Hide "${row.name}" from the shop? You can bring it back later from the database.`)) return;
+    if (!window.confirm(`Delete "${row.name}"? It will disappear from the shop. Past orders keep their record of it.`)) return;
     setBusy(true);
     try {
       await deleteProduct(row.id);
-      toast(`${row.name} is hidden from the shop.`);
+      toast(`${row.name} was deleted.`);
       await refresh();
     } catch (err) {
       toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
@@ -70,7 +125,10 @@ export default function CategoriesPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
         <h2 className="text-[22px] font-bold text-[var(--a-ink)]">Discover</h2>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <Btn variant="white" onClick={() => setAdding((v) => !v)} className="h-12 rounded-md px-5">
+            <CirclePlus size={22} /> Add Category
+          </Btn>
           <Btn as={Link} to="/admin/products/new" className="h-12 rounded-md px-5">
             <CirclePlus size={22} /> Add Product
           </Btn>
@@ -88,8 +146,45 @@ export default function CategoriesPage() {
         </div>
       </div>
 
+      {adding && (
+        <Card className="mb-5 p-5">
+          <form onSubmit={addCategory} className="flex flex-wrap items-end gap-3">
+            <label className="flex min-w-[240px] flex-1 flex-col gap-1.5 text-left text-[14px] text-[var(--a-ink)]">
+              New category name
+              <input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="e.g. Crop Tops"
+                maxLength={40}
+                autoFocus
+                className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px] outline-none"
+              />
+            </label>
+            <Btn type="submit" disabled={busy || newName.trim().length < 2} className="h-11 rounded-md px-5">
+              Save category
+            </Btn>
+            <Btn type="button" variant="white" onClick={() => { setAdding(false); setNewName(""); }} className="h-11 rounded-md px-5">
+              Cancel
+            </Btn>
+          </form>
+          {customCats.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-left text-[14px] text-[var(--a-muted)]">
+              <span>Your own categories:</span>
+              {customCats.map((c) => (
+                <span key={c.slug} className="inline-flex items-center gap-1.5 rounded-full bg-[var(--a-pink)] py-1 pl-3 pr-1.5 text-[var(--a-maroon)]">
+                  {c.label}
+                  <button type="button" aria-label={`Remove ${c.label}`} disabled={busy} onClick={() => removeCategory(c)} className="flex size-5 items-center justify-center rounded-full hover:bg-white/70">
+                    <X size={13} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {m.cards.slice(0, 8).map((c) => {
+        {cards.map((c) => {
           const on = cat === c.slug;
           return (
             <button
@@ -158,11 +253,11 @@ export default function CategoriesPage() {
         <div className="mt-8 overflow-x-auto">
           <div className="min-w-[680px]">
             <HeadRow className={cx("h-14", COLS)}>
-              <span className="pl-1">No.</span>
-              <span className="pl-16">Product</span>
+              <span>No.</span>
+              <span>Product</span>
               <span>Created Date</span>
-              <span className="pl-10">Order</span>
-              <span className="text-center">Action</span>
+              <span>Order</span>
+              <span>Action</span>
             </HeadRow>
 
             {visible.length === 0 && (
@@ -184,17 +279,17 @@ export default function CategoriesPage() {
                   <Checkbox label={`Select ${r.name}`} checked={selected.has(r.id)} onChange={() => toggleOne(r.id)} />
                   {(current - 1) * PAGE_SIZE + i + 1}
                 </span>
-                <button type="button" onClick={() => navigate(`/admin/products/${r.id}`)} className="flex min-w-0 items-center gap-3 pl-4 text-left">
+                <button type="button" onClick={() => navigate(`/admin/products/${r.id}`)} className="flex min-w-0 items-center gap-3 text-left">
                   <Thumb src={r.image} alt="" size={40} className="rounded border border-[#e5e7eb] bg-white" />
                   <span className="truncate hover:underline">{r.name}</span>
                 </button>
                 <span>{r.created ? dateDMY(r.created) : "—"}</span>
-                <span className="pl-10">{r.orders}</span>
-                <span className="flex items-center justify-center gap-3">
+                <span>{r.orders}</span>
+                <span className="flex items-center justify-start gap-3">
                   <button type="button" aria-label={`Edit ${r.name}`} onClick={() => navigate(`/admin/products/${r.id}`)} className="text-[#4b5563] hover:text-[var(--a-maroon)]">
                     <SquarePen size={17} />
                   </button>
-                  <button type="button" aria-label={`Hide ${r.name}`} disabled={busy} onClick={() => remove(r)} className="text-[#4b5563] hover:text-[var(--a-red)] disabled:opacity-50">
+                  <button type="button" aria-label={`Delete ${r.name}`} disabled={busy} onClick={() => remove(r)} className="text-[#4b5563] hover:text-[var(--a-red)] disabled:opacity-50">
                     <Trash2 size={17} />
                   </button>
                 </span>

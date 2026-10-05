@@ -250,12 +250,12 @@ export default function OrdersPage() {
           <div className="min-w-[860px]">
             <HeadRow className={cx("h-14", COLS)}>
               <span>No.</span>
-              <span className="pl-2.5">Order Id</span>
-              <span className="pl-[62px]">Product</span>
-              <span className="pl-6">Date</span>
-              <span className="relative left-[50px] text-right">Price</span>
-              <span className="pl-[110px]">Payment</span>
-              <span className="text-center">Status</span>
+              <span>Order Id</span>
+              <span>Product</span>
+              <span>Date</span>
+              <span>Price</span>
+              <span>Payment</span>
+              <span>Status</span>
             </HeadRow>
 
             {visible.length === 0 && (
@@ -296,13 +296,13 @@ export default function OrdersPage() {
                   </span>
                 </button>
                 <span>{dateDMY(r.date)}</span>
-                <span className="text-right">{naira(r.price).replace("₦", "")}</span>
-                <span className="pl-[110px]">
+                <span>{naira(r.price).replace("₦", "")}</span>
+                <span>
                   <StatusDot tone={r.paid ? "green" : "red"} plain>
                     {r.paid ? "Paid" : "Unpaid"}
                   </StatusDot>
                 </span>
-                <span className="flex justify-center">
+                <span className="flex justify-start">
                   <StatusMenu order={r} onChange={changeStatus} />
                 </span>
               </div>

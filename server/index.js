@@ -21,6 +21,7 @@ import teamRoutes from "./routes/team.js";
 import couponRoutes from "./routes/coupons.js";
 import reviewRoutes from "./routes/reviews.js";
 import brandRoutes from "./routes/brand.js";
+import categoryRoutes from "./routes/categories.js";
 
 await connectDB();
 
@@ -111,6 +112,7 @@ app.use("/api/team", teamRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/brand", brandRoutes);
+app.use("/api/categories", categoryRoutes);
 
 app.get("/", (req, res) => res.send("Lara's Crochet API is running"));
 

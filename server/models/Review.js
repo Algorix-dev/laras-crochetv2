@@ -16,6 +16,9 @@ const reviewSchema = new mongoose.Schema(
     fit: { type: String, enum: ['small', 'true', 'large'], default: 'true' },
     variant: String, // e.g. "Navy mix · Size M", copied from their order
     status: { type: String, enum: ['pending', 'approved', 'hidden'], default: 'pending' },
+    // TIP: 'customer' = written on the site by someone who paid;
+    // 'manual' = typed in by Lara from the admin (e.g. a review a customer sent in a DM).
+    source: { type: String, enum: ['customer', 'manual'], default: 'customer' },
   },
   { timestamps: true }
 );

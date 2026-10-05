@@ -89,6 +89,11 @@ const CATEGORY_LABELS = {
   skirts: "Skirt",
 };
 
+// "crop-tops" -> "Crop Tops" (for categories Lara adds herself)
+function prettySlug(slug = "") {
+  return slug.split("-").filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+}
+
 export function normalizeProduct(apiProduct) {
   // TIP — ANGLE SHOTS: `views` holds one photo per direction. Older
   // products (seeded before angle shots existed) only have `images`, so
@@ -110,7 +115,7 @@ export function normalizeProduct(apiProduct) {
     // ProductCard reads `categoryLabel`, but the API only sends
     // `category` (a slug like "two-pieces") — map it here so the
     // real label shows instead of falling back to "PRODUCT".
-    categoryLabel: CATEGORY_LABELS[apiProduct.category] || apiProduct.category,
+    categoryLabel: CATEGORY_LABELS[apiProduct.category] || prettySlug(apiProduct.category),
   };
 }
 
@@ -345,6 +350,19 @@ export const getAdminReviews = () => adminRequest("/api/reviews");
 export const setReviewStatus = (id, status) =>
   adminRequest(`/api/reviews/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
 export const deleteReview = (id) => adminRequest(`/api/reviews/${id}`, { method: "DELETE" });
+// Lara types in a review herself (e.g. one a customer sent in a DM)
+export const addManualReview = (payload) =>
+  adminRequest("/api/reviews/manual", { method: "POST", body: JSON.stringify(payload) });
+
+// categories: the built-in ones plus any Lara has added → [{ slug, label, custom }]
+export async function getCategories() {
+  const res = await fetch(`${API_URL}/api/categories`);
+  if (!res.ok) throw new Error("Could not load categories");
+  return res.json();
+}
+export const createCategory = (label) =>
+  adminRequest("/api/categories", { method: "POST", body: JSON.stringify({ label }) });
+export const deleteCategory = (slug) => adminRequest(`/api/categories/${slug}`, { method: "DELETE" });
 
 // public: brand settings the storefront uses (footer links, logo, favicon, colour)
 export async function getBrand() {

@@ -8,18 +8,34 @@
                      Control Authority).
 */
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CirclePlus, Hourglass } from "lucide-react";
+import { CirclePlus, Hourglass, Trash2 } from "lucide-react";
+import { deleteProduct } from "../../api";
 import { useAdmin } from "../AdminData";
 import { titleFor } from "../AdminShell";
 import { naira } from "../fmt";
-import { Btn, Card, EmptyState } from "../ui";
+import { Btn, Card, EmptyState, useToast } from "../ui";
 
 const ANGLE_KEYS = ["front", "left", "right", "back"];
 
 export function ProductListPage() {
-  const { models } = useAdmin();
+  const { models, refresh, demo } = useAdmin();
   const navigate = useNavigate();
+  const [toast, toastNode] = useToast();
   const pieces = models.products;
+
+  // TIP: "Delete" hides the piece from the shop but keeps its record, so past
+  // orders that mention it still make sense (see DELETE /api/products/:id).
+  async function remove(p) {
+    if (demo) return toast("Sample data — nothing is saved in demo mode.");
+    if (!window.confirm(`Delete "${p.name}"? It will disappear from the shop. Past orders keep their record of it.`)) return;
+    try {
+      await deleteProduct(p._id || p.id);
+      toast(`${p.name} was deleted.`);
+      await refresh();
+    } catch (err) {
+      toast(err.message === "SESSION_EXPIRED" ? "Please sign in again." : err.message, "error");
+    }
+  }
 
   return (
     <div>
@@ -65,12 +81,22 @@ export function ProductListPage() {
                       </div>
                     </div>
                   </button>
+                  <div className="flex justify-end border-t border-[var(--a-line)] px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => remove(p)}
+                      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[13px] text-[var(--a-muted)] hover:bg-[#ffe4e6] hover:text-[var(--a-red)]"
+                    >
+                      <Trash2 size={15} /> Delete
+                    </button>
+                  </div>
                 </Card>
               </li>
             );
           })}
         </ul>
       )}
+      {toastNode}
     </div>
   );
 }

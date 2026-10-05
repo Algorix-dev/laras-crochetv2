@@ -23,7 +23,8 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['dresses', 'bikinis', 'two-pieces', 'shirts', 'skirts', 'accessories'],
+      // TIP: no fixed list here any more. Lara can add her own categories, so the
+      // allowed names are checked in routes/products.js against routes/categories.js.
     },
     // Cloudinary URLs, not local file paths — see routes/upload.js
     // TIP: `images` is kept for older code (ProductCard reads images[0]).

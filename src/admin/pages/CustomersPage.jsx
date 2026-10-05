@@ -216,7 +216,7 @@ export default function CustomersPage() {
         <Card className="px-5 pb-6 pt-5">
           <div className="overflow-x-auto">
             <div className="min-w-[760px]">
-              <HeadRow className={cx("h-14 text-center", COLS)}>
+              <HeadRow className={cx("h-14", COLS)}>
                 <span>Customer Id</span>
                 <span>Name</span>
                 <span>Phone</span>
@@ -238,7 +238,7 @@ export default function CustomersPage() {
                     onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
                     onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSelectedId(c.id === selectedId ? null : c.id)}
                     className={cx(
-                      "grid h-16 cursor-pointer items-center border-b border-[var(--a-line-strong)] px-4 text-center text-[15px] text-[var(--a-ink)] hover:bg-[#f3f4f6]",
+                      "grid h-16 cursor-pointer items-center border-b border-[var(--a-line-strong)] px-4 text-left text-[15px] text-[var(--a-ink)] hover:bg-[#f3f4f6]",
                       COLS,
                       c.id === selectedId && "bg-[#f3f4f6]"
                     )}
@@ -248,10 +248,10 @@ export default function CustomersPage() {
                     <span className="truncate">{c.phone}</span>
                     <span>{c.orders}</span>
                     <span>{naira(c.spend)}</span>
-                    <span className="flex justify-center">
+                    <span className="flex justify-start">
                       <StatusDot tone={st.tone}>{st.label}</StatusDot>
                     </span>
-                    <span className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <span className="flex items-center justify-start gap-2" onClick={(e) => e.stopPropagation()}>
                       <a href={`mailto:${c.email}`} aria-label={`Email ${c.name}`} className="text-[#4b5563] hover:text-[var(--a-maroon)]">
                         <MessageSquare size={17} />
                       </a>

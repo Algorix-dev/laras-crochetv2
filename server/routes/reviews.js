@@ -96,6 +96,56 @@ router.get('/', requireAdmin, async (req, res) => {
   res.json(await Review.find().sort({ createdAt: -1 }));
 });
 
+// POST /api/reviews/manual — Lara adds a review herself (e.g. one a customer sent in a DM)
+// body: { productId, reviewerName, rating, text, title?, date?, status? }
+router.post('/manual', requireAdmin, async (req, res) => {
+  try {
+    const { productId } = req.body || {};
+    const rating = Number(req.body?.rating);
+    const text = clip(req.body?.text, 2000);
+    const title = clip(req.body?.title, 120);
+    const reviewerName = clip(req.body?.reviewerName, 60);
+    const status = ['pending', 'approved', 'hidden'].includes(req.body?.status) ? req.body.status : 'approved';
+
+    if (!mongoose.isValidObjectId(productId)) return res.status(400).json({ error: 'Choose which piece the review is for.' });
+    if (!reviewerName) return res.status(400).json({ error: "Add the reviewer's name." });
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ error: 'Choose a star rating.' });
+    if (text.length < 5) return res.status(400).json({ error: 'Add the review text.' });
+
+    const product = await Product.findById(productId).select('name');
+    if (!product) return res.status(404).json({ error: 'Product not found.' });
+
+    // TIP: the review date can be backdated (the day the customer actually sent it).
+    // A future or invalid date falls back to today.
+    let createdAt = new Date();
+    if (req.body?.date) {
+      const d = new Date(req.body.date);
+      if (!Number.isNaN(d.getTime()) && d <= new Date()) createdAt = d;
+    }
+
+    const id = new mongoose.Types.ObjectId();
+    const doc = await Review.create({
+      _id: id,
+      product: productId,
+      productName: product.name,
+      // the model needs an email and allows one review per email per piece, so manual
+      // reviews get a unique placeholder (it is never shown or emailed)
+      customerEmail: `manual-${id}@manual.invalid`,
+      reviewerName,
+      rating,
+      title,
+      text,
+      status,
+      source: 'manual',
+      createdAt,
+    });
+    res.status(201).json(doc);
+  } catch (err) {
+    console.error('Manual review failed:', err);
+    res.status(500).json({ error: 'Could not save the review.' });
+  }
+});
+
 // PATCH /api/reviews/:id/status   body: { status: pending|approved|hidden }
 router.patch('/:id/status', requireAdmin, async (req, res) => {
   const { status } = req.body || {};
