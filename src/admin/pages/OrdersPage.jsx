@@ -159,7 +159,7 @@ export default function OrdersPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
         <h2 className="text-[22px] font-bold text-[var(--a-ink)]">Order List</h2>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Btn
             onClick={() => toast("Orders are created when a customer checks out on the shop.")}
             className="h-12 rounded-md px-5 text-[16px]"
@@ -210,7 +210,7 @@ export default function OrdersPage() {
               { value: "canceled", label: "Canceled" },
             ]}
           />
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
             <SearchField
               value={query}
               onChange={(v) => {

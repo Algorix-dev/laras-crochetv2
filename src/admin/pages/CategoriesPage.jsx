@@ -223,7 +223,7 @@ export default function CategoriesPage() {
               { value: "out", label: "Out of Stock" },
             ]}
           />
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center gap-3">
             <SearchField
               value={query}
               onChange={(v) => {

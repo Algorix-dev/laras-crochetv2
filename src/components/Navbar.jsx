@@ -204,8 +204,8 @@ export default function Navbar() {
         <div
           className="
             grid h-[66px] grid-cols-[auto_1fr_auto] items-center gap-4
-            px-5 md:px-8 lg:px-[15.83%]
-            md:grid-cols-[1fr_auto_1fr]
+            px-5 md:px-8 lg:px-10 xl:px-[15.83%]
+            md:grid-cols-[auto_1fr_auto] lg:grid-cols-[1fr_auto_1fr]
           "
         >
           {/* Brand logo */}
@@ -213,20 +213,20 @@ export default function Navbar() {
             <img
               src={brand.logoUrl || laraCrochetLogo}
               alt="Lara's Crochet"
-              className="h-9 w-auto"
+              className="h-9 w-auto max-w-none shrink-0"
             />
           </Link>
 
           {/* Desktop nav links — justify-self-center is the piece
               that actually centers this against the page, not the
               grid alone. */}
-          <nav className="hidden justify-self-center gap-5 text-sm uppercase md:flex">
+          <nav className="hidden justify-self-center gap-1 whitespace-nowrap text-[13px] uppercase md:flex lg:gap-5 lg:text-sm">
             {LINKS.map((link) => (
               <Link
                 key={link.label}
                 to={link.to}
                 className={
-                  "flex h-10 items-center rounded-[10px] px-[10px] hover:bg-black/5 " +
+                  "flex h-10 items-center rounded-[10px] px-2 hover:bg-black/5 lg:px-[10px] " +
                   (isActive(link.to)
                     ? "font-nav-active text-[var(--ink)]"
                     : "text-[var(--muted)] hover:text-[var(--ink)]")
@@ -238,7 +238,7 @@ export default function Navbar() {
           </nav>
 
           {/* Desktop utility icons */}
-          <div className="hidden items-center justify-self-end gap-5 md:flex">
+          <div className="hidden items-center justify-self-end gap-3 md:flex lg:gap-5">
             <button
               type="button"
               aria-label="Search"

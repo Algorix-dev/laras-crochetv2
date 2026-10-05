@@ -460,24 +460,24 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-3">
         <SalesAndOrders d={d} />
       </div>
 
       {/* TIP: all three rows below share the SAME two column widths (left 739 : right 361),
           so the gap between the left and right boxes forms one straight line down the page.
           To change the split, change the two numbers in all three rows. */}
-      <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,739fr)_minmax(0,361fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-stretch gap-5 lg:grid-cols-[minmax(0,739fr)_minmax(0,361fr)]">
         <WeekReport week={d.week} />
         <LiveAndCountries d={d} />
       </div>
 
-      <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,739fr)_minmax(0,361fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-stretch gap-5 lg:grid-cols-[minmax(0,739fr)_minmax(0,361fr)]">
         <TransactionCard rows={d.transactions} />
         <TopProducts rows={d.topProducts} />
       </div>
 
-      <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,739fr)_minmax(0,361fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-stretch gap-5 lg:grid-cols-[minmax(0,739fr)_minmax(0,361fr)]">
         <BestSelling rows={d.bestSelling} />
         <AddNewProduct categories={d.categories} products={d.addProducts} />
       </div>

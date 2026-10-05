@@ -95,13 +95,17 @@ router.post('/send', requireAdmin, requireFullAdmin, async (req, res) => {
     }
 
     if (req.body?.testOnly) {
-      const to = process.env.ADMIN_NOTIFY_EMAIL;
-      if (!to) return res.status(400).json({ error: 'ADMIN_NOTIFY_EMAIL is not set on the server.' });
+      // TIP: Lara can type any address to send the test to; if she leaves it
+      // empty we fall back to ADMIN_NOTIFY_EMAIL from the server settings.
+      const typed = String(req.body?.testEmail || '').trim().toLowerCase();
+      if (typed && !EMAIL_RE.test(typed)) return res.status(400).json({ error: 'That test email address does not look right.' });
+      const to = typed || process.env.ADMIN_NOTIFY_EMAIL;
+      if (!to) return res.status(400).json({ error: 'Type an email address to send the test to.' });
       const result = await sendCampaign(
         { subject: `[TEST] ${subject}`, body },
         [{ email: to, unsubscribeToken: 'test' }]
       );
-      return res.json({ test: true, ...result });
+      return res.json({ test: true, to, ...result });
     }
 
     const subscribers = await Subscriber.find({ subscribed: true });

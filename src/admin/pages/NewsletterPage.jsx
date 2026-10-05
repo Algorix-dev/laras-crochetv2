@@ -7,7 +7,7 @@
   Tip: use "Send me a test" first to see exactly how it will look.
 */
 import { useEffect, useState } from "react";
-import { getCampaigns, getSubscribers, sendNewsletter } from "../../api";
+import { adminSession, getCampaigns, getSubscribers, sendNewsletter } from "../../api";
 import { useAdmin } from "../AdminData";
 import { Btn, Card, CardHead, useToast } from "../ui";
 
@@ -37,6 +37,9 @@ export default function NewsletterPage() {
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState("");
   const [showList, setShowList] = useState(false);
+  // TIP: the test copy goes to this address. It starts as the email you signed
+  // in with, and you can type any other address.
+  const [testEmail, setTestEmail] = useState(() => adminSession.profile()?.email || "");
 
   const active = subscribers.filter((s) => s.subscribed);
 
@@ -68,8 +71,8 @@ export default function NewsletterPage() {
     if (demo) return showToast("Sample data, nothing is sent in demo mode.");
     setBusy("test");
     try {
-      await sendNewsletter(subject.trim(), body.trim(), true);
-      showToast("Test sent to your own email.");
+      const result = await sendNewsletter(subject.trim(), body.trim(), true, testEmail.trim());
+      showToast(`Test sent to ${result.to || "your email"}.`);
     } catch (err) {
       showToast(errMsg(err), "error");
     } finally {
@@ -140,6 +143,19 @@ export default function NewsletterPage() {
           placeholder="Write to your subscribers…"
           className={`mt-2 py-3 ${input}`}
         />
+
+        <label className="mt-4 block text-[14px] font-bold text-[var(--a-ink)]" htmlFor="nl-test-email">
+          Send test to
+        </label>
+        <input
+          id="nl-test-email"
+          type="email"
+          value={testEmail}
+          onChange={(e) => setTestEmail(e.target.value)}
+          placeholder="you@example.com"
+          className={`mt-2 h-12 max-w-[420px] ${input}`}
+        />
+        <p className="mt-1 text-[13px] text-[var(--a-muted)]">"Send me a test" emails only this address. Subscribers get nothing until you press Send.</p>
 
         <div className="mt-5 flex flex-wrap gap-3">
           <Btn variant="outline" className="h-11 rounded-md px-5" disabled={!canSend || busy !== ""} onClick={sendTest}>

@@ -181,7 +181,7 @@ export function PillTabs({ tabs, value, onChange, className }) {
   return (
     <div
       role="tablist"
-      className={cx("inline-flex items-center gap-1 rounded-md bg-[var(--a-pink)] p-1", className)}
+      className={cx("inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-md bg-[var(--a-pink)] p-1", className)}
     >
       {tabs.map((tab) => {
         const on = tab.value === value;
@@ -308,7 +308,12 @@ export function Pager({ page, pages, onPage }) {
         <ArrowLeft size={16} /> Previous
       </Btn>
 
-      <div className="hidden items-center gap-3 sm:flex">
+      {/* TIP: the numbered buttons need room, so below 1024px we show "Page 2 of 5" instead */}
+      <span className="text-[14px] text-[var(--a-muted)] lg:hidden">
+        Page {page} of {pages}
+      </span>
+
+      <div className="hidden items-center gap-3 lg:flex">
         {items.map((item, i) =>
           item === "gap" ? (
             <span

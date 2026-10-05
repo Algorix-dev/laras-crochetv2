@@ -302,8 +302,9 @@ export async function lookupOrderStatus(reference) {
 /* ---------- NEWSLETTER + ENQUIRIES (admin) ---------- */
 export const getSubscribers = () => adminRequest("/api/newsletter/subscribers");
 export const getCampaigns = () => adminRequest("/api/newsletter/campaigns");
-export const sendNewsletter = (subject, body, testOnly = false) =>
-  adminRequest("/api/newsletter/send", { method: "POST", body: JSON.stringify({ subject, body, testOnly }) });
+// testEmail (optional) = who gets the test copy; the server falls back to ADMIN_NOTIFY_EMAIL
+export const sendNewsletter = (subject, body, testOnly = false, testEmail = "") =>
+  adminRequest("/api/newsletter/send", { method: "POST", body: JSON.stringify({ subject, body, testOnly, testEmail }) });
 export const getEnquiries = () => adminRequest("/api/enquiries");
 export const updateEnquiryStatus = (id, status) =>
   adminRequest(`/api/enquiries/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });

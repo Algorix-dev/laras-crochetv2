@@ -196,7 +196,7 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 xl:grid-cols-[270px_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[270px_minmax(0,1fr)]">
         <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1 xl:grid-rows-3">
           <StatCard title="Total Customers" value={number(m.stats.total.value)} delta={m.stats.total.delta} />
           <StatCard title="New Customers" value={number(m.stats.fresh.value)} delta={m.stats.fresh.delta} />
@@ -212,7 +212,7 @@ export default function CustomersPage() {
 
       {selected && <h2 className="pt-1 text-[20px] font-bold text-[var(--a-ink)]">Customer Details</h2>}
 
-      <div className={cx("grid items-start gap-5", selected && "xl:grid-cols-[minmax(0,1fr)_270px]")}>
+      <div className={cx("grid grid-cols-[minmax(0,1fr)] items-start gap-5", selected && "xl:grid-cols-[minmax(0,1fr)_270px]")}>
         <Card className="px-5 pb-6 pt-5">
           <div className="overflow-x-auto">
             <div className="min-w-[760px]">

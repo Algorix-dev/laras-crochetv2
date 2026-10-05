@@ -13,7 +13,6 @@ import {
   Inbox,
   Mail,
   House,
-  Image as ImageIcon,
   LogOut,
   Menu,
   MessageSquareText,
@@ -59,7 +58,6 @@ const MENU = [
     heading: "Product",
     items: [
       { to: "/admin/products/new", label: "Add Products", icon: CirclePlus, title: "Add Product" },
-      { to: "/admin/media", label: "Product Media", icon: ImageIcon, title: "Product Media" },
       { to: "/admin/products", label: "Product List", icon: PackageSearch, title: "Product List", exact: true },
       { to: "/admin/reviews", label: "Product Reviews", icon: MessageSquareText, title: "Product Reviews" },
     ],
@@ -234,7 +232,7 @@ function Topbar({ title, onMenu }) {
 
       <h1 className="min-w-0 flex-1 truncate text-[24px] font-bold leading-8 text-[var(--a-ink)]">{title}</h1>
 
-      <form onSubmit={submit} role="search" className="hidden h-12 w-full max-w-[406px] items-center rounded-full bg-[var(--a-bg)] pl-6 pr-4 md:flex">
+      <form onSubmit={submit} role="search" className="hidden h-12 w-[150px] shrink-0 items-center rounded-full bg-[var(--a-bg)] pl-5 pr-3 md:flex lg:w-full lg:max-w-[280px] lg:shrink xl:max-w-[406px] lg:pl-6 lg:pr-4">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}

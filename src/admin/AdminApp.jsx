@@ -19,7 +19,7 @@
   /admin?demo shows made-up sample data (see demo.js) — handy for previews.
 */
 import { useCallback, useEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { acceptInvite, adminLogin, adminSession } from "../api";
 import logo from "../assets/lara-crochet-logo.png";
 import { AdminDataProvider, readDemoFlag, useAdmin } from "./AdminData";
@@ -38,7 +38,6 @@ import NewsletterPage from "./pages/NewsletterPage";
 import { ComingSoonPage, ProductListPage } from "./pages/MiscPages";
 import OrdersPage from "./pages/OrdersPage";
 import ProductFormPage from "./pages/ProductFormPage";
-import ProductMediaPage from "./pages/ProductMediaPage";
 import ProductReviewsPage from "./pages/ProductReviewsPage";
 import ShippingPage from "./pages/ShippingPage";
 import TransactionsPage from "./pages/TransactionsPage";
@@ -190,7 +189,8 @@ function Screens() {
           {/* Previously "coming soon" — now fully built */}
           <Route path="coupons" element={<CouponPage />} />
           <Route path="brand" element={<BrandPage />} />
-          <Route path="media" element={<ProductMediaPage />} />
+          {/* Product Media was merged into Product List — keep old links working */}
+          <Route path="media" element={<Navigate to="/admin/products" replace />} />
           <Route path="reviews" element={<ProductReviewsPage />} />
           <Route path="authority" element={<ControlAuthorityPage />} />
           <Route path="*" element={<ComingSoonPage />} />
@@ -200,11 +200,12 @@ function Screens() {
   );
 }
 
-// TIP: matchMedia asks the browser "is the screen narrower than 1024px?" and
-// tells us again if that changes (rotating a phone). To allow tablets,
-// lower 1023 to something like 767.
+// TIP: matchMedia asks the browser "is the screen narrower than 768px?" and
+// tells us again if that changes (rotating a phone). Phones (under 768px) get
+// the "please use a laptop" notice; tablets and every desktop size get the
+// real dashboard. To block tablets again, raise 767 back to 1023.
 function useIsSmallScreen() {
-  const query = "(max-width: 1023px)";
+  const query = "(max-width: 767px)";
   const [small, setSmall] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {
     const mq = window.matchMedia(query);
