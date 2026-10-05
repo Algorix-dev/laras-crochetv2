@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Search } from "lucide-react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -22,7 +22,21 @@ import AccountPage from "./pages/AccountPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import ShopPage from "./pages/ShopPage";
-import AdminApp from "./admin/AdminApp";
+import BrandedLoader from "./components/BrandedLoader";
+
+// TIP: the admin dashboard is a big chunk of code that only Lara uses. React.lazy puts it in
+// its own file, so shoppers never download it. It is fetched the first time someone opens
+// /admin, and the splash below shows while it loads (usually under a second after the first time).
+const AdminApp = lazy(() => import("./admin/AdminApp"));
+
+// full-screen splash for that first load: the same logo + tagline the shop uses while loading
+function AdminSplash() {
+  return (
+    <div className="fixed inset-0 z-[100] bg-[#FAFAFA]">
+      <BrandedLoader minHeight="100vh" />
+    </div>
+  );
+}
 import VisitorTracker from "./components/VisitorTracker";
 import ProductDetail from "./pages/ProductDetail";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -290,7 +304,14 @@ export default function App() {
         <Route path="/signin" element={<SignInPage />} />
         {/* Lara's page for adding / editing pieces — not linked anywhere;
             she signs in with the admin account from server/seedAdmin.js */}
-        <Route path="/admin/*" element={<AdminApp />} />
+        <Route
+          path="/admin/*"
+          element={
+            <Suspense fallback={<AdminSplash />}>
+              <AdminApp />
+            </Suspense>
+          }
+        />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/account/addresses" element={<AddressesPage />} />
 

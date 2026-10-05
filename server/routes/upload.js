@@ -10,19 +10,21 @@ import { requireAdmin } from '../middleware/requireAdmin.js';
 // longer needs the big @imgly package or lots of memory.)
 //
 // The one thing that MUST be handled: JPEG cannot store transparency. So a
-// photo that has see-through pixels is saved as PNG; a normal photo with no
+// photo that has see-through pixels is saved as WebP (it keeps transparency but is
+// roughly 10x smaller than PNG, which keeps the shop fast); a normal photo with no
 // transparency is saved as a smaller JPEG.
 sharp.concurrency(1);
 sharp.cache(false);
 
 // TIP: .rotate() with no arguments reads the photo's EXIF orientation and
 // turns it upright (phone photos often look sideways without it).
-// To change the maximum size, edit the 1600 (pixels wide).
+// To change the maximum size, edit the 1600 (pixels wide). To trade sharpness for
+// speed on see-through photos, change quality: 82 (lower = smaller file, softer photo).
 async function prepareImage(file) {
   const img = sharp(file.buffer).rotate().resize({ width: 1600, withoutEnlargement: true });
   const { hasAlpha } = await sharp(file.buffer).metadata();
   if (hasAlpha) {
-    return { buffer: await img.png({ compressionLevel: 9 }).toBuffer(), format: 'png' };
+    return { buffer: await img.webp({ quality: 82, alphaQuality: 100 }).toBuffer(), format: 'webp' };
   }
   return { buffer: await img.jpeg({ quality: 85 }).toBuffer(), format: 'jpg' };
 }

@@ -68,7 +68,7 @@ export function AdminDataProvider({ demo, onExpired, children }) {
       if (expired) return onExpired?.();
 
       if (ordersResult.status === "fulfilled") setOrders(ordersResult.value);
-      if (productsResult.status === "fulfilled") setProducts(productsResult.value.map(normalizeProduct));
+      if (productsResult.status === "fulfilled") setProducts(productsResult.value.map((p) => normalizeProduct(p, { optimize: false })));
       // visitor numbers are a bonus: if the server doesn't have the analytics
       // route yet, the cards say so instead of the whole dashboard failing
       setAnalytics(analyticsResult.status === "fulfilled" ? analyticsResult.value : null);

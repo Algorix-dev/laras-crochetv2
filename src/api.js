@@ -94,16 +94,32 @@ function prettySlug(slug = "") {
   return slug.split("-").filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 }
 
-export function normalizeProduct(apiProduct) {
+// TIP — FASTER PHOTOS: Cloudinary can resize and compress a photo on the fly if we add
+// "f_auto,q_auto,w_1200" to its link. f_auto = best format for the visitor's browser,
+// q_auto = smart compression, w_1200 = never send more than 1200px wide. The stored
+// original is untouched. To make the photos sharper or lighter, change the 1200.
+// Links that are not Cloudinary links, or already have a transformation, are left alone.
+const CLOUDINARY_OPT = "f_auto,q_auto,w_1200";
+export function optimizeImage(url) {
+  if (typeof url !== "string" || !url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
+  if (/\/upload\/[a-z]_[^/]*\//.test(url)) return url; // already has a transformation
+  return url.replace("/upload/", `/upload/${CLOUDINARY_OPT}/`);
+}
+
+// `options` is only an object when we pass one on purpose. (When used as `.map(normalizeProduct)`
+// the second argument is a number, which is ignored.) The admin passes { optimize: false } so it
+// always works with, and saves back, the ORIGINAL photo links.
+export function normalizeProduct(apiProduct, options) {
+  const optimize = options?.optimize === false ? (u) => u : optimizeImage;
   // TIP — ANGLE SHOTS: `views` holds one photo per direction. Older
   // products (seeded before angle shots existed) only have `images`, so
   // their first image is treated as the FRONT view and the other three
   // angles are simply empty ("" = not uploaded yet).
   const views = {
-    front: apiProduct.views?.front || apiProduct.images?.[0] || "",
-    left: apiProduct.views?.left || "",
-    right: apiProduct.views?.right || "",
-    back: apiProduct.views?.back || "",
+    front: optimize(apiProduct.views?.front || apiProduct.images?.[0] || ""),
+    left: optimize(apiProduct.views?.left || ""),
+    right: optimize(apiProduct.views?.right || ""),
+    back: optimize(apiProduct.views?.back || ""),
   };
 
   return {
