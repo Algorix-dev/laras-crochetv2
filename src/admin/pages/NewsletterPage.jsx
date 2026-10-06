@@ -7,9 +7,15 @@
   Tip: use "Send me a test" first to see exactly how it will look.
 */
 import { useEffect, useState } from "react";
-import { adminSession, getCampaigns, getSubscribers, sendNewsletter } from "../../api";
+import { getCampaigns, getSubscribers, sendNewsletter } from "../../api";
 import { useAdmin } from "../AdminData";
 import { Btn, Card, CardHead, useToast } from "../ui";
+
+// TIP: THE DEFAULT TEST ADDRESS — this is the email the "Send test to" box starts
+// with. To change it, edit the address between the quotes below, save, and
+// redeploy. (Whoever is using the page can still type a different address in the
+// box for a single test.)
+const DEFAULT_TEST_EMAIL = "larascrochethq@gmail.com";
 
 const input =
   "w-full rounded-md border border-[#e1e4e8] bg-[var(--a-bg)] px-4 text-[15px] text-[var(--a-ink)] outline-none focus:border-[var(--a-maroon)]";
@@ -39,7 +45,7 @@ export default function NewsletterPage() {
   const [showList, setShowList] = useState(false);
   // TIP: the test copy goes to this address. It starts as the email you signed
   // in with, and you can type any other address.
-  const [testEmail, setTestEmail] = useState(() => adminSession.profile()?.email || "");
+  const [testEmail, setTestEmail] = useState(DEFAULT_TEST_EMAIL);
 
   const active = subscribers.filter((s) => s.subscribed);
 
