@@ -23,6 +23,16 @@
   /* TIP: Scalable wordmark-to-model overlap for CustomOrderBanner.
      Scales with viewport from -20px on small mobile up to -52px on desktop. */
   --wordmark-model-overlap: clamp(-52px, -3.8vw, -20px);
+
+  /* TIP: height of the fixed top bar. Phones keep 66px. From 768px up it is 84px so the logo
+     (now 72px tall, twice the old 36px) fits inside it. Everything that has to sit below the bar
+     reads this one number, so to change the bar height, change it here only. */
+  --nav-h: 66px;
+}
+@media (min-width: 768px) {
+  :root {
+    --nav-h: 84px;
+  }
 }
 * {
   box-sizing: border-box;

@@ -9,6 +9,7 @@ import { CirclePlus, Copy, Pencil, Trash2, X } from "lucide-react";
 import { useAdmin } from "../AdminData";
 import { cx, dateDMY } from "../fmt";
 import { Btn, Card, CardHead, EmptyState, HeadRow, SearchField, StatusDot, useToast } from "../ui";
+import Select from "../../components/Select";
 
 /* ---------- helpers ---------- */
 
@@ -94,10 +95,10 @@ function CouponModal({ initial, onSave, onClose, saving }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={lbl}>Discount type</label>
-              <select className={inp} value={form.type} onChange={upd("type")}>
+              <Select className={inp} value={form.type} onChange={upd("type")}>
                 <option value="percent">Percentage (%)</option>
                 <option value="fixed">Fixed amount (₦)</option>
-              </select>
+              </Select>
             </div>
             <div>
               <label className={lbl}>{form.type === "percent" ? "Percentage" : "Amount (₦)"}</label>

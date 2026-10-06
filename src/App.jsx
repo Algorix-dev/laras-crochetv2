@@ -259,7 +259,7 @@ function PageOffset({ children }) {
   // /signin and /admin are standalone screens: no navbar, no scroll-rise
   const isSignIn = pathname === "/signin" || pathname.startsWith("/admin");
   return (
-    <div className={isSignIn ? "" : "pt-[66px]"}>
+    <div className={isSignIn ? "" : "pt-[var(--nav-h)]"}>
       <div
         key={pathname.startsWith("/admin") ? "admin" : pathname}
         data-page={isSignIn ? undefined : "true"}

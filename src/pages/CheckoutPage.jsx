@@ -22,6 +22,7 @@ import { NIGERIAN_STATES } from '../data/nigerianStates';
 import { formatBusinessDays, formatDeliveryRange } from '../utils/delivery';
 import Footer from '../components/Footer';
 import laraCrochetLogo from '../assets/lara-crochet-logo.png';
+import Select from "../components/Select";
 
 
 /* TIP: Reusable input field component — renders a label + text input
@@ -373,7 +374,7 @@ export default function CheckoutPage() {
                 {/* TIP: Country/Region dropdown — label above value, matching Figma. */}
                 <label className="block text-base">
                   <span className="mb-1 block text-[var(--muted)]">Country/Region</span>
-                  <select
+                  <Select
                     className="w-full border border-[var(--line)] p-3 text-base"
                     value={country}
                     onChange={(e) => {
@@ -389,7 +390,7 @@ export default function CheckoutPage() {
                     {countries.map((c) => (
                       <option key={c.code} value={c.code}>{c.name}</option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
 
                 {/* TIP: First name and last name side by side. */}
@@ -413,7 +414,7 @@ export default function CheckoutPage() {
                   {country === 'NG' ? (
                     <label className="block text-base">
                       <span className="mb-1 block text-[var(--muted)]">State</span>
-                      <select
+                      <Select
                         name="state"
                         className={`w-full border bg-white px-3 py-3 text-base ${
                           invalidFields.has('state') ? 'border-red-500 bg-red-50' : 'border-[var(--line)]'
@@ -425,7 +426,7 @@ export default function CheckoutPage() {
                         {NIGERIAN_STATES.map((st) => (
                           <option key={st} value={st}>{st}</option>
                         ))}
-                      </select>
+                      </Select>
                     </label>
                   ) : (
                     <Field label="State / Region" optional value={form.state} onChange={updateField('state')} />

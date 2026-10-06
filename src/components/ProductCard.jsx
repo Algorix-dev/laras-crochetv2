@@ -82,6 +82,10 @@ export default function ProductCard({
               : 'h-[272px] lg:aspect-[640/731] lg:h-auto'
           }
         `}
+        /* TIP: if the photo has its own solid background (no see-through parts), the server saved
+           that colour when it was uploaded; painting the card with it hides the box edge around
+           the photo. No saved colour = the normal white card, exactly as before. */
+        style={product.viewBg?.front ? { backgroundColor: product.viewBg.front } : undefined}
       >
         {/* The mobile Figma defines the image frame itself.
             The product image fills the frame without an additional
@@ -106,6 +110,14 @@ export default function ProductCard({
             <ProductPlaceholder className="h-full w-full" />
           )}
         </div>
+
+        {/* TIP: the tag Lara picks on the product form (New, Bestseller...). Change the look with the
+            classes below; bg-[var(--maroon)] is the badge colour. */}
+        {product.tag && (
+          <span className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-[var(--maroon)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white md:bottom-3 md:left-3 md:text-[11px]">
+            {product.tag}
+          </span>
+        )}
 
         {/* ========================================================
             DEFAULT CARD WISHLIST BADGE
@@ -244,6 +256,8 @@ export default function ProductCard({
             `}
           >
             {formatPrice(product.price)}
+            {/* while a discount is running, the normal price stays visible, crossed out */}
+            {product.onSale && <span className="ml-2 font-normal text-[#8a8a8a] line-through">{formatPrice(product.compareAtPrice)}</span>}
           </div>
         </CardLink>
 

@@ -9,6 +9,7 @@ import { CheckCircle, CirclePlus, EyeOff, Star, Trash2 } from "lucide-react";
 import { useAdmin } from "../AdminData";
 import { cx, dateDMY } from "../fmt";
 import { Btn, Card, EmptyState, HeadRow, SearchField, StatusDot, PillTabs, useToast } from "../ui";
+import Select from "../../components/Select";
 
 /* ---------- helpers ---------- */
 
@@ -192,14 +193,14 @@ export default function ProductReviewsPage() {
           </p>
           <form onSubmit={submitManual} className="grid gap-4 text-left sm:grid-cols-2">
             {[
-              ["Piece", <select key="p" required value={form.productId} onChange={(e) => setForm({ ...form, productId: e.target.value })} className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]">
+              ["Piece", <Select key="p" required value={form.productId} onChange={(e) => setForm({ ...form, productId: e.target.value })} className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]">
                 <option value="">Choose a piece</option>
                 {products.map((p) => <option key={p._id || p.id} value={p._id || p.id}>{p.name}</option>)}
-              </select>],
+              </Select>],
               ["Reviewer name", <input key="n" required maxLength={60} value={form.reviewerName} onChange={(e) => setForm({ ...form, reviewerName: e.target.value })} placeholder="e.g. Amara O." className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]" />],
-              ["Rating", <select key="r" value={form.rating} onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })} className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]">
+              ["Rating", <Select key="r" value={form.rating} onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })} className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]">
                 {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} star{n > 1 ? "s" : ""}</option>)}
-              </select>],
+              </Select>],
               ["Date received", <input key="d" type="date" max={today} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="h-11 rounded-md border border-[var(--a-line-strong)] bg-white px-3 text-[15px]" />],
             ].map(([label, control]) => (
               <label key={label} className="flex flex-col gap-1.5 text-[14px] text-[var(--a-ink)]">
@@ -254,13 +255,13 @@ export default function ProductReviewsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-2 text-[14px] text-[var(--a-muted)]">
               Sort by
-              <select value={sort} onChange={(e) => setSort(e.target.value)} className="h-10 rounded-md border border-[var(--a-line-strong)] bg-white px-2 text-[14px] text-[var(--a-ink)]">
+              <Select value={sort} onChange={(e) => setSort(e.target.value)} className="h-10 rounded-md border border-[var(--a-line-strong)] bg-white px-2 text-[14px] text-[var(--a-ink)]">
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>
                 <option value="highest">Highest rating</option>
                 <option value="lowest">Lowest rating</option>
                 <option value="product">Product A–Z</option>
-              </select>
+              </Select>
             </label>
             <SearchField value={query} onChange={setQuery} placeholder="Search by product or reviewer…" className="w-[240px]" />
           </div>

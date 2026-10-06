@@ -20,7 +20,7 @@ export default function AboutPage() {
           viewport, so the photo on the left still lines up with it.
           100dvh (not 100vh) so it stays right when a phone/tablet browser
           bar shows or hides; the 66px matches the fixed navbar height. */}
-      <main className="flex flex-col md:h-[calc(100dvh-66px)] md:flex-row md:items-stretch">
+      <main className="flex flex-col md:h-[calc(100dvh-var(--nav-h))] md:flex-row md:items-stretch">
         {/* Left image — desktop only. On mobile, Figma wants the heading
             first and this photo second, so it's hidden here and a mobile-
             only copy is rendered inline below instead of restructuring the

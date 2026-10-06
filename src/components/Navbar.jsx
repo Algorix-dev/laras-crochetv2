@@ -203,7 +203,7 @@ export default function Navbar() {
         */}
         <div
           className="
-            grid h-[66px] grid-cols-[auto_1fr_auto] items-center gap-4
+            grid h-[var(--nav-h)] grid-cols-[auto_1fr_auto] items-center gap-4
             px-5 md:px-8 lg:px-10 xl:px-[15.83%]
             md:grid-cols-[auto_1fr_auto] lg:grid-cols-[1fr_auto_1fr]
           "
@@ -213,7 +213,7 @@ export default function Navbar() {
             <img
               src={brand.logoUrl || laraCrochetLogo}
               alt="Lara's Crochet"
-              className="h-9 w-auto max-w-none shrink-0"
+              className="h-9 w-auto max-w-none shrink-0 md:h-[72px]"
             />
           </Link>
 

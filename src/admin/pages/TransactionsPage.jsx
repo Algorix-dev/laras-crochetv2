@@ -4,6 +4,7 @@
   Payments go through Paystack, so the "card" shown here is Paystack (the
   template's fake bank card is not real data).
 */
+import { downloadCsv } from "../csv";
 import { useMemo, useState } from "react";
 import { ArrowUpDown, Ellipsis, ExternalLink, ListFilter } from "lucide-react";
 import { useAdmin } from "../AdminData";
@@ -40,7 +41,12 @@ function PaystackCard({ gateway, onView }) {
     <Card className="p-4 xl:row-span-2">
       <div className="flex items-center justify-between">
         <h3 className="text-[18px] font-bold text-[var(--a-ink)]">Payment Method</h3>
-        <Kebab />
+        <Kebab
+          items={[
+            { label: "Open Paystack dashboard", onClick: () => window.open("https://dashboard.paystack.com", "_blank", "noopener") },
+            { label: "See payment history", onClick: onView },
+          ]}
+        />
       </div>
 
       <div className="mt-3 grid gap-4 sm:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
@@ -123,6 +129,15 @@ export default function TransactionsPage() {
     return list;
   }, [m.rows, tab, query, methodFilter, oldestFirst]);
 
+  // TIP: downloads what is on screen right now (after the tab, search and method filter)
+  function exportCsv() {
+    downloadCsv(
+      `transactions-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Customer", "Product", "Method", "Status", "Reference"],
+      rows.map((r) => [r.customer, r.name, r.method, r.status, r.raw?.paystackReference || ""])
+    );
+  }
+
   const pages = pageCount(rows.length, PAGE_SIZE);
   const current = Math.min(page, pages);
   const visible = rows.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
@@ -185,9 +200,17 @@ export default function TransactionsPage() {
             <IconBtn label={oldestFirst ? "Showing oldest first" : "Showing newest first"} onClick={() => setOldestFirst((o) => !o)}>
               <ArrowUpDown size={18} />
             </IconBtn>
-            <IconBtn label="More">
-              <Ellipsis size={18} />
-            </IconBtn>
+            <DropMenu
+              trigger={
+                <IconBtn label="More">
+                  <Ellipsis size={18} />
+                </IconBtn>
+              }
+              items={[
+                { label: "Export as CSV", onClick: exportCsv },
+                { label: "Clear filters", onClick: () => { setTab("all"); setQuery(""); setMethodFilter("any"); setPage(1); } },
+              ]}
+            />
           </div>
         </div>
 

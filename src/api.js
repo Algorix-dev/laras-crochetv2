@@ -110,7 +110,20 @@ export function optimizeImage(url) {
 // the second argument is a number, which is ignored.) The admin passes { optimize: false } so it
 // always works with, and saves back, the ORIGINAL photo links.
 export function normalizeProduct(apiProduct, options) {
-  const optimize = options?.optimize === false ? (u) => u : optimizeImage;
+  const admin = options?.optimize === false; // the admin passes this: it needs the raw saved values
+  const optimize = admin ? (u) => u : optimizeImage;
+
+  // TIP — SALE PRICE. In the shop, while a sale is running, `price` becomes the discounted price and
+  // `compareAtPrice` keeps the normal one (shown crossed out). Everything that already reads `price`
+  // (cards, bag, hero) then uses the sale price with no other change. The server makes the same
+  // decision again at payment (server/utils/pricing.js), so the browser can never undercharge.
+  const now = Date.now();
+  const sale = Number(apiProduct.salePrice);
+  const saleOn =
+    !admin &&
+    Number.isFinite(sale) && sale > 0 && sale < Number(apiProduct.price) &&
+    (!apiProduct.saleStart || now >= new Date(apiProduct.saleStart).getTime()) &&
+    (!apiProduct.saleEnd || now <= new Date(apiProduct.saleEnd).getTime());
   // TIP — ANGLE SHOTS: `views` holds one photo per direction. Older
   // products (seeded before angle shots existed) only have `images`, so
   // their first image is treated as the FRONT view and the other three
@@ -125,6 +138,9 @@ export function normalizeProduct(apiProduct, options) {
   return {
     ...apiProduct,
     id: apiProduct._id,
+    price: saleOn ? sale : apiProduct.price,
+    compareAtPrice: saleOn ? apiProduct.price : null,
+    onSale: saleOn,
     views,
     image: views.front || undefined,
     placements: apiProduct.placements || [],
@@ -229,7 +245,9 @@ export async function adminLogin(email, password) {
 // transparent background as-is, stores it on Cloudinary and returns its URL. (That route wants
 // multipart/form-data, so this can't reuse authenticatedFetch, which
 // forces a JSON Content-Type.)
-export async function uploadPhoto(file) {
+// Same as uploadPhoto but also returns the photo's edge colour ("" when it has see-through parts),
+// so the product card can be painted the same colour behind it.
+export async function uploadPhotoWithBg(file) {
   const body = new FormData();
   body.append("images", file);
   const res = await fetch(`${API_URL}/api/upload`, {
@@ -240,7 +258,10 @@ export async function uploadPhoto(file) {
   const data = await res.json().catch(() => ({}));
   if (res.status === 401) throw new Error("SESSION_EXPIRED");
   if (!res.ok) throw new Error(data.error || "Upload failed");
-  return data.urls[0];
+  return { url: data.urls[0], bg: data.bgs?.[0] || "" };
+}
+export async function uploadPhoto(file) {
+  return (await uploadPhotoWithBg(file)).url;
 }
 
 // POST when there's no id (new piece), PUT when there is (editing one).

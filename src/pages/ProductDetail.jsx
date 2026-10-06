@@ -45,6 +45,7 @@ import BrandedLoader from '../components/BrandedLoader';
 import InlineLoader from '../components/InlineLoader';
 import { shouldShowSplash } from '../utils/splashOnce';
 import verifiedBadge from '../assets/verified-badge.png';
+import Select from "../components/Select";
 // TIP: the source files on disk are mislabeled relative to what they
 // actually show — review-restaurant.webp is the beach photo, and
 // review-beach.webp is the restaurant photo. Rather than have every
@@ -623,11 +624,11 @@ function WriteReview({ productId, onSubmitted }) {
           </div>
           <input className={box} placeholder="Title (optional)" maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} />
           <textarea className={box} rows={4} required minLength={5} maxLength={2000} placeholder="How was it?" value={text} onChange={(e) => setText(e.target.value)} />
-          <select className={box} value={fit} onChange={(e) => setFit(e.target.value)} aria-label="How did it fit?">
+          <Select className={box} value={fit} onChange={(e) => setFit(e.target.value)} aria-label="How did it fit?">
             <option value="small">Runs small</option>
             <option value="true">True to size</option>
             <option value="large">Runs large</option>
-          </select>
+          </Select>
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
           <button type="submit" disabled={busy} className="h-12 bg-[var(--maroon)] px-6 text-base font-bold text-[var(--white-warm)] disabled:opacity-60">
             {busy ? 'Sending…' : 'Submit review'}
@@ -707,6 +708,15 @@ export default function ProductDetail() {
      selections to the cart context so we know exactly which
      variant they ordered. Initialized once the product loads —
      see the effect below. */
+  // TIP — LARA'S OWN COLOURS. If she added colours / shades on the product form, those are what
+  // customers see. If she left them empty, the standard Figma sets above are used, as before.
+  const colorChoices = product?.colorOptions?.length
+    ? product.colorOptions.map((o) => ({ label: o.name, color: o.hex }))
+    : FIGMA_COLOR_MIXES;
+  const shadeChoices = product?.shadeOptions?.length
+    ? product.shadeOptions.map((o) => ({ label: o.name, color: o.hex }))
+    : FIGMA_SHADES;
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [color, setColor] = useState(null);
   const [shade, setShade] = useState(null);
@@ -720,8 +730,8 @@ export default function ProductDetail() {
   useEffect(() => {
     if (!product) return;
     setSelectedImage(0);
-    setColor(FIGMA_COLOR_MIXES[0]?.label ?? null);
-    setShade(FIGMA_SHADES[0]?.label ?? null);
+    setColor((product.colorOptions?.[0]?.name ?? FIGMA_COLOR_MIXES[0]?.label) ?? null);
+    setShade((product.shadeOptions?.[0]?.name ?? FIGMA_SHADES[0]?.label) ?? null);
     setSize(FIGMA_SIZES[0] ?? null);
   }, [product]);
 
@@ -829,7 +839,12 @@ export default function ProductDetail() {
                   photo with visible gray padding either side. Both are
                   fixed here: real fixed dimensions instead of stretch,
                   and lg: to match the grid breakpoint above. */}
-              <div className="flex flex-col items-center justify-center px-5 py-5 lg:px-[19.58%] lg:py-5">
+              <div
+                className="flex flex-col items-center justify-center px-5 py-5 lg:px-[19.58%] lg:py-5"
+                /* TIP: when this photo has its own solid background, the panel around it is painted the
+                   same colour (measured once at upload), so no box edge shows. No saved colour = unchanged. */
+                style={product.viewBg?.[angleShots[selectedImage]?.key] ? { backgroundColor: product.viewBg[angleShots[selectedImage].key] } : undefined}
+              >
                 <div className="h-[380px] w-[145px] lg:h-[602px] lg:w-[229px]">
                   {angleShots[selectedImage]?.src && (
                     <img
@@ -931,6 +946,10 @@ export default function ProductDetail() {
             </h1>
             <div className="mt-4 flex items-center gap-4">
               <p className="text-xl">{formatPrice(product.price)}</p>
+              {product.onSale && <p className="text-base text-[var(--muted)] line-through">{formatPrice(product.compareAtPrice)}</p>}
+              {product.tag && (
+                <span className="rounded-sm bg-[var(--maroon)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">{product.tag}</span>
+              )}
               <button
                 onClick={() => toggleWishlist(product.id)}
                 aria-label="Toggle wishlist"
@@ -942,6 +961,8 @@ export default function ProductDetail() {
               </button>
               <ShareButton product={product} />
             </div>
+            {/* TIP: shows when "Tax Included: Yes" is set on the product form in the admin */}
+            {product.taxIncluded !== false && <p className="mt-1 text-xs text-[var(--muted)]">Tax included</p>}
 
             {/* TIP: fixed from text-sm/leading-7 (14px/28px) — the
                 real Figma CSS export specifies 16px font-size with a
@@ -964,7 +985,7 @@ export default function ProductDetail() {
                     gap-3 (12px). Small, but it's what makes the row
                     width match Figma's measurements. */}
                 <div className="flex flex-wrap gap-[9px]">
-                  {FIGMA_COLOR_MIXES.map((option) => (
+                  {colorChoices.map((option) => (
                     <ColorSwatch
                       key={option.label}
                       option={option}
@@ -979,7 +1000,7 @@ export default function ProductDetail() {
               <div>
                 <p className="mb-3 text-sm font-semibold">Shades</p>
                 <div className="flex flex-wrap gap-[9px]">
-                  {FIGMA_SHADES.map((option) => (
+                  {shadeChoices.map((option) => (
                     <ShadeSwatch
                       key={option.label}
                       option={option}

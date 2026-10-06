@@ -17,6 +17,7 @@ import { countries } from "../../data/countries";
 import { NIGERIAN_STATES } from "../../data/nigerianStates";
 import { useAdmin } from "../AdminData";
 import { Btn, Card, CardHead, Checkbox, useToast } from "../ui";
+import Select from "../../components/Select";
 
 const DEFAULT_KEY = "*|";
 const NG_KEY = "NG|";
@@ -305,7 +306,7 @@ export default function ShippingPage() {
             One price per country. Any country not listed here uses the default price.
           </p>
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <select
+            <Select
               value={addCountry}
               onChange={(e) => setAddCountry(e.target.value)}
               aria-label="Choose a country to add"
@@ -317,7 +318,7 @@ export default function ShippingPage() {
                   {c.name}
                 </option>
               ))}
-            </select>
+            </Select>
             <Btn
               variant="outline"
               className="h-10 rounded-md px-4"

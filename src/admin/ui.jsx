@@ -12,7 +12,8 @@ import {
   EllipsisVertical,
   Search,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAdmin } from "./AdminData";
 import { cx } from "./fmt";
 
 /* ---------------- surfaces ---------------- */
@@ -31,15 +32,30 @@ export function Card({ className, children, ...rest }) {
   );
 }
 
-export function Kebab({ className }) {
+// TIP: the three dots on a card. Every card now opens a small menu:
+//   to    = adds "View details" which opens that page (e.g. to="/admin/orders")
+//   items = replace the whole menu with your own [{ label, onClick }]
+// Without either, it still offers "Refresh numbers", which reloads the dashboard data.
+export function Kebab({ className, to, items }) {
+  const { refresh } = useAdmin();
+  const navigate = useNavigate();
+  const menu = items ?? [
+    ...(to ? [{ label: "View details", onClick: () => navigate(to) }] : []),
+    { label: "Refresh numbers", onClick: () => refresh() },
+  ];
   return (
-    <button
-      type="button"
-      aria-label="More options"
-      className={cx("flex size-6 items-center justify-center text-[#4b5563] hover:text-[var(--a-maroon)]", className)}
-    >
-      <EllipsisVertical size={18} strokeWidth={2.4} />
-    </button>
+    <DropMenu
+      trigger={
+        <button
+          type="button"
+          aria-label="More options"
+          className={cx("flex size-6 items-center justify-center text-[#4b5563] hover:text-[var(--a-maroon)]", className)}
+        >
+          <EllipsisVertical size={18} strokeWidth={2.4} />
+        </button>
+      }
+      items={menu}
+    />
   );
 }
 

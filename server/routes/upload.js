@@ -60,11 +60,37 @@ function receiveImages(req, res, next) {
   });
 }
 
+// TIP — BACKGROUND COLOUR OF A PHOTO. We shrink the photo to a tiny 24x24 picture (this takes
+// a few milliseconds and is thrown away) and average its outer ring of pixels. If the photo has
+// see-through parts we return '' because then the card's own background shows through anyway.
+// The result is saved with the product so the browser never has to measure anything.
+async function edgeColour(buffer) {
+  try {
+    const { hasAlpha } = await sharp(buffer).metadata();
+    if (hasAlpha) return '';
+    const N = 24;
+    const { data } = await sharp(buffer).rotate().resize(N, N, { fit: 'fill' }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    let r = 0, g = 0, b = 0, count = 0;
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        if (x > 1 && x < N - 2 && y > 1 && y < N - 2) continue; // only the outer ring
+        const i = (y * N + x) * 3;
+        r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
+      }
+    }
+    const hex = (v) => Math.round(v / count).toString(16).padStart(2, '0');
+    return `#${hex(r)}${hex(g)}${hex(b)}`;
+  } catch {
+    return '';
+  }
+}
+
 router.post('/', requireAdmin, receiveImages, async (req, res) => {
   try {
     if (!req.files?.length) return res.status(400).json({ error: 'No photo was sent.' });
 
     const urls = [];
+    const bgs = [];
     for (const file of req.files) {
       let prepared;
       try {
@@ -75,8 +101,9 @@ router.post('/', requireAdmin, receiveImages, async (req, res) => {
       }
       const result = await uploadBufferToCloudinary(prepared.buffer, prepared.format);
       urls.push(result.secure_url);
+      bgs.push(await edgeColour(file.buffer));
     }
-    res.json({ urls });
+    res.json({ urls, bgs });
   } catch (err) {
     console.error('Upload failed:', err);
     res.status(500).json({ error: 'Failed to process one or more images.' });

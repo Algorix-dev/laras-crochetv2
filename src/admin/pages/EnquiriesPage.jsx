@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getEnquiries, updateEnquiryStatus } from "../../api";
 import { useAdmin } from "../AdminData";
 import { Btn, Card, CardHead, useToast } from "../ui";
+import Select from "../../components/Select";
 
 const STATUSES = [
   { value: "new", label: "New" },
@@ -129,13 +130,13 @@ export default function EnquiriesPage() {
             </div>
             <label className="text-[13px] text-[var(--a-muted)]">
               Status
-              <select value={r.status} onChange={(e) => changeStatus(r._id, e.target.value)} className={`${select} mt-1 block w-40`}>
+              <Select value={r.status} onChange={(e) => changeStatus(r._id, e.target.value)} className={`${select} mt-1 block w-40`}>
                 {STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">

@@ -233,9 +233,17 @@ export default function CategoriesPage() {
               placeholder="Search your product"
               className="w-[200px] max-w-full"
             />
-            <IconBtn label="Show all categories" onClick={() => setCat("")}>
-              <ListFilter size={18} />
-            </IconBtn>
+            <DropMenu
+              trigger={
+                <IconBtn label="Filter by category">
+                  <ListFilter size={18} />
+                </IconBtn>
+              }
+              items={[
+                { label: "All categories", active: !cat, onClick: () => { setCat(""); setPage(1); } },
+                ...cards.map((c) => ({ label: c.label, active: cat === c.slug, onClick: () => { setCat(c.slug); setPage(1); } })),
+              ]}
+            />
             <IconBtn label="Add a product" onClick={() => navigate("/admin/products/new")}>
               <CirclePlus size={18} />
             </IconBtn>

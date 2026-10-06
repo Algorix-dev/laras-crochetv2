@@ -1,3 +1,4 @@
+import { currentPrice } from '../utils/pricing.js';
 import { Router } from 'express';
 import mongoose from 'mongoose';
 import Coupon from '../models/Coupon.js';
@@ -20,7 +21,7 @@ router.post('/validate', async (req, res) => {
       const qty = Number(item.quantity);
       if (!mongoose.isValidObjectId(item.productId) || !Number.isInteger(qty) || qty < 1) continue;
       const product = await Product.findById(item.productId).select('price');
-      if (product) subtotal += product.price * qty;
+      if (product) subtotal += currentPrice(product) * qty;
     }
 
     const coupon = await Coupon.findOne({ code });

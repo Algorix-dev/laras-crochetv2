@@ -49,6 +49,26 @@ const productSchema = new mongoose.Schema(
     // is always in the Shop). 'hero' = the carousel at the top of the home
     // page, 'featured' = the "Shop Our Pieces" row on the home page.
     placements: [{ type: String, enum: ['hero', 'featured'] }],
+    // TIP — PRICING EXTRAS (all optional). salePrice must be lower than price. The sale runs
+    // from saleStart to saleEnd (either can be empty). utils/pricing.js decides if it is live.
+    salePrice: { type: Number, min: 0, default: null },
+    saleStart: { type: Date, default: null },
+    saleEnd: { type: Date, default: null },
+    // true = the price already includes tax (the shop shows a small "Tax included" note)
+    taxIncluded: { type: Boolean, default: true },
+    // a small badge on the card and product page: 'New', 'Bestseller', ... (see TAGS in routes/products.js)
+    tag: { type: String, default: '' },
+
+    // TIP — IMAGE BACKGROUND COLOUR per photo. When a photo has no see-through parts, the
+    // upload measures its edge colour once and saves it here, so the product card / page can
+    // be painted the same colour and no visible box appears around the photo. Empty = unknown.
+    viewBg: {
+      front: { type: String, default: '' },
+      left: { type: String, default: '' },
+      right: { type: String, default: '' },
+      back: { type: String, default: '' },
+    },
+
     colors: [{ type: String }], // hex codes, e.g. '#1c1c22'  (older pieces)
     shades: [{ type: String }],
     colorOptions: [optionSchema], // { name, hex } — edited in the admin page

@@ -14,12 +14,13 @@
 */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CalendarDays, CirclePlus, Image as ImageIcon, Pencil, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
-import { deleteProduct, getCategories, saveProduct, uploadPhoto } from "../../api";
+import { CirclePlus, Image as ImageIcon, Pencil, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
+import { deleteProduct, getCategories, saveProduct, uploadPhotoWithBg } from "../../api";
 import { useAdmin } from "../AdminData";
 import { cx } from "../fmt";
 import { Btn, Card, IconBtn, useDismiss, useToast } from "../ui";
 import ColorOptionsEditor from "../ColorOptionsEditor";
+import Select from "../../components/Select";
 
 const ANGLES = [
   { key: "front", label: "Front" },
@@ -39,6 +40,13 @@ const DEFAULT_CATEGORY_OPTIONS = [
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 const DEFAULT_SIZES = ["XS", "S", "M", "XL", "XXL"];
 const SOON = "Coming soon";
+
+// TIP: the tags Lara can pick from. The words must also exist in TAGS in server/routes/products.js,
+// otherwise the server ignores them. To add a tag, add it in both places.
+const PRODUCT_TAGS = ["New", "Bestseller", "Limited edition", "Back in stock", "Made to order"];
+
+// a saved date -> the "2026-10-05" text a date box understands (and back is done by the server)
+const dateText = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
 
 const input =
   "h-11 w-full rounded-md border border-[#eceef1] bg-[var(--a-bg)] px-3.5 text-[15px] text-[var(--a-ink)] outline-none focus:border-[var(--a-maroon)] disabled:cursor-not-allowed disabled:opacity-60";
@@ -201,6 +209,12 @@ export default function ProductFormPage() {
   const [colorOptions, setColorOptions] = useState([]);
   const [shadeOptions, setShadeOptions] = useState([]);
   const [views, setViews] = useState(blank);
+  const [viewBg, setViewBg] = useState(blank); // edge colour of each photo (measured by the server)
+  const [salePrice, setSalePrice] = useState("");
+  const [saleStart, setSaleStart] = useState("");
+  const [saleEnd, setSaleEnd] = useState("");
+  const [taxIncluded, setTaxIncluded] = useState(true);
+  const [tag, setTag] = useState("");
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState(DEFAULT_CATEGORY_OPTIONS);
@@ -229,6 +243,12 @@ export default function ProductFormPage() {
     setColorOptions(piece?.colorOptions ?? []);
     setShadeOptions(piece?.shadeOptions ?? []);
     setViews(piece?.views ?? blank);
+    setViewBg({ ...blank, ...(piece?.viewBg || {}) });
+    setSalePrice(piece?.salePrice != null ? String(piece.salePrice) : "");
+    setSaleStart(dateText(piece?.saleStart));
+    setSaleEnd(dateText(piece?.saleEnd));
+    setTaxIncluded(piece?.taxIncluded !== false);
+    setTag(piece?.tag ?? "");
     setError("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, piece?._id]);
@@ -242,8 +262,9 @@ export default function ProductFormPage() {
     setError("");
     setUploading((s) => ({ ...s, [key]: true }));
     try {
-      const url = demo ? URL.createObjectURL(file) : await uploadPhoto(file);
+      const { url, bg } = demo ? { url: URL.createObjectURL(file), bg: "" } : await uploadPhotoWithBg(file);
       setViews((s) => ({ ...s, [key]: url }));
+      setViewBg((s) => ({ ...s, [key]: bg }));
     } catch (err) {
       setError(err.message === "SESSION_EXPIRED" ? "Your session ended — please sign in again." : `The ${key} photo didn't upload: ${err.message}`);
     } finally {
@@ -275,6 +296,9 @@ export default function ProductFormPage() {
     if (!name.trim()) return setError("Give the piece a name.");
     if (!priceNumber || priceNumber < 0) return setError("Enter the price in naira.");
     if (!category) return setError("Choose a category.");
+    const saleNumber = salePrice === "" ? null : Number(salePrice);
+    if (saleNumber != null && (!(saleNumber > 0) || saleNumber >= priceNumber)) return setError("The discounted price must be lower than the normal price.");
+    if (saleStart && saleEnd && saleEnd < saleStart) return setError("The sale end date is before its start date.");
     if (!views.front) return setError("The front photo is required — it's the main photo everywhere.");
     if (Object.values(uploading).some(Boolean)) return setError("Wait for the photos to finish uploading.");
 
@@ -287,7 +311,17 @@ export default function ProductFormPage() {
     setSaving(true);
     try {
       await saveProduct(
-        { name: name.trim(), price: priceNumber, category, stock: stockNumber, description, sizes, placements, views, colorOptions, shadeOptions },
+        {
+          name: name.trim(), price: priceNumber, category, stock: stockNumber, description, sizes, placements, views, colorOptions, shadeOptions,
+          // pricing extras — empty boxes are sent as null so a sale can also be switched OFF by clearing them
+          salePrice: saleNumber,
+          // TIP: the end date counts through the END of that day, so a sale "ending on 12 Dec" still runs on the 12th
+          saleStart: saleStart ? `${saleStart}T00:00:00` : null,
+          saleEnd: saleEnd ? `${saleEnd}T23:59:59` : null,
+          taxIncluded,
+          tag,
+          viewBg,
+        },
         piece?._id
       );
       await refresh();
@@ -362,48 +396,66 @@ export default function ProductFormPage() {
           </Field>
 
           <Section>Pricing</Section>
+          {/* TIP: the ₦ sign and "NGN" sit in their own fixed boxes OUTSIDE the typing area, so what
+              you type can never run underneath them. To widen the ₦ box, change w-11. */}
           <Field label="Product Price">
-            <div className="flex h-11 items-center rounded-md border border-[#eceef1] bg-[var(--a-bg)] focus-within:border-[var(--a-maroon)]">
-              <span className="pl-3.5 text-[15px] text-[var(--a-ink)]">₦</span>
+            <div className="flex h-11 items-stretch overflow-hidden rounded-md border border-[#eceef1] bg-[var(--a-bg)] focus-within:border-[var(--a-maroon)]">
+              <span className="flex w-11 shrink-0 items-center justify-center border-r border-[#d8dbe0] bg-[var(--a-pink)] text-[16px] font-bold text-[var(--a-ink)]">₦</span>
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value.replace(/[^\d.]/g, ""))}
                 inputMode="decimal"
-                className="h-full min-w-0 flex-1 bg-transparent px-2 text-[15px] text-[var(--a-ink)] outline-none"
+                className="h-full min-w-0 flex-1 bg-transparent px-3 text-[15px] text-[var(--a-ink)] outline-none"
                 placeholder="0"
               />
-              <span className="mr-3 border-l border-[#d8dbe0] pl-3 text-[14px] text-[var(--a-muted)]">NGN</span>
+              <span className="flex shrink-0 items-center border-l border-[#d8dbe0] px-3 text-[14px] text-[var(--a-muted)]">NGN</span>
             </div>
           </Field>
 
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
             <Field label="Discounted Price" hint="(Optional)">
-              <div className="flex h-11 items-center gap-2 rounded-md border border-[#eceef1] bg-[var(--a-bg)] px-1.5 opacity-60" title={SOON}>
-                <span className="flex h-8 w-8 items-center justify-center rounded bg-[var(--a-pink)] text-[14px] font-bold text-[var(--a-ink)]">₦</span>
-                <input disabled placeholder="0" className="min-w-0 flex-1 bg-transparent text-[15px] outline-none" />
+              <div className="flex h-11 items-stretch overflow-hidden rounded-md border border-[#eceef1] bg-[var(--a-bg)] focus-within:border-[var(--a-maroon)]">
+                <span className="flex w-11 shrink-0 items-center justify-center border-r border-[#d8dbe0] bg-[var(--a-pink)] text-[16px] font-bold text-[var(--a-ink)]">₦</span>
+                <input
+                  value={salePrice}
+                  onChange={(e) => setSalePrice(e.target.value.replace(/[^\d.]/g, ""))}
+                  inputMode="decimal"
+                  placeholder="0"
+                  aria-label="Discounted price in naira"
+                  className="h-full min-w-0 flex-1 bg-transparent px-3 text-[15px] text-[var(--a-ink)] outline-none"
+                />
               </div>
+              <p className="mt-1 text-[12px] text-[var(--a-muted)]">Must be lower than the normal price. Leave empty for no discount.</p>
             </Field>
             <Field label="Tax Included">
-              <div className="space-y-1 opacity-60" title={SOON}>
-                <label className="flex items-center gap-2 text-[15px] font-bold text-[var(--a-ink)]">
-                  <input type="radio" disabled defaultChecked className={check} /> Yes
-                </label>
-                <label className="flex items-center gap-2 text-[15px] text-[var(--a-ink)]">
-                  <input type="radio" disabled className={check} /> No
-                </label>
+              <div className="space-y-1">
+                {[[true, "Yes"], [false, "No"]].map(([val, label]) => (
+                  <label key={label} className={cx("flex cursor-pointer items-center gap-2 text-[15px] text-[var(--a-ink)]", taxIncluded === val && "font-bold")}>
+                    <input type="radio" name="taxIncluded" checked={taxIncluded === val} onChange={() => setTaxIncluded(val)} className={check} /> {label}
+                  </label>
+                ))}
               </div>
+              <p className="mt-1 text-[12px] text-[var(--a-muted)]">"Yes" shows a small "Tax included" note on the product page. Customers always pay the price shown.</p>
             </Field>
           </div>
 
-          <Field label="Expiration" className="mt-5">
-            <div className="grid gap-5 sm:grid-cols-2 opacity-60" title={SOON}>
-              {["Start", "End"].map((label) => (
-                <div key={label} className="flex h-11 items-center justify-between rounded-md border border-[#eceef1] bg-[var(--a-bg)] px-3.5 text-[15px] text-[var(--a-muted)]">
-                  {label}
-                  <CalendarDays size={17} className="text-[var(--a-ink)]" />
-                </div>
+          <Field label="Expiration" hint="(for the discount)" className="mt-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              {[["Start", saleStart, setSaleStart, ""], ["End", saleEnd, setSaleEnd, saleStart]].map(([label, val, set, min]) => (
+                <label key={label} className="flex h-11 items-center justify-between gap-2 rounded-md border border-[#eceef1] bg-[var(--a-bg)] px-3.5 text-[15px] text-[var(--a-ink)] focus-within:border-[var(--a-maroon)]">
+                  <span className="shrink-0 text-[var(--a-muted)]">{label}</span>
+                  <input
+                    type="date"
+                    value={val}
+                    min={min || undefined}
+                    onChange={(e) => set(e.target.value)}
+                    aria-label={`Discount ${label.toLowerCase()} date`}
+                    className="h-full min-w-0 flex-1 bg-transparent text-right outline-none"
+                  />
+                </label>
               ))}
             </div>
+            <p className="mt-1 text-[12px] text-[var(--a-muted)]">The discount only applies between these dates. Leave both empty and it applies until you remove it.</p>
           </Field>
 
           <Section>Inventory</Section>
@@ -417,14 +469,14 @@ export default function ProductFormPage() {
               />
             </Field>
             <Field label="Stock Status">
-              <select
+              <Select
                 value={stockNumber > 0 ? "in" : "out"}
                 onChange={(e) => setStock(e.target.value === "out" ? "0" : stockNumber > 0 ? stock : "1")}
                 className={input}
               >
                 <option value="in">In Stock</option>
                 <option value="out">Out of Stock</option>
-              </select>
+              </Select>
             </Field>
           </div>
 
@@ -483,23 +535,28 @@ export default function ProductFormPage() {
 
         <Card className="p-5">
           <Section>Upload Product Image</Section>
-          <PhotoPicker views={views} uploading={uploading} onFile={onFile} onClear={(key) => setViews((s) => ({ ...s, [key]: "" }))} />
+          <PhotoPicker views={views} uploading={uploading} onFile={onFile} onClear={(key) => { setViews((s) => ({ ...s, [key]: "" })); setViewBg((s) => ({ ...s, [key]: "" })); }} />
 
           <Section>Categories</Section>
           <Field label="Product Categories">
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className={cx(input, "shadow-[0_1px_2px_rgba(16,24,40,0.08)]")}>
+            <Select value={category} onChange={(e) => setCategory(e.target.value)} className={cx(input, "shadow-[0_1px_2px_rgba(16,24,40,0.08)]")}>
               <option value="">Select your product</option>
               {categoryOptions.map(([slug, label]) => (
                 <option key={slug} value={slug}>
                   {label}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
-          <Field label="Product Tag" className="mt-5">
-            <select disabled title={SOON} className={input}>
-              <option>Select your product</option>
-            </select>
+          <Field label="Product Tag" hint="(Optional)" className="mt-5">
+            <Select value={tag} onChange={(e) => setTag(e.target.value)} className={input}>
+              <option value="">No tag</option>
+              {PRODUCT_TAGS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </Select>
           </Field>
 
           <div className="mt-5 space-y-6">

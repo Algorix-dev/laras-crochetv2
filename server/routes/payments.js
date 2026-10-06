@@ -1,3 +1,4 @@
+import { currentPrice } from '../utils/pricing.js';
 import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { Router } from 'express';
@@ -70,11 +71,12 @@ router.post('/initialize', async (req, res) => {
     }
     const product = await Product.findById(item.productId);
     if (!product) return res.status(400).json({ error: `Product ${item.productId} not found` });
-    totalAmount += product.price * quantity;
+    const livePrice = currentPrice(product); // sale price while a sale is running
+    totalAmount += livePrice * quantity;
     orderItems.push({
       product: product._id,
       name: product.name,
-      price: product.price,
+      price: livePrice,
       color: item.color,
       size: item.size,
       quantity,

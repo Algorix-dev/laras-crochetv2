@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getCustomOrders, updateCustomOrderStatus } from "../../api";
 import { useAdmin } from "../AdminData";
 import { Btn, Card, CardHead, useToast } from "../ui";
+import Select from "../../components/Select";
 
 const STATUSES = [
   { value: "new", label: "New" },
@@ -152,7 +153,7 @@ export default function CustomOrdersPage() {
               </div>
               <label className="text-[13px] text-[var(--a-muted)]">
                 Status
-                <select
+                <Select
                   value={r.status}
                   onChange={(e) => changeStatus(r._id, e.target.value)}
                   className={`${select} mt-1 block w-40`}
@@ -162,7 +163,7 @@ export default function CustomOrdersPage() {
                       {s.label}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
             </div>
 

@@ -10,6 +10,7 @@ import { useAdmin } from "./AdminData";
 import { dateTimeShort, naira } from "./fmt";
 import { ORDER_STATUS_KEYS, STATUS_LABEL, STATUS_TONE, methodLabel } from "./model";
 import { StatusDot, useToast } from "./ui";
+import Select from "../components/Select";
 
 function Row({ label, children }) {
   return (
@@ -74,7 +75,7 @@ export default function OrderDrawer({ order, onClose }) {
             <label htmlFor="order-status" className="text-[14px] font-bold text-[var(--a-ink)]">
               Status
             </label>
-            <select
+            <Select
               id="order-status"
               value={order.status}
               onChange={change}
@@ -86,7 +87,7 @@ export default function OrderDrawer({ order, onClose }) {
                   {STATUS_LABEL[key]}
                 </option>
               ))}
-            </select>
+            </Select>
             <p className="mt-2 flex items-center gap-3 text-[14px]">
               <StatusDot tone={paid ? "green" : "red"} plain>
                 {paid ? "Paid" : "Unpaid"}

@@ -12,6 +12,7 @@ import { useAdmin } from "../AdminData";
 import { cx, dateDMY } from "../fmt";
 import { Avatar } from "../AdminShell";
 import { Btn, Card, EmptyState, HeadRow, StatusDot, useToast } from "../ui";
+import Select from "../../components/Select";
 
 /* ---------- types ---------- */
 const ROLES = {
@@ -232,7 +233,7 @@ export default function ControlAuthorityPage() {
                 </div>
 
                 {/* Role selector */}
-                <select
+                <Select
                   value={m.role}
                   disabled={isMe(m)}
                   title={isMe(m) ? "You can't change your own role" : undefined}
@@ -242,7 +243,7 @@ export default function ControlAuthorityPage() {
                   {Object.entries(ROLES).map(([key, { label }]) => (
                     <option key={key} value={key}>{label}</option>
                   ))}
-                </select>
+                </Select>
 
                 {/* Status */}
                 <span>

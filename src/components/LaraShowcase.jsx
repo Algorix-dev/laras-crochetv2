@@ -73,7 +73,12 @@ import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
    GENERAL SETTINGS
    ============================================================ */
 
-const NAVBAR_HEIGHT_PX = 66;
+// TIP: reads --nav-h from index.css (66px on phones, 84px from 768px up) so the pinned scroll
+// maths always matches the real top bar. Falls back to 66 if it can't be read.
+const navbarHeightPx = () =>
+  (typeof window !== "undefined" &&
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h"))) ||
+  66;
 
 /*
   TIP — svh, NOT vh (mobile fix):
@@ -1030,6 +1035,7 @@ export default function LaraShowcase() {
       let nextState;
       let next;
 
+      const NAVBAR_HEIGHT_PX = navbarHeightPx();
       if (rect.top > NAVBAR_HEIGHT_PX) {
         nextState = "before";
 
@@ -1287,14 +1293,14 @@ export default function LaraShowcase() {
   // and after it, but 100vh - 66px while pinned. Its contents are
   // vertically centred, so they jumped 33px at both hand-offs. Every state
   // now uses the SAME height, so pinning / unpinning is invisible.
-  const STAGE_HEIGHT = `calc(100${VH_UNIT} - ${NAVBAR_HEIGHT_PX}px)`;
+  const STAGE_HEIGHT = `calc(100${VH_UNIT} - var(--nav-h))`;
 
   if (pinState === "before") {
     containerStyle = { position: "relative", height: STAGE_HEIGHT };
   } else if (pinState === "pinned") {
     containerStyle = {
       position: "fixed",
-      top: NAVBAR_HEIGHT_PX,
+      top: "var(--nav-h)",
       left: 0,
       right: 0,
       height: STAGE_HEIGHT,

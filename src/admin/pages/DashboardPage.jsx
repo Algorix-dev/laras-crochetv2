@@ -20,6 +20,7 @@ import {
   EmptyState,
   HeadRow,
   Kebab,
+  DropMenu,
   PillButton,
   StatusDot,
   Thumb,
@@ -37,7 +38,7 @@ function TopStat({ title, children, to }) {
   return (
     <Card className="flex min-h-[222px] flex-col p-5">
       <CardHead title={title}>
-        <Kebab />
+        <Kebab to={to} />
       </CardHead>
       <p className="mt-1 text-[14px] leading-5 text-[var(--a-muted)]">Last 7 days</p>
       <div className="mt-3 flex-1">{children}</div>
@@ -117,7 +118,7 @@ function WeekReport({ week }) {
         <h3 className="text-[20px] font-bold text-[var(--a-ink)]">Report for this week</h3>
         <div className="flex items-center gap-3">
           <WeekSwitch value={range} onChange={setRange} />
-          <Kebab />
+          <Kebab to="/admin/orders" />
         </div>
       </div>
 
@@ -228,13 +229,25 @@ function LiveAndCountries({ d }) {
 
 /* ---------------- row 3 ---------------- */
 
-function TransactionCard({ rows }) {
+function TransactionCard({ rows: allRows }) {
+  // TIP: "Filter" now narrows the list right here instead of opening another page.
+  const [show, setShow] = useState("all");
+  const rows = allRows.filter((r) => show === "all" || (show === "paid" ? r.paid : !r.paid));
   return (
     <Card className="flex flex-col p-5">
       <CardHead title="Transaction" className="[&_h3]:text-[20px]">
-        <Btn as={Link} to="/admin/transactions" className="h-8 rounded-md px-4 text-[15px] font-normal">
-          Filter <ListFilter size={16} />
-        </Btn>
+        <DropMenu
+          trigger={
+            <Btn className="h-8 rounded-md px-4 text-[15px] font-normal">
+              {show === "all" ? "Filter" : show === "paid" ? "Paid" : "Unpaid"} <ListFilter size={16} />
+            </Btn>
+          }
+          items={[
+            { label: "All orders", active: show === "all", onClick: () => setShow("all") },
+            { label: "Paid only", active: show === "paid", onClick: () => setShow("paid") },
+            { label: "Unpaid only", active: show === "unpaid", onClick: () => setShow("unpaid") },
+          ]}
+        />
       </CardHead>
 
       <div className="mt-6 overflow-x-auto">
@@ -328,13 +341,25 @@ function TopProducts({ rows }) {
 
 /* ---------------- row 4 ---------------- */
 
-function BestSelling({ rows }) {
+function BestSelling({ rows: allRows }) {
+  // TIP: "Filter" narrows this table by stock status without leaving the dashboard.
+  const [show, setShow] = useState("all");
+  const rows = allRows.filter((r) => show === "all" || (show === "in" ? r.inStock : !r.inStock));
   return (
     <Card className="p-5">
       <CardHead title="Best selling product" className="[&_h3]:text-[20px]">
-        <Btn as={Link} to="/admin/categories" className="h-8 rounded-md px-4 text-[15px] font-normal">
-          Filter <ListFilter size={16} />
-        </Btn>
+        <DropMenu
+          trigger={
+            <Btn className="h-8 rounded-md px-4 text-[15px] font-normal">
+              {show === "all" ? "Filter" : show === "in" ? "In stock" : "Stock out"} <ListFilter size={16} />
+            </Btn>
+          }
+          items={[
+            { label: "All products", active: show === "all", onClick: () => setShow("all") },
+            { label: "In stock only", active: show === "in", onClick: () => setShow("in") },
+            { label: "Stock out only", active: show === "out", onClick: () => setShow("out") },
+          ]}
+        />
       </CardHead>
 
       <div className="mt-5 overflow-x-auto">
