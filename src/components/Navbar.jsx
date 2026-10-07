@@ -213,7 +213,7 @@ export default function Navbar() {
             <img
               src={brand.logoUrl || laraCrochetLogo}
               alt="Lara's Crochet"
-              className="h-9 w-auto max-w-none shrink-0 md:h-[96px]"
+              className="h-9 w-auto max-w-none shrink-0 md:h-[72px]"
             />
           </Link>
 
