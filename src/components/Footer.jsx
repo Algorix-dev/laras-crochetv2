@@ -12,6 +12,7 @@ import { useState } from "react";
 import lacMonogram from "../assets/lara-monogram.webp";
 import Reveal from "./Reveal";
 import { subscribeNewsletter } from "../api";
+import { toast } from "../utils/toast";
 import { useBrand } from "../BrandProvider";
 
 const columns = [
@@ -54,6 +55,7 @@ export default function Footer() {
     try {
       await subscribeNewsletter(email.trim());
       setSubscribed(true);
+      toast.success("You're subscribed. Check your inbox for a confirmation.");
     } catch (err) {
       setError(err.message);
     } finally {

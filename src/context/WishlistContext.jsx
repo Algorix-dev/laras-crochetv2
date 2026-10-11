@@ -2,6 +2,7 @@
    passing props down through every single component (no "prop drilling").
    Think of it as a global bucket that any component can reach into. */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { toast } from '../utils/toast';
 
 /* TIP: createContext() makes the "bucket". The initial value (null) is just
    a fallback — the real value comes from the Provider component below. */
@@ -10,8 +11,8 @@ const WishlistContext = createContext(null);
 /* TIP: We use a CustomEvent ('lara-toast') to broadcast a toast notification
    to the rest of the app. This is a lightweight pub/sub pattern — no extra
    library needed. The Toast component listens for this event. */
-const notify = (message) =>
-  window.dispatchEvent(new CustomEvent('lara-toast', { detail: message }));
+const notify = (message, added) =>
+  (added ? toast.success : toast.info)(message, { duration: 2500 });
 
 /* TIP: The Provider component wraps part of your app and makes the context
    value available to every child inside it. Only components inside
@@ -53,14 +54,15 @@ export function WishlistProvider({ children }) {
       /* TIP: toggleWishlist uses the functional updater form of setState
          (items => ...) so it always reads the latest state, even if multiple
          toggles happen in quick succession. */
-            toggleWishlist: (productId) =>
+      toggleWishlist: (productId, { silent = false } = {}) => {
+        /* TIP: the toast is fired here, OUTSIDE the state updater. Inside the updater React can
+           run it twice (StrictMode), which would show every message twice. */
+        if (!silent) {
+          const had = wishlistItems.includes(productId);
+          notify(had ? 'Removed from wishlist' : 'Added to wishlist', !had);
+        }
         setWishlistItems((items) => {
           const included = items.includes(productId);
-
-          /* TIP: Fire the toast notification based on the action. */
-          notify(
-            included ? 'Removed from wishlist' : 'Added to wishlist'
-          );
 
           /* TIP: We return a NEW array (spread or filter) so React can detect
              the change. Mutating the existing array in place would NOT trigger
@@ -68,7 +70,8 @@ export function WishlistProvider({ children }) {
           return included
             ? items.filter((id) => id !== productId)
             : [...items, productId];
-        }),
+        });
+      },
 
       /* TIP: silently drops any stored id that no longer matches a real,
          live product — no toast, since this isn't a user action. This is

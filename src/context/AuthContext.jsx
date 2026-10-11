@@ -6,6 +6,7 @@
    avoids a confusing "is this an admin or a customer?" check
    scattered through the app later. */
 import { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "../utils/toast";
 
 const AuthContext = createContext(null);
 
@@ -36,11 +37,13 @@ export function AuthProvider({ children }) {
   const login = (userData, authToken) => {
     setUser(userData);
     setToken(authToken);
+    toast.success("You're signed in. Welcome back!");
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
+    toast.info("You've been signed out.");
   };
 
   // TIP: for updating fields on the already-signed-in user (e.g. after

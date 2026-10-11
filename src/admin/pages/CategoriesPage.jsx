@@ -28,27 +28,35 @@ export default function CategoriesPage() {
   const [selected, setSelected] = useState(() => new Set());
   const [busy, setBusy] = useState(false);
 
-  // TIP: categories Lara adds herself ("custom"). The five built-in ones come from
-  // her products automatically; these extra ones can exist before any piece uses them.
-  const [customCats, setCustomCats] = useState([]);
+  // TIP: the real category list from the server (built-in ones she hasn't deleted + her own).
+  // null until it loads (or in demo mode) — then the cards come from her products only.
+  const [allCats, setAllCats] = useState(null);
+  const customCats = useMemo(() => (allCats || []).filter((c) => c.custom), [allCats]);
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
 
   useEffect(() => {
     if (demo) return;
     getCategories()
-      .then((list) => setCustomCats(list.filter((c) => c.custom)))
+      .then((list) => setAllCats(list))
       .catch(() => {});
   }, [demo]);
 
-  // the cards on screen: built-in + products' categories, then her empty custom ones
+  // the cards on screen. Once the server list is here it decides what exists (so a deleted
+  // category disappears); a category some piece still uses always stays visible.
   const cards = useMemo(() => {
-    const have = new Set(m.cards.map((c) => c.slug));
-    const extra = customCats
-      .filter((c) => !have.has(c.slug))
-      .map((c) => ({ slug: c.slug, label: c.label, count: 0, image: "" }));
-    return [...m.cards, ...extra];
-  }, [m.cards, customCats]);
+    if (!allCats) return m.cards;
+    const info = new Map(m.cards.map((c) => [c.slug, c]));
+    const listed = new Set(allCats.map((c) => c.slug));
+    const fromServer = allCats.map((c) => ({
+      slug: c.slug,
+      label: c.label,
+      count: info.get(c.slug)?.count || 0,
+      image: info.get(c.slug)?.image || "",
+    }));
+    const stillUsed = m.cards.filter((c) => !listed.has(c.slug) && c.count > 0);
+    return [...fromServer, ...stillUsed];
+  }, [m.cards, allCats]);
 
   async function addCategory(e) {
     e.preventDefault();
@@ -56,7 +64,7 @@ export default function CategoriesPage() {
     setBusy(true);
     try {
       const made = await createCategory(newName);
-      setCustomCats((cur) => [...cur, made]);
+      setAllCats((cur) => [...(cur || []), made]);
       setNewName("");
       setAdding(false);
       toast(`${made.label} was added. You can now pick it when adding a piece.`);
@@ -69,11 +77,15 @@ export default function CategoriesPage() {
 
   async function removeCategory(c) {
     if (demo) return toast("Sample data — nothing is saved in demo mode.");
-    if (!window.confirm(`Remove the "${c.label}" category?`)) return;
+    const used = c.count ?? cards.find((x) => x.slug === c.slug)?.count ?? 0;
+    if (used > 0) {
+      return toast(`${c.label} still has ${used} piece${used === 1 ? "" : "s"}. Move or delete ${used === 1 ? "it" : "them"} first, then remove the category.`, "error");
+    }
+    if (!window.confirm(`Delete the "${c.label}" category? It will also disappear from the shop's category tabs.`)) return;
     setBusy(true);
     try {
       await deleteCategory(c.slug);
-      setCustomCats((cur) => cur.filter((x) => x.slug !== c.slug));
+      setAllCats((cur) => (cur || []).filter((x) => x.slug !== c.slug));
       if (cat === c.slug) setCat("");
       toast(`${c.label} was removed.`);
     } catch (err) {
@@ -187,23 +199,35 @@ export default function CategoriesPage() {
         {cards.map((c) => {
           const on = cat === c.slug;
           return (
-            <button
-              key={c.slug}
-              type="button"
-              onClick={() => {
-                setCat(on ? "" : c.slug);
-                setPage(1);
-              }}
-              aria-pressed={on}
-              className={cx(
-                "flex h-[88px] items-center gap-4 rounded-lg bg-white px-3 text-left shadow-[0_1px_4px_rgba(16,24,40,0.16)] hover:bg-[#fafafa]",
-                on && "outline outline-2 -outline-offset-2 outline-[var(--a-maroon)]"
-              )}
-            >
-              <Thumb src={c.image} alt="" size={64} className="rounded border border-[#e5e7eb] bg-white" />
-              <span className="flex-1 text-[20px] leading-6 text-[var(--a-ink)]">{c.label}</span>
-              <span className="pr-2 text-[13px] text-[var(--a-muted)]">{c.count}</span>
-            </button>
+            <div key={c.slug} className="group relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setCat(on ? "" : c.slug);
+                  setPage(1);
+                }}
+                aria-pressed={on}
+                className={cx(
+                  "flex h-[88px] w-full items-center gap-4 rounded-lg bg-white px-3 text-left shadow-[0_1px_4px_rgba(16,24,40,0.16)] hover:bg-[#fafafa]",
+                  on && "outline outline-2 -outline-offset-2 outline-[var(--a-maroon)]"
+                )}
+              >
+                <Thumb src={c.image} alt="" size={64} className="rounded border border-[#e5e7eb] bg-white" />
+                <span className="flex-1 pr-6 text-[20px] leading-6 text-[var(--a-ink)]">{c.label}</span>
+                <span className="pr-2 text-[13px] text-[var(--a-muted)]">{c.count}</span>
+              </button>
+              {/* TIP: delete a category. It is blocked (with a message) while pieces still use it. */}
+              <button
+                type="button"
+                aria-label={`Delete ${c.label} category`}
+                title={`Delete ${c.label}`}
+                disabled={busy}
+                onClick={() => removeCategory(c)}
+                className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[var(--a-pink)] hover:text-[var(--a-red)] disabled:opacity-50"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
           );
         })}
       </div>

@@ -27,10 +27,16 @@ export default function ShopPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // TIP: categories Lara adds in the admin show up here after the built-in ones.
   const [extraCategories, setExtraCategories] = useState([]);
+  // TIP: slugs the server says still exist. null until loaded (then every built-in tab shows, as before).
+  // Lara can delete categories in the admin, and a deleted one disappears from these tabs.
+  const [liveSlugs, setLiveSlugs] = useState(null);
 
   useEffect(() => {
     getCategories()
-      .then((list) => setExtraCategories(list.filter((c) => c.custom).map((c) => c.slug)))
+      .then((list) => {
+        setExtraCategories(list.filter((c) => c.custom).map((c) => c.slug));
+        setLiveSlugs(new Set(list.map((c) => c.slug)));
+      })
       .catch(() => {}); // if this fails the built-in filters still work
   }, []);
 
@@ -167,7 +173,7 @@ export default function ShopPage() {
               20px gaps
         ========================================================== */}
           <div className="mt-5 flex w-full flex-wrap gap-[20px] md:mt-6 md:gap-5 md:mb-20">
-            {[...CATEGORIES, ...extraCategories].map((cat) => {
+            {[...CATEGORIES.filter((c) => !liveSlugs || liveSlugs.has(c)), ...extraCategories].map((cat) => {
               const active = activeCategory === cat;
 
               return (

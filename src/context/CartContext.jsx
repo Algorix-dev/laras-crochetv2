@@ -10,6 +10,7 @@
     const { cartItems, addToBag, cartCount } = useCart();
 */
 import { createContext, useContext, useMemo, useState } from 'react';
+import { toast } from '../utils/toast';
 
 const CartContext = createContext(null);
 
@@ -57,10 +58,17 @@ export function CartProvider({ children }) {
         },
       ];
     });
+    // TIP: the pop-up notification (see utils/toast.js). Called here, outside setCartItems,
+    // so it fires once per click.
+    toast.success(`${product.name ? `${product.name} added` : 'Added'} to bag`, { duration: 2500 });
   };
 
-  const removeFromBag = (itemId) =>
+  // TIP: pass { silent: true } when something else already tells the user what happened
+  // (e.g. "Move to wishlist" shows its own message).
+  const removeFromBag = (itemId, { silent = false } = {}) => {
     setCartItems((items) => items.filter((item) => item.id !== itemId));
+    if (!silent) toast.info('Removed from bag', { duration: 2500 });
+  };
 
   /* TIP: Math.max(1, qty) ensures quantity never drops below 1
      when the user clicks minus. To actually remove an item,

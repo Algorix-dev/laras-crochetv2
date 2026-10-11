@@ -10,6 +10,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Minus, Plus, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from '../utils/toast';
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -130,8 +131,9 @@ export default function BagDrawer({ open, onClose }) {
                           </div>
                           <button
                             onClick={() => {
-                              if (!isInWishlist(item.product.id)) toggleWishlist(item.product.id);
-                              removeFromBag(item.id);
+                              if (!isInWishlist(item.product.id)) toggleWishlist(item.product.id, { silent: true });
+                              removeFromBag(item.id, { silent: true });
+                              toast.success('Moved to wishlist', { duration: 2500 });
                             }}
                             className="shrink-0 text-[10px] uppercase tracking-wider underline"
                           >

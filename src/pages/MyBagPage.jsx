@@ -11,6 +11,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
 import RecommendedProducts from '../components/RecommendedProducts';
 import Footer from '../components/Footer';
+import { toast } from '../utils/toast';
 import { formatDeliveryRange, formatDeliveryDays, DELIVERY_WINDOWS } from '../utils/delivery';
 
 // TIP: client's desktop review flagged this whole page as too small
@@ -37,8 +38,9 @@ export default function MyBagPage() {
   const total = cartTotal + shipping;
     // Move = add to wishlist (only if it isn't there already), then take it out of the bag.
   const moveToWishlist = (item) => {
-    if (!isInWishlist(item.product.id)) toggleWishlist(item.product.id);
-    removeFromBag(item.id);
+    if (!isInWishlist(item.product.id)) toggleWishlist(item.product.id, { silent: true });
+    removeFromBag(item.id, { silent: true });
+    toast.success('Moved to wishlist', { duration: 2500 });
   };
 
   if (!cartItems.length) {

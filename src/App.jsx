@@ -5,6 +5,8 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NavbarVisibilityProvider } from "./context/NavbarVisibilityContext";
 import { useCart } from "./context/CartContext";
 import Navbar from "./components/Navbar";
+import Toaster from "./components/Toaster";
+import OrderUpdateWatcher from "./components/OrderUpdateWatcher";
 import BagDrawer from "./components/BagDrawer";
 import Hero from "./components/Hero";
 import ProductGrid from "./components/ProductGrid";
@@ -294,6 +296,9 @@ export default function App() {
       <AutoRiseProvider>
       <ScrollToTop />
       <VisitorTracker />
+      {/* TIP: pop-up notifications ("Added to bag", order updates...). See utils/toast.js */}
+      <Toaster />
+      <OrderUpdateWatcher />
       <ConditionalNavbar />
       <BagDrawer open={isBagOpen} onClose={closeBag} />
       <PageOffset><Routes>

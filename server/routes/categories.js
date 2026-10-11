@@ -5,7 +5,8 @@ import { requireAdmin } from '../middleware/requireAdmin.js';
 
 const router = Router();
 
-// TIP: these are always available and can't be deleted.
+// TIP: these start out available. Lara can delete them from the admin too (a removed marker is
+// saved in the Category collection, see below), and add them back later by creating one with the same name.
 export const BUILT_IN = [
   { slug: 'dresses', label: 'Dresses' },
   { slug: 'bikinis', label: 'Bikinis' },
@@ -15,9 +16,15 @@ export const BUILT_IN = [
   { slug: 'accessories', label: 'Accessories' },
 ];
 
+// the built-in slugs Lara has deleted
+async function removedBuiltIns() {
+  const gone = await Category.find({ removed: true }).select('slug');
+  return new Set(gone.map((c) => c.slug));
+}
+
 export async function allCategorySlugs() {
-  const extra = await Category.find().select('slug');
-  return [...BUILT_IN.map((c) => c.slug), ...extra.map((c) => c.slug)];
+  const [extra, gone] = await Promise.all([Category.find({ removed: { $ne: true } }).select('slug'), removedBuiltIns()]);
+  return [...BUILT_IN.filter((c) => !gone.has(c.slug)).map((c) => c.slug), ...extra.map((c) => c.slug)];
 }
 
 const toSlug = (label) =>
@@ -27,11 +34,14 @@ const toSlug = (label) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-// GET /api/categories  (public) — built-in + Lara's own, in the order they were made
+// GET /api/categories  (public) — built-in (minus any she deleted) + Lara's own, in the order they were made
 router.get('/', async (req, res) => {
-  const extra = await Category.find().sort({ createdAt: 1 }).select('slug label');
+  const [extra, gone] = await Promise.all([
+    Category.find({ removed: { $ne: true } }).sort({ createdAt: 1 }).select('slug label'),
+    removedBuiltIns(),
+  ]);
   res.json([
-    ...BUILT_IN.map((c) => ({ ...c, custom: false })),
+    ...BUILT_IN.filter((c) => !gone.has(c.slug)).map((c) => ({ ...c, custom: false })),
     ...extra.map((c) => ({ slug: c.slug, label: c.label, custom: true })),
   ]);
 });
@@ -43,18 +53,31 @@ router.post('/', requireAdmin, async (req, res) => {
   const slug = toSlug(label);
   if (!slug) return res.status(400).json({ error: 'Use letters or numbers in the name.' });
   if ((await allCategorySlugs()).includes(slug)) return res.status(400).json({ error: 'That category already exists.' });
+  // adding back a built-in category she deleted earlier: clear its removed marker first
+  await Category.deleteOne({ slug, removed: true });
   const doc = await Category.create({ slug, label });
   res.status(201).json({ slug: doc.slug, label: doc.label, custom: true });
 });
 
-// DELETE /api/categories/:slug — only her own, and only when no piece uses it
+// DELETE /api/categories/:slug — any category, but only when no piece uses it
 router.delete('/:slug', requireAdmin, async (req, res) => {
-  const { slug } = req.params;
-  if (BUILT_IN.some((c) => c.slug === slug)) return res.status(400).json({ error: "The built-in categories can't be removed." });
+  const slug = String(req.params.slug || '').toLowerCase();
+  const isBuiltIn = BUILT_IN.some((c) => c.slug === slug);
+  const exists = (await allCategorySlugs()).includes(slug);
+  if (!exists) return res.status(404).json({ error: 'Category not found.' });
   const inUse = await Product.countDocuments({ category: slug });
-  if (inUse) return res.status(400).json({ error: `${inUse} piece(s) still use this category. Move or delete them first.` });
-  const gone = await Category.findOneAndDelete({ slug });
-  if (!gone) return res.status(404).json({ error: 'Category not found.' });
+  if (inUse) {
+    return res.status(400).json({
+      error: `${inUse} piece${inUse === 1 ? ' still uses' : 's still use'} this category. Move or delete ${inUse === 1 ? 'it' : 'them'} first.`,
+    });
+  }
+  if (isBuiltIn) {
+    // built-ins aren't stored, so save a marker that keeps it hidden
+    const label = BUILT_IN.find((c) => c.slug === slug).label;
+    await Category.findOneAndUpdate({ slug }, { slug, label, removed: true }, { upsert: true });
+  } else {
+    await Category.deleteOne({ slug });
+  }
   res.json({ ok: true });
 });
 

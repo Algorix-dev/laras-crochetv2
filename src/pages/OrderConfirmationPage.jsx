@@ -17,6 +17,7 @@ import { verifyPayment } from '../api';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import Footer from '../components/Footer';
+import { toast } from '../utils/toast';
 
 export default function OrderConfirmationPage() {
   const [searchParams] = useSearchParams();
@@ -38,6 +39,9 @@ export default function OrderConfirmationPage() {
           setOrder(data.order);
           setStatus('success');
           clearCart();
+          toast.order('Payment confirmed. Your order is placed and a confirmation email is on its way.', {
+            title: data.order?.orderNumber ? `Order #${data.order.orderNumber}` : 'Order confirmed',
+          });
         } else {
           setStatus('failed');
         }

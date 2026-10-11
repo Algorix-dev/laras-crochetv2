@@ -23,6 +23,7 @@ import { formatBusinessDays, formatDeliveryRange } from '../utils/delivery';
 import Footer from '../components/Footer';
 import laraCrochetLogo from '../assets/lara-crochet-logo.png';
 import Select from "../components/Select";
+import { toast } from '../utils/toast';
 
 
 /* TIP: Reusable input field component — renders a label + text input
@@ -165,6 +166,7 @@ export default function CheckoutPage() {
       const result = await validateCoupon(code.trim(), bagForServer());
       setCoupon(result);
       setCouponMsg('');
+      toast.success('Discount code applied.');
     } catch (err) {
       setCoupon(null);
       setCouponMsg(err.message);
