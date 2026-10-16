@@ -245,13 +245,16 @@ export default function ShopPage() {
                     setVisibleCount((n) => n + PAGE_SIZE)
                   }
                   className="
+                    flex
+                    items-center
+                    justify-center
                     h-[42px]
                     w-full
                     bg-[#412B2D]
                     px-8
                     text-[14px]
                     font-bold
-                    leading-[20px]
+                    leading-none
                     uppercase
                     text-[#FFFCFC]
                     transition-colors
@@ -261,14 +264,12 @@ export default function ShopPage() {
                     md:h-[44px]
                     md:w-auto
                     md:px-12
-                    md:py-3
                     md:text-sm
                     md:tracking-wide
 
                     lg:h-[46px]
                     lg:w-[320px]
                     lg:px-[104px]
-                    lg:py-[11px]
                     lg:text-base
                     lg:tracking-normal
                   "

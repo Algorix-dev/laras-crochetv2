@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCart } from "../context/CartContext";
 import { ChevronUp } from "lucide-react";
@@ -725,17 +725,25 @@ function HeroModel({
 
   /*
     IMPORTANT:
-    We use the model's FRONT image as the normalization reference.
+    Each model is sized from the photo that is actually showing:
+    the FRONT photo in the centre, the SIDE photo in the side slots.
 
-    That means the same person stays visually consistent as they move
-    from side -> centre -> side instead of changing size because their
-    left/right photo has a different amount of transparent padding.
+    Front and side photos usually have different amounts of transparent
+    space around the person. Sizing the side slots from the front photo's
+    padding made some models look shorter than others there, so every
+    visible person now ends up the same height wherever they are.
   */
+  const showsSide =
+    !isSelected &&
+    Boolean(view?.side);
+
   const visualBounds =
     useVisualModelBounds(
-      hasFront
-        ? model.views.front
-        : view?.side
+      showsSide
+        ? view.side
+        : hasFront
+          ? model.views.front
+          : view?.side
     );
 
   const visualScale =
@@ -1197,11 +1205,6 @@ function HeroCarousel({ models }) {
     openBag, cartItems
   } = useCart();
 
-  // right after: const activeModel = models[nav.active];
-  const activeInBag = cartItems.some(
-    (item) => item.product.id === activeModel?.product?.id
-  );
-
   const reduceMotion =
     useReducedMotion();
 
@@ -1301,11 +1304,10 @@ function HeroCarousel({ models }) {
 
   const [nav, setNav] =
     useState(() => ({
-      active:
-        Math.floor(count / 2),
+      // opens on the FIRST piece in the order Lara set
+      active: 0,
 
-      prevActive:
-        Math.floor(count / 2),
+      prevActive: 0,
 
       move: 0,
 
@@ -1514,6 +1516,19 @@ function HeroCarousel({ models }) {
 
   const activeModel =
     models[nav.active];
+
+  // (must come AFTER activeModel — it was above it before, which crashed
+  // the home page as soon as the bag had anything in it)
+  const activeProductId =
+    activeModel?.product?.id;
+
+  const activeInBag =
+    Boolean(activeProductId) &&
+    cartItems.some(
+      (item) =>
+        item.product?.id ===
+        activeProductId
+    );
 
   const handleAddToBag = (
     model
@@ -2147,10 +2162,34 @@ export default function Hero({
         >
           <div
             className={`
+              flex
               w-full
+              flex-col
+              items-center
+              justify-center
+              gap-3
+              text-center
               ${IMAGE_HEIGHT_SELECTED}
             `}
-          />
+          >
+            {/* models === null means still loading: stay blank, no message flash */}
+            {models && (
+              <>
+                <p className="font-['Raleway'] text-[clamp(1.5rem,3vw,2.5rem)] font-bold tracking-[-0.04em] text-[var(--maroon-dark)]">
+                  New pieces are on their way
+                </p>
+                <p className="text-[var(--muted)]">
+                  Our showcase is being styled. Have a look around the shop in the meantime.
+                </p>
+                <Link
+                  to="/shop"
+                  className="mt-1 text-sm uppercase tracking-wide text-[var(--maroon-dark)] underline underline-offset-4"
+                >
+                  Browse the shop
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </section>
     );

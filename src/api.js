@@ -227,6 +227,9 @@ export const changeAdminPassword = (currentPassword, newPassword) =>
 export const updateAdminName = (name) =>
   adminRequest("/api/auth/profile", { method: "PUT", body: JSON.stringify({ name }) });
 
+// the Home Hero page: the list of product ids IS the hero, in this order (see PUT /api/products/hero/order)
+export const saveHeroOrder = (ids) => adminRequest("/api/products/hero/order", { method: "PUT", body: JSON.stringify({ ids }) });
+
 // "soft delete" on the server: the piece is hidden from the shop, not erased
 export const deleteProduct = (id) => adminRequest(`/api/products/${id}`, { method: "DELETE" });
 

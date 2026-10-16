@@ -16,7 +16,6 @@ import Footer from "./components/Footer";
 import Reveal from "./components/Reveal";
 import AutoRiseProvider from "./components/AutoRiseProvider";
 import { products } from "./data/products";
-import { FALLBACK_HERO_MODELS } from "./data/heroFallback";
 import { getProducts, normalizeProduct, toHeroModel } from "./api";
 
 import SignInPage from "./pages/SignInPage";
@@ -108,9 +107,9 @@ function HomePage() {
 
   // TIP — THE HERO IS DRIVEN BY THE PRODUCTS. `null` = still loading (the
   // hero holds its space, empty). Once the products arrive it becomes
-  // every piece marked "Hero" in the admin page — or, if none is marked
-  // yet (or the API can't be reached), the sample models in
-  // data/heroFallback.js so the landing page is never empty.
+  // every piece on the hero, in the order Lara set on the admin's "Home
+  // Hero" page. If there are none (or the API can't be reached) it is an
+  // empty list and the hero shows a short "new pieces coming soon" note.
   const [heroModels, setHeroModels] = useState(null);
 
   useEffect(() => {
@@ -118,24 +117,19 @@ function HomePage() {
       .then((data) => {
         const live = data.map(normalizeProduct);
 
+        // TIP: pieces Lara has placed (heroOrder 0, 1, 2...) come first in that
+        // order; any not placed yet go after them. The sort is stable, so
+        // those keep the API's newest-first order.
+        const heroRank = (product) =>
+          Number.isFinite(product.heroOrder) ? product.heroOrder : 1e9;
         const onHero = live
           .filter((product) => product.placements.includes("hero"))
+          .sort((a, b) => heroRank(a) - heroRank(b))
           .map((product) => ({
             ...toHeroModel(product),
             product,
           }));
-        // TIP: with nothing marked "Hero" yet, the sample models are shown.
-        // Link each one to the real piece of the same name (if the shop has
-        // it) so clicking it in the middle opens a real product page.
-        const linkedSamples = FALLBACK_HERO_MODELS.map((sample) => {
-          const match = live.find(
-            (product) => product.name?.trim().toLowerCase() === sample.name.toLowerCase()
-          );
-          return match
-            ? { ...sample, productId: match.id, product: match }
-            : sample;
-        });
-        setHeroModels(onHero.length > 0 ? onHero : linkedSamples);
+        setHeroModels(onHero);
 
         if (live.length > 0) {
           // "Shop Our Pieces" shows the first four: pieces marked
@@ -150,8 +144,9 @@ function HomePage() {
       })
       .catch(() => {
         // fails quietly to the static fallbacks — isLive stays false, so
-        // those cards correctly stay inert
-        setHeroModels(FALLBACK_HERO_MODELS);
+        // those cards correctly stay inert. The hero just shows its
+        // "coming soon" note.
+        setHeroModels([]);
       });
   }, []);
 

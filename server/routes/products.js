@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 import { allCategorySlugs } from './categories.js';
@@ -16,6 +17,12 @@ router.get('/', async (req, res) => {
   if (placement) filter.placements = placement; // e.g. 'hero' or 'featured'
 
   const products = await Product.find(filter).sort({ createdAt: -1 });
+  // TIP: the hero is shown in the order Lara chose (Home Hero page). Pieces she hasn't placed yet
+  // (heroOrder empty) come last, newest first. Array.sort is stable, so that newest-first order holds.
+  if (placement === 'hero') {
+    const rank = (p) => (Number.isFinite(p.heroOrder) ? p.heroOrder : 1e9);
+    products.sort((a, b) => rank(a) - rank(b));
+  }
   res.json(products);
 });
 
@@ -99,6 +106,38 @@ function heroProblem(product) {
   const front = product.views?.front || product.images?.[0];
   return wantsHero && !front ? 'A piece on the hero needs a front-facing photo.' : null;
 }
+
+// PUT /api/products/hero/order   body: { ids: ['<id>', '<id>', ...] }
+// TIP — THE HOME HERO PAGE SAVES HERE. The list IS the hero: exactly these pieces, in this order.
+// Anything not in the list is taken off the hero (it stays in the shop). Defined before the
+// '/:id' routes so it can never be mistaken for a product id.
+router.put('/hero/order', requireAdmin, async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body.ids) ? req.body.ids.map(String) : null;
+    if (!ids) return res.status(400).json({ error: 'Send the hero pieces as a list.' });
+    if (new Set(ids).size !== ids.length) return res.status(400).json({ error: 'A piece can only be on the hero once.' });
+    if (!ids.every((id) => mongoose.isValidObjectId(id))) return res.status(400).json({ error: 'One of those pieces is not valid.' });
+
+    const pieces = await Product.find({ _id: { $in: ids }, isActive: true });
+    if (pieces.length !== ids.length) return res.status(400).json({ error: 'One of those pieces no longer exists. Refresh and try again.' });
+    const noFront = pieces.find((p) => !(p.views?.front || p.images?.[0]));
+    if (noFront) return res.status(400).json({ error: `${noFront.name} needs a front-facing photo before it can go on the hero.` });
+
+    // take the hero off everything that isn't in the list...
+    await Product.updateMany({ placements: 'hero', _id: { $nin: ids } }, { $pull: { placements: 'hero' }, $set: { heroOrder: null } });
+    // ...then put the listed pieces on it, in order
+    if (ids.length) {
+      await Product.bulkWrite(
+        ids.map((id, index) => ({
+          updateOne: { filter: { _id: id }, update: { $addToSet: { placements: 'hero' }, $set: { heroOrder: index } } },
+        }))
+      );
+    }
+    res.json({ ids });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // POST /api/products
 router.post('/', requireAdmin, async (req, res) => {

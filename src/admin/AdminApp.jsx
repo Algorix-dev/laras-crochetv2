@@ -12,6 +12,7 @@
     /admin/shipping        Shipping prices (per state / country)
     /admin/products        Product List
     /admin/products/new    Add Product        /admin/products/<id>  edit
+    /admin/hero            Home Hero (which pieces are on the home page hero, and in what order)
     /admin/role            Admin role
     anything else in the menu -> "coming soon"
 
@@ -34,6 +35,7 @@ import CustomersPage from "./pages/CustomersPage";
 import CustomOrdersPage from "./pages/CustomOrdersPage";
 import DashboardPage from "./pages/DashboardPage";
 import EnquiriesPage from "./pages/EnquiriesPage";
+import HeroPage from "./pages/HeroPage";
 import NewsletterPage from "./pages/NewsletterPage";
 import { ComingSoonPage, ProductListPage } from "./pages/MiscPages";
 import OrdersPage from "./pages/OrdersPage";
@@ -185,6 +187,7 @@ function Screens() {
           <Route path="products" element={<ProductListPage />} />
           <Route path="products/new" element={<ProductFormPage />} />
           <Route path="products/:id" element={<ProductFormPage />} />
+          <Route path="hero" element={<HeroPage />} />
           <Route path="role" element={<AdminRolePage />} />
           {/* Previously "coming soon" — now fully built */}
           <Route path="coupons" element={<CouponPage />} />

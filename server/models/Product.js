@@ -49,6 +49,10 @@ const productSchema = new mongoose.Schema(
     // is always in the Shop). 'hero' = the carousel at the top of the home
     // page, 'featured' = the "Shop Our Pieces" row on the home page.
     placements: [{ type: String, enum: ['hero', 'featured'] }],
+    // TIP — ORDER ON THE HERO. 0 = first in the carousel, 1 = second, and so on. It is set from the
+    // admin's Home Hero page (PUT /api/products/hero/order). null = not placed yet, so the piece
+    // goes after the ordered ones (newest first).
+    heroOrder: { type: Number, default: null },
     // TIP — PRICING EXTRAS (all optional). salePrice must be lower than price. The sale runs
     // from saleStart to saleEnd (either can be empty). utils/pricing.js decides if it is live.
     salePrice: { type: Number, min: 0, default: null },
