@@ -14,7 +14,7 @@
 */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CirclePlus, Image as ImageIcon, Pencil, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, CirclePlus, Image as ImageIcon, Pencil, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
 import { deleteProduct, getCategories, saveProduct, uploadPhotoWithBg } from "../../api";
 import { useAdmin } from "../AdminData";
 import { cx } from "../fmt";
@@ -22,11 +22,16 @@ import { Btn, Card, IconBtn, useDismiss, useToast } from "../ui";
 import ColorOptionsEditor from "../ColorOptionsEditor";
 import Select from "../../components/Select";
 
+// TIP — LEFT / RIGHT MEAN WHERE THE MODEL IS LOOKING IN THE PICTURE, as you see it on screen: in the
+// "Left" photo she looks toward the left edge of the picture, in the "Right" photo toward the right
+// edge. They do NOT mean the model's own left or right side. (The home page carousel relies on this: the
+// models on the left of the carousel use the Left photo, the ones on the right use the Right photo.)
+// `hint` is the little caption shown under each slot so the two can't be mixed up.
 const ANGLES = [
   { key: "front", label: "Front" },
-  { key: "left", label: "Left" },
-  { key: "right", label: "Right" },
-  { key: "back", label: "Back" },
+  { key: "left", label: "Left", hint: "Model looks to the left of the picture", arrow: ArrowLeft },
+  { key: "right", label: "Right", hint: "Model looks to the right of the picture", arrow: ArrowRight },
+  { key: "back", label: "Back", hint: "Seen from behind" },
 ];
 // TIP: fallback list, used until the real list (including categories Lara adds
 // on the Categories page) loads from the server.
@@ -70,7 +75,9 @@ function Section({ children }) {
 
 function Tile({ angle, url, busy, onFile, onClear }) {
   const pick = useRef(null);
+  const Arrow = angle.arrow;
   return (
+    <div>
     <div className="relative">
       <input ref={pick} type="file" accept="image/*" hidden onChange={(e) => onFile(angle.key, e.target.files?.[0])} />
       {url ? (
@@ -96,6 +103,12 @@ function Tile({ angle, url, busy, onFile, onClear }) {
           {busy ? "Uploading…" : `Add ${angle.label}`}
         </button>
       )}
+    </div>
+      {/* the caption stays visible after a photo is added, so you can always tell which slot is which */}
+      <p className="mt-1.5 flex items-center justify-center gap-1 text-[13px] font-bold text-[var(--a-ink)]">
+        {Arrow && <Arrow size={14} />} {angle.label}
+      </p>
+      <p className="text-center text-[11px] leading-tight text-[var(--a-muted)]">{angle.hint}</p>
     </div>
   );
 }
@@ -134,6 +147,11 @@ function PhotoPicker({ views, uploading, onFile, onClear }) {
       <p className="mb-2 mt-3 text-[13px] text-[var(--a-muted)]">
         Upload photos with a transparent background (PNG) — they are resized but the background is kept as is. {front.label} is the main photo; the other angles
         are used on the product page and in the home-page carousel.
+      </p>
+      <p className="mb-3 rounded-md border border-[#fed7aa] bg-[#fff7ed] p-3 text-[13px] leading-snug text-[#7c2d12]">
+        <b>Left and Right mean where the model is looking in the picture, as you see it on your screen.</b> In the{" "}
+        <b>Left</b> photo she looks toward the left edge of the picture; in the <b>Right</b> photo she looks toward the
+        right edge. It is not the model&apos;s own left or right side. Check the little arrow under each photo.
       </p>
       <div className="grid grid-cols-3 gap-3">
         {ANGLES.slice(1).map((angle) => (
