@@ -533,7 +533,7 @@ export default function ProductFormPage() {
           </label>
           <label className="mt-3 flex items-center gap-3 text-[15px] text-[var(--a-ink)]">
             <input type="checkbox" checked={placements.includes("hero")} onChange={() => togglePlacement("hero")} className={check} />
-            Show this piece in the home page hero carousel.
+            Show this piece in the home page hero carousel. (It holds up to 5 pieces; set the order on the Home Hero page.)
           </label>
 
           <div className="mt-6 flex flex-wrap justify-end gap-3">

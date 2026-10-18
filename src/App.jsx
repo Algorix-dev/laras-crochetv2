@@ -16,7 +16,7 @@ import Footer from "./components/Footer";
 import Reveal from "./components/Reveal";
 import AutoRiseProvider from "./components/AutoRiseProvider";
 import { products } from "./data/products";
-import { getProducts, normalizeProduct, toHeroModel } from "./api";
+import { getProducts, MAX_HERO_PIECES, normalizeProduct, toHeroModel } from "./api";
 
 import SignInPage from "./pages/SignInPage";
 import AccountPage from "./pages/AccountPage";
@@ -125,6 +125,9 @@ function HomePage() {
         const onHero = live
           .filter((product) => product.placements.includes("hero"))
           .sort((a, b) => heroRank(a) - heroRank(b))
+          // the hero holds at most MAX_HERO_PIECES (5); if more got ticked in a product's
+          // form, only the first ones in order show, and the Home Hero page says to trim
+          .slice(0, MAX_HERO_PIECES)
           .map((product) => ({
             ...toHeroModel(product),
             product,

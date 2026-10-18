@@ -227,6 +227,10 @@ export const changeAdminPassword = (currentPassword, newPassword) =>
 export const updateAdminName = (name) =>
   adminRequest("/api/auth/profile", { method: "PUT", body: JSON.stringify({ name }) });
 
+// TIP — HOW MANY PIECES THE HOME PAGE HERO HOLDS. Change it here, and the same number in
+// server/routes/products.js (MAX_HERO_PIECES), which is what actually enforces it when saving.
+export const MAX_HERO_PIECES = 5;
+
 // the Home Hero page: the list of product ids IS the hero, in this order (see PUT /api/products/hero/order)
 export const saveHeroOrder = (ids) => adminRequest("/api/products/hero/order", { method: "PUT", body: JSON.stringify({ ids }) });
 

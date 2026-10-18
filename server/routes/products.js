@@ -37,6 +37,8 @@ router.get('/:id', async (req, res) => {
 // checks the JWT before any of these handlers even run. ──
 
 const ANGLES = ['front', 'left', 'right', 'back'];
+// TIP: the most pieces the home page hero holds. Keep in step with MAX_HERO_PIECES in src/api.js.
+const MAX_HERO_PIECES = 5;
 
 // TIP: tidies what the admin page sends. `views` is cut down to the four
 // known angles, and images[0] is kept equal to views.front so anything
@@ -116,6 +118,7 @@ router.put('/hero/order', requireAdmin, async (req, res) => {
     const ids = Array.isArray(req.body.ids) ? req.body.ids.map(String) : null;
     if (!ids) return res.status(400).json({ error: 'Send the hero pieces as a list.' });
     if (new Set(ids).size !== ids.length) return res.status(400).json({ error: 'A piece can only be on the hero once.' });
+    if (ids.length > MAX_HERO_PIECES) return res.status(400).json({ error: `The hero holds up to ${MAX_HERO_PIECES} pieces. Remove ${ids.length - MAX_HERO_PIECES} to save.` });
     if (!ids.every((id) => mongoose.isValidObjectId(id))) return res.status(400).json({ error: 'One of those pieces is not valid.' });
 
     const pieces = await Product.find({ _id: { $in: ids }, isActive: true });

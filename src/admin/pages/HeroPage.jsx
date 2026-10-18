@@ -17,7 +17,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowDown, ArrowUp, CirclePlus, X } from "lucide-react";
-import { saveHeroOrder } from "../../api";
+import { MAX_HERO_PIECES, saveHeroOrder } from "../../api";
 import { useAdmin } from "../AdminData";
 import { cx } from "../fmt";
 import { Btn, Card, EmptyState, SearchField, Thumb, useToast } from "../ui";
@@ -51,6 +51,8 @@ export default function HeroPage() {
   const onHero = ids.map((id) => byId.get(id)).filter(Boolean);
   const shownIds = onHero.map(idOf);
   const dirty = edited !== null && shownIds.join("|") !== savedIds.join("|");
+  const full = onHero.length >= MAX_HERO_PIECES;
+  const over = onHero.length - MAX_HERO_PIECES; // > 0 = too many to save
 
   const available = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -73,6 +75,7 @@ export default function HeroPage() {
 
   async function save() {
     if (demo) return toast("Sample data — nothing is saved in demo mode.");
+    if (over > 0) return toast(`The hero holds up to ${MAX_HERO_PIECES} pieces. Remove ${over} to save.`, "error");
     setSaving(true);
     try {
       await saveHeroOrder(shownIds);
@@ -91,14 +94,14 @@ export default function HeroPage() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
-        <h2 className="text-[22px] font-bold text-[var(--a-ink)]">On the home page hero ({onHero.length})</h2>
+        <h2 className="text-[22px] font-bold text-[var(--a-ink)]">On the home page hero ({onHero.length} of {MAX_HERO_PIECES})</h2>
         <div className="flex flex-wrap items-center gap-3">
           {dirty && (
             <Btn variant="white" onClick={() => setEdited(null)} disabled={saving} className="h-10 rounded-md px-4 text-[14px]">
               Discard
             </Btn>
           )}
-          <Btn onClick={save} disabled={!dirty || saving} className="h-10 rounded-md px-5 text-[14px]">
+          <Btn onClick={save} disabled={!dirty || saving || over > 0} className="h-10 rounded-md px-5 text-[14px]">
             {saving ? "Saving…" : "Save changes"}
           </Btn>
         </div>
@@ -107,6 +110,12 @@ export default function HeroPage() {
         The first piece is the one visitors see first. Use the arrows to change the order, then press Save changes.
         {dirty && <span className="font-bold text-[var(--a-maroon)]"> You have unsaved changes.</span>}
       </p>
+      {over > 0 && (
+        <p className="mb-4 rounded-md border border-[#fecaca] bg-[#fef2f2] p-3 text-[13px] text-[#991b1b]">
+          The hero holds up to {MAX_HERO_PIECES} pieces, and {onHero.length} are on it. Only the first {MAX_HERO_PIECES} show on the home
+          page. Remove {over} to be able to save.
+        </p>
+      )}
 
       {onHero.length === 0 ? (
         <Card>
@@ -156,6 +165,11 @@ export default function HeroPage() {
         <h2 className="text-[22px] font-bold text-[var(--a-ink)]">Add a piece to the hero</h2>
         <SearchField value={query} onChange={setQuery} placeholder="Search pieces…" className="w-[200px]" />
       </div>
+      {full && (
+        <p className="mb-3 text-[13px] text-[var(--a-muted)]">
+          The hero is full ({onHero.length} of {MAX_HERO_PIECES}). Remove a piece above to add another.
+        </p>
+      )}
 
       {available.length === 0 ? (
         <Card>
@@ -177,7 +191,7 @@ export default function HeroPage() {
                     {ok ? photoNote(p) : "Needs a front-facing photo before it can go on the hero"}
                   </p>
                 </div>
-                <Btn variant="white" onClick={() => add(idOf(p))} disabled={!ok} className="h-9 rounded-md px-3 text-[14px]">
+                <Btn variant="white" onClick={() => add(idOf(p))} disabled={!ok || full} className="h-9 rounded-md px-3 text-[14px]">
                   <CirclePlus size={16} /> Add
                 </Btn>
               </div>
