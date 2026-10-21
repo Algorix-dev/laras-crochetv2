@@ -48,6 +48,8 @@ function paymentInfo(data = {}) {
 router.post('/initialize', async (req, res) => {
   const { customerName, customerEmail, customerPhone, shippingAddress, shippingCountry, shippingState, items } = req.body;
   const shippingMethod = req.body.shippingMethod === 'express' ? 'express' : 'standard';
+  // TIP: optional note from the customer to Lara. It is only text for her to read, never used in any price.
+  const customerNote = String(req.body.customerNote || '').trim().slice(0, 500);
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your bag is empty' });
@@ -155,6 +157,7 @@ router.post('/initialize', async (req, res) => {
     customerEmail,
     customerPhone,
     shippingAddress,
+    customerNote,
     items: orderItems,
     shippingMethod,
     shippingFee,

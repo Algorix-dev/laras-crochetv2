@@ -865,8 +865,11 @@ export default function ProductDetail() {
                   ring/outline. If you want the ring style back, swap
                   the opacity-30/opacity-100 pair for the old
                   ring-1 ring-offset-2 classes. */}
+              {/* TIP: data-no-rise (on the row below) keeps the scroll-reveal engine off these buttons. Its
+                  .rv.on rule forces opacity: 1, which beat the opacity-30 on unselected thumbnails, so all
+                  four looked fully opaque until one was clicked. */}
               {product && (
-                <div className="mt-3 flex items-center justify-center gap-[39px]">
+                <div data-no-rise className="mt-3 flex items-center justify-center gap-[39px]">
                   {angleShots.map(({ key, label, src }, index) => {
                     // TIP — 3 THUMBNAILS ON MOBILE, 4 ON DESKTOP: the
                     // Figma mobile mockup only shows 3 (front/left/right);

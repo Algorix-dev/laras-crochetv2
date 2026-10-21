@@ -42,6 +42,7 @@ import OrdersPage from "./pages/OrdersPage";
 import ProductFormPage from "./pages/ProductFormPage";
 import ProductReviewsPage from "./pages/ProductReviewsPage";
 import ShippingPage from "./pages/ShippingPage";
+import ShowcaseReviewsPage from "./pages/ShowcaseReviewsPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import { Btn } from "./ui";
 
@@ -195,6 +196,7 @@ function Screens() {
           {/* Product Media was merged into Product List — keep old links working */}
           <Route path="media" element={<Navigate to="/admin/products" replace />} />
           <Route path="reviews" element={<ProductReviewsPage />} />
+          <Route path="home-reviews" element={<ShowcaseReviewsPage />} />
           <Route path="authority" element={<ControlAuthorityPage />} />
           <Route path="*" element={<ComingSoonPage />} />
         </Routes>

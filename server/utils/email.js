@@ -107,6 +107,7 @@ export async function sendAdminOrderNotification(order) {
         <p>${itemLines}</p>
         <p><strong>Total:</strong> ₦${order.totalAmount.toLocaleString()} (incl. ${order.shippingMethod} shipping)</p>
         <p><strong>Ship to:</strong> ${escapeHtml(order.shippingAddress)}</p>
+        ${order.customerNote ? `<p style="background: #fff7ed; border: 1px solid #fed7aa; padding: 12px; white-space: pre-wrap;"><strong>Note from the customer:</strong><br/>${escapeHtml(order.customerNote)}</p>` : ''}
       </div>
     `,
   });

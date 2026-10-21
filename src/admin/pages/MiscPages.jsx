@@ -139,7 +139,7 @@ export function ProductListPage() {
                 <span className="truncate font-bold">{p.name}</span>
                 <span className="truncate capitalize">{p.categoryLabel}</span>
                 <span>{naira(p.price)}</span>
-                <span>{p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}</span>
+                <span>{p.isDraft ? "Draft — not in the shop" : p.unlimitedStock ? "Unlimited stock" : p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}</span>
                 <span className="flex justify-end">
                   <DeleteBtn p={p} />
                 </span>
@@ -164,7 +164,7 @@ export function ProductListPage() {
                         <p className="text-[15px] font-bold text-[var(--a-ink)]">{naira(p.price)}</p>
                       </div>
                       <p className="mt-0.5 text-[13px] capitalize text-[var(--a-muted)]">
-                        {p.categoryLabel} · {p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}
+                        {p.categoryLabel} · {p.isDraft ? "Draft — not in the shop" : p.unlimitedStock ? "Unlimited stock" : p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2 text-[12px]">
                         <span className={photos.length === 4 ? "rounded-full bg-[#e7f7ec] px-2.5 py-1 text-[var(--a-green)]" : "rounded-full bg-[#fff4e0] px-2.5 py-1 text-[var(--a-amber)]"}>

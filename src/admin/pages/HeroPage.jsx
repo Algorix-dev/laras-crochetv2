@@ -33,7 +33,9 @@ function photoNote(p) {
 }
 
 export default function HeroPage() {
-  const { products, refresh, demo } = useAdmin();
+  const { products: allProducts, refresh, demo } = useAdmin();
+  // drafts aren't in the shop yet, so they can't go on the hero
+  const products = useMemo(() => allProducts.filter((p) => !p.isDraft), [allProducts]);
   const [toast, toastNode] = useToast();
   const [query, setQuery] = useState("");
   const [edited, setEdited] = useState(null); // null = nothing changed yet

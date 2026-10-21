@@ -81,6 +81,13 @@ const productSchema = new mongoose.Schema(
     stock: { type: Number, default: 0, min: 0 },
     description: { type: String, default: '' },
     isActive: { type: Boolean, default: true }, // lets Lara hide instead of delete
+    // TIP — DRAFTS. true = saved from the admin with "Save to draft": it is NOT in the shop, hero or
+    // search yet, but it stays in Lara's Product List so she can finish it later. (Kept separate from
+    // isActive on purpose: isActive=false means DELETED.)
+    isDraft: { type: Boolean, default: false },
+    // TIP — "Unlimited" stock switch on the product form. Nothing in the shop counts stock down yet, so
+    // for now this only changes how the piece is labelled in the admin (Unlimited / In stock).
+    unlimitedStock: { type: Boolean, default: false },
   },
   { timestamps: true } // adds createdAt/updatedAt automatically
 );

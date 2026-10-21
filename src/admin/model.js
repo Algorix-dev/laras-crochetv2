@@ -163,7 +163,7 @@ export function buildModels({ orders = [], products = [], analytics = null, now 
     })
   );
   const unitsFor = (p) => sold.get(String(p._id || p.id)) || 0;
-  const inStock = products.filter((p) => (p.stock ?? 0) > 0);
+  const inStock = products.filter((p) => p.unlimitedStock || (p.stock ?? 0) > 0);
 
   /* ----- weekly chart series ----- */
   const weekStart = startOfWeek(now);
@@ -302,7 +302,7 @@ export function buildModels({ orders = [], products = [], analytics = null, now 
     bestSelling: [...products]
       .sort((a, b) => unitsFor(b) - unitsFor(a))
       .slice(0, 4)
-      .map((p) => ({ id: p._id || p.id, name: p.name, image: p.image, orders: unitsFor(p), inStock: (p.stock ?? 0) > 0, price: naira(p.price) })),
+      .map((p) => ({ id: p._id || p.id, name: p.name, image: p.image, orders: unitsFor(p), inStock: p.unlimitedStock || (p.stock ?? 0) > 0, price: naira(p.price) })),
     addProducts: [...products]
       .filter((p) => !(p.placements || []).includes("featured"))
       .slice(0, 3)
@@ -329,7 +329,7 @@ export function buildModels({ orders = [], products = [], analytics = null, now 
       orders: unitsFor(p),
       featured: (p.placements || []).includes("featured"),
       onSale: false,
-      outOfStock: (p.stock ?? 0) <= 0,
+      outOfStock: !p.unlimitedStock && (p.stock ?? 0) <= 0,
       stock: p.stock ?? 0,
       price: p.price,
       product: p,

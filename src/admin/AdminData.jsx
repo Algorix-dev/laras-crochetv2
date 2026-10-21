@@ -9,7 +9,7 @@
     the design can be previewed before there are real orders.
 */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { adminSession, getAdminOrders, getAnalyticsSummary, getProducts, normalizeProduct, updateOrderStatus } from "../api";
+import { adminSession, getAdminOrders, getAdminProducts, getAnalyticsSummary, normalizeProduct, updateOrderStatus } from "../api";
 import { demoAnalytics, demoData } from "./demo";
 import { buildModels } from "./model";
 
@@ -58,7 +58,7 @@ export function AdminDataProvider({ demo, onExpired, children }) {
       // orders call shouldn't hide the products (and the other way round)
       const [ordersResult, productsResult, analyticsResult] = await Promise.allSettled([
         getAdminOrders(),
-        getProducts("all"),
+        getAdminProducts(),
         getAnalyticsSummary(),
       ]);
 

@@ -82,6 +82,23 @@ export function CartProvider({ children }) {
       )
     );
 
+  /* TIP: change the size of ONE bag line. The line's id includes its size, so the id changes too.
+     If the bag already has the same outfit in the new size, the two lines merge (quantities add up)
+     instead of showing the same outfit twice. */
+  const updateSize = (itemId, newSize) =>
+    setCartItems((items) => {
+      const target = items.find((item) => item.id === itemId);
+      if (!target || !newSize || target.selectedSize === newSize) return items;
+      const newId = `${target.product.id}-${target.selectedColor}-${target.selectedShade}-${newSize}`;
+      const clash = items.find((item) => item.id === newId);
+      if (clash) {
+        return items
+          .filter((item) => item.id !== itemId)
+          .map((item) => (item.id === newId ? { ...item, quantity: item.quantity + target.quantity } : item));
+      }
+      return items.map((item) => (item.id === itemId ? { ...item, id: newId, selectedSize: newSize } : item));
+    });
+
   const clearCart = () => setCartItems([]);
 
   /* TIP: useMemo makes sure these derived values only recompute
@@ -94,6 +111,7 @@ export function CartProvider({ children }) {
       addToBag,
       removeFromBag,
       updateQuantity,
+      updateSize,
       clearCart,
       isBagOpen,
       openBag,

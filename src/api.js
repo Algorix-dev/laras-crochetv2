@@ -234,6 +234,17 @@ export const MAX_HERO_PIECES = 5;
 // the Home Hero page: the list of product ids IS the hero, in this order (see PUT /api/products/hero/order)
 export const saveHeroOrder = (ids) => adminRequest("/api/products/hero/order", { method: "PUT", body: JSON.stringify({ ids }) });
 
+// the admin Product List: every live piece INCLUDING drafts (the public list hides drafts)
+export const getAdminProducts = () => adminRequest("/api/products/admin/all");
+
+// the nine reviews on the home page. Public read (an empty list means "use the built-in reviews"), admin save.
+export const getShowcaseReviews = () =>
+  fetch(`${API_URL}/api/showcase-reviews`)
+    .then((res) => (res.ok ? res.json() : { items: [] }))
+    .catch(() => ({ items: [] }));
+export const saveShowcaseReviews = (items) =>
+  adminRequest("/api/showcase-reviews", { method: "PUT", body: JSON.stringify({ items }) });
+
 // "soft delete" on the server: the piece is hidden from the shop, not erased
 export const deleteProduct = (id) => adminRequest(`/api/products/${id}`, { method: "DELETE" });
 

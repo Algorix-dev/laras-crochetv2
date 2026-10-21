@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { heroNameLines } from '../utils/heroName';
 import { Link, useNavigate } from "react-router-dom";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCart } from "../context/CartContext";
@@ -1659,9 +1660,16 @@ function HeroCarousel({ models }) {
                   text-[var(--maroon-dark)]
                   select-none
                   whitespace-nowrap
+                  text-center
+
                 "
               >
-                {activeModel.name.toUpperCase()}
+                {heroNameLines(activeModel.name).map((line, i, all) => (
+                  <span key={i} className="block">
+                    {line.toUpperCase()}
+                    {i < all.length - 1 ? ' ' : ''}
+                  </span>
+                ))}
               </motion.h1>
             </AnimatePresence>
           </div>

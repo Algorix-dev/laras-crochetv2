@@ -104,6 +104,12 @@ export default function OrderDrawer({ order, onClose }) {
             <Row label="Email">{order.customerEmail}</Row>
             <Row label="Phone">{order.customerPhone}</Row>
             <Row label="Delivery address">{order.shippingAddress}</Row>
+            {order.customerNote && (
+              <div className="mt-3 rounded-md border border-[#fed7aa] bg-[#fff7ed] p-3">
+                <p className="text-[13px] font-bold text-[#7c2d12]">Note from the customer</p>
+                <p className="mt-1 whitespace-pre-wrap text-[14px] text-[var(--a-ink)]">{order.customerNote}</p>
+              </div>
+            )}
           </section>
 
           <section>

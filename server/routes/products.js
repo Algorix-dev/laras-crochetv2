@@ -12,7 +12,8 @@ const router = Router();
 // GET /api/products?category=dresses&placement=hero
 router.get('/', async (req, res) => {
   const { category, placement } = req.query;
-  const filter = { isActive: true };
+  // TIP: drafts (saved with "Save to draft") never show in the shop, hero or search.
+  const filter = { isActive: true, isDraft: { $ne: true } };
   if (category && category !== 'all') filter.category = category;
   if (placement) filter.placements = placement; // e.g. 'hero' or 'featured'
 
@@ -26,10 +27,17 @@ router.get('/', async (req, res) => {
   res.json(products);
 });
 
+// GET /api/products/admin/all — ADMIN ONLY: every live piece INCLUDING drafts, which is what the admin
+// Product List and edit form need. (Defined before '/:id' so "admin" is never read as a product id.)
+router.get('/admin/all', requireAdmin, async (req, res) => {
+  const products = await Product.find({ isActive: true }).sort({ createdAt: -1 });
+  res.json(products);
+});
+
 // GET /api/products/:id
 router.get('/:id', async (req, res) => {
   const product = await Product.findById(req.params.id);
-  if (!product) return res.status(404).json({ error: 'Product not found' });
+  if (!product || product.isDraft) return res.status(404).json({ error: 'Product not found' });
   res.json(product);
 });
 
@@ -63,6 +71,8 @@ function tidyProduct(body) {
     }
   }
   if ('taxIncluded' in body) data.taxIncluded = body.taxIncluded !== false;
+  if ('isDraft' in body) data.isDraft = body.isDraft === true;
+  if ('unlimitedStock' in body) data.unlimitedStock = body.unlimitedStock === true;
   if ('tag' in body) data.tag = TAGS.includes(body.tag) ? body.tag : '';
   if (body.viewBg && typeof body.viewBg === 'object') {
     const bg = {};
@@ -121,7 +131,7 @@ router.put('/hero/order', requireAdmin, async (req, res) => {
     if (ids.length > MAX_HERO_PIECES) return res.status(400).json({ error: `The hero holds up to ${MAX_HERO_PIECES} pieces. Remove ${ids.length - MAX_HERO_PIECES} to save.` });
     if (!ids.every((id) => mongoose.isValidObjectId(id))) return res.status(400).json({ error: 'One of those pieces is not valid.' });
 
-    const pieces = await Product.find({ _id: { $in: ids }, isActive: true });
+    const pieces = await Product.find({ _id: { $in: ids }, isActive: true, isDraft: { $ne: true } });
     if (pieces.length !== ids.length) return res.status(400).json({ error: 'One of those pieces no longer exists. Refresh and try again.' });
     const noFront = pieces.find((p) => !(p.views?.front || p.images?.[0]));
     if (noFront) return res.status(400).json({ error: `${noFront.name} needs a front-facing photo before it can go on the hero.` });

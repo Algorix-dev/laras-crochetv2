@@ -80,6 +80,7 @@ export default function CheckoutPage() {
     state: 'Lagos',
     postalCode: '',
     phone: '',
+    note: '',
   });
     const updateField = (key) => (e) => {
       setForm((f) => ({ ...f, [key]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
@@ -228,6 +229,8 @@ export default function CheckoutPage() {
         customerName: `${form.firstName} ${form.lastName}`.trim(),
         customerEmail: form.email,
         customerPhone: `${selectedCountry.dial}${form.phone}`,
+        // Optional note to Lara — saved on the order (server/models/Order.js customerNote).
+        customerNote: form.note.trim(),
         // The backend looks the shipping PRICE up itself from this name
         // (server/routes/payments.js) and adds it to what Paystack charges.
         shippingMethod,
@@ -476,6 +479,23 @@ export default function CheckoutPage() {
                   >
                     <MessageCircleQuestion size={18} strokeWidth={1.5} />
                   </button>
+                </div>
+
+                {/* TIP: optional note to Lara, right under the phone number. It is saved on the order and
+                    shown to her in the admin order drawer and in her new-order email. */}
+                <div className="border border-[var(--line)]">
+                  <textarea
+                    name="note"
+                    rows={3}
+                    maxLength={500}
+                    placeholder="Note for Lara (optional), e.g. colour details or delivery instructions"
+                    value={form.note}
+                    onChange={updateField('note')}
+                    className="block w-full resize-none bg-transparent p-3 text-base outline-none"
+                  />
+                  <p className="px-3 pb-2 text-right text-xs text-[var(--mauve-muted)]">
+                    {form.note.length}/500
+                  </p>
                 </div>
               </div>
             </section>

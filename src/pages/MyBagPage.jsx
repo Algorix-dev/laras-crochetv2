@@ -14,6 +14,79 @@ import Footer from '../components/Footer';
 import { toast } from '../utils/toast';
 import { formatDeliveryRange, formatDeliveryDays, DELIVERY_WINDOWS } from '../utils/delivery';
 
+// TIP — SIZE CHOICES IN THE BAG. A customer can change the size of a bag line with the little dropdown.
+// It offers the sizes Lara enabled for that piece (product.sizes); if the piece has none saved, the
+// standard set. The current size is always in the list, and the list is kept in XS-to-XXL order.
+const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+const STANDARD_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+function sizeChoices(product, current) {
+  const base = product?.sizes?.length ? product.sizes : STANDARD_SIZES;
+  const list = base.includes(current) ? [...base] : [current, ...base];
+  const rank = (s) => {
+    const i = SIZE_ORDER.indexOf(String(s).toUpperCase());
+    return i === -1 ? 99 : i;
+  };
+  return list.filter(Boolean).sort((a, b) => rank(a) - rank(b));
+}
+
+function SizeSelect({ item, onChange, className = '' }) {
+  return (
+    <select
+      value={item.selectedSize || ''}
+      onChange={(e) => onChange(item.id, e.target.value)}
+      aria-label={`Size for ${item.product.name}`}
+      className={`h-9 cursor-pointer border border-[#DED3D4] bg-white px-2 text-base font-semibold text-[#564345] outline-none ${className}`}
+    >
+      {sizeChoices(item.product, item.selectedSize).map((s) => (
+        <option key={s} value={s}>
+          {s}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function QtyStepper({ item, updateQuantity, removeFromBag, variant }) {
+  const mobile = variant === 'mobile';
+  const minus = () => {
+    if (item.quantity > 1) updateQuantity(item.id, item.quantity - 1);
+    else removeFromBag(item.id);
+  };
+  const side = mobile ? 'flex h-full w-10 items-center justify-center' : 'flex h-full w-6 items-center justify-center';
+  return (
+    <div
+      className={
+        mobile
+          ? 'flex h-[34px] w-full items-center justify-between border border-[#DED3D4] text-base text-[#564345]'
+          : 'flex h-10 w-full items-center justify-between border border-[#EFE7E7] px-2 py-[7px]'
+      }
+    >
+      <button
+        type="button"
+        onClick={minus}
+        className={side}
+        aria-label={item.quantity > 1 ? 'Decrease quantity' : 'Remove item'}
+      >
+        {item.quantity > 1 ? (
+          <Minus size={mobile ? 14 : 24} strokeWidth={1.5} />
+        ) : (
+          <Trash2 size={mobile ? 14 : 16} strokeWidth={1.5} />
+        )}
+      </button>
+      <span className={mobile ? 'font-medium' : 'text-base'}>{item.quantity}</span>
+      <button
+        type="button"
+        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+        className={side}
+        aria-label="Increase quantity"
+      >
+        <Plus size={mobile ? 14 : 24} strokeWidth={1.5} />
+      </button>
+    </div>
+  );
+}
+
 // TIP: client's desktop review flagged this whole page as too small
 // ("16px is not that small") — every text-sm/text-[12–14px] class below
 // was bumped up to text-base (16px). If a specific label still reads too
@@ -25,6 +98,7 @@ export default function MyBagPage() {
     cartTotal,
     removeFromBag,
     updateQuantity,
+    updateSize,
   } = useCart();
 
   const { formatPrice } = useCurrency();
@@ -36,10 +110,25 @@ export default function MyBagPage() {
 
   const shipping = cartItems.length ? 10000 : 0;
   const total = cartTotal + shipping;
-    // Move = add to wishlist (only if it isn't there already), then take it out of the bag.
-  const moveToWishlist = (item) => {
-    if (!isInWishlist(item.product.id)) toggleWishlist(item.product.id, { silent: true });
-    removeFromBag(item.id, { silent: true });
+  // TIP — SAME OUTFIT, SEVERAL SIZES = ONE PRODUCT ROW. Bag lines for the same piece in the same
+  // colour/shade are grouped, so e.g. a Reina dress in S and in M shows as ONE product with both sizes
+  // listed under it, not as two separate products. (The cart itself still keeps one line per size.)
+  const groups = [];
+  for (const item of cartItems) {
+    const key = `${item.product.id}|${item.selectedColor}|${item.selectedShade}`;
+    let group = groups.find((g) => g.key === key);
+    if (!group) {
+      group = { key, lines: [] };
+      groups.push(group);
+    }
+    group.lines.push(item);
+  }
+
+  // Move = add to wishlist (only if it isn't there already), then take the whole product out of the bag.
+  const moveGroupToWishlist = (group) => {
+    const { product } = group.lines[0];
+    if (!isInWishlist(product.id)) toggleWishlist(product.id, { silent: true });
+    group.lines.forEach((line) => removeFromBag(line.id, { silent: true }));
     toast.success('Moved to wishlist', { duration: 2500 });
   };
 
@@ -119,9 +208,12 @@ export default function MyBagPage() {
 
               {/* CART LIST */}
               <div className="mt-5 space-y-0">
-                {cartItems.map((item) => (
+                {groups.map((group) => {
+                  const first = group.lines[0];
+                  const { product } = first;
+                  return (
                   <article
-                    key={item.id}
+                    key={group.key}
                     className="
                       grid
                       min-h-[201px]
@@ -137,11 +229,9 @@ export default function MyBagPage() {
                       md:py-5
                     "
                   >
-                    {/* =========================
-                        PRODUCT IMAGE
-                    ========================== */}
+                    {/* PRODUCT IMAGE */}
                     <Link
-                      to={`/product/${item.product.id}`}
+                      to={`/product/${product.id}`}
                       className="
                         flex
                         h-[200px]
@@ -160,8 +250,8 @@ export default function MyBagPage() {
                       "
                     >
                       <img
-                        src={item.product.image}
-                        alt={item.product.name}
+                        src={product.image}
+                        alt={product.name}
                         className="
                           h-[190px]
                           w-[91px]
@@ -173,56 +263,53 @@ export default function MyBagPage() {
                       />
                     </Link>
 
-                    {/* =========================
-                        PRODUCT INFORMATION
-                    ========================== */}
+                    {/* PRODUCT INFORMATION */}
                     <div className="flex min-w-0 flex-col py-1 md:py-0">
                       <p className="text-[12px] uppercase tracking-wider text-[#AF9D9E] md:text-[12px]">
-                        {item.product.category === 'two-pieces'
+                        {product.category === 'two-pieces'
                           ? 'Two-Piece'
-                          : item.product.category === 'bikinis'
+                          : product.category === 'bikinis'
                             ? 'Bikini'
-                            : item.product.category === 'skirts'
+                            : product.category === 'skirts'
                               ? 'Skirt'
-                              : item.product.category === 'shirts'
+                              : product.category === 'shirts'
                                 ? 'Shirt'
                                 : 'Dress'}
                       </p>
 
                       <Link
-                        to={`/product/${item.product.id}`}
+                        to={`/product/${product.id}`}
                         className="mt-1 text-base font-bold uppercase tracking-wide text-[#000000] hover:underline md:text-base"
                       >
-                        {item.product.name}
+                        {product.name}
                       </Link>
 
                       <p className="mt-1 text-base text-[#000000] md:text-base">
-                        {formatPrice(item.product.price)}
+                        {formatPrice(product.price)}
                       </p>
 
-                      {/* MOBILE SIZE + COLOR */}
+                      {/* MOBILE COLOR (+ shade) */}
                       <div className="mt-2 space-y-1 text-base text-[#564345] md:hidden">
-                        <p>
-                          Size{' '}
-                          <span className="font-bold text-[var(--ink)]">
-                            {[item.selectedSize, item.selectedShade]
-                              .filter(Boolean)
-                              .join('/')}
-                          </span>
-                        </p>
-
                         <p>
                           Color{' '}
                           <span className="font-bold text-[var(--ink)]">
-                            {item.selectedColor}
+                            {first.selectedColor}
                           </span>
                         </p>
+                        {first.selectedShade && (
+                          <p>
+                            Shade{' '}
+                            <span className="font-bold text-[var(--ink)]">
+                              {first.selectedShade}
+                            </span>
+                          </p>
+                        )}
                       </div>
 
                       {/* MOBILE WISHLIST */}
                       <button
                         type="button"
-                        onClick={() => moveToWishlist(item)}
+                        onClick={() => moveGroupToWishlist(group)}
                         className="
                           mt-2
                           w-fit
@@ -240,148 +327,56 @@ export default function MyBagPage() {
                         Move to wishlist
                       </button>
 
-                      {/* MOBILE QUANTITY */}
-                      <div className="mt-auto pt-3 md:hidden">
-                        <div className="flex h-[34px] w-full items-center justify-between border border-[#DED3D4] text-base text-[#564345]">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (item.quantity > 1) {
-                                updateQuantity(
-                                  item.id,
-                                  item.quantity - 1
-                                );
-                              } else {
-                                removeFromBag(item.id);
-                              }
-                            }}
-                            className="flex h-full w-10 items-center justify-center"
-                            aria-label={
-                              item.quantity > 1
-                                ? 'Decrease quantity'
-                                : 'Remove item'
-                            }
-                          >
-                            {item.quantity > 1 ? (
-                              <Minus
-                                size={14}
-                                strokeWidth={1.5}
+                      {/* MOBILE: one line per size — change the size, change the quantity */}
+                      <div className="mt-auto space-y-2 pt-3 md:hidden">
+                        {group.lines.map((line) => (
+                          <div key={line.id} className="flex items-center gap-2">
+                            <SizeSelect item={line} onChange={updateSize} className="w-[84px] shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <QtyStepper
+                                item={line}
+                                updateQuantity={updateQuantity}
+                                removeFromBag={removeFromBag}
+                                variant="mobile"
                               />
-                            ) : (
-                              <Trash2
-                                size={14}
-                                strokeWidth={1.5}
-                              />
-                            )}
-                          </button>
-
-                          <span className="font-medium">
-                            {item.quantity}
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateQuantity(
-                                item.id,
-                                item.quantity + 1
-                              )
-                            }
-                            className="flex h-full w-10 items-center justify-center"
-                            aria-label="Increase quantity"
-                          >
-                            <Plus
-                              size={14}
-                              strokeWidth={1.5}
-                            />
-                          </button>
-                        </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    {/* =========================
-                        DESKTOP SIZE
-                    ========================== */}
-                    <span className="hidden text-sm font-semibold leading-[18px] text-[#564345] md:block">
-                      {item.selectedSize}
-                    </span>
-
-                    {/* =========================
-                        DESKTOP COLOR
-                    ========================== */}
-                    <span className="hidden text-base font-semibold leading-[18px] text-[#564345] md:block">
-                      {item.selectedColor}
-                    </span>
-
-                    {/* =========================
-                        DESKTOP QUANTITY
-                    ========================== */}
-                    <div className="hidden md:flex md:w-full md:flex-col md:items-stretch md:gap-[10px]">
-                      <div className="flex h-10 w-full items-center justify-between border border-[#EFE7E7] px-2 py-[7px]">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (item.quantity > 1) {
-                              updateQuantity(
-                                item.id,
-                                item.quantity - 1
-                              );
-                            } else {
-                              removeFromBag(item.id);
-                            }
-                          }}
-                          className="flex h-full w-6 items-center justify-center"
-                          aria-label={
-                            item.quantity > 1
-                              ? 'Decrease quantity'
-                              : 'Remove item'
-                          }
+                    {/* DESKTOP: size / color / quantity, one line per size under the same product */}
+                    <div className="hidden md:col-span-3 md:flex md:flex-col md:gap-4">
+                      {group.lines.map((line) => (
+                        <div
+                          key={line.id}
+                          className="md:grid md:grid-cols-[96px_120px_223px] md:items-start md:gap-3"
                         >
-                          {item.quantity > 1 ? (
-                            <Minus
-                              size={24}
-                              strokeWidth={1.5}
-                            />
-                          ) : (
-                            <Trash2
-                              size={16}
-                              strokeWidth={1.5}
-                            />
-                          )}
-                        </button>
-
-                        <span className="text-base">
-                          {item.quantity}
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateQuantity(
-                              item.id,
-                              item.quantity + 1
-                            )
-                          }
-                          className="flex h-full w-6 items-center justify-center"
-                          aria-label="Increase quantity"
-                        >
-                          <Plus
-                            size={24}
-                            strokeWidth={1.5}
+                          <SizeSelect item={line} onChange={updateSize} className="w-full" />
+                          <span className="pt-2 text-base font-semibold leading-[18px] text-[#564345]">
+                            {line.selectedColor}
+                          </span>
+                          <QtyStepper
+                            item={line}
+                            updateQuantity={updateQuantity}
+                            removeFromBag={removeFromBag}
+                            variant="desktop"
                           />
+                        </div>
+                      ))}
+                      <div className="md:grid md:grid-cols-[96px_120px_223px] md:gap-3">
+                        <button
+                          type="button"
+                          onClick={() => moveGroupToWishlist(group)}
+                          className="w-fit whitespace-nowrap text-left text-base font-semibold text-[#564345] underline underline-offset-2 md:col-start-3"
+                        >
+                          Move to wishlist
                         </button>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => moveToWishlist(item)}
-                        className="w-fit whitespace-nowrap text-left text-base font-semibold text-[#564345] underline underline-offset-2"
-                      >
-                        Move to wishlist
-                      </button>
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

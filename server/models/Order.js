@@ -36,6 +36,9 @@ const orderSchema = new mongoose.Schema(
     customerEmail: { type: String, required: true },
     customerPhone: { type: String, required: true },
     shippingAddress: { type: String, required: true },
+    // TIP: the optional "Note for Lara" box on the checkout page. Shown in the admin order drawer and
+    // included in her new-order email. Capped at 500 characters (the checkout box uses the same limit).
+    customerNote: { type: String, default: '', trim: true, maxlength: 500 },
     items: [
       {
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },

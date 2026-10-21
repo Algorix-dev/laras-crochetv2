@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   MessageSquareText,
+  Quote,
   PackageSearch,
   Scissors,
   Search,
@@ -62,6 +63,7 @@ const MENU = [
       { to: "/admin/products", label: "Product List", icon: PackageSearch, title: "Product List", exact: true },
       { to: "/admin/hero", label: "Home Hero", icon: Images, title: "Home Hero" },
       { to: "/admin/reviews", label: "Product Reviews", icon: MessageSquareText, title: "Product Reviews" },
+      { to: "/admin/home-reviews", label: "Home Reviews", icon: Quote, title: "Home Reviews" },
     ],
   },
   {

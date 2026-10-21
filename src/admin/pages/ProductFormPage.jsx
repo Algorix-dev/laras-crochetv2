@@ -21,6 +21,7 @@ import { cx } from "../fmt";
 import { Btn, Card, IconBtn, useDismiss, useToast } from "../ui";
 import ColorOptionsEditor from "../ColorOptionsEditor";
 import Select from "../../components/Select";
+import { HERO_LINE_MAX, HERO_WORD_MAX, heroNameLines } from "../../utils/heroName";
 
 // TIP — LEFT / RIGHT MEAN WHERE THE MODEL IS LOOKING IN THE PICTURE, as you see it on screen: in the
 // "Left" photo she looks toward the left edge of the picture, in the "Right" photo toward the right
@@ -45,6 +46,33 @@ const DEFAULT_CATEGORY_OPTIONS = [
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
 const DEFAULT_SIZES = ["XS", "S", "M", "XL", "XXL"];
 const SOON = "Coming soon";
+
+// TIP — HERO NAME CHECK. The home-page hero shows the product name very large, so a long name is broken onto
+// extra lines (see src/utils/heroName.js). This shows Lara a red hint when that will happen, and a small
+// preview of how the name will look in the hero, so she can shorten it before publishing.
+function HeroNameCheck({ name }) {
+  const lines = heroNameLines(name);
+  if (!lines.length) return null;
+  const long = lines.length > 1;
+  return (
+    <div className="mt-2">
+      {long && (
+        <p role="alert" className="text-[13px] font-bold text-[var(--a-red)]">
+          This name is long. In the Hero it will break onto {lines.length} lines (see the preview). Words over {HERO_WORD_MAX} letters
+          are split, and lines hold about {HERO_LINE_MAX} characters. A shorter name looks cleaner.
+        </p>
+      )}
+      <div className="mt-2 rounded-md border border-[#eceef1] bg-[#fafafa] px-3 py-3 text-center">
+        <p className="mb-1 text-[11px] text-[var(--a-muted)]">How the name looks in the Hero</p>
+        <div className="font-['Raleway'] text-[30px] font-bold leading-[1.05] tracking-[-0.07em] text-[var(--a-maroon)]">
+          {lines.map((line, i) => (
+            <span key={i} className="block whitespace-nowrap">{line.toUpperCase()}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // TIP: the tags Lara can pick from. The words must also exist in TAGS in server/routes/products.js,
 // otherwise the server ignores them. To add a tag, add it in both places.
@@ -233,6 +261,7 @@ export default function ProductFormPage() {
   const [saleEnd, setSaleEnd] = useState("");
   const [taxIncluded, setTaxIncluded] = useState(true);
   const [tag, setTag] = useState("");
+  const [unlimited, setUnlimited] = useState(false);
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState(DEFAULT_CATEGORY_OPTIONS);
@@ -267,6 +296,7 @@ export default function ProductFormPage() {
     setSaleEnd(dateText(piece?.saleEnd));
     setTaxIncluded(piece?.taxIncluded !== false);
     setTag(piece?.tag ?? "");
+    setUnlimited(piece?.unlimitedStock === true);
     setError("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, piece?._id]);
@@ -308,6 +338,46 @@ export default function ProductFormPage() {
     }
   }
 
+  // TIP — SAVE TO DRAFT. Saves whatever is filled in without publishing: the piece is NOT in the shop,
+  // hero or search, but it stays in the Product List (marked "Draft") to finish later. Only a name and a
+  // category are needed (the server requires a category); price can be added later. "Publish Product" makes it live.
+  async function saveDraft() {
+    setError("");
+    if (!name.trim()) return setError("Give the piece a name before saving a draft.");
+    if (!category) return setError("Choose a category before saving a draft.");
+    if (Object.values(uploading).some(Boolean)) return setError("Wait for the photos to finish uploading.");
+    const priceNumber = Number(price) || 0;
+    const saleNumber = salePrice === "" ? null : Number(salePrice);
+    if (saleNumber != null && (!(saleNumber > 0) || saleNumber >= priceNumber)) return setError("The discounted price must be lower than the normal price.");
+    if (saleStart && saleEnd && saleEnd < saleStart) return setError("The sale end date is before its start date.");
+    if (demo) return toast("Sample data — nothing is saved in demo mode.");
+
+    setSaving(true);
+    try {
+      await saveProduct(
+        {
+          name: name.trim(), price: priceNumber, category, stock: stockNumber, unlimitedStock: unlimited, isDraft: true, description, sizes,
+          // a draft is never on the hero or featured row until it is published
+          placements: [], views, colorOptions, shadeOptions,
+          salePrice: saleNumber,
+          saleStart: saleStart ? `${saleStart}T00:00:00` : null,
+          saleEnd: saleEnd ? `${saleEnd}T23:59:59` : null,
+          taxIncluded,
+          tag,
+          viewBg,
+        },
+        piece?._id
+      );
+      await refresh();
+      toast("Saved as a draft. It isn't in the shop yet.");
+      navigate("/admin/products");
+    } catch (err) {
+      setError(err.message === "SESSION_EXPIRED" ? "Your session ended — please sign in again." : err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function publish() {
     setError("");
     const priceNumber = Number(price);
@@ -330,7 +400,7 @@ export default function ProductFormPage() {
     try {
       await saveProduct(
         {
-          name: name.trim(), price: priceNumber, category, stock: stockNumber, description, sizes, placements, views, colorOptions, shadeOptions,
+          name: name.trim(), price: priceNumber, category, stock: stockNumber, unlimitedStock: unlimited, isDraft: false, description, sizes, placements, views, colorOptions, shadeOptions,
           // pricing extras — empty boxes are sent as null so a sale can also be switched OFF by clearing them
           salePrice: saleNumber,
           // TIP: the end date counts through the END of that day, so a sale "ending on 12 Dec" still runs on the 12th
@@ -371,7 +441,7 @@ export default function ProductFormPage() {
           <Btn onClick={publish} disabled={saving} className="h-11 rounded-md px-6 text-[15px]">
             {saving ? "Saving…" : "Publish Product"}
           </Btn>
-          <Btn variant="white" disabled title={SOON} className="h-11 rounded-md px-5 text-[15px] disabled:opacity-60">
+          <Btn variant="white" onClick={saveDraft} disabled={saving} className="h-11 rounded-md px-5 text-[15px] disabled:opacity-60">
             <Save size={16} /> Save to draft
           </Btn>
           <IconBtn label="Add a new product" onClick={() => navigate("/admin/products/new")} className="h-11 w-11">
@@ -390,7 +460,8 @@ export default function ProductFormPage() {
         <Card className="p-5">
           <Section>Basic Details</Section>
           <Field label="Product Name">
-            <input value={name} onChange={(e) => setName(e.target.value)} className={input} placeholder="e.g. Reina" />
+            <input value={name} onChange={(e) => setName(e.target.value)} className={cx(input, heroNameLines(name).length > 1 && "border-[var(--a-red)]")} placeholder="e.g. Reina" />
+            <HeroNameCheck name={name} />
           </Field>
           <Field label="Product Description" className="mt-5">
             <div className="relative">
@@ -477,7 +548,7 @@ export default function ProductFormPage() {
           </Field>
 
           <Section>Inventory</Section>
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className={cx("grid gap-5 sm:grid-cols-2", unlimited && "pointer-events-none opacity-50")}>
             <Field label="Stock Quantity">
               <input
                 value={stock}
@@ -498,11 +569,13 @@ export default function ProductFormPage() {
             </Field>
           </div>
 
-          <label className="mt-4 flex items-center gap-3 opacity-60" title={SOON}>
-            <span className="relative inline-flex h-6 w-10 items-center rounded-full bg-[#d9d2d3]">
-              <i className="ml-1 size-4 rounded-full bg-white shadow" />
+          <label className="mt-4 flex cursor-pointer items-center gap-3">
+            <input type="checkbox" className="peer sr-only" checked={unlimited} onChange={(e) => setUnlimited(e.target.checked)} />
+            <span className={cx("relative inline-flex h-6 w-10 items-center rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--a-maroon)]", unlimited ? "bg-[var(--a-maroon)]" : "bg-[#d9d2d3]")}>
+              <i className={cx("size-4 rounded-full bg-white shadow transition-transform", unlimited ? "translate-x-5" : "translate-x-1")} />
             </span>
             <span className="text-[15px] text-[var(--a-ink)]">Unlimited</span>
+            <span className="text-[13px] text-[var(--a-muted)]">{unlimited ? "Shown as unlimited stock; the quantity below is ignored." : "Turn on if you can make more whenever an order comes in."}</span>
           </label>
 
           <Field label="Sizes" className="mt-5">
@@ -542,7 +615,7 @@ export default function ProductFormPage() {
                 <Trash2 size={15} /> Delete product
               </Btn>
             )}
-            <Btn variant="white" disabled title={SOON} className="h-10 rounded-md px-4 text-[14px]">
+            <Btn variant="white" onClick={saveDraft} disabled={saving} className="h-10 rounded-md px-4 text-[14px]">
               <Save size={15} /> Save to draft
             </Btn>
             <Btn onClick={publish} disabled={saving} className="h-10 rounded-md px-5 text-[14px]">

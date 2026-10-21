@@ -269,7 +269,8 @@ export default function ShopPage() {
 
                     lg:h-[46px]
                     lg:w-[320px]
-                    lg:px-[104px]
+                    lg:px-6
+                    whitespace-nowrap
                     lg:text-base
                     lg:tracking-normal
                   "

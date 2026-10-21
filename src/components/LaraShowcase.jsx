@@ -7,6 +7,8 @@ import scatterStreet from "../assets/scatter-street.jpg";
 import scatterTeal from "../assets/scatter-teal.webp";
 import laraDecor from "../assets/decor/lara-decor-composite.png";
 import { useNavbarVisibility } from "../context/NavbarVisibilityContext";
+import { getShowcaseReviews } from "../api";
+import { DEFAULT_TESTIMONIALS, SHOWCASE_REVIEW_COUNT } from "../data/showcaseReviews";
 
 /* ============================================================
    LARA SHOWCASE
@@ -461,60 +463,24 @@ function buildWordParagraphs(paragraphs) {
    REVIEWS
    ============================================================ */
 
-const TESTIMONIALS = [
-  {
-    quote:
-      "I've never had a piece fit this well straight out of the box. Literally made to my measurements. No alterations needed.",
-    name: "Teniola Aladese",
-  },
-  {
-    quote:
-      "You can tell this isn't machine-made. The detail in the stitching is unreal.",
-    name: "Tolu Coker",
-  },
-  {
-    quote:
-      "The bikini set held up through an entire beach trip. No stretching, no losing shape. Genuinely impressed.",
-    name: "Halima Finny",
-  },
-  {
-    quote:
-      "The Reina dress is a whole moment. I get stopped every single time I wear it.",
-    name: "Chidinma K.",
-  },
-  {
-    quote:
-      "Ordered a custom two-piece for my birthday and it arrived exactly how I described it. Lara really listens.",
-    name: "Precious Ehizoge",
-  },
-  {
-    quote:
-      "Customer service walked me through sizing so patiently. Made ordering online feel less scary.",
-    name: "Ejiro Okezie",
-  },
-  {
-    quote:
-      "Every detail felt intentional. You can really see the care that went into making the piece.",
-    name: "Amaka O.",
-  },
-  {
-    quote: "The fit was beautiful and the finishing was even better in person.",
-    name: "Nora E.",
-  },
-  {
-    quote:
-      "I loved being able to choose the colour and get something made specifically for me.",
-    name: "Zainab A.",
-  },
-];
 
 // 9 testimonials → 3 rows of 3, all 3 in a row revealed together
 // (see getReviewRowReveal) and all 9 ending up on screen at once.
-const REVIEW_ROWS = [
-  TESTIMONIALS.slice(0, 3),
-  TESTIMONIALS.slice(3, 6),
-  TESTIMONIALS.slice(6, 9),
-];
+// TIP: Lara edits these in the admin ("Home Reviews"). The built-in ones live in src/data/showcaseReviews.js
+// and are used until she saves her own, or if the server can't be reached.
+function useTestimonials() {
+  const [items, setItems] = useState(DEFAULT_TESTIMONIALS);
+  useEffect(() => {
+    let cancelled = false;
+    getShowcaseReviews().then((data) => {
+      if (!cancelled && Array.isArray(data.items) && data.items.length === SHOWCASE_REVIEW_COUNT) setItems(data.items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return items;
+}
 
 
 /* ============================================================
@@ -770,7 +736,7 @@ function NarrowReviewRow({ row, rowIndex = 0, progress, innerRef }) {
       <div ref={innerRef} className="flex flex-col gap-3">
         {row.map((testimonial) => (
           <div
-            key={testimonial.name}
+            key={`${rowIndex}-${testimonial.name}`}
             className="border border-[var(--line)] bg-[var(--cream)] p-4 max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
           >
             <ReviewCardBody testimonial={testimonial} compact />
@@ -807,6 +773,11 @@ function useIsNarrow() {
    ============================================================ */
 
 export default function LaraShowcase() {
+  const TESTIMONIALS = useTestimonials();
+  const REVIEW_ROWS = useMemo(
+    () => [TESTIMONIALS.slice(0, 3), TESTIMONIALS.slice(3, 6), TESTIMONIALS.slice(6, 9)],
+    [TESTIMONIALS]
+  );
   const wrapperRef = useRef(null);
   const contentRef = useRef(null);
   const contentHeightRef = useRef(0);
@@ -1446,7 +1417,7 @@ export default function LaraShowcase() {
                   {REVIEW_ROWS.map((row, rowIndex) =>
                     row.map((testimonial) => (
                       <ReviewCard
-                        key={testimonial.name}
+                        key={`${rowIndex}-${testimonial.name}`}
                         testimonial={testimonial}
                         rowIndex={rowIndex}
                         progress={progress}
