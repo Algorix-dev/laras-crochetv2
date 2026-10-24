@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { heroNameLines } from '../utils/heroName';
+import { heroNameLines, HERO_BROKEN_DROP } from '../utils/heroName';
 import { Link, useNavigate } from "react-router-dom";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCart } from "../context/CartContext";
@@ -1663,6 +1663,11 @@ function HeroCarousel({ models }) {
                   text-center
 
                 "
+                // TIP: when the name is broken into several lines, push the whole title down a little
+                // (em = relative to the title's own font size). Change HERO_BROKEN_DROP in utils/heroName.js.
+                style={{
+                  marginBottom: `${-(heroNameLines(activeModel.name).length - 1) * HERO_BROKEN_DROP * 1.05}em`,
+                }}
               >
                 {heroNameLines(activeModel.name).map((line, i, all) => (
                   <span key={i} className="block">

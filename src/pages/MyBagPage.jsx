@@ -11,6 +11,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
 import RecommendedProducts from '../components/RecommendedProducts';
 import Footer from '../components/Footer';
+import Select from '../components/Select';
 import { toast } from '../utils/toast';
 import { formatDeliveryRange, formatDeliveryDays, DELIVERY_WINDOWS } from '../utils/delivery';
 
@@ -30,20 +31,23 @@ function sizeChoices(product, current) {
   return list.filter(Boolean).sort((a, b) => rank(a) - rank(b));
 }
 
+// TIP — STYLED SIZE DROPDOWN. This uses the site's own <Select> (components/Select.jsx) instead of the
+// browser's plain select, so the open list is styled like the rest of the site. The closed box is styled
+// by the classes below (height, border, padding); the open list is styled inside Select.jsx.
 function SizeSelect({ item, onChange, className = '' }) {
   return (
-    <select
+    <Select
       value={item.selectedSize || ''}
       onChange={(e) => onChange(item.id, e.target.value)}
       aria-label={`Size for ${item.product.name}`}
-      className={`h-9 cursor-pointer border border-[#DED3D4] bg-white px-2 text-base font-semibold text-[#564345] outline-none ${className}`}
+      className={`h-9 border border-[#DED3D4] bg-white px-2.5 text-base font-semibold text-[#564345] outline-none transition-colors hover:border-[#564345] focus-visible:border-[#564345] ${className}`}
     >
       {sizeChoices(item.product, item.selectedSize).map((s) => (
         <option key={s} value={s}>
           {s}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 
@@ -202,7 +206,7 @@ export default function MyBagPage() {
                 <span className="text-[14px] text-[#564345]">Item</span>
                 <span />
                 <span className="text-[14px] text-[#564345]">Size</span>
-                <span className="text-[14px] text-[#564345]">Color</span>
+                <span className="text-[14px] text-[#564345] md:pl-4">Color</span>
                 <span className="text-[14px] text-[#564345]">Qty</span>
               </div>
 
@@ -352,8 +356,8 @@ export default function MyBagPage() {
                           key={line.id}
                           className="md:grid md:grid-cols-[96px_120px_223px] md:items-start md:gap-3"
                         >
-                          <SizeSelect item={line} onChange={updateSize} className="w-full" />
-                          <span className="pt-2 text-base font-semibold leading-[18px] text-[#564345]">
+                          <SizeSelect item={line} onChange={updateSize} className="w-[80px]" />
+                          <span className="pt-2 pl-4 text-base font-semibold leading-[18px] text-[#564345]">
                             {line.selectedColor}
                           </span>
                           <QtyStepper

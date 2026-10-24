@@ -11,6 +11,14 @@
 export const HERO_WORD_MAX = 7;
 export const HERO_LINE_MAX = 8;
 
+/*
+  TIP — HOW FAR A BROKEN TITLE DROPS. The hero title sits on its bottom edge, so when a name breaks into
+  2+ lines the extra lines grow UPWARD and can touch the navbar. To prevent that, the title is pushed down
+  by this much for every extra line, measured in "lines" of the title's own text size
+  (0.5 = half a line per extra line). Bigger number = lower title, 0 = turn the drop off.
+*/
+export const HERO_BROKEN_DROP = 0.55;
+
 export function heroNameLines(name) {
   const words = String(name || '').trim().split(/\s+/).filter(Boolean);
   const lines = [];
