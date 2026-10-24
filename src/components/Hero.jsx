@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { heroNameLines, HERO_BROKEN_DROP } from '../utils/heroName';
+import { defaultVariant } from '../utils/variantLabel';
 import { Link, useNavigate } from "react-router-dom";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCart } from "../context/CartContext";
@@ -1539,15 +1540,9 @@ function HeroCarousel({ models }) {
 
     if (!product) return;
 
-    addToBag(
-      product,
-      product.colors?.[0] ||
-        "",
-      product.shades?.[0] ||
-        "",
-      product.sizes?.[0] ||
-        "S"
-    );
+    // TIP: same first colour / shade / size the product page pre-selects (see utils/variantLabel.js).
+    const v = defaultVariant(product);
+    addToBag(product, v.color, v.shade, v.size);
 
     openBag();
   };

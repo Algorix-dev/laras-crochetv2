@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCurrency } from '../context/CurrencyContext';
 import BagIcon from './BagIcon';
+import { defaultVariant } from '../utils/variantLabel';
 
 const HEART_UNFILLED = 'rgba(64, 64, 64, 0.15)';
 
@@ -28,12 +29,9 @@ export default function ProductCard({
   const handleAddToBag = () => {
     if (isPlaceholder) return;
 
-    addToBag(
-      product,
-      product.colors?.[0] || '',
-      product.shades?.[0] || '',
-      product.sizes?.[0] || 'S'
-    );
+    // TIP: same first colour / shade / size the product page pre-selects (see utils/variantLabel.js).
+    const v = defaultVariant(product);
+    addToBag(product, v.color, v.shade, v.size);
 
     openBag();
   };
