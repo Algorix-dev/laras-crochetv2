@@ -16,6 +16,7 @@ import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useWishlist } from '../context/WishlistContext';
 import RecommendedProducts from './RecommendedProducts';
+import { realVariant } from '../utils/variantLabel';
 
 
 export default function BagDrawer({ open, onClose }) {
@@ -122,12 +123,14 @@ export default function BagDrawer({ open, onClose }) {
                             <p>
                               Size{' '}
                               <span className="font-bold text-[var(--ink)]">
-                                {[item.selectedSize, item.selectedShade].filter(Boolean).join('/')}
+                                {[item.selectedSize, realVariant(item.selectedShade)].filter(Boolean).join('/')}
                               </span>
                             </p>
-                            <p>
-                              Color <span className="font-bold text-[var(--ink)]">{item.selectedColor}</span>
-                            </p>
+                            {realVariant(item.selectedColor) && (
+                              <p>
+                                Color <span className="font-bold text-[var(--ink)]">{realVariant(item.selectedColor)}</span>
+                              </p>
+                            )}
                           </div>
                           <button
                             onClick={() => {

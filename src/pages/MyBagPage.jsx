@@ -12,6 +12,7 @@ import { useWishlist } from '../context/WishlistContext';
 import RecommendedProducts from '../components/RecommendedProducts';
 import Footer from '../components/Footer';
 import Select from '../components/Select';
+import { realVariant } from '../utils/variantLabel';
 import { toast } from '../utils/toast';
 import { formatDeliveryRange, formatDeliveryDays, DELIVERY_WINDOWS } from '../utils/delivery';
 
@@ -318,16 +319,22 @@ export default function MyBagPage() {
                       <div className="mt-auto space-y-2 pt-3 md:hidden">
                         {group.lines.map((line) => (
                           <div key={line.id} className="space-y-1">
-                            <p className="text-base text-[#564345]">
-                              Color{' '}
-                              <span className="font-bold text-[var(--ink)]">{line.selectedColor}</span>
-                              {line.selectedShade && (
-                                <>
-                                  {' · Shade '}
-                                  <span className="font-bold text-[var(--ink)]">{line.selectedShade}</span>
-                                </>
-                              )}
-                            </p>
+                            {(realVariant(line.selectedColor) || realVariant(line.selectedShade)) && (
+                              <p className="text-base text-[#564345]">
+                                {realVariant(line.selectedColor) && (
+                                  <>
+                                    Color{' '}
+                                    <span className="font-bold text-[var(--ink)]">{realVariant(line.selectedColor)}</span>
+                                  </>
+                                )}
+                                {realVariant(line.selectedShade) && (
+                                  <>
+                                    {realVariant(line.selectedColor) ? ' · Shade ' : 'Shade '}
+                                    <span className="font-bold text-[var(--ink)]">{realVariant(line.selectedShade)}</span>
+                                  </>
+                                )}
+                              </p>
+                            )}
                             <div className="flex items-center gap-2">
                               <SizeSelect item={line} onChange={updateSize} className="w-[84px] shrink-0" />
                               <div className="min-w-0 flex-1">
@@ -353,9 +360,9 @@ export default function MyBagPage() {
                         >
                           <SizeSelect item={line} onChange={updateSize} className="w-[80px]" />
                           <span className="pt-2 pl-4 text-base font-semibold leading-[18px] text-[#564345]">
-                            {line.selectedColor}
-                            {line.selectedShade && (
-                              <span className="block font-normal text-[#AF9D9E]">{line.selectedShade}</span>
+                            {realVariant(line.selectedColor)}
+                            {realVariant(line.selectedShade) && (
+                              <span className="block font-normal text-[#AF9D9E]">{realVariant(line.selectedShade)}</span>
                             )}
                           </span>
                           <QtyStepper

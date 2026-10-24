@@ -24,6 +24,7 @@ import Footer from '../components/Footer';
 import laraCrochetLogo from '../assets/lara-crochet-logo.png';
 import Select from "../components/Select";
 import { toast } from '../utils/toast';
+import { realVariant } from '../utils/variantLabel';
 
 
 /* TIP: Reusable input field component — renders a label + text input
@@ -639,7 +640,7 @@ export default function CheckoutPage() {
                         {item.product.category === 'dresses' ? ' Dress' : ''}
                       </b>
                       <p className="mt-1 text-base uppercase text-[var(--mauve-muted)]">
-                        {[item.selectedColor, item.selectedSize, item.selectedShade]
+                        {[realVariant(item.selectedColor), item.selectedSize, realVariant(item.selectedShade)]
                           .filter(Boolean)
                           .join(' / ')}
                       </p>

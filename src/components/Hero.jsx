@@ -1542,9 +1542,9 @@ function HeroCarousel({ models }) {
     addToBag(
       product,
       product.colors?.[0] ||
-        "Default",
+        "",
       product.shades?.[0] ||
-        "Default",
+        "",
       product.sizes?.[0] ||
         "S"
     );

@@ -30,8 +30,8 @@ export default function ProductCard({
 
     addToBag(
       product,
-      product.colors?.[0] || 'Default',
-      product.shades?.[0] || 'Default',
+      product.colors?.[0] || '',
+      product.shades?.[0] || '',
       product.sizes?.[0] || 'S'
     );
 
