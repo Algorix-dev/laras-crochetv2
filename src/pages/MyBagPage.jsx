@@ -114,12 +114,13 @@ export default function MyBagPage() {
 
   const shipping = cartItems.length ? 10000 : 0;
   const total = cartTotal + shipping;
-  // TIP — SAME OUTFIT, SEVERAL SIZES = ONE PRODUCT ROW. Bag lines for the same piece in the same
-  // colour/shade are grouped, so e.g. a Reina dress in S and in M shows as ONE product with both sizes
-  // listed under it, not as two separate products. (The cart itself still keeps one line per size.)
+  // TIP — SAME OUTFIT = ONE PRODUCT ROW. Bag lines for the same piece are grouped whatever the size or
+  // colour, so e.g. a Reina dress in S/Black and in M/Red shows as ONE product with both lines listed
+  // under it, not as two separate products. (The cart itself still keeps one line per size + colour.)
+  // To group by colour as well again, change the key to `${item.product.id}|${item.selectedColor}|${item.selectedShade}`.
   const groups = [];
   for (const item of cartItems) {
-    const key = `${item.product.id}|${item.selectedColor}|${item.selectedShade}`;
+    const key = String(item.product.id);
     let group = groups.find((g) => g.key === key);
     if (!group) {
       group = { key, lines: [] };
@@ -292,24 +293,6 @@ export default function MyBagPage() {
                         {formatPrice(product.price)}
                       </p>
 
-                      {/* MOBILE COLOR (+ shade) */}
-                      <div className="mt-2 space-y-1 text-base text-[#564345] md:hidden">
-                        <p>
-                          Color{' '}
-                          <span className="font-bold text-[var(--ink)]">
-                            {first.selectedColor}
-                          </span>
-                        </p>
-                        {first.selectedShade && (
-                          <p>
-                            Shade{' '}
-                            <span className="font-bold text-[var(--ink)]">
-                              {first.selectedShade}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-
                       {/* MOBILE WISHLIST */}
                       <button
                         type="button"
@@ -334,15 +317,27 @@ export default function MyBagPage() {
                       {/* MOBILE: one line per size — change the size, change the quantity */}
                       <div className="mt-auto space-y-2 pt-3 md:hidden">
                         {group.lines.map((line) => (
-                          <div key={line.id} className="flex items-center gap-2">
-                            <SizeSelect item={line} onChange={updateSize} className="w-[84px] shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <QtyStepper
-                                item={line}
-                                updateQuantity={updateQuantity}
-                                removeFromBag={removeFromBag}
-                                variant="mobile"
-                              />
+                          <div key={line.id} className="space-y-1">
+                            <p className="text-base text-[#564345]">
+                              Color{' '}
+                              <span className="font-bold text-[var(--ink)]">{line.selectedColor}</span>
+                              {line.selectedShade && (
+                                <>
+                                  {' · Shade '}
+                                  <span className="font-bold text-[var(--ink)]">{line.selectedShade}</span>
+                                </>
+                              )}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <SizeSelect item={line} onChange={updateSize} className="w-[84px] shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <QtyStepper
+                                  item={line}
+                                  updateQuantity={updateQuantity}
+                                  removeFromBag={removeFromBag}
+                                  variant="mobile"
+                                />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -359,6 +354,9 @@ export default function MyBagPage() {
                           <SizeSelect item={line} onChange={updateSize} className="w-[80px]" />
                           <span className="pt-2 pl-4 text-base font-semibold leading-[18px] text-[#564345]">
                             {line.selectedColor}
+                            {line.selectedShade && (
+                              <span className="block font-normal text-[#AF9D9E]">{line.selectedShade}</span>
+                            )}
                           </span>
                           <QtyStepper
                             item={line}
