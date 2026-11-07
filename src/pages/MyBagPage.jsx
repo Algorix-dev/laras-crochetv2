@@ -63,8 +63,8 @@ function QtyStepper({ item, updateQuantity, removeFromBag, variant }) {
     <div
       className={
         mobile
-          ? 'flex h-[34px] w-full items-center justify-between border border-[#DED3D4] text-base text-[#564345]'
-          : 'flex h-10 w-full items-center justify-between border border-[#EFE7E7] px-2 py-[7px]'
+          ? 'flex h-[2.125rem] w-full items-center justify-between border border-[#DED3D4] text-base text-[#564345]'
+          : 'flex h-10 w-full items-center justify-between border border-[#EFE7E7] px-2 py-[0.4375rem]'
       }
     >
       <button
@@ -142,8 +142,8 @@ export default function MyBagPage() {
     return (
       <>
         <main className="min-h-screen">
-          <section className="mx-auto max-w-[984px] px-4 py-16 text-center md:px-0">
-            <h1 className="text-2xl font-bold uppercase tracking-wide md:text-3xl lg:text-[36px]">
+          <section className="mx-auto max-w-[61.5rem] px-4 py-16 text-center md:px-0">
+            <h1 className="text-2xl font-bold uppercase tracking-wide md:text-3xl lg:text-[2.25rem]">
               My Bag (0)
             </h1>
 
@@ -156,7 +156,7 @@ export default function MyBagPage() {
               className="
                 mt-8
                 inline-flex
-                h-[42px]
+                h-[2.625rem]
                 items-center
                 justify-center
                 bg-[var(--ink)]
@@ -184,7 +184,7 @@ export default function MyBagPage() {
       <main className="min-h-screen">
         <section className="px-4 pt-8 pb-16 md:px-8 md:pt-10 lg:px-[15.83%]">
           {/* PAGE HEADING */}
-          <h1 className="text-[24px] font-bold uppercase tracking-wide md:text-3xl lg:text-[36px]">
+          <h1 className="text-[1.5rem] font-bold uppercase tracking-wide md:text-3xl lg:text-[2.25rem]">
             My Bag ({cartCount})
           </h1>
 
@@ -204,12 +204,12 @@ export default function MyBagPage() {
             ========================== */}
             <div>
               {/* DESKTOP TABLE HEADER */}
-              <div className="hidden border-b border-[var(--line)] pb-4 md:grid md:grid-cols-[6rem_1fr_96px_120px_223px] md:items-center md:gap-3">
-                <span className="text-[14px] text-[#564345]">Item</span>
+              <div className="hidden border-b border-[var(--line)] pb-4 md:grid md:grid-cols-[6rem_1fr_6rem_7.5rem_13.9375rem] md:items-center md:gap-3">
+                <span className="text-[0.875rem] text-[#564345]">Item</span>
                 <span />
-                <span className="text-[14px] text-[#564345]">Size</span>
-                <span className="text-[14px] text-[#564345] md:pl-4">Color</span>
-                <span className="text-[14px] text-[#564345]">Qty</span>
+                <span className="text-[0.875rem] text-[#564345]">Size</span>
+                <span className="text-[0.875rem] text-[#564345] md:pl-4">Color</span>
+                <span className="text-[0.875rem] text-[#564345]">Qty</span>
               </div>
 
               {/* CART LIST */}
@@ -222,14 +222,14 @@ export default function MyBagPage() {
                     key={group.key}
                     className="
                       grid
-                      min-h-[201px]
-                      grid-cols-[105px_minmax(0,1fr)]
-                      gap-[14px]
+                      min-h-[12.5625rem]
+                      grid-cols-[6.5625rem_minmax(0,1fr)]
+                      gap-[0.875rem]
                       border-b
                       border-[#D4D4D4]
 
                       md:min-h-0
-                      md:grid-cols-[6rem_1fr_96px_120px_223px]
+                      md:grid-cols-[6rem_1fr_6rem_7.5rem_13.9375rem]
                       md:items-start
                       md:gap-3
                       md:py-5
@@ -240,14 +240,14 @@ export default function MyBagPage() {
                       to={`/product/${product.id}`}
                       className="
                         flex
-                        h-[200px]
-                        w-[105px]
+                        h-[12.5rem]
+                        w-[6.5625rem]
                         shrink-0
                         items-center
                         justify-center
                         bg-[#FAFAFA]
                         px-4
-                        py-[5px]
+                        py-[0.3125rem]
 
                         md:h-24
                         md:w-24
@@ -259,8 +259,8 @@ export default function MyBagPage() {
                         src={product.image}
                         alt={product.name}
                         className="
-                          h-[190px]
-                          w-[91px]
+                          h-[11.875rem]
+                          w-[5.6875rem]
                           object-contain
 
                           md:h-24
@@ -271,7 +271,7 @@ export default function MyBagPage() {
 
                     {/* PRODUCT INFORMATION */}
                     <div className="flex min-w-0 flex-col py-1 md:py-0">
-                      <p className="text-[12px] uppercase tracking-wider text-[#AF9D9E] md:text-[12px]">
+                      <p className="text-[0.75rem] uppercase tracking-wider text-[#AF9D9E] md:text-[0.75rem]">
                         {product.category === 'two-pieces'
                           ? 'Two-Piece'
                           : product.category === 'bikinis'
@@ -336,7 +336,7 @@ export default function MyBagPage() {
                               </p>
                             )}
                             <div className="flex items-center gap-2">
-                              <SizeSelect item={line} onChange={updateSize} className="w-[84px] shrink-0" />
+                              <SizeSelect item={line} onChange={updateSize} className="w-[5.25rem] shrink-0" />
                               <div className="min-w-0 flex-1">
                                 <QtyStepper
                                   item={line}
@@ -356,10 +356,10 @@ export default function MyBagPage() {
                       {group.lines.map((line) => (
                         <div
                           key={line.id}
-                          className="md:grid md:grid-cols-[96px_120px_223px] md:items-start md:gap-3"
+                          className="md:grid md:grid-cols-[6rem_7.5rem_13.9375rem] md:items-start md:gap-3"
                         >
-                          <SizeSelect item={line} onChange={updateSize} className="w-[80px]" />
-                          <span className="pt-2 pl-4 text-base font-semibold leading-[18px] text-[#564345]">
+                          <SizeSelect item={line} onChange={updateSize} className="w-[5rem]" />
+                          <span className="pt-2 pl-4 text-base font-semibold leading-[1.125rem] text-[#564345]">
                             {realVariant(line.selectedColor)}
                             {realVariant(line.selectedShade) && (
                               <span className="block font-normal text-[#AF9D9E]">{realVariant(line.selectedShade)}</span>
@@ -373,7 +373,7 @@ export default function MyBagPage() {
                           />
                         </div>
                       ))}
-                      <div className="md:grid md:grid-cols-[96px_120px_223px] md:gap-3">
+                      <div className="md:grid md:grid-cols-[6rem_7.5rem_13.9375rem] md:gap-3">
                         <button
                           type="button"
                           onClick={() => moveGroupToWishlist(group)}
@@ -400,7 +400,7 @@ export default function MyBagPage() {
                   onClick={() =>
                     setPromoOpen((open) => !open)
                   }
-                  className="flex h-[28px] w-full items-center justify-between text-base font-bold text-[#564345]"
+                  className="flex h-[1.75rem] w-full items-center justify-between text-base font-bold text-[#564345]"
                 >
                   <span>Promo Code or Gift Card?</span>
 
@@ -432,7 +432,7 @@ export default function MyBagPage() {
 
               {/* TOTAL */}
               <div className="mt-10">
-                <div className="flex h-10 items-center justify-between bg-[#EFE7E7] px-[30px] text-base text-[#564345]">
+                <div className="flex h-10 items-center justify-between bg-[#EFE7E7] px-[1.875rem] text-base text-[#564345]">
                   <span>TOTAL</span>
 
                   <span>{formatPrice(total)}</span>
@@ -444,7 +444,7 @@ export default function MyBagPage() {
                   className="
                     mt-2
                     flex
-                    h-[42px]
+                    h-[2.625rem]
                     w-full
                     items-center
                     justify-center
@@ -468,7 +468,7 @@ export default function MyBagPage() {
                   onClick={() =>
                     setTermsOpen((open) => !open)
                   }
-                  className="flex h-[45px] w-full items-center justify-between border-b border-[#EFE7E7] text-base font-bold text-[#564345]"
+                  className="flex h-[2.8125rem] w-full items-center justify-between border-b border-[#EFE7E7] text-base font-bold text-[#564345]"
                 >
                   <span>Terms & Conditions</span>
 
@@ -495,7 +495,7 @@ export default function MyBagPage() {
                   onClick={() =>
                     setDeliveryOpen((open) => !open)
                   }
-                  className="flex h-[45px] w-full items-center justify-between border-b border-[#EFE7E7] text-base font-bold text-[#564345]"
+                  className="flex h-[2.8125rem] w-full items-center justify-between border-b border-[#EFE7E7] text-base font-bold text-[#564345]"
                 >
                   <span>Delivery</span>
 

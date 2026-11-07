@@ -20,6 +20,11 @@ import { CartProvider } from './context/CartContext.jsx';
 import { WishlistProvider } from './context/WishlistContext.jsx';
 import { CurrencyProvider } from './context/CurrencyContext.jsx';
 import { BrandProvider } from './BrandProvider.jsx';
+import { getProducts, warmProductImages } from './api.js';
+
+// TIP: start loading the products NOW (this also wakes the server if it was asleep) instead of waiting
+// for the page to draw first. Everything that later asks for products shares this same request.
+getProducts().then((list) => warmProductImages(list)).catch(() => {});
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

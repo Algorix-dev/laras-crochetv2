@@ -6,6 +6,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useCurrency } from '../context/CurrencyContext';
 import BagIcon from './BagIcon';
 import { defaultVariant } from '../utils/variantLabel';
+import { cardImageSrcSet, CARD_IMAGE_SIZES } from '../api';
 
 const HEART_UNFILLED = 'rgba(64, 64, 64, 0.15)';
 
@@ -13,6 +14,7 @@ export default function ProductCard({
   product,
   variant = 'default',
   isPlaceholder = false,
+  priority = false, // first row of a grid: load right away instead of lazily
 }) {
   const { addToBag, openBag, cartItems } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -57,9 +59,7 @@ export default function ProductCard({
       className={`
         group
         w-full
-        ${isRecommendation ? 'w-[196px]' : 'w-[164px]'}
-        lg:w-auto
-        lg:max-w-none
+        min-w-0
       `}
     >
       {/* ==========================================================
@@ -76,8 +76,8 @@ export default function ProductCard({
 
           ${
             isRecommendation
-              ? 'h-[260px] lg:aspect-[313/404] lg:h-auto'
-              : 'h-[272px] lg:aspect-[640/731] lg:h-auto'
+              ? 'aspect-[196/260] lg:aspect-[313/404]'
+              : 'aspect-[164/272] min-[375px]:aspect-auto min-[375px]:h-[calc(17rem+(100vw-23.4375rem)*0.3546)] md:h-auto md:aspect-[640/731]'
           }
         `}
         /* TIP: if the photo has its own solid background (no see-through parts), the server saved
@@ -92,8 +92,11 @@ export default function ProductCard({
           {product.image ? (
             <img
               src={product.image}
+              srcSet={cardImageSrcSet(product.image)}
+              sizes={cardImageSrcSet(product.image) ? CARD_IMAGE_SIZES : undefined}
               alt={product.name}
-              loading="lazy"
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
               decoding="async"
               className="
                 h-full
@@ -112,7 +115,7 @@ export default function ProductCard({
         {/* TIP: the tag Lara picks on the product form (New, Bestseller...). Change the look with the
             classes below; bg-[var(--maroon)] is the badge colour. */}
         {product.tag && (
-          <span className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-[var(--maroon)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white md:bottom-3 md:left-3 md:text-[11px]">
+          <span className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-[var(--maroon)] px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-white md:bottom-3 md:left-3 md:text-[0.6875rem]">
             {product.tag}
           </span>
         )}
@@ -128,8 +131,8 @@ export default function ProductCard({
             aria-disabled={isPlaceholder}
             onClick={handleToggleWishlist}
             className={`
-              absolute left-[16px] top-[6px]
-              flex h-[28px] w-[28px] items-center justify-center
+              absolute left-[1rem] top-[0.375rem]
+              flex h-[1.75rem] w-[1.75rem] items-center justify-center
               rounded-full bg-[#EFE7E7] text-[#412B2D]
               md:left-5 md:top-5 md:h-8 md:w-8
               ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}
@@ -156,26 +159,22 @@ export default function ProductCard({
           ${
             isRecommendation
               ? `
-                h-[43.25px]
-                w-[196px]
-                gap-[3.25px]
-                px-[10px]
+                min-h-[2.7031rem]
+                gap-[0.2031rem]
+                px-[0.625rem]
                 pt-0
-                mt-[10px]
+                mt-[0.625rem]
               `
               : `
-                h-[61.25px]
-                w-[164px]
-                gap-[5.25px]
-                px-[12px]
+                min-h-[3.8281rem]
+                gap-[0.3281rem]
+                px-[0.75rem]
                 pt-0
-                mt-[17.86px]
+                mt-[1.1162rem]
               `
           }
 
           lg:mt-[1.1rem]
-          lg:h-auto
-          lg:w-auto
           lg:px-3
         `}
       >
@@ -184,11 +183,6 @@ export default function ProductCard({
           className={`
             min-w-0
             flex-1
-            ${
-              isRecommendation
-                ? 'w-[162px]'
-                : 'w-[124px]'
-            }
           `}
         >
           {/* Category */}
@@ -197,9 +191,9 @@ export default function ProductCard({
               className="
                 truncate
                 whitespace-nowrap
-                text-[12px]
+                text-[0.75rem]
                 font-normal
-                leading-[18px]
+                leading-[1.125rem]
                 text-[#737373]
                 lg:text-xs
               "
@@ -217,9 +211,9 @@ export default function ProductCard({
             className={`
               truncate
               whitespace-nowrap
-              text-[14px]
+              text-[0.875rem]
               font-bold
-              leading-[20px]
+              leading-[1.25rem]
               uppercase
 
               ${
@@ -239,9 +233,9 @@ export default function ProductCard({
           <div
             className={`
               whitespace-nowrap
-              text-[14px]
+              text-[0.875rem]
               font-normal
-              leading-[20px]
+              leading-[1.25rem]
 
               ${
                 isRecommendation
@@ -270,7 +264,7 @@ export default function ProductCard({
             aria-disabled={isPlaceholder}
             onClick={handleToggleWishlist}
             className={`
-              -mr-[3px] flex h-6 w-6 shrink-0 items-center justify-center
+              -mr-[0.1875rem] flex h-6 w-6 shrink-0 items-center justify-center
               text-[#000000] transition-colors
               ${isPlaceholder ? 'cursor-default opacity-60' : 'hover:text-[var(--maroon)]'}
             `}
@@ -288,9 +282,10 @@ export default function ProductCard({
             aria-disabled={isPlaceholder}
             onClick={handleAddToBag}
             className={`
+              ml-auto
               flex
-              h-[16px]
-              w-[16px]
+              h-[1rem]
+              w-[1rem]
               shrink-0
               items-center
               justify-center

@@ -42,7 +42,7 @@ export default function AccountLayout({ active, title, headerAction, children })
           / Account
         </p>
 
-        <div className="grid gap-y-6 md:grid-cols-[200px_1fr] md:gap-x-0 lg:grid-cols-[max(180px,23.25%)_1fr]">
+        <div className="grid gap-y-6 md:grid-cols-[12.5rem_1fr] md:gap-x-0 lg:grid-cols-[max(11.25rem,23.25%)_1fr]">
           {/* max-md:mb-4 keeps the 40px gap between the mobile dropdown
               and the heading (24px row gap + 16px). */}
           <div className="max-md:mb-4 md:col-start-1 md:row-start-2">
@@ -50,7 +50,7 @@ export default function AccountLayout({ active, title, headerAction, children })
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 md:col-start-2 md:row-start-1">
-            <h1 className="text-[24px] md:text-3xl lg:text-[36px] font-bold uppercase tracking-[-2%] text-[var(--ink)]">
+            <h1 className="text-[1.5rem] md:text-3xl lg:text-[2.25rem] font-bold uppercase tracking-[-2%] text-[var(--ink)]">
               {title}
             </h1>
             {headerAction}

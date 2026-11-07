@@ -4,11 +4,32 @@
 // this is the only file that needs to change.
 const API_URL = import.meta.env.VITE_API_URL;
 
-export async function getProducts(category = "all") {
-  const query = category && category !== "all" ? `?category=${category}` : "";
-  const res = await fetch(`${API_URL}/api/products${query}`);
-  if (!res.ok) throw new Error("Failed to load products");
-  return res.json();
+// TIP — ONE SHARED REQUEST. The hero, the product grid, the search box, the wishlist and the
+// recommendation strips all ask for the same product list, often at the same moment. Without this each
+// one made its own request, and when the server is asleep (Render's free plan sleeps after ~15 min idle)
+// every one of them sat waiting separately. Now they share one request, and main.jsx starts it the
+// instant the site opens instead of waiting for the page to draw. The list is re-fetched after
+// PRODUCT_TTL_MS, so changes Lara makes in the admin still show up within about 30 seconds.
+const PRODUCT_TTL_MS = 30_000;
+const productRequests = new Map(); // category -> { at, promise }
+
+export function getProducts(category = "all") {
+  const key = category || "all";
+  const hit = productRequests.get(key);
+  if (hit && Date.now() - hit.at < PRODUCT_TTL_MS) return hit.promise;
+
+  const query = key !== "all" ? `?category=${key}` : "";
+  const promise = fetch(`${API_URL}/api/products${query}`)
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to load products");
+      return res.json();
+    })
+    .catch((err) => {
+      productRequests.delete(key); // a failed request must not be remembered
+      throw err;
+    });
+  productRequests.set(key, { at: Date.now(), promise });
+  return promise;
 }
 
 export async function getProduct(id) {
@@ -104,6 +125,33 @@ export function optimizeImage(url) {
   if (typeof url !== "string" || !url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
   if (/\/upload\/[a-z]_[^/]*\//.test(url)) return url; // already has a transformation
   return url.replace("/upload/", `/upload/${CLOUDINARY_OPT}/`);
+}
+
+// TIP — RIGHT-SIZED CARD PHOTOS. A product card is only ~170-430px wide on screen but was downloading the
+// 1200px photo. These give the browser 3 sizes of the same photo (srcset) and it downloads the smallest one
+// that still looks sharp on that screen. CARD_IMAGE_SIZES tells it how wide a card is at each screen width
+// (46vw = 2 columns on phones, 30vw = 3 columns on tablets, 23vw = 3 columns on laptops/desktops).
+export const CARD_IMAGE_SIZES = "(min-width: 1024px) 23vw, (min-width: 768px) 30vw, 46vw";
+export function cardImageSrcSet(url, widths = [400, 640, 960]) {
+  if (typeof url !== "string" || !url.includes(`/upload/${CLOUDINARY_OPT}/`)) return undefined;
+  return widths.map((w) => `${url.replace(CLOUDINARY_OPT, CLOUDINARY_OPT.replace("w_1200", `w_${w}`))} ${w}w`).join(", ");
+}
+
+// Starts downloading the first few card photos the moment the product list arrives (same srcset/sizes
+// as the real cards, so the browser fetches the exact file the card will use and reuses it).
+export function warmProductImages(list, count = 6) {
+  if (typeof Image === "undefined") return;
+  list.slice(0, count).forEach((raw) => {
+    const url = normalizeProduct(raw).image;
+    if (!url) return;
+    const img = new Image();
+    const set = cardImageSrcSet(url);
+    if (set) {
+      img.sizes = CARD_IMAGE_SIZES;
+      img.srcset = set;
+    }
+    img.src = url;
+  });
 }
 
 // `options` is only an object when we pass one on purpose. (When used as `.map(normalizeProduct)`

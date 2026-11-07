@@ -18,9 +18,9 @@ export default function BrandedLoader({ minHeight = '60vh' }) {
 
   return (
     <div className="flex items-center justify-center text-center" style={{ minHeight }}>
-      <div className={`transition duration-[1000ms] ${clear ? 'opacity-100 blur-0' : 'opacity-55 blur-[3px]'}`}>
-        <img className="mx-auto h-[120px] w-[186px] object-contain" src={logoMark} alt="Lara's Crochet" />
-        <p className="mt-3 text-[14px] tracking-[0.5em] text-[#A3A3A3]">LIMITED BY NATURE</p>
+      <div className={`transition duration-[1000ms] ${clear ? 'opacity-100 blur-0' : 'opacity-55 blur-[0.1875rem]'}`}>
+        <img className="mx-auto h-[7.5rem] w-[11.625rem] object-contain" src={logoMark} alt="Lara's Crochet" />
+        <p className="mt-3 text-[0.875rem] tracking-[0.5em] text-[#A3A3A3]">LIMITED BY NATURE</p>
       </div>
     </div>
   );

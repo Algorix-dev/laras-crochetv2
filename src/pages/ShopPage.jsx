@@ -83,20 +83,20 @@ export default function ShopPage() {
             {/* Title + description */}
             <div className="flex flex-col gap-8 md:order-1 md:gap-2">
               <div>
-                <h1 className="text-[24px] font-bold leading-[32px] tracking-[-0.48px] text-[#564345] md:text-[36px] md:leading-[1.05] md:tracking-[-2%]">
+                <h1 className="text-[1.5rem] font-bold leading-[2rem] tracking-[-0.48px] text-[#564345] md:text-[2.25rem] md:leading-[1.05] md:tracking-[-2%]">
                   SHOP LARA'S CROCHET
                 </h1>
 
                 {/* TIP: client review asked for this supporting line to be
                     bigger — bumped from 14px/18px (mobile/desktop) to
                     16px/20px. */}
-                <p className="mt-0 text-base leading-[22px] text-[#564345] md:mt-2 md:text-xl">
+                <p className="mt-0 text-base leading-[1.375rem] text-[#564345] md:mt-2 md:text-xl">
                   Shop the latest pieces and must-haves from Lara's Crochet
                 </p>
               </div>
 
               {/* Breadcrumb */}
-              <p className="md:mt-8 text-[14px] leading-[20px] text-[#564345]">
+              <p className="md:mt-8 text-[0.875rem] leading-[1.25rem] text-[#564345]">
                 <Link
                   to="/"
                   className="hover:text-[var(--ink)]"
@@ -122,17 +122,17 @@ export default function ShopPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search"
                 className="
-                  h-[44px]
+                  h-[2.75rem]
                   w-full
-                  rounded-[20px]
+                  rounded-[1.25rem]
                   border
                   border-[#D4D4D4]
                   bg-[#F5F5F5]
                   py-2.5
-                  pl-[48px]
+                  pl-[3rem]
                   pr-4
-                  text-[16px]
-                  leading-[24px]
+                  text-[1rem]
+                  leading-[1.5rem]
                   text-[#404040]
                   outline-none
                   shadow-[0_0_1px_rgba(0,0,0,0.25)]
@@ -153,7 +153,7 @@ export default function ShopPage() {
                 className="
                   pointer-events-none
                   absolute
-                  left-[16px]
+                  left-[1rem]
                   top-1/2
                   -translate-y-1/2
                   text-[#737373]
@@ -172,7 +172,7 @@ export default function ShopPage() {
               wraps
               20px gaps
         ========================================================== */}
-          <div className="mt-5 flex w-full flex-wrap gap-[20px] md:mt-6 md:gap-5 md:mb-20">
+          <div className="mt-5 flex w-full flex-wrap gap-[1.25rem] md:mt-6 md:gap-5 md:mb-20">
             {[...CATEGORIES.filter((c) => !liveSlugs || liveSlugs.has(c)), ...extraCategories].map((cat) => {
               const active = activeCategory === cat;
 
@@ -184,14 +184,14 @@ export default function ShopPage() {
                     setActiveCategory(active ? 'all' : cat)
                   }
                   className={`
-                    h-[26px]
+                    h-[1.625rem]
                     shrink-0
                     border
-                    px-[10px]
-                    py-[4px]
-                    text-[12px]
+                    px-[0.625rem]
+                    py-[0.25rem]
+                    text-[0.75rem]
                     font-normal
-                    leading-[18px]
+                    leading-[1.125rem]
                     uppercase
                     tracking-normal
                     transition-colors
@@ -248,11 +248,11 @@ export default function ShopPage() {
                     flex
                     items-center
                     justify-center
-                    h-[42px]
+                    h-[2.625rem]
                     w-full
                     bg-[#412B2D]
                     px-8
-                    text-[14px]
+                    text-[0.875rem]
                     font-bold
                     leading-none
                     uppercase
@@ -261,14 +261,14 @@ export default function ShopPage() {
                     hover:bg-[var(--maroon)]
                     cursor-pointer
 
-                    md:h-[44px]
+                    md:h-[2.75rem]
                     md:w-auto
                     md:px-12
                     md:text-sm
                     md:tracking-wide
 
-                    lg:h-[46px]
-                    lg:w-[320px]
+                    lg:h-[2.875rem]
+                    lg:w-[20rem]
                     lg:px-6
                     whitespace-nowrap
                     lg:text-base

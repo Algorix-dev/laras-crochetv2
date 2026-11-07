@@ -54,7 +54,7 @@ export default function BagDrawer({ open, onClose }) {
             aria-modal="true"
             role="dialog"
             aria-labelledby="bag-title"
-            className="fixed inset-y-0 right-0 z-[61] flex w-full max-w-[420px] flex-col bg-white shadow-2xl"
+            className="fixed inset-y-0 right-0 z-[61] flex w-full max-w-[26.25rem] flex-col bg-white shadow-2xl"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -107,7 +107,7 @@ export default function BagDrawer({ open, onClose }) {
                         className="h-28 w-20 bg-white object-contain"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] uppercase tracking-wider text-[var(--muted)]">
+                        <p className="text-[0.6875rem] uppercase tracking-wider text-[var(--muted)]">
                           {item.product.categoryLabel || 'Product'}
                         </p>
                         <h3 className="text-sm uppercase tracking-wide">
@@ -138,7 +138,7 @@ export default function BagDrawer({ open, onClose }) {
                               removeFromBag(item.id, { silent: true });
                               toast.success('Moved to wishlist', { duration: 2500 });
                             }}
-                            className="shrink-0 text-[10px] uppercase tracking-wider underline"
+                            className="shrink-0 text-[0.625rem] uppercase tracking-wider underline"
                           >
                             Move to wishlist
                           </button>

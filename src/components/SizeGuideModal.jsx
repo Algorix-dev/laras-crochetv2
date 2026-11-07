@@ -39,7 +39,7 @@ export default function SizeGuideModal({ onClose }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[696px] bg-[var(--cream)] p-8 shadow-lg md:p-10"
+        className="relative w-full max-w-[43.5rem] bg-[var(--cream)] p-8 shadow-lg md:p-10"
       >
         <button
           onClick={onClose}

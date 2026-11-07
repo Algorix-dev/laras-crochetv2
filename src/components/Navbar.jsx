@@ -156,7 +156,7 @@ export default function Navbar() {
           in it (client request). Empty bag = outline only. */}
       <BagIcon size={18} filled={inBag}/>
       {cartCount > 0 && (
-        <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
+        <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[0.5625rem] text-white">
           {cartCount}
         </span>
       )}
@@ -177,7 +177,7 @@ export default function Navbar() {
     >
       <Heart size={18} />
       {wishlistCount > 0 && (
-        <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[9px] text-white">
+        <span className="absolute -right-2 -top-2 rounded-full bg-[var(--maroon)] px-1 text-[0.5625rem] text-white">
           {wishlistCount}
         </span>
       )}
@@ -204,7 +204,7 @@ export default function Navbar() {
         <div
           className="
             grid h-[var(--nav-h)] grid-cols-[auto_1fr_auto] items-center gap-4
-            px-5 md:px-8 lg:px-10 xl:px-[15.83%]
+            px-5 md:px-8 lg:px-[15.83%]
             md:grid-cols-[auto_1fr_auto] lg:grid-cols-[1fr_auto_1fr]
           "
         >
@@ -220,13 +220,13 @@ export default function Navbar() {
           {/* Desktop nav links — justify-self-center is the piece
               that actually centers this against the page, not the
               grid alone. */}
-          <nav className="hidden justify-self-center gap-1 whitespace-nowrap text-[13px] uppercase md:flex lg:gap-5 lg:text-sm">
+          <nav className="hidden justify-self-center gap-1 whitespace-nowrap text-[0.8125rem] uppercase md:flex lg:gap-5 lg:text-sm">
             {LINKS.map((link) => (
               <Link
                 key={link.label}
                 to={link.to}
                 className={
-                  "flex h-10 items-center rounded-[10px] px-2 hover:bg-black/5 lg:px-[10px] " +
+                  "flex h-10 items-center rounded-[0.625rem] px-2 hover:bg-black/5 lg:px-[0.625rem] " +
                   (isActive(link.to)
                     ? "font-nav-active text-[var(--ink)]"
                     : "text-[var(--muted)] hover:text-[var(--ink)]")
@@ -269,7 +269,7 @@ export default function Navbar() {
           {/* Mobile cluster — heart, bag, hamburger, as in the Figma
               mobile header. TIP: the menu below no longer repeats the
               heart and bag. */}
-          <div className="flex items-center gap-4 justify-self-end md:hidden">
+          <div className="flex items-center gap-4 justify-self-end max-[359px]:gap-3 md:hidden">
             <WishlistButton />
             <BagButton />
             <button
@@ -284,7 +284,7 @@ export default function Navbar() {
 
         {/* Mobile menu dropdown */}
         {menuOpen && (
-          <nav className="flex flex-col gap-4 px-5 pb-6 text-base uppercase md:hidden">
+          <nav className="flex max-h-[calc(100dvh-var(--nav-h))] flex-col gap-4 overflow-y-auto overscroll-contain px-5 pb-6 text-base uppercase md:hidden">
             {LINKS.map((link) => (
               <Link
                 key={link.label}

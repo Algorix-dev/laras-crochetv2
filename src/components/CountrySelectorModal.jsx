@@ -337,7 +337,7 @@ export default function CountrySelector({
           alt=""
           width="24"
           height="18"
-          className="w-6 h-[18px] object-cover rounded-[2px] shrink-0"
+          className="w-6 h-[1.125rem] object-cover rounded-[2px] shrink-0"
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <span className="text-sm font-medium tracking-wide">{selected.code3}</span>
@@ -357,7 +357,7 @@ export default function CountrySelector({
           {/* TIP: on phones this is a bottom sheet (full width, hugging the bottom,
               smaller padding + heading). From the sm breakpoint (640px) up it is
               the original centered 480px card. Edit the max-sm: values to tweak. */}
-          <div className="w-full max-w-none sm:max-w-[480px] max-h-[88dvh] sm:max-h-[calc(100vh-32px)] overflow-y-auto bg-[#FFFCFC] shadow-[0px_8px_30px_rgba(0,0,0,0.25)] p-5 sm:p-8">
+          <div className="w-full max-w-none sm:max-w-[30rem] max-h-[88dvh] sm:max-h-[calc(100vh-2rem)] overflow-y-auto bg-[#FFFCFC] shadow-[0px_0.5rem_1.875rem_rgba(0,0,0,0.25)] p-5 sm:p-8">
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <h2 className="text-lg sm:text-2xl font-bold text-[#404040] m-0">Select Your Country</h2>
               <button
@@ -380,12 +380,12 @@ export default function CountrySelector({
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search for a country..."
-                    className="w-full h-11 sm:h-[52px] border border-[#404040] bg-transparent pl-4 pr-11 text-base outline-none placeholder:text-[#A3A3A3]"
+                    className="w-full h-11 sm:h-[3.25rem] border border-[#404040] bg-transparent pl-4 pr-11 text-base outline-none placeholder:text-[#A3A3A3]"
                   />
                   <Search size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#777]" aria-hidden="true" />
                 </div>
 
-                <div className="max-h-[45dvh] sm:max-h-[330px] overflow-y-auto pr-1" role="listbox">
+                <div className="max-h-[45dvh] sm:max-h-[20.625rem] overflow-y-auto pr-1" role="listbox">
                   {filteredCountries.length > 0 ? (
                     filteredCountries.map((country) => {
                       const active = country.code === activeCode;
@@ -396,7 +396,7 @@ export default function CountrySelector({
                           onClick={() => pickCountry(country)}
                           role="option"
                           aria-selected={active}
-                          className="w-full min-h-[50px] px-0 flex items-center justify-between gap-4 text-left hover:bg-[#F6F3F3] cursor-pointer"
+                          className="w-full min-h-[3.125rem] px-0 flex items-center justify-between gap-4 text-left hover:bg-[#F6F3F3] cursor-pointer"
                         >
                           <span className="flex items-center gap-3 min-w-0">
                             <img
@@ -405,10 +405,10 @@ export default function CountrySelector({
                               width="24"
                               height="18"
                               loading="lazy"
-                              className="w-6 h-[18px] object-cover rounded-[2px] shrink-0"
+                              className="w-6 h-[1.125rem] object-cover rounded-[2px] shrink-0"
                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
-                            <span className="text-[15px] text-[#404040] truncate">{country.name}</span>
+                            <span className="text-[0.9375rem] text-[#404040] truncate">{country.name}</span>
                           </span>
                           <span className="flex items-center gap-3 shrink-0 text-sm text-[#777]">
                             {country.currency && <span>{country.currency}</span>}
@@ -426,11 +426,11 @@ export default function CountrySelector({
 
             {/* STEP 2: CONFIRMING — matches the screenshot */}
             {step === 'confirming' && (
-              <div className="mx-auto max-w-[360px]">
+              <div className="mx-auto max-w-[22.5rem]">
                 <button
                   type="button"
                   onClick={() => setStep('picking')}
-                  className="w-full h-[52px] border border-[#D8D8D8] px-4 mb-4 flex items-center justify-between text-left hover:border-[#999] cursor-pointer"
+                  className="w-full h-[3.25rem] border border-[#D8D8D8] px-4 mb-4 flex items-center justify-between text-left hover:border-[#999] cursor-pointer"
                 >
                   <span className="flex items-center gap-3 min-w-0">
                     <img
@@ -438,7 +438,7 @@ export default function CountrySelector({
                       alt=""
                       width="24"
                       height="18"
-                      className="w-6 h-[18px] object-cover rounded-[2px] shrink-0"
+                      className="w-6 h-[1.125rem] object-cover rounded-[2px] shrink-0"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                     <span className="text-sm text-[#404040] truncate">

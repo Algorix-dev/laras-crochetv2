@@ -212,7 +212,7 @@ function StepShell({
           </button>
         )}
       </div>
-      <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_3px_0px_#00000040] max-md:border-0 max-md:shadow-none max-md:p-0">
+      <div className="bg-[#FAFAFA] p-6 sm:p-8 md:p-12 border border-[#E5E5E5] shadow-[0px_1px_0.1875rem_0px_#00000040] max-md:border-0 max-md:shadow-none max-md:p-0">
         {showHeader && (
           <div className="text-center mb-6">
             <p className="text-xs tracking-[0.2em] font-normal text-[var(--muted)] uppercase mb-2">
@@ -253,7 +253,7 @@ function SuccessCard({
 }) {
   return (
     <div className="text-center max-w-md mx-auto">
-      <div className="bg-[#FAFAFA] border-none border-[#E5E5E5] shadow-[0px_4px_24px_0px_#00000022] rounded-3xl p-8 lg:px-15 lg:py-10 lg:border">
+      <div className="bg-[#FAFAFA] border-none border-[#E5E5E5] shadow-[0px_0.25rem_1.5rem_0px_#00000022] rounded-3xl p-8 lg:px-15 lg:py-10 lg:border">
         
         <h2 className="font-display text-2xl text-[var(--ink)] font-bold mb-1">
           {heading}
@@ -762,7 +762,7 @@ export default function ContactPage() {
           64px navbar) and the page itself doesn't scroll, as in the client's
           Figma (no footer on these pages). If a step is taller than the
           screen, only the area inside scrolls. Desktop is unchanged. */}
-      <main data-no-rise="true" className="min-h-[calc(100vh-64px)] max-md:h-[calc(100dvh-134px)] max-md:min-h-0 max-md:overflow-y-auto w-full flex items-center justify-center max-md:items-start py-12 max-md:py-2 px-5 bg-[var(--cream)]">
+      <main data-no-rise="true" className="min-h-[calc(100vh-4rem)] max-md:h-[calc(100dvh-8.375rem)] max-md:min-h-0 max-md:overflow-y-auto w-full flex items-center justify-center max-md:items-start py-12 max-md:py-2 px-5 bg-[var(--cream)]">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={`${flow}-${phase}`}
@@ -1016,7 +1016,7 @@ export default function ContactPage() {
                               />
                               {!isLast && (
                                 <div
-                                  className={`w-px min-h-[36px] flex-1 ${
+                                  className={`w-px min-h-[2.25rem] flex-1 ${
                                     isPast ? "bg-[var(--line-2)]" : "bg-[var(--line)]"
                                   }`}
                                 />

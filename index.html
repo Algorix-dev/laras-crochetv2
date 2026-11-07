@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- TIP: open the connections to the photo host (Cloudinary) and the API before the page needs them.
+         Saves the DNS + TLS handshake (a few hundred ms) on the first photo and the first product request. -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=2" />

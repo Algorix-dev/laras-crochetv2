@@ -95,7 +95,7 @@ export default function OrderHistoryPage() {
       {loading ? (
         <div aria-busy="true" aria-label="Loading orders" className="animate-pulse">
           {[0, 1, 2].map((i) => (
-            <div key={i} className={`${ROW_GRID} min-h-[72px] items-center`}>
+            <div key={i} className={`${ROW_GRID} min-h-[4.5rem] items-center`}>
               <div className="px-5 md:px-6"><div className="h-3.5 w-28 rounded bg-[var(--line)]" /></div>
               <div className="hidden px-6 md:block"><div className="h-3 w-24 rounded bg-[var(--line)]" /></div>
               <div className="px-5 md:px-6"><div className="h-5 w-20 rounded-full bg-[var(--line)]" /></div>
@@ -129,7 +129,7 @@ export default function OrderHistoryPage() {
                     mobile is the full row, not a tiny arrow. */}
                 <Link
                   to={`/account/orders/${order._id}`}
-                  className={`${ROW_GRID} min-h-[72px] items-center text-sm text-[var(--ink)]/75 transition-colors hover:bg-black/[0.03]`}
+                  className={`${ROW_GRID} min-h-[4.5rem] items-center text-sm text-[var(--ink)]/75 transition-colors hover:bg-black/[0.03]`}
                 >
                   {/* TIP: older orders saved before orderNumber
                       existed fall back to the Paystack reference

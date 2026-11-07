@@ -193,9 +193,9 @@ export default function BrandStory() {
               mx-auto
               mb-14
               w-full
-              max-w-[560px]
+              max-w-[35rem]
               md:mb-20
-              md:max-w-[720px]
+              md:max-w-[45rem]
             "
           >
             <img
@@ -216,14 +216,14 @@ export default function BrandStory() {
                 absolute
                 left-1/2
                 top-1/2
-                h-[80px]
-                w-[110px]
+                h-[5rem]
+                w-[6.875rem]
                 -translate-x-1/2
                 -translate-y-1/2
-                sm:h-[100px]
-                sm:w-[140px]
-                md:h-[115px]
-                md:w-[160px]
+                sm:h-[6.25rem]
+                sm:w-[8.75rem]
+                md:h-[7.1875rem]
+                md:w-[10rem]
               "
             >
               {SCATTER_PHOTOS.map((photo) => (
@@ -342,7 +342,7 @@ export default function BrandStory() {
                       justify-center
                       rounded-full
                       bg-[var(--maroon)]
-                      text-[9px]
+                      text-[0.5625rem]
                       text-white
                     "
                   >
@@ -353,7 +353,7 @@ export default function BrandStory() {
                 <p
                   className="
                     mt-1
-                    text-[11px]
+                    text-[0.6875rem]
                     text-[var(--muted)]
                   "
                 >

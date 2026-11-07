@@ -36,7 +36,7 @@ const CUSTOM_ELLIPSE_OPACITY = 0.35;
 // TIP — SHARED 304px MARGIN: same px-5 md:px-8 lg:px-[15.83%]
 // class used in Navbar/Hero/LaraShowcase/ProductGrid/Footer, so
 // this section's content edges line up with the rest of the page
-// instead of the old max-w-[1200px] + px-5, which put the content
+// instead of the old max-w-[75rem] + px-5, which put the content
 // edge somewhere different from every other section at most
 // screen widths.
 const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
@@ -47,11 +47,11 @@ const PAGE_CONTAINER_PADDING = "px-5 md:px-8 lg:px-[15.83%]";
 
 /*
   TIP — THE BIG GAP ABOVE THE FOOTER ON PHONES: this section used to be
-  `min-h-[1098px]` at every size. 1098px is the Figma's height at 1920px
+  `min-h-[68.625rem]` at every size. 1098px is the Figma's height at 1920px
   wide, where the content fills it; on a phone the content ends ~440px
   sooner, so that much empty space sat between the button and the footer.
   Now the minimum only applies from md (768px) up; on phones the section is
-  exactly as tall as its content plus pb-[139px] of space under the button.
+  exactly as tall as its content plus pb-[8.6875rem] of space under the button.
   139 + the footer's own 24px top padding puts the newsletter heading about
   171px under the button, which is the gap in Lara's phone footer design.
   Lower the 139 for a tighter gap.
@@ -63,8 +63,8 @@ export default function CustomOrderBanner() {
       className="
         relative
         min-h-0
-        pb-[139px]
-        md:min-h-[860px]
+        pb-[8.6875rem]
+        md:min-h-[53.75rem]
         w-full
         overflow-hidden
         bg-[#FAFAFA]
@@ -115,7 +115,7 @@ export default function CustomOrderBanner() {
           style={{
             width: "69.84vw",
             left: "-9.58vw",
-            top: "194px",
+            top: "12.125rem",
             opacity: CUSTOM_ARC_OPACITY,
           }}
         />
@@ -137,7 +137,7 @@ export default function CustomOrderBanner() {
           style={{
             width: "71.09vw",
             left: "37.81vw",
-            top: "193px",
+            top: "12.0625rem",
             opacity: CUSTOM_ARC_OPACITY,
             transform: "scaleX(-1)",
             transformOrigin: "center",
@@ -162,7 +162,7 @@ export default function CustomOrderBanner() {
             select-none
           "
           style={{
-            top: "359px",
+            top: "22.4375rem",
             opacity: CUSTOM_THREAD_OPACITY,
           }}
         />
@@ -177,8 +177,8 @@ export default function CustomOrderBanner() {
       {/* ========================================================
           CONTENT LAYER
 
-          TIP: dropped `mx-auto max-w-[1200px]` in favor of the
-          shared PAGE_CONTAINER_PADDING class — max-w-[1200px] was
+          TIP: dropped `mx-auto max-w-[75rem]` in favor of the
+          shared PAGE_CONTAINER_PADDING class — max-w-[75rem] was
           capping this section's content width independently of
           every other section, so its left/right edges landed in a
           different place than Hero/ProductGrid/Footer at most
@@ -197,8 +197,8 @@ export default function CustomOrderBanner() {
           className="
             relative
             mx-auto
-            mt-[15px]
-            w-[547px]
+            mt-[0.9375rem]
+            w-[34.1875rem]
             max-w-[80vw]
           "
         >
@@ -248,8 +248,8 @@ export default function CustomOrderBanner() {
               font-sans
               font-normal
               text-black
-              text-[clamp(16px,1.33vw,25.47px)]
-              max-sm:text-[clamp(11px,3.3vw,14px)]
+              text-[clamp(1rem,1.33vw,1.5919rem)]
+              max-sm:text-[clamp(0.6875rem,3.3vw,0.875rem)]
               max-sm:[--orders-top:-3%]
               max-sm:[--orders-left:76%]
             "
@@ -305,7 +305,7 @@ export default function CustomOrderBanner() {
             exactly as plain as they are today.
             ====================================================== */}
 
-        <div className="relative z-20 mx-auto mt-[-13vw] md:mt-[-70px] flex justify-center">
+        <div className="relative z-20 mx-auto mt-[-13vw] md:mt-[-4.375rem] flex justify-center">
           {/* TIP — HEADS AT THE BOTTOM OF THE "C", NOT THE MIDDLE:
               this negative margin is what pulls the models UP into
               the wordmark above — it WAS -70px, which pulled them up
@@ -331,12 +331,12 @@ export default function CustomOrderBanner() {
                 top-[98%]
                 z-10
                 w-[75%]
-                max-w-[420px]
+                max-w-[26.25rem]
                 -translate-x-1/2
                 -translate-y-1/2
                 rounded-[50%]
                 bg-[#4C0519]
-                blur-[24px]
+                blur-[1.5rem]
                 aspect-[640/78]
               "
               style={{
@@ -355,7 +355,7 @@ export default function CustomOrderBanner() {
               z-20
               h-auto
               w-[80vw]
-              md:w-[clamp(400px,32vw,620px)]
+              md:w-[clamp(25rem,32vw,38.75rem)]
               select-none
               object-contain
             "
@@ -372,19 +372,19 @@ export default function CustomOrderBanner() {
             relative
             z-20
             mx-auto
-            mt-[36px]
+            mt-[2.25rem]
             flex
-            max-w-[617px]
+            max-w-[38.5625rem]
             flex-col
             items-center
-            gap-[14px]
+            gap-[0.875rem]
             text-center
           "
         >
           <p
             className="
               w-full
-              text-[16px]
+              text-[1rem]
               leading-6
               text-[#404040]
             "
@@ -401,16 +401,16 @@ export default function CustomOrderBanner() {
             to="/contact?flow=custom"
             className="
               flex
-              h-[46px]
+              h-[2.875rem]
               w-full
-              md:w-[280px]
+              md:w-[17.5rem]
               items-center
               justify-center
-              gap-[10px]
+              gap-[0.625rem]
               bg-[#412B2D]
               hover:bg-[#4C0519]
-              px-[32px]
-              text-[16px]
+              px-[2rem]
+              text-[1rem]
               font-bold
               uppercase
               text-[#FAFAFA]

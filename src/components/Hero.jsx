@@ -1575,7 +1575,7 @@ function HeroCarousel({ models }) {
         className={`
           relative
           mx-auto
-          max-sm:translate-y-[10px]
+          max-sm:translate-y-[0.625rem]
           ${PAGE_CONTAINER_PADDING}
         `}
       >

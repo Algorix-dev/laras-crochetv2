@@ -91,7 +91,7 @@ export default function WishlistPage() {
             </>
           ) : (
             <div className="mb-12">
-              <h1 className="sm:text-[20px] lg:text-[36px] md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
+              <h1 className="sm:text-[1.25rem] lg:text-[2.25rem] md:text-3xl font-bold uppercase tracking-wide text-[var(--ink)] mb-1">
                 Wishlist
               </h1>
               <p className="text-sm text-[var(--muted)] mb-3">

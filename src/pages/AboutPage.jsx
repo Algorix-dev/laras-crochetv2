@@ -42,12 +42,12 @@ export default function AboutPage() {
             lg:py-8 → 2xl:py-6). To give it more/less air, change the
             number after `py-` on the matching breakpoint below. */}
         <section className="flex w-full items-center justify-center overflow-y-auto px-6 py-12 text-center sm:px-10 md:w-1/2 md:px-8 md:py-6 lg:px-12 lg:py-8 xl:px-16 2xl:py-6">
-          <div className="flex w-full max-w-[560px] flex-col items-center">
+          <div className="flex w-full max-w-[35rem] flex-col items-center">
             {/* Heading */}
             <img
               src={aboutHeadingLockup}
               alt="This is Lara's Crochet"
-              className="rv h-auto w-full max-w-[420px]"
+              className="rv h-auto w-full max-w-[26.25rem]"
             />
 
             {/* TIP: mobile-only duplicate of the left-column photo.
@@ -59,7 +59,7 @@ export default function AboutPage() {
             <img
               src={clientPic}
               alt="Lara — founder of Lara's Crochet"
-              className="rv d1 mt-2.5 block h-auto w-full max-w-[420px] object-cover md:hidden"
+              className="rv d1 mt-2.5 block h-auto w-full max-w-[26.25rem] object-cover md:hidden"
             />
 
             {/* Meet Lara + portrait */}
@@ -71,7 +71,7 @@ export default function AboutPage() {
                 double-rises. Portrait max-w: 416px → 380px, and 360px at
                 2xl (≥1536px) so it stops pushing the Instagram link off
                 screen — edit those two numbers to resize it. */}
-            <div className="rv d1 relative mt-2.5 md:mt-10 w-full max-w-[380px] 2xl:max-w-[360px]">
+            <div className="rv d1 relative mt-2.5 md:mt-10 w-full max-w-[23.75rem] 2xl:max-w-[22.5rem]">
               {/* Desktop: rotated caption running up the left edge */}
               <p
                 className="absolute bottom-0 right-full hidden whitespace-nowrap text-base font-bold md:block"
@@ -98,12 +98,12 @@ export default function AboutPage() {
             </div>
 
             {/* Story */}
-            <p className="rv d2 mt-9 max-w-[520px] text-[16px] leading-6 text-[var(--muted)]">
+            <p className="rv d2 mt-9 max-w-[32.5rem] text-[1rem] leading-6 text-[var(--muted)]">
              Lara's Crochet started with a hook, a ball of yarn, and a refusal to settle for basic. Founded by Lara, it's grown into a brand built on precision — every dress, bikini, and two-piece crocheted by hand, made to order, and shaped to fit exactly how you want it. No two customers are styled the same way, because no two bodies are. This is slow fashion done properly: considered, made-to-measure, and built to last far longer than anything off a rack.
             </p>
 
             {/* Instagram */}
-            <div className="rv d3 mt-8 flex justify-center text-[16px] underline underline-offset-4">
+            <div className="rv d3 mt-8 flex justify-center text-[1rem] underline underline-offset-4">
               <a
                 href="#"
                 className="text-[#564345]"

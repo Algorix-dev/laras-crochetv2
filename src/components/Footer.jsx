@@ -82,7 +82,7 @@ export default function Footer() {
           the page. */}
       {/* TIP — WHY THE INSTAGRAM / NEWSLETTER SIDE WAS DROPPING DOWN:
           the newsletter block had a hard minimum width (input
-          min-w-[356px] + a 208px button = 564px) and the gaps were a
+          min-w-[22.25rem] + a 208px button = 564px) and the gaps were a
           fixed 64px. At 1920px there's room for all of that, but on a
           laptop at 125-150% display scaling the browser is really only
           ~1280-1536px wide, the row ran out of space, and flex-wrap
@@ -122,10 +122,10 @@ export default function Footer() {
             return col;
           }).map((col) => (
             <div key={col.title}>
-              <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4%] max-md:mb-6 max-md:text-[16.5px] max-md:tracking-[-0.04em] max-md:text-black">
+              <h3 className="mb-3 text-[1.25rem] font-bold uppercase tracking-[-4%] max-md:mb-6 max-md:text-[1.0312rem] max-md:tracking-[-0.04em] max-md:text-black">
                 {col.title}
               </h3>
-              <ul className="space-y-2 text-[16px] text-[var(--muted)] max-md:space-y-[10px] max-md:text-[14.5px] max-md:text-[var(--ink)]">
+              <ul className="space-y-2 text-[1rem] text-[var(--muted)] max-md:space-y-[0.625rem] max-md:text-[0.9062rem] max-md:text-[var(--ink)]">
                 {col.links.map((link) => (
                   <li key={link.label}>
                     {link.href ? (
@@ -155,7 +155,7 @@ export default function Footer() {
             between the heading and the form on phones (order-2) but stay UNDER
             the form on desktop (default order). */}
         <div className="flex w-full flex-col md:max-w-[35.25rem] lg:w-[clamp(20rem,27.5vw,35.25rem)] max-md:order-first max-md:text-center">
-          <h3 className="mb-3 text-[20px] font-bold uppercase tracking-[-4%] max-md:order-1 max-md:mb-1.5 max-md:text-[20.5px] max-md:tracking-[-0.04em] max-md:text-black">
+          <h3 className="mb-3 text-[1.25rem] font-bold uppercase tracking-[-4%] max-md:order-1 max-md:mb-1.5 max-md:text-[1.2812rem] max-md:tracking-[-0.04em] max-md:text-black">
             Subscribe to Our Newsletter
           </h3>
           {subscribed ? (
@@ -170,12 +170,12 @@ export default function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="min-w-0 flex-1 border border-[var(--line)] px-3 py-2 text-sm outline-none focus:border-[var(--ink)] max-md:h-[47px] max-md:flex-none max-md:border-[#e3e3e3] max-md:bg-transparent"
+                  className="min-w-0 flex-1 border border-[var(--line)] px-3 py-2 text-sm outline-none focus:border-[var(--ink)] max-md:h-[2.9375rem] max-md:flex-none max-md:border-[#e3e3e3] max-md:bg-transparent"
                 />
                 <button
                   type="submit"
                   disabled={busy}
-                  className="h-12 w-[clamp(7.5rem,10.8vw,13rem)] shrink-0 disabled:opacity-60 bg-[var(--maroon)] px-4 text-[16px] font-bold uppercase text-white hover:bg-[var(--maroon-dark)] max-md:h-[50px] max-md:w-full"
+                  className="h-12 w-[clamp(7.5rem,10.8vw,13rem)] shrink-0 disabled:opacity-60 bg-[var(--maroon)] px-4 text-[1rem] font-bold uppercase text-white hover:bg-[var(--maroon-dark)] max-md:h-[3.125rem] max-md:w-full"
                 >
                   {busy ? "Subscribing…" : "Subscribe"}
                 </button>
@@ -185,7 +185,7 @@ export default function Footer() {
                   {error}
                 </p>
               )}
-              <p className="mt-1.5 text-xs text-[var(--muted)] max-md:order-2 max-md:mb-[22px] max-md:mt-0 max-md:text-[16px] max-md:tracking-normal max-md:text-[#a9acb2]">Enjoy latest exclusives.</p>
+              <p className="mt-1.5 text-xs text-[var(--muted)] max-md:order-2 max-md:mb-[1.375rem] max-md:mt-0 max-md:text-[1rem] max-md:tracking-normal max-md:text-[#a9acb2]">Enjoy latest exclusives.</p>
             </>
           )}
         </div>
@@ -202,16 +202,16 @@ export default function Footer() {
           file to src/assets/fonts/, 2) adding an @font-face rule
           for it in index.css, 3) changing font-['Yellowtail'] below
           to font-['Genty_Demo']. */}
-      {/* TIP — PHONES: max-md:mt-[33px] is the gap between INSTAGRAM and the
-          monogram; -mb-[5px] (on the image) crops 5px off the bottom of the
+      {/* TIP — PHONES: max-md:mt-[2.0625rem] is the gap between INSTAGRAM and the
+          monogram; -mb-[0.3125rem] (on the image) crops 5px off the bottom of the
           lettering (the image has empty space at the top, so this leaves the
           same amount of lettering showing as the phone design). */}
-      <div className="w-full overflow-hidden flex justify-center mt-10 md:mt-16 max-md:mt-[33px]">
+      <div className="w-full overflow-hidden flex justify-center mt-10 md:mt-16 max-md:mt-[2.0625rem]">
         <img
           src={lacMonogram}
           alt="Lara's Crochet Monogram"
           aria-hidden="true"
-          className="w-full h-auto mix-blend-multiply opacity-95 block align-bottom -mb-[5px] sm:-mb-4 md:-mb-6"
+          className="w-full h-auto mix-blend-multiply opacity-95 block align-bottom -mb-[0.3125rem] sm:-mb-4 md:-mb-6"
         />
       </div>
     </footer>

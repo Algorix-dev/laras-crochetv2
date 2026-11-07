@@ -65,7 +65,7 @@ export default function CurrencySelector() {
         aria-label="Select currency"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
-        className="flex h-11 w-32 items-center justify-center gap-2 rounded-[10px] bg-[#E5E5E5] px-[10px] text-base font-semibold"
+        className="flex h-11 w-32 items-center justify-center gap-2 rounded-[0.625rem] bg-[#E5E5E5] px-[0.625rem] text-base font-semibold"
       >
         <Flag code={currency} />
         {currency}

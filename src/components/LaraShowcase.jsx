@@ -77,10 +77,16 @@ import { DEFAULT_TESTIMONIALS, SHOWCASE_REVIEW_COUNT } from "../data/showcaseRev
 
 // TIP: reads --nav-h from index.css (66px on phones, 84px from 768px up) so the pinned scroll
 // maths always matches the real top bar. Falls back to 66 if it can't be read.
-const navbarHeightPx = () =>
-  (typeof window !== "undefined" &&
-    parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h"))) ||
-  66;
+const navbarHeightPx = () => {
+  // --nav-h is in rem now, so measure it as real pixels with a throw-away probe element.
+  if (typeof window === "undefined") return 66;
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:absolute;visibility:hidden;pointer-events:none;height:var(--nav-h)";
+  document.body.appendChild(probe);
+  const px = probe.getBoundingClientRect().height;
+  probe.remove();
+  return px || 66;
+};
 
 /*
   TIP — svh, NOT vh (mobile fix):
@@ -672,7 +678,7 @@ function ReviewCard({ testimonial, rowIndex, progress }) {
 
   return (
     <motion.div
-      className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5  max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
+      className="min-h-[11.875rem] border border-[var(--line)] bg-[var(--cream)] p-5  max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
       style={{ opacity, y }}
     >
       <ReviewCardBody testimonial={testimonial} />
@@ -685,7 +691,7 @@ function ReviewCardBody({ testimonial, compact = false }) {
     <>
       <p
         className={`text-[var(--ink)] ${
-          compact ? "mb-3 text-[13.5px] leading-[1.55]" : "mb-5 text-[15px] leading-[1.65]"
+          compact ? "mb-3 text-[0.8438rem] leading-[1.55]" : "mb-5 text-[0.9375rem] leading-[1.65]"
         }`}
       >
         "{testimonial.quote}"
@@ -1108,7 +1114,7 @@ export default function LaraShowcase() {
 
   const laraAndParagraphStatic = (
     <div className={`w-full pt-16 md:pt-24 ${PAGE_CONTAINER_PADDING}`}>
-      <div className="mx-auto w-full max-w-[1080px]">
+      <div className="mx-auto w-full max-w-[67.5rem]">
         <div className="relative flex items-center justify-center pb-10 pt-8 md:pb-14">
           <div className="relative w-full" style={{ maxWidth: WORDMARK_CONTAINER_WIDTH }}>
             <img
@@ -1165,7 +1171,7 @@ export default function LaraShowcase() {
         </div>
 
         <div className="flex items-center justify-center pb-16 pt-6 md:pb-20 md:pt-10 mt-5">
-          <div className="mx-auto max-w-2xl text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
+          <div className="mx-auto max-w-2xl text-center text-[0.9375rem] leading-[1.6] text-[var(--ink)] sm:text-[1.125rem] sm:leading-[1.7] md:max-w-3xl md:text-[1.25rem]">
             {PARAGRAPHS.map((paragraph, index) => (
               <p key={index} className={index === PARAGRAPHS.length - 1 ? "mt-5 sm:mt-8" : "mb-4 sm:mb-6"}>
                 {paragraph}
@@ -1199,9 +1205,9 @@ export default function LaraShowcase() {
             // row 20px. The animated version never did that, so the two
             // versions didn't match (Lara flagged it). Removed: every card
             // now sits on the same line in both.
-            className="min-h-[190px] border border-[var(--line)] bg-[var(--cream)] p-5 max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
+            className="min-h-[11.875rem] border border-[var(--line)] bg-[var(--cream)] p-5 max-md:text-left max-md:max-w-[85%] max-md:mx-auto"
           >
-            <p className="mb-5 text-[15px] leading-[1.65] text-[var(--ink)]">
+            <p className="mb-5 text-[0.9375rem] leading-[1.65] text-[var(--ink)]">
               "{testimonial.quote}"
             </p>
 
@@ -1370,7 +1376,7 @@ export default function LaraShowcase() {
             >
               {/* TIP: 15px on phones (it was 20px, which filled the whole screen),
                   18px from sm, 20px from md. Change the first number for phones. */}
-              <div className="mx-auto max-w-2xl px-1 text-center text-[15px] leading-[1.6] text-[var(--ink)] sm:text-[18px] sm:leading-[1.7] md:max-w-3xl md:text-[20px]">
+              <div className="mx-auto max-w-2xl px-1 text-center text-[0.9375rem] leading-[1.6] text-[var(--ink)] sm:text-[1.125rem] sm:leading-[1.7] md:max-w-3xl md:text-[1.25rem]">
                 {wordParagraphs.map((words, paragraphIndex) => (
                   <WordParagraph
                     key={paragraphIndex}

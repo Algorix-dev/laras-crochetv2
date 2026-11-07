@@ -176,7 +176,7 @@ export default function Select({
             role="listbox"
             aria-activedescendant={`${uid}-o${active}`}
             style={{ position: "fixed", left: box.left, width: box.width, top: box.top, bottom: box.bottom, maxHeight: box.maxHeight }}
-            className="z-[400] overflow-y-auto rounded-lg border border-black/10 bg-white py-1 shadow-[0_8px_24px_rgba(16,24,40,0.16)]"
+            className="z-[400] overflow-y-auto rounded-lg border border-black/10 bg-white py-1 shadow-[0_0.5rem_1.5rem_rgba(16,24,40,0.16)]"
           >
             {options.map((o, i) => {
               const selected = o.value === String(value ?? "");
@@ -192,7 +192,7 @@ export default function Select({
                   onMouseEnter={() => !o.disabled && setActive(i)}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => choose(o)}
-                  className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-[15px] leading-5 text-[#1f2328] ${
+                  className={`flex cursor-pointer items-center justify-between gap-3 px-3 py-2 text-[0.9375rem] leading-5 text-[#1f2328] ${
                     i === active ? "bg-black/[0.05]" : ""
                   } ${selected ? "font-bold" : ""} ${o.disabled ? "cursor-not-allowed opacity-40" : ""}`}
                 >

@@ -42,7 +42,7 @@ export default function LogoutModal({ open, onCancel, onConfirm }) {
     >
       <div
         onClick={(e) => e.stopPropagation()} // stop clicks INSIDE the card from bubbling up and closing it
-        className="w-full bg-white p-6 text-center shadow-xl md:w-[322px]"
+        className="w-full bg-white p-6 text-center shadow-xl md:w-[20.125rem]"
       >
         <div className="mb-3 flex items-start justify-between">
           <span

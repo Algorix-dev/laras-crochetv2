@@ -32,7 +32,7 @@ export default function RecommendedProducts({
   enabled = true,
   columns = 4,
   headingClassName =
-    'text-[18px] font-bold leading-[28px] tracking-[-0.36px] md:text-[36px] md:leading-[44px] md:tracking-[-0.72px]',
+    'text-[1.125rem] font-bold leading-[1.75rem] tracking-[-0.36px] md:text-[2.25rem] md:leading-[2.75rem] md:tracking-[-0.72px]',
   onProductClick,
 }) {
   const [products, setProducts] = useState([]);

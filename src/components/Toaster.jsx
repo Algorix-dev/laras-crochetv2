@@ -55,7 +55,7 @@ function ToastItem({ item, onClose, onAction }) {
       transition={{ type: 'spring', stiffness: 420, damping: 32 }}
       onMouseEnter={pause}
       onMouseLeave={start}
-      className="pointer-events-auto flex w-full items-start gap-3 rounded-lg border border-[var(--line)] bg-[var(--white-warm)] px-4 py-3 text-left shadow-[0_8px_24px_rgba(65,43,45,0.14)] md:w-[360px]"
+      className="pointer-events-auto flex w-full items-start gap-3 rounded-lg border border-[var(--line)] bg-[var(--white-warm)] px-4 py-3 text-left shadow-[0_0.5rem_1.5rem_rgba(65,43,45,0.14)] md:w-[22.5rem]"
     >
       <span className="mt-0.5 shrink-0">{ICONS[item.type] || ICONS.info}</span>
       <div className="min-w-0 flex-1">
@@ -124,7 +124,7 @@ export default function Toaster() {
     <div
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 z-[300] flex flex-col items-stretch gap-2 px-3 md:left-auto md:right-6 md:items-end md:px-0"
-      style={{ top: 'calc(var(--nav-h, 66px) + 8px)' }}
+      style={{ top: 'calc(var(--nav-h, 4.125rem) + 8px)' }}
     >
       <AnimatePresence initial={false}>
         {items.map((item) => (

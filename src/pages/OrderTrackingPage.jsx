@@ -221,7 +221,7 @@ export default function OrderTrackingPage() {
       )}
 
       {state === 'ready' && order && (
-        <div className="max-w-[870px]">
+        <div className="max-w-[54.375rem]">
           <h2 className="hidden text-xl font-semibold text-[var(--ink)] md:block">Order Tracking</h2>
 
           {cancelled ? (
@@ -235,7 +235,7 @@ export default function OrderTrackingPage() {
             <>
               {/* ===== Desktop: horizontal stepper ===== */}
               <div className="hidden md:block">
-                <div className="ml-9 mt-14 flex max-w-[560px] items-center">
+                <div className="ml-9 mt-14 flex max-w-[35rem] items-center">
                   {STAGES.map((label, i) => {
                     const s = stageState(i, current, delivered);
                     return (
@@ -273,11 +273,11 @@ export default function OrderTrackingPage() {
                     <li key={label} className="pt-6 first:pt-2">
                       <p className="pl-1 text-sm text-[var(--muted)]">{label}</p>
                       <div className="mt-3 flex gap-2.5">
-                        <div className="flex w-[42px] shrink-0 flex-col items-center">
+                        <div className="flex w-[2.625rem] shrink-0 flex-col items-center">
                           <Dot state={s} />
                           <span className="mt-2 flex-1 border-l-2 border-dashed border-[#d4d4d4]" />
                         </div>
-                        <div className={showMessage ? 'pb-6 pt-1' : 'min-h-[64px]'}>
+                        <div className={showMessage ? 'pb-6 pt-1' : 'min-h-[4rem]'}>
                           {showMessage && <StageMessage stage={i} order={order} />}
                         </div>
                       </div>
@@ -331,12 +331,12 @@ export default function OrderTrackingPage() {
                   {/* Desktop row */}
                   <div className="hidden grid-cols-[minmax(0,2.4fr)_1fr_1fr_1fr] items-center md:grid">
                     <div className="flex items-center gap-8">
-                      <div className="flex h-[118px] w-[124px] shrink-0 items-center justify-center bg-white">
+                      <div className="flex h-[7.375rem] w-[7.75rem] shrink-0 items-center justify-center bg-white">
                         {item.image && <img src={item.image} alt={item.name} className="h-full w-full object-contain" />}
                       </div>
                       <div className="text-sm">
                         {item.categoryLabel && (
-                          <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{item.categoryLabel}</p>
+                          <p className="text-[0.625rem] uppercase tracking-wide text-[var(--muted)]">{item.categoryLabel}</p>
                         )}
                         <p className="font-bold text-black">{item.name}</p>
                         <p className="mt-1 text-[var(--ink)]/80">{formatPrice(item.price)}</p>
@@ -348,7 +348,7 @@ export default function OrderTrackingPage() {
                   </div>
 
                   {/* Mobile card */}
-                  <div className="grid grid-cols-[132px_1fr] gap-x-4 md:hidden">
+                  <div className="grid grid-cols-[8.25rem_1fr] gap-x-4 md:hidden">
                     <div className="flex items-center justify-center bg-white">
                       {item.image && <img src={item.image} alt={item.name} className="aspect-[3/4] w-full object-contain" />}
                     </div>

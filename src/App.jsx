@@ -184,10 +184,10 @@ function HomePage() {
                   lines up with the product grid directly below it. */}
               <Reveal>
                 <div className="px-5 md:px-8 lg:px-[15.83%] flex items-end justify-between mb-0 md:mb-15">
-                  <h2 className="sm:text-[16px] lg:text-[32px] md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
+                  <h2 className="sm:text-[1rem] lg:text-[2rem] md:text-3xl font-bold uppercase tracking-[-2%] text-[var(--ink)]">
                     Shop Our Pieces
                   </h2>
-                  {/* TIP: was text-[14px] everywhere — client review flagged this as
+                  {/* TIP: was text-[0.875rem] everywhere — client review flagged this as
                       too small ("not 16px"). text-base = 16px and matches the rest
                       of the site's body copy. */}
                   <Link to="/shop" className="pr-3 text-base underline underline-offset-2 hover:text-[var(--maroon)]">
@@ -202,7 +202,7 @@ function HomePage() {
                 <div className="px-5 text-center md:px-0 mb-8 md:mb-16">
                   <Link
                     to="/shop"
-                    className="block w-full md:w-auto md:inline-block bg-[var(--maroon)] px-8 py-3.5 text-[14px] md:text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors"
+                    className="block w-full md:w-auto md:inline-block bg-[var(--maroon)] px-8 py-3.5 text-[0.875rem] md:text-base font-bold uppercase tracking-widest text-white hover:bg-[var(--maroon-dark)] transition-colors"
                   >
                     Go to Shop
                   </Link>
@@ -254,6 +254,10 @@ function MobileSearchBar() {
 
 function PageOffset({ children }) {
   const { pathname } = useLocation();
+  // TIP: the customer site scales fluidly (see FLUID SCALE in index.css); the admin dashboard doesn't.
+  useEffect(() => {
+    document.documentElement.classList.toggle("no-fluid", pathname.startsWith("/admin"));
+  }, [pathname]);
   // /shop has its own search box (it filters the grid), styled like Figma
   const showMobileSearch = pathname === "/contact";
   // /signin and /admin are standalone screens: no navbar, no scroll-rise

@@ -44,7 +44,7 @@ const Field = ({ label, value, onChange, error, ...props }) => (
         error ? 'border-red-500 bg-red-50' : 'border-[var(--line)]'
       }`}
     />
-    {error && <span className="mt-1 block text-[13px] text-red-600">Please fill in this field</span>}
+    {error && <span className="mt-1 block text-[0.8125rem] text-red-600">Please fill in this field</span>}
   </label>
 );
 
@@ -605,7 +605,7 @@ export default function CheckoutPage() {
             <button
               type="submit"
               disabled={submitting || !cartItems.length || quote.status !== 'ok'}
-              className="mt-8 w-full bg-[#412B2D] py-[11px] text-base font-bold text-white disabled:opacity-50"
+              className="mt-8 w-full bg-[#412B2D] py-[0.6875rem] text-base font-bold text-white disabled:opacity-50"
             >
               {submitting ? 'OPENING SECURE PAYMENT…' : 'PAY NOW'}
             </button>

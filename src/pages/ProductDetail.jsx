@@ -15,9 +15,9 @@
     1. Thumbnails: square crop -> real 52.96:139 ratio, ring
        highlight -> opacity-based selection (matches spec exactly).
     2. Heading: 48-60px font-display -> 36px/44px DM Sans, per spec.
-    3. Description: max-w-lg (512px) -> max-w-[412px], per spec.
+    3. Description: max-w-lg (512px) -> max-w-[25.75rem], per spec.
     4. Swatches: 48x48 rounded squares -> 61x49 sharp rectangles,
-       gap-3 (12px) -> gap-[9px], per spec.
+       gap-3 (12px) -> gap-[0.5625rem], per spec.
     5. Size selector: full-width 6-col grid -> compact auto-width
        bordered boxes in a ~339px row, per spec.
     6. Add to Bag: 10px tracked-out label -> 20px bold, -0.04em
@@ -152,7 +152,7 @@ function ColorSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} color`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[30px] w-[31px] shrink-0 rounded-none border-2 cursor-pointer transition-all md:h-[49px] md:w-[61px] ${
+      className={`h-[1.875rem] w-[1.9375rem] shrink-0 rounded-none border-2 cursor-pointer transition-all md:h-[3.0625rem] md:w-[3.8125rem] ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -173,7 +173,7 @@ function ShadeSwatch({ option, active, onClick }) {
       aria-label={`Select ${option.label} shade`}
       aria-pressed={active}
       onClick={onClick}
-      className={`h-[30px] w-[31px] shrink-0 rounded-none border-2 cursor-pointer transition-all md:h-[49px] md:w-[61px] ${
+      className={`h-[1.875rem] w-[1.9375rem] shrink-0 rounded-none border-2 cursor-pointer transition-all md:h-[3.0625rem] md:w-[3.8125rem] ${
         active
           ? 'border-[var(--ink)] scale-110'
           : 'border-[var(--line)] hover:scale-105'
@@ -210,16 +210,16 @@ function FitIndicator({ fit }) {
         : 'top-1/2 -translate-y-1/2';
 
   return (
-    <div className="relative h-[249px] w-[160px] shrink-0">
-      <div className="absolute left-[3px] top-1 h-[234px] w-[2px] bg-[var(--mauve)]" />
+    <div className="relative h-[15.5625rem] w-[10rem] shrink-0">
+      <div className="absolute left-[0.1875rem] top-1 h-[14.625rem] w-[2px] bg-[var(--mauve)]" />
 
-      <span className="absolute left-2 top-0 text-xs leading-[18px] text-[#564345]">
+      <span className="absolute left-2 top-0 text-xs leading-[1.125rem] text-[#564345]">
         Runs small
       </span>
-      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs leading-[18px] text-[#564345]">
+      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs leading-[1.125rem] text-[#564345]">
         True to size
       </span>
-      <span className="absolute bottom-0 left-2 text-xs leading-[18px] text-[#564345]">
+      <span className="absolute bottom-0 left-2 text-xs leading-[1.125rem] text-[#564345]">
         Runs large
       </span>
 
@@ -261,7 +261,7 @@ function FitArrows() {
 
 function FitScaleAggregate({ position = 'true' }) {
   return (
-    <div className="flex items-center gap-[37.67px]">
+    <div className="flex items-center gap-[2.3544rem]">
       <FitIndicator
         fit={
           position === 'small'
@@ -347,7 +347,7 @@ function Reviews({ productId }) {
     new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const renderStars = (rating = 5, size = 14) => (
-    <span className="flex items-center gap-1 text-[#564345] md:gap-[10px]">
+    <span className="flex items-center gap-1 text-[#564345] md:gap-[0.625rem]">
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
@@ -369,7 +369,7 @@ function Reviews({ productId }) {
 
     return (
       <div className="w-full">
-        <div className="mb-2 flex items-center justify-between text-[10px] text-[var(--muted)]">
+        <div className="mb-2 flex items-center justify-between text-[0.625rem] text-[var(--muted)]">
           <span>Runs small</span>
           <span>True to size</span>
           <span>Runs large</span>
@@ -402,7 +402,7 @@ function Reviews({ productId }) {
             width="16"
             height="7"
             viewBox="0 0 16 7"
-            className={i > 0 ? '-mt-[3px]' : ''}
+            className={i > 0 ? '-mt-[0.1875rem]' : ''}
             style={{ opacity: o }}
           >
             <path
@@ -429,11 +429,11 @@ function Reviews({ productId }) {
        scroll-rise engine adds its own classes to it). */
     <div className="mt-16 md:mt-20 md:bg-[#FAFAFA]" data-auto-rise="true">
       {/* ================= SUMMARY BLOCK ================= */}
-      <section className="px-5 md:border-b md:border-[#EFE7E7] md:px-8 md:pb-[60px] lg:px-[15.83%]">
+      <section className="px-5 md:border-b md:border-[#EFE7E7] md:px-8 md:pb-[3.75rem] lg:px-[15.83%]">
         {/* Frame 96 — heading + rating */}
-        <div className="flex flex-col md:gap-[10px]">
+        <div className="flex flex-col md:gap-[0.625rem]">
           <h2
-            className="text-3xl font-bold md:py-[10px] md:text-[36px] md:leading-[44px] md:tracking-[-0.02em] md:text-[#404040]"
+            className="text-3xl font-bold md:py-[0.625rem] md:text-[2.25rem] md:leading-[2.75rem] md:tracking-[-0.02em] md:text-[#404040]"
             style={{ fontFamily: 'DM Sans, sans-serif' }}
           >
             Reviews
@@ -441,12 +441,12 @@ function Reviews({ productId }) {
 
           <div>
             <div className="mt-5 flex items-center gap-2 md:mt-0">
-              <strong className="text-base font-medium md:py-[10px] md:text-[20px] md:font-bold md:leading-[30px] md:tracking-[-0.04em] md:text-[#404040]">
+              <strong className="text-base font-medium md:py-[0.625rem] md:text-[1.25rem] md:font-bold md:leading-[1.875rem] md:tracking-[-0.04em] md:text-[#404040]">
                 {data.count ? data.average.toFixed(1) : '—'}
               </strong>
-              <div className="md:p-[10px]">{renderStars(Math.round(data.average), 24)}</div>
+              <div className="md:p-[0.625rem]">{renderStars(Math.round(data.average), 24)}</div>
             </div>
-            <span className="block text-[14px] text-[var(--muted)] md:text-base md:leading-6 md:text-[#404040]">
+            <span className="block text-[0.875rem] text-[var(--muted)] md:text-base md:leading-6 md:text-[#404040]">
               {data.count
                 ? `Based on ${data.count} ${data.count === 1 ? 'review' : 'reviews'}`
                 : 'No reviews yet'}
@@ -456,7 +456,7 @@ function Reviews({ productId }) {
 
         {/* How most reviewers found the fit (only when there are reviews) */}
         {data.count > 0 && (
-          <div className="mt-8 md:mt-[50px]">
+          <div className="mt-8 md:mt-[3.125rem]">
             <div className="hidden md:block">
               <FitScaleAggregate position={commonFit} />
             </div>
@@ -468,21 +468,21 @@ function Reviews({ productId }) {
       </section>
 
       {/* ================= INDIVIDUAL REVIEWS ================= */}
-      <section className="mt-16 px-5 md:mt-0 md:px-8 md:py-[60px] lg:px-[15.83%]">
+      <section className="mt-16 px-5 md:mt-0 md:px-8 md:py-[3.75rem] lg:px-[15.83%]">
         {list.map((review) => (
           /* Figma columns: 413 (name + verified + slider) / 777 (stars,
              title, photo, text) / 102 (date), 10px apart. */
           <article
             key={review._id}
-            className="grid border-t border-[var(--line)] py-10 md:grid-cols-[minmax(0,413px)_minmax(0,1fr)_auto] md:gap-[10px] md:border-t-0 md:py-0 md:[&:not(:first-child)]:mt-[60px]"
+            className="grid border-t border-[var(--line)] py-10 md:grid-cols-[minmax(0,25.8125rem)_minmax(0,1fr)_auto] md:gap-[0.625rem] md:border-t-0 md:py-0 md:[&:not(:first-child)]:mt-[3.75rem]"
           >
             {/* Column 1 (desktop): name + Verified Buyer + badge, then the slider */}
             <div className="hidden md:flex md:flex-col md:gap-1">
-              <div className="flex items-center gap-[15px]">
-                <p className="py-[10px] text-[20px] font-bold leading-[30px] tracking-[-0.04em] text-[#404040]">
+              <div className="flex items-center gap-[0.9375rem]">
+                <p className="py-[0.625rem] text-[1.25rem] font-bold leading-[1.875rem] tracking-[-0.04em] text-[#404040]">
                   {review.reviewerName}
                 </p>
-                <span className="flex items-end gap-[6px] text-[20px] leading-[30px] text-[#564345]">
+                <span className="flex items-end gap-[0.375rem] text-[1.25rem] leading-[1.875rem] text-[#564345]">
                   Verified Buyer
                   <img
                     src={verifiedBadge}
@@ -500,8 +500,8 @@ function Reviews({ productId }) {
             <div className="min-w-0">
               {/* Phones keep the name row on top of the content */}
               <div className="flex items-center gap-1.5 md:hidden">
-                <p className="text-[20px] font-bold text-[#404040]">{review.reviewerName}</p>
-                <span className="flex items-center gap-1.5 text-[20px] text-[#564345]">
+                <p className="text-[1.25rem] font-bold text-[#404040]">{review.reviewerName}</p>
+                <span className="flex items-center gap-1.5 text-[1.25rem] text-[#564345]">
                   Verified Buyer
                   <img
                     src={verifiedBadge}
@@ -513,19 +513,19 @@ function Reviews({ productId }) {
                 </span>
               </div>
 
-              <div className="mt-5 md:mt-0 md:py-[10px] md:pl-0 md:pr-[10px]">
+              <div className="mt-5 md:mt-0 md:py-[0.625rem] md:pl-0 md:pr-[0.625rem]">
                 {renderStars(review.rating, 24)}
               </div>
 
               {review.title && (
-                <h3 className="mt-5 text-[20px] font-bold text-[#404040] md:mt-0 md:py-[10px] md:leading-[30px] md:tracking-[-0.04em]">
+                <h3 className="mt-5 text-[1.25rem] font-bold text-[#404040] md:mt-0 md:py-[0.625rem] md:leading-[1.875rem] md:tracking-[-0.04em]">
                   {review.title}
                 </h3>
               )}
               {review.variant && <p className="mt-2 text-sm text-[var(--muted)]">{review.variant}</p>}
 
               {/* Figma: 16/24 #564345 with 16px above and below */}
-              <p className="mt-6 text-[16px] leading-6 text-[#564345] md:mt-0 md:py-4">
+              <p className="mt-6 text-[1rem] leading-6 text-[#564345] md:mt-0 md:py-4">
                 {review.text}
               </p>
             </div>
@@ -845,7 +845,7 @@ export default function ProductDetail() {
                    same colour (measured once at upload), so no box edge shows. No saved colour = unchanged. */
                 style={product.viewBg?.[angleShots[selectedImage]?.key] ? { backgroundColor: product.viewBg[angleShots[selectedImage].key] } : undefined}
               >
-                <div className="h-[380px] w-[145px] lg:h-[602px] lg:w-[229px]">
+                <div className="h-[23.75rem] w-[9.0625rem] lg:h-[37.625rem] lg:w-[14.3125rem]">
                   {angleShots[selectedImage]?.src && (
                     <img
                       src={angleShots[selectedImage].src}
@@ -869,7 +869,7 @@ export default function ProductDetail() {
                   .rv.on rule forces opacity: 1, which beat the opacity-30 on unselected thumbnails, so all
                   four looked fully opaque until one was clicked. */}
               {product && (
-                <div data-no-rise className="mt-3 flex items-center justify-center gap-[39px]">
+                <div data-no-rise className="mt-3 flex items-center justify-center gap-[2.4375rem]">
                   {angleShots.map(({ key, label, src }, index) => {
                     // TIP — 3 THUMBNAILS ON MOBILE, 4 ON DESKTOP: the
                     // Figma mobile mockup only shows 3 (front/left/right);
@@ -883,7 +883,7 @@ export default function ProductDetail() {
                       return (
                         <div
                           key={`placeholder-${index}`}
-                          className={`aspect-[53/139] w-[52.96px] opacity-30 ${mobileHiddenClass}`}
+                          className={`aspect-[53/139] w-[3.31rem] opacity-30 ${mobileHiddenClass}`}
                         >
                           <ProductPlaceholder className="h-full w-full" />
                         </div>
@@ -895,7 +895,7 @@ export default function ProductDetail() {
                         type="button"
                         aria-label={`View ${product.name} — ${label}`}
                         onClick={() => setSelectedImage(index)}
-                        className={`aspect-[53/139] w-[52.96px] shrink-0 transition-opacity ${mobileHiddenClass} ${
+                        className={`aspect-[53/139] w-[3.31rem] shrink-0 transition-opacity ${mobileHiddenClass} ${
                           index === selectedImage ? 'opacity-100' : 'opacity-30'
                         }`}
                       >
@@ -941,7 +941,7 @@ export default function ProductDetail() {
                 elsewhere on the site, keep this override so the PDP
                 heading doesn't pick that font up by accident. */}
             <h1
-              className="mt-3 text-[36px] font-bold leading-[44px] tracking-[-0.02em] text-[#404040]"
+              className="mt-3 text-[2.25rem] font-bold leading-[2.75rem] tracking-[-0.02em] text-[#404040]"
               style={{ fontFamily: 'DM Sans, sans-serif' }}
             >
               The {product.name}
@@ -951,7 +951,7 @@ export default function ProductDetail() {
               <p className="text-xl">{formatPrice(product.price)}</p>
               {product.onSale && <p className="text-base text-[var(--muted)] line-through">{formatPrice(product.compareAtPrice)}</p>}
               {product.tag && (
-                <span className="rounded-sm bg-[var(--maroon)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">{product.tag}</span>
+                <span className="rounded-sm bg-[var(--maroon)] px-2 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wide text-white">{product.tag}</span>
               )}
               <button
                 onClick={() => toggleWishlist(product.id)}
@@ -972,7 +972,7 @@ export default function ProductDetail() {
                 24px line-height for this paragraph (Text md/Regular),
                 confirmed against the same 16/24 spec repeated for the
                 Details tab body and both review-text blocks below. */}
-            <p className="mt-7 max-w-[412px] text-base leading-6 text-[#404040]">
+            <p className="mt-7 max-w-[25.75rem] text-base leading-6 text-[#404040]">
               {productDescription(product)}
             </p>
 
@@ -987,7 +987,7 @@ export default function ProductDetail() {
                 {/* TIP: spec gap between swatches is 9px, not the old
                     gap-3 (12px). Small, but it's what makes the row
                     width match Figma's measurements. */}
-                <div className="flex flex-wrap gap-[9px]">
+                <div className="flex flex-wrap gap-[0.5625rem]">
                   {colorChoices.map((option) => (
                     <ColorSwatch
                       key={option.label}
@@ -1002,7 +1002,7 @@ export default function ProductDetail() {
               {/* Shades */}
               <div>
                 <p className="mb-3 text-sm font-semibold">Shades</p>
-                <div className="flex flex-wrap gap-[9px]">
+                <div className="flex flex-wrap gap-[0.5625rem]">
                   {shadeChoices.map((option) => (
                     <ShadeSwatch
                       key={option.label}
@@ -1016,7 +1016,7 @@ export default function ProductDetail() {
 
               {/* Size */}
               <div>
-                <div className="mb-3 flex items-center justify-between md:max-w-[339px]">
+                <div className="mb-3 flex items-center justify-between md:max-w-[21.1875rem]">
                   <p className="text-sm font-semibold">Size</p>
                   <button
                     type="button"
@@ -1040,7 +1040,7 @@ export default function ProductDetail() {
                     × 6 ≈ 343px, no gaps) — the opposite of desktop's
                     auto-width/wrap. flex-1 below does that; md: turns
                     it back into the auto-width wrapping row. */}
-                <div className="flex md:max-w-[339px] md:flex-wrap">
+                <div className="flex md:max-w-[21.1875rem] md:flex-wrap">
                   {FIGMA_SIZES.map((s) => (
                     <button
                       key={s}
@@ -1074,7 +1074,7 @@ export default function ProductDetail() {
                 its growth. */}
             <button
               onClick={handleAddToBag}
-              className="mt-8 flex w-full items-center justify-center whitespace-nowrap bg-[#564345] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[322px]"
+              className="mt-8 flex w-full items-center justify-center whitespace-nowrap bg-[#564345] px-8 py-3.5 text-base font-bold uppercase tracking-widest text-white transition-colors hover:bg-[var(--maroon)] md:max-w-[20.125rem]"
             >
               Add to Bag
             </button>
@@ -1094,7 +1094,7 @@ export default function ProductDetail() {
             className here ever became dynamic, React would overwrite the
             .rv/.on classes the engine adds. */}
         <div className="mt-16 mb-12 px-5 md:px-8 lg:px-[15.83%]" data-auto-rise="true">
-          <div className="flex gap-6 md:gap-[30px] border-b border-[var(--line)]">
+          <div className="flex gap-6 md:gap-[1.875rem] border-b border-[var(--line)]">
             {Object.keys(tabs).map((tabName) => (
               <button
                 key={tabName}
