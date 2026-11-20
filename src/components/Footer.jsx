@@ -29,6 +29,9 @@ const columns = [
     links: [
       { label: "Contact", to: "/contact" },
       { label: "Enquiries", to: "/contact" },
+      { label: "Privacy Policy", to: "/privacy" },
+      { label: "Terms & Conditions", to: "/terms" },
+      { label: "Returns & Shipping", to: "/returns" },
     ],
   },
   {

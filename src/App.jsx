@@ -22,6 +22,7 @@ import SignInPage from "./pages/SignInPage";
 import AccountPage from "./pages/AccountPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import { PrivacyPolicyPage, TermsPage, ReturnsPage } from "./pages/LegalPages";
 import ShopPage from "./pages/ShopPage";
 import BrandedLoader from "./components/BrandedLoader";
 
@@ -308,6 +309,9 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/returns" element={<ReturnsPage />} />
         <Route path="/signin" element={<SignInPage />} />
         {/* Lara's page for adding / editing pieces — not linked anywhere;
             she signs in with the admin account from server/seedAdmin.js */}

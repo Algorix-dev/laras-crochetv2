@@ -609,6 +609,13 @@ export default function CheckoutPage() {
             >
               {submitting ? 'OPENING SECURE PAYMENT…' : 'PAY NOW'}
             </button>
+            {/* TIP: Paystack asks to see that customers agree to the legal pages before paying. */}
+            <p className="mt-3 text-center text-sm text-[var(--muted)]">
+              By placing your order you agree to our{' '}
+              <Link to="/terms" target="_blank" className="underline">Terms &amp; Conditions</Link>,{' '}
+              <Link to="/privacy" target="_blank" className="underline">Privacy Policy</Link> and{' '}
+              <Link to="/returns" target="_blank" className="underline">Returns &amp; Shipping</Link> policy.
+            </p>
           </form>
 
           {/* ================================================================
