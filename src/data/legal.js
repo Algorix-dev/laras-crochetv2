@@ -17,8 +17,8 @@ export const LEGAL = {
   // ---- ABOUT THE BUSINESS (Lara) ----
   businessName: '',      // full legal / registered name, e.g. "Lara’s Crochet Ventures"
   registration: 'Not registered',      // CAC registration number (RC / BN). Write "Not registered" if none.
-  address: '',           // business address customers can write to
-  phone: '',             // phone / WhatsApp number
+  address: '10 Arigbawonwo Road, Mowe Mowe, Obafemi Owode, Ogun State, 110001, Nigeria',           // business address customers can write to
+  phone: '+234 807 150 1685',             // phone / WhatsApp number
   email: 'larascrochethq@gmail.com',             // support email (if blank, the email saved on the admin Brand page is used)
 
   // ---- ORDERS, DELIVERY, RETURNS (Lara) ----

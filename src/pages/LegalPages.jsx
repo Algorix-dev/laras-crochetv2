@@ -213,7 +213,7 @@ export function TermsPage() {
       <section>
         <H>5. Accepting and cancelling orders</H>
         <P>We may decline or cancel an order, for example if a material is unavailable, we suspect fraud, or we cannot deliver to your address. If we cancel an order you have already paid for, we will refund you in full.</P>
-        <P>Because pieces are made to order, we start work soon after payment. If you need to change or cancel an order, contact us as soon as possible. We will do our best, but once work has started we may not be able to cancel it.</P>
+        <P>Because pieces are made to order, we start work soon after payment. If you need to change or cancel an order, contact us as soon as possible. We will do our best, but once work has started we may not be able to cancel it. The cancellation rule in section 6 applies to custom orders only, not to ordinary orders.</P>
       </section>
 
       <section>
